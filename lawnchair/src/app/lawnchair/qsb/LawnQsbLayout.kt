@@ -13,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.stringResource
 import androidx.core.view.children
 import androidx.lifecycle.lifecycleScope
 import app.lawnchair.LawnchairLauncher
@@ -132,6 +133,8 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
                             state = state,
                             style = style,
                             actions = actions,
+                            placeholder = stringResource(R.string.nostromo_prompt_hint),
+                            hint = stringResource(R.string.nostromo_swipe_hint),
                         )
                     }
                 }

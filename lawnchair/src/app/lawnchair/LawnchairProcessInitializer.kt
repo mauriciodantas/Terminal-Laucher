@@ -3,8 +3,7 @@ package app.lawnchair
 import android.content.Context
 import androidx.annotation.Keep
 import app.lawnchair.bugreport.LawnchairBugReporter
-import app.lawnchair.theme.color.tokens.ColorTokens
-import com.android.launcher3.Utilities
+import app.lawnchair.theme.color.tokens.PhosphorColorToken
 import com.android.launcher3.icons.mono.ThemedIconDrawable
 import com.android.quickstep.QuickstepProcessInitializer
 
@@ -13,18 +12,12 @@ class LawnchairProcessInitializer(context: Context) : QuickstepProcessInitialize
 
     override fun init(context: Context) {
         LawnchairBugReporter.INSTANCE.get(context)
+        // Nostromo terminal icons: phosphor glyph on a dark panel, tinted with the user-selected color.
         ThemedIconDrawable.COLORS_LOADER = {
-            if (Utilities.isDarkTheme(it)) {
-                intArrayOf(
-                    ColorTokens.Accent2_800.resolveColor(it),
-                    ColorTokens.Accent1_200.resolveColor(it),
-                )
-            } else {
-                intArrayOf(
-                    ColorTokens.Accent1_100.resolveColor(it),
-                    ColorTokens.Accent1_700.resolveColor(it),
-                )
-            }
+            intArrayOf(
+                PhosphorColorToken(0.10f).resolveColor(it),
+                PhosphorColorToken(1f).resolveColor(it),
+            )
         }
         super.init(context)
     }

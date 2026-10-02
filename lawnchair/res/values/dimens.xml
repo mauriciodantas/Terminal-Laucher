@@ -41,7 +41,7 @@
     <dimen name="qsb_margin_top_adjusting">20dp</dimen>
     <dimen name="qsb_min_width_with_mic">124dp</dimen>
     <dimen name="qsb_shadow_margin">6dp</dimen>
-    <dimen name="qsb_widget_height">64dp</dimen>
+    <dimen name="qsb_widget_height">86dp</dimen>
     <dimen name="qsb_icon_width">56dp</dimen>
     <dimen name="search_widget_top_shift">16dp</dimen>
     <dimen name="search_widget_hotseat_height">56dp</dimen>
@@ -51,7 +51,7 @@
     <dimen name="search_box_container_height">60dp</dimen>
     <dimen name="search_box_height">52dp</dimen>
     <dimen name="search_decoration_padding">1dp</dimen>
-    <dimen name="search_group_radius">20dp</dimen>
+    <dimen name="search_group_radius">0dp</dimen>
     <dimen name="search_hero_inline_button_text_size">12sp</dimen>
     <dimen name="search_result_recycler_view_padding">8dp</dimen>
     <dimen name="search_result_hero_title_size">16sp</dimen>
@@ -60,7 +60,7 @@
     <dimen name="search_result_padding">16dp</dimen>
     <dimen name="search_result_padding_medium">12dp</dimen>
     <dimen name="search_result_text_padding">12dp</dimen>
-    <dimen name="search_result_radius">4dp</dimen>
+    <dimen name="search_result_radius">0dp</dimen>
     <dimen name="search_result_row_height">92dp</dimen>
     <dimen name="search_result_row_medium_height">76dp</dimen>
     <dimen name="search_result_small_row_height">64dp</dimen>
@@ -129,4 +129,5 @@
     <dimen name="aspect_ratio_portrait">1</dimen>
     <dimen name="aspect_ratio_portrait_and_square">1.05</dimen>
 
+    <dimen name="nostromo_section_header_height">36dp</dimen>
 </resources>

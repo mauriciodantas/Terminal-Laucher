@@ -276,6 +276,17 @@ public abstract class BaseAllAppsAdapter<T extends Context & ActivityContext> ex
         }
     }
 
+    /** 1-based position of the app at [position] among the app entries, for the directory codes. */
+    private int directoryIndexOf(int position) {
+        int count = 0;
+        for (int i = 0; i <= position && i < mApps.getAdapterItems().size(); i++) {
+            if (mApps.getAdapterItems().get(i).viewType == VIEW_TYPE_ICON) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         holder.itemView.setVisibility(View.VISIBLE);
@@ -293,6 +304,7 @@ public abstract class BaseAllAppsAdapter<T extends Context & ActivityContext> ex
                                         && privateProfileManager.isPrivateSpaceItem(adapterItem)));
                 icon.setSkipUserBadge(skipUserBadge);
                 icon.applyFromApplicationInfo(adapterItem.itemInfo);
+                icon.setDirectoryIndex(directoryIndexOf(position));
                 icon.setOnFocusChangeListener(mIconFocusListener);
                 if (privateProfileManager != null) {
                     // Set the alpha of the private space icon to 0 upon expanding the header so the

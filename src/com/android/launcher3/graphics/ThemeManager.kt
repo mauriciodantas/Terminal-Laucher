@@ -173,7 +173,7 @@ constructor(
         const val KEY_ICON_SHAPE = "icon_shape_model"
 
         const val KEY_THEMED_ICONS = "themed_icons"
-        @JvmField val THEMED_ICONS = backedUpItem(KEY_THEMED_ICONS, false, EncryptionType.ENCRYPTED)
+        @JvmField val THEMED_ICONS = backedUpItem(KEY_THEMED_ICONS, true, EncryptionType.ENCRYPTED)
         @JvmField val PREF_ICON_SHAPE = backedUpItem(KEY_ICON_SHAPE, "", EncryptionType.ENCRYPTED)
 
         private const val ACTION_OVERLAY_CHANGED = "android.intent.action.OVERLAY_CHANGED"

@@ -318,7 +318,7 @@ sealed class IconShape {
     object Square : SimpleCornerBased(
         key = "square",
         IconCornerShape.arc,
-        .16f,
+        .04f,
     ) {
         override val windowTransitionRadius = .16f
     }

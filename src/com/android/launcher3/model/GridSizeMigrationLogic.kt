@@ -29,6 +29,7 @@ import com.android.launcher3.LauncherPrefs.Companion.get
 import com.android.launcher3.LauncherSettings
 import com.android.launcher3.LauncherSettings.Favorites.TABLE_NAME
 import com.android.launcher3.LauncherSettings.Favorites.TMP_TABLE
+import com.android.launcher3.Workspace
 import com.android.launcher3.logging.FileLog
 import com.android.launcher3.logging.StatsLogManager
 import com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_ROW_SHIFT_GRID_MIGRATION
@@ -516,7 +517,7 @@ class GridSizeMigrationLogic {
 
         val next: Point =
             if (screenId == 0 && prefs2.enableSmartspace.firstCached()) {
-                Point(0, 1 /* smartspace */)
+                Point(0, Workspace.SMARTSPACE_ROWS)
             } else {
                 Point(0, 0)
             }

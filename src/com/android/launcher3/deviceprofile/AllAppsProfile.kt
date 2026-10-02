@@ -108,9 +108,9 @@ data class AllAppsProfile(
                 }
             }
 
+            // Directory rows: icon and label sit side by side, so the row only needs the taller of the two.
             val cellContentHeight: Int =
-                (allAppsIconSizePx +
-                    Utilities.calculateTextHeight(allAppsIconTextSizePx) +
+                (max(allAppsIconSizePx, Utilities.calculateTextHeight(allAppsIconTextSizePx)) +
                     allAppsBorderSpacePx.y)
             if (allAppsCellHeightPx < cellContentHeight) {
                 // Increase allAppsCellHeight to fit its content.

@@ -1,30 +1,191 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Nostromo terminal home: status header, clock, date and the motion tracker panel. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="match_parent"
+    android:gravity="center_vertical"
+    android:orientation="vertical"
+    android:paddingStart="4dp"
+    android:paddingEnd="4dp">
 
-    <app.lawnchair.smartspace.BcSmartspaceView
-        android:id="@+id/bc_smartspace_view"
+    <TextView
+        android:id="@+id/nostromo_header"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/ibm_plex_mono_medium"
+        android:includeFontPadding="false"
+        android:letterSpacing="0.12"
+        android:maxLines="1"
+        android:text="@string/nostromo_header"
+        android:textColor="#FF7DFFB2"
+        android:textSize="10sp" />
+
+    <TextClock
+        android:id="@+id/nostromo_clock"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/vt323_regular"
+        android:format12Hour="HH:mm"
+        android:format24Hour="HH:mm"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:shadowColor="#667DFFB2"
+        android:shadowDx="0"
+        android:shadowDy="0"
+        android:shadowRadius="8"
+        android:textColor="#FF7DFFB2"
+        android:textSize="44sp"
+        tools:text="03:47" />
+
+    <TextClock
+        android:id="@+id/nostromo_date"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/ibm_plex_mono_medium"
+        android:format12Hour="EEEE · dd.MMM.yyyy"
+        android:format24Hour="EEEE · dd.MMM.yyyy"
+        android:includeFontPadding="false"
+        android:letterSpacing="0.08"
+        android:maxLines="1"
+        android:textAllCaps="true"
+        android:textColor="#FF7DFFB2"
+        android:textSize="12sp"
+        tools:text="SÁBADO · 02.OUT.2026" />
+
+    <TextView
+        android:id="@+id/nostromo_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:fontFamily="@font/ibm_plex_mono_regular"
+        android:includeFontPadding="false"
+        android:letterSpacing="0.08"
+        android:maxLines="1"
+        android:text="@string/nostromo_status_line"
+        android:textColor="#FF50A172"
+        android:textSize="10sp" />
+
+    <LinearLayout
+        android:id="@+id/nostromo_panel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:layout_marginStart="@dimen/enhanced_smartspace_margin_start_launcher">
+        android:layout_marginTop="5dp"
+        android:orientation="vertical">
 
-        <androidx.viewpager.widget.ViewPager
-            android:id="@+id/smartspace_card_pager"
+        <LinearLayout
+            android:id="@+id/nostromo_panel_title"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/enhanced_smartspace_height"
-            android:layout_gravity="center" />
-
-        <app.lawnchair.smartspace.PageIndicator
-            android:id="@+id/smartspace_page_indicator"
-            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom|left|center_vertical|center_horizontal|center|start"
-            android:importantForAccessibility="no"
-            android:paddingStart="@dimen/page_indicator_padding_start"
-            android:paddingTop="@dimen/page_indicator_padding_top_bottom"
-            android:paddingBottom="@dimen/page_indicator_padding_top_bottom"
-            android:visibility="visible" />
-    </app.lawnchair.smartspace.BcSmartspaceView>
-</FrameLayout>
+            android:orientation="horizontal"
+            android:paddingStart="8dp"
+            android:paddingTop="2dp"
+            android:paddingEnd="8dp"
+            android:paddingBottom="2dp">
+
+            <TextView
+                android:id="@+id/nostromo_panel_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="@font/ibm_plex_mono_semibold"
+                android:includeFontPadding="false"
+                android:letterSpacing="0.1"
+                android:maxLines="1"
+                android:text="@string/nostromo_panel_title"
+                android:textColor="#FF07090A"
+                android:textSize="10sp" />
+
+            <TextView
+                android:id="@+id/nostromo_panel_state"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/ibm_plex_mono_semibold"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:text="@string/nostromo_panel_state"
+                android:textColor="#FF07090A"
+                android:textSize="10sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="4dp">
+
+            <app.lawnchair.smartspace.RadarView
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:importantForAccessibility="no" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
+                android:layout_weight="1"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/nostromo_label_range"
+                        style="@style/NostromoReadoutLabel"
+                        android:text="@string/nostromo_range_label" />
+
+                    <TextView
+                        android:id="@+id/nostromo_value_range"
+                        style="@style/NostromoReadoutValue"
+                        android:text="@string/nostromo_range_value" />
+
+                    <TextView
+                        android:id="@+id/nostromo_label_azimuth"
+                        style="@style/NostromoReadoutLabel"
+                        android:layout_marginTop="4dp"
+                        android:text="@string/nostromo_azimuth_label" />
+
+                    <TextView
+                        android:id="@+id/nostromo_value_azimuth"
+                        style="@style/NostromoReadoutValue"
+                        android:text="@string/nostromo_azimuth_value" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/nostromo_label_contact"
+                        style="@style/NostromoReadoutLabel"
+                        android:text="@string/nostromo_contact_label" />
+
+                    <TextView
+                        android:id="@+id/nostromo_contact"
+                        style="@style/NostromoReadoutValue"
+                        android:text="@string/nostromo_contact_value"
+                        android:textColor="#FFFF5A45" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/nostromo_quick_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:fontFamily="@font/ibm_plex_mono_regular"
+        android:includeFontPadding="false"
+        android:letterSpacing="0.1"
+        android:maxLines="1"
+        android:text="@string/nostromo_quick_access"
+        android:textColor="#FF50A172"
+        android:textSize="10sp" />
+</LinearLayout>

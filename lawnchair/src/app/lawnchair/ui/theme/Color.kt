@@ -64,3 +64,56 @@ fun preferenceGroupColor() = (if (isSelectedThemeDark) MaterialTheme.colorScheme
 
 @Composable
 fun dividerColor() = MaterialTheme.colorScheme.outlineVariant
+
+/** Nostromo terminal palette: phosphor on near-black, red only for danger. */
+object Nostromo {
+    val Alert = androidx.compose.ui.graphics.Color(0xFFFF5A45)
+}
+
+/** Builds the terminal color scheme for the given phosphor [accent] color. */
+fun nostromoColorScheme(accent: Int): androidx.compose.material3.ColorScheme {
+    fun shade(mix: Float) = androidx.compose.ui.graphics.Color(ColorUtils.blendARGB(0xFF07090A.toInt(), accent, mix))
+    val phosphor = shade(1f)
+    val ground = shade(0f)
+    val dim = shade(0.62f)
+    val line = shade(0.32f)
+    val panelHigh = shade(0.10f)
+    val panel = shade(0.05f)
+    return androidx.compose.material3.darkColorScheme(
+        primary = phosphor,
+        onPrimary = ground,
+        primaryContainer = panelHigh,
+        onPrimaryContainer = phosphor,
+        secondary = phosphor,
+        onSecondary = ground,
+        secondaryContainer = panelHigh,
+        onSecondaryContainer = phosphor,
+        tertiary = phosphor,
+        onTertiary = ground,
+        tertiaryContainer = panelHigh,
+        onTertiaryContainer = phosphor,
+        background = ground,
+        onBackground = phosphor,
+        surface = ground,
+        onSurface = phosphor,
+        surfaceVariant = panelHigh,
+        onSurfaceVariant = dim,
+        surfaceTint = phosphor,
+        inverseSurface = phosphor,
+        inverseOnSurface = ground,
+        error = Nostromo.Alert,
+        onError = ground,
+        errorContainer = androidx.compose.ui.graphics.Color(0xFF3A1410),
+        onErrorContainer = Nostromo.Alert,
+        outline = dim,
+        outlineVariant = line,
+        scrim = androidx.compose.ui.graphics.Color(0xFF000000),
+        surfaceBright = panelHigh,
+        surfaceDim = ground,
+        surfaceContainerLowest = ground,
+        surfaceContainerLow = panel,
+        surfaceContainer = panel,
+        surfaceContainerHigh = panelHigh,
+        surfaceContainerHighest = panelHigh,
+    )
+}

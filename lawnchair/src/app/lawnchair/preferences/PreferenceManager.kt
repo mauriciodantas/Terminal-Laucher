@@ -75,7 +75,7 @@ class PreferenceManager @Inject constructor(
     val allowRotation = BoolPref("pref_allowRotation", false)
     val wrapAdaptiveIcons = BoolPref("prefs_wrapAdaptive", true)
     val transparentIconBackground = BoolPref("prefs_transparentIconBackground", false)
-    val shadowBGIcons = BoolPref("pref_shadowBGIcons", true)
+    val shadowBGIcons = BoolPref("pref_shadowBGIcons", false)
     val addIconToHome = BoolPref("pref_add_icon_to_home", true)
 
     private val isPhone: Boolean get() = deviceType == InvariantDeviceProfile.TYPE_PHONE
@@ -113,11 +113,11 @@ class PreferenceManager @Inject constructor(
     val workspaceIncreaseMaxGridSize = BoolPref("pref_workspace_increase_max_grid_size", false)
     val folderRows = IdpIntPref("pref_folderRows", { numFolderRows[INDEX_DEFAULT] }, reloadGrid)
 
-    val drawerOpacity = FloatPref("pref_drawerOpacity", .5f, recreate)
+    val drawerOpacity = FloatPref("pref_drawerOpacity", 1f, recreate)
     val coloredBackgroundLightness = FloatPref("pref_coloredBackgroundLightness", 1F)
     val feedProvider = StringPref("pref_feedProvider", "")
     val ignoreFeedWhitelist = BoolPref("pref_ignoreFeedWhitelist", false)
-    val launcherTheme = StringPref("pref_launcherTheme", "system")
+    val launcherTheme = StringPref("pref_launcherTheme", "dark")
     val overrideWindowCornerRadius = BoolPref("pref_overrideWindowCornerRadius", false, recreate)
     val windowCornerRadius = IntPref("pref_windowCornerRadius", 80, recreate)
     val autoLaunchRoot = BoolPref("pref_autoLaunchRoot", false)
@@ -163,13 +163,13 @@ class PreferenceManager @Inject constructor(
     val searchResultSettingsEntry = BoolPref("pref_searchResultSettingsEntry", false, recreate)
     val searchResulRecentSuggestion = BoolPref("pref_searchResultRecentSuggestion", false, recreate)
 
-    val themedIcons = BoolPref("themed_icons", false, reloadIcons)
-    val drawerThemedIcons = BoolPref("drawer_themed_icons", false, reloadIcons)
+    val themedIcons = BoolPref("themed_icons", true, reloadIcons)
+    val drawerThemedIcons = BoolPref("drawer_themed_icons", true, reloadIcons)
     val tintIconPackBackgrounds = BoolPref("tint_icon_pack_backgrounds", false, reloadIcons)
 
-    val hotseatQsbCornerRadius = FloatPref("pref_hotseatQsbCornerRadius", 1F, recreate)
+    val hotseatQsbCornerRadius = FloatPref("pref_hotseatQsbCornerRadius", 0F, recreate)
     val hotseatQsbAlpha = IntPref("pref_searchHotseatTranparency", 100, recreate)
-    val hotseatQsbStrokeWidth = FloatPref("pref_searchStrokeWidth", 0F, recreate)
+    val hotseatQsbStrokeWidth = FloatPref("pref_searchStrokeWidth", 1F, recreate)
     val hotseatBG = BoolPref("pref_hotseatBG", false, recreate)
     val hotseatBGHorizontalInsetLeft = IntPref("pref_hotseatBGHRinsetLeft", 0, recreate)
     val hotseatBGVerticalInsetTop = IntPref("pref_hotseatBGVRinsetTop", 0, recreate)
@@ -203,7 +203,7 @@ class PreferenceManager @Inject constructor(
         context.getApkVersionComparison().first[0],
     )
 
-    val forceIconMonochrome = BoolPref("pref_forceIconMonochrome", false)
+    val forceIconMonochrome = BoolPref("pref_forceIconMonochrome", true)
 
     override fun close() {
         TODO("Not yet implemented")

@@ -929,14 +929,14 @@
     -->
     <!-- Launcher strings used -->
     <string name="all_apps_device_search_hint">Search web and more</string>
-    <string name="all_apps_search_bar_hint">Search apps</string>
+    <string name="all_apps_search_bar_hint" translatable="false">FILTRAR PROGRAMAS</string>
     <string name="all_apps_no_search_results">No apps found matching \"<xliff:g example="Android" id="query">%1$s</xliff:g>\"
     </string>
 
-    <string name="all_apps_search_result_suggestions">From the web</string>
-    <string name="all_apps_search_result_contacts_from_device">Contacts from device</string>
-    <string name="all_apps_search_result_files">Files from device</string>
-    <string name="all_apps_search_result_settings_entry_from_device">Settings from device</string>
+    <string name="all_apps_search_result_suggestions">COMANDOS</string>
+    <string name="all_apps_search_result_contacts_from_device">CONTATOS</string>
+    <string name="all_apps_search_result_files">ARQUIVOS</string>
+    <string name="all_apps_search_result_settings_entry_from_device">AJUSTES</string>
 
     <string name="all_apps_search_market_message">Search for more apps</string>
     <string name="all_apps_search_on_web_message">Search on <xliff:g example="Startpage" id="web_search_provider">%1$s</xliff:g>
@@ -996,7 +996,7 @@
     <string name="search_pref_result_all_files_title">All files</string>
     <string name="search_pref_result_web_title">Web suggestions</string>
     <string name="search_pref_result_history_title">Search history</string>
-    <string name="all_apps_search_result_calculator">Calculator</string>
+    <string name="all_apps_search_result_calculator">CÁLCULO</string>
 
     <string name="search_empty_state_title">Start searching</string>
     <string name="search_empty_state_no_history_subtitle">Find apps, contacts, and more. Your recent searches will appear here.</string>
@@ -1070,4 +1070,22 @@
     <string name="lawnchair_action_failed">Failed to trigger action</string>
 
     <string name="please_wait">Please wait…</string>
+    <string name="nostromo_status_line" translatable="false">CICLO DE HIPERSONO · SEÇÃO A</string>
+    <string name="nostromo_contact_value" translatable="false">14.2 M</string>
+    <string name="nostromo_contact_label" translatable="false">CONTATO 01</string>
+    <string name="nostromo_range_label" translatable="false">ALCANCE</string>
+    <string name="nostromo_range_value" translatable="false">20 M</string>
+    <string name="nostromo_azimuth_label" translatable="false">AZIMUTE</string>
+    <string name="nostromo_azimuth_value" translatable="false">042°</string>
+    <string name="nostromo_panel_title" translatable="false">RASTREADOR DE MOVIMENTO</string>
+    <string name="nostromo_panel_state" translatable="false">[ATIVO]</string>
+    <string name="phosphor_color_label" translatable="false">Cor do fósforo</string>
+    <string name="nostromo_header" translatable="false">MU/TH/UR 6000 · ENERGIA %1$s</string>
+    <string name="nostromo_prompt_hint" translatable="false">DIGITE UM COMANDO</string>
+    <string name="nostromo_filter_hint" translatable="false">FILTRAR PROGRAMAS</string>
+    <string name="nostromo_section_programs" translatable="false">PROGRAMAS</string>
+    <string name="nostromo_matches_one" translatable="false">1 CORRESPONDÊNCIA</string>
+    <string name="nostromo_matches_many" translatable="false">%1$d CORRESPONDÊNCIAS</string>
+    <string name="nostromo_swipe_hint" translatable="false">▲ DESLIZE PARA O DIRETÓRIO DE PROGRAMAS</string>
+    <string name="nostromo_quick_access" translatable="false">› ACESSO RÁPIDO</string>
 </resources>

@@ -111,6 +111,24 @@ data class SetLStarColorToken(
     }
 }
 
+/**
+ * A shade of the user's phosphor color over the terminal ground: [mix] 1.0 is the pure phosphor,
+ * lower values fade towards the near-black ground.
+ */
+data class PhosphorColorToken(
+    private val mix: Float,
+) : ColorToken {
+
+    override fun resolve(context: Context, scheme: ColorScheme, uiColorMode: UiColorMode): Color {
+        val phosphor = ThemeProvider.INSTANCE.get(context).phosphorColor
+        return AndroidColor(ColorUtils.blendARGB(GROUND, phosphor, mix))
+    }
+
+    companion object {
+        const val GROUND = 0xFF07090A.toInt()
+    }
+}
+
 class WithContextColorToken(
     private val token: ColorToken,
     private val transform: ColorToken.(Context) -> ColorToken,

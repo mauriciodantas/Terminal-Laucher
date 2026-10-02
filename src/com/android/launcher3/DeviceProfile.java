@@ -1984,6 +1984,10 @@ public class DeviceProfile {
                 numShownAllAppsColumns);
         int iconAlignmentMargin = (cellWidth - getIconVisibleSizePx(
                 getAllAppsProfile().getIconSizePx())) / 2;
+        if (numShownAllAppsColumns == 1) {
+            // Directory list: rows start at the left edge, so no centering margin is needed.
+            iconAlignmentMargin = 0;
+        }
 
         return (Utilities.isRtl(context.getResources()) ? allAppsPadding.right
                 : allAppsPadding.left) + iconAlignmentMargin;

@@ -7,11 +7,13 @@ import app.lawnchair.allapps.views.SearchResultView.Companion.EXTRA_QUICK_LAUNCH
 import app.lawnchair.preferences2.PreferenceManager2
 import app.lawnchair.preferences2.firstCached
 import app.lawnchair.search.LawnchairSearchAdapterProvider
+import app.lawnchair.search.adapter.META_PREFIX
 import app.lawnchair.search.adapter.START_PAGE
 import app.lawnchair.search.adapter.SearchAdapterItem
 import app.lawnchair.search.adapter.SearchTargetCompat
 import app.lawnchair.search.adapter.SearchTargetCompat.Companion.RESULT_TYPE_APPLICATION
 import app.lawnchair.search.adapter.SearchTargetCompat.Companion.RESULT_TYPE_SHORTCUT
+import app.lawnchair.search.adapter.SearchTargetFactory
 import com.android.app.search.LayoutType.CALCULATOR
 import com.android.app.search.LayoutType.EDUCARD
 import com.android.app.search.LayoutType.EMPTY_DIVIDER
@@ -28,6 +30,7 @@ import com.android.app.search.LayoutType.TEXT_HEADER
 import com.android.app.search.LayoutType.THUMBNAIL
 import com.android.app.search.LayoutType.WIDGET_LIVE
 import com.android.launcher3.BuildConfig
+import com.android.launcher3.R
 import com.android.launcher3.Utilities
 import com.android.launcher3.allapps.BaseAllAppsAdapter
 import com.android.launcher3.search.SearchAlgorithm
@@ -92,7 +95,7 @@ sealed class LawnchairSearchAlgorithm(
         val recentIndices = findIndices(filtered, WIDGET_LIVE)
         val calculator = findIndices(filtered, CALCULATOR)
 
-        return filtered.mapIndexedNotNull { index, target ->
+        val items = filtered.mapIndexedNotNull { index, target ->
             val isFirst = index == 0 || filtered[index - 1].isDivider
             val isLast = index == filtered.lastIndex || filtered[index + 1].isDivider
 
@@ -122,6 +125,17 @@ sealed class LawnchairSearchAlgorithm(
                 SearchAdapterItem.createAdapterItem(target, background)
             }
         }
+
+        // "N CORRESPONDÊNCIAS" line on top of the results, like a terminal query report.
+        val matches = filtered.count { it.layoutType != TEXT_HEADER && !it.isDivider }
+        if (matches == 0) return items
+        val label = if (matches == 1) {
+            context.getString(R.string.nostromo_matches_one)
+        } else {
+            context.getString(R.string.nostromo_matches_many, matches)
+        }
+        val meta = SearchTargetFactory(context).createHeaderTarget(META_PREFIX + label)
+        return listOfNotNull(SearchAdapterItem.createAdapterItem(meta, transparentBackground)) + items
     }
 
     protected fun setFirstItemQuickLaunch(searchTargets: List<SearchTargetCompat>) {

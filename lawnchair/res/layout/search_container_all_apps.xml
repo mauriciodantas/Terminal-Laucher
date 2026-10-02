@@ -44,7 +44,7 @@
             android:id="@+id/hint"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            android:layout_marginStart="28dp"
+            android:layout_marginStart="44dp"
             android:layout_marginEnd="28dp"
             android:clickable="false"
             android:ellipsize="end"
@@ -53,13 +53,13 @@
             android:scrollHorizontally="true"
             android:singleLine="true"
             android:textColor="?android:textColorTertiary"
-            android:textSize="20sp" />
+            android:textSize="16sp" />
 
         <app.lawnchair.allapps.FallbackSearchInputView
             android:id="@+id/input"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginStart="28dp"
+            android:layout_marginStart="44dp"
             android:layout_marginEnd="28dp"
             android:background="@android:color/transparent"
             android:ellipsize="end"
@@ -73,7 +73,7 @@
             android:singleLine="true"
             android:textColor="?android:textColorPrimary"
             android:textColorHint="?android:textColorTertiary"
-            android:textSize="20sp" />
+            android:textSize="16sp" />
 
     </FrameLayout>
 

@@ -25,8 +25,6 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MotionScheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.expressiveLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -37,13 +35,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
-import app.lawnchair.preferences.observeAsState
-import app.lawnchair.preferences.preferenceManager
 import app.lawnchair.preferences2.asState
 import app.lawnchair.preferences2.preferenceManager2
 import app.lawnchair.theme.ThemeProvider
-import app.lawnchair.theme.toComposeColorScheme
-import app.lawnchair.ui.preferences.components.ThemeChoice
 import app.lawnchair.wallpaper.WallpaperManagerCompat
 import com.android.launcher3.Utilities
 
@@ -89,38 +83,15 @@ fun ComponentActivity.EdgeToEdge() {
 }
 
 @Composable
-fun getColorScheme(darkTheme: Boolean): ColorScheme {
-    if (LocalInspectionMode.current) return getPreviewColorScheme(darkTheme)
-
+fun getColorScheme(@Suppress("UNUSED_PARAMETER") darkTheme: Boolean): ColorScheme {
     val context = LocalContext.current
-    val preferenceManager2 = preferenceManager2()
-    val accentColor by preferenceManager2.accentColor.asState()
-    val colorStyle by preferenceManager2.colorStyle.asState()
-
-    val colorScheme = remember(accentColor, colorStyle.style) {
-        ThemeProvider.INSTANCE.get(context).colorScheme
-    }
-
-    return colorScheme.toComposeColorScheme(isDark = darkTheme)
+    val accentColor by preferenceManager2().accentColor.asState()
+    return remember(accentColor) { nostromoColorScheme(ThemeProvider.INSTANCE.get(context).phosphorColor) }
 }
 
-private fun getPreviewColorScheme(darkTheme: Boolean) = if (darkTheme) {
-    darkColorScheme()
-} else {
-    expressiveLightColorScheme()
-}
-
+// The Nostromo interface is always a dark phosphor terminal.
 val isSelectedThemeDark: Boolean
-    @Composable get() {
-        if (LocalInspectionMode.current) return isAutoThemeDark
-
-        val themeChoice by preferenceManager().launcherTheme.observeAsState()
-        return when (themeChoice) {
-            ThemeChoice.LIGHT -> false
-            ThemeChoice.DARK -> true
-            else -> isAutoThemeDark
-        }
-    }
+    @Composable get() = true
 
 val isAutoThemeDark: Boolean @Composable get() =
     if (LocalInspectionMode.current || Utilities.ATLEAST_P) {

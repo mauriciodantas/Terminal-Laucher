@@ -277,6 +277,9 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
     // Variables relating to touch disambiguation (scrolling workspace vs. scrolling a widget)
     private float mXDown;
     private float mYDown;
+    /** Rows of the first page taken by the terminal readout widget. */
+    public static final int SMARTSPACE_ROWS = 2;
+
     private View mFirstPagePinnedItem;
     private boolean mIsEventOverFirstPagePinnedItem;
 
@@ -684,7 +687,8 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
         }
 
         int cellHSpan = mLauncher.getDeviceProfile().inv.numColumns;
-        CellLayoutLayoutParams lp = new CellLayoutLayoutParams(0, 0, cellHSpan, 1);
+        CellLayoutLayoutParams lp =
+                new CellLayoutLayoutParams(0, 0, cellHSpan, SMARTSPACE_ROWS);
         lp.canReorder = false;
         if (!firstPage.addViewToCellLayout(
                 mFirstPagePinnedItem, 0, R.id.search_container_workspace, lp, true)) {

@@ -694,7 +694,8 @@ class PreferenceManager2 @Inject constructor(
 
     val drawerColumns = idpPreference(
         key = intPreferencesKey(name = "drawer_columns"),
-        defaultSelector = { numAllAppsColumns },
+        // The app directory is a single-column list.
+        defaultSelector = { 1 },
         onSet = { reloadHelper.reloadGrid() },
     )
 

@@ -88,6 +88,9 @@ class ThemeProvider @Inject constructor(
         )
     }
 
+    /** The terminal phosphor color: the user's custom accent, or Nostromo green. */
+    val phosphorColor: Int get() = (accentColor as? ColorOption.CustomColor)?.color ?: NOSTROMO_PHOSPHOR
+
     val colorScheme get() = when (val accentColor = this.accentColor) {
         is ColorOption.SystemAccent -> systemColorScheme
 
@@ -137,6 +140,7 @@ class ThemeProvider @Inject constructor(
     }
 
     companion object {
+        const val NOSTROMO_PHOSPHOR = 0xFF7DFFB2.toInt()
         @JvmField
         val INSTANCE = DaggerSingletonObject(LauncherAppComponent::getThemeProvider)
     }

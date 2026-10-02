@@ -17,5 +17,10 @@
     style="@style/BaseIcon.AllApps"
     android:id="@+id/icon"
     launcher:iconDisplay="all_apps"
+    android:ellipsize="end"
+    android:gravity="start|center_vertical"
+    android:maxLines="1"
+    android:paddingEnd="32dp"
+    launcher:layoutHorizontal="true"
     launcher:centerVertically="true" />
 

@@ -3,25 +3,22 @@ package app.lawnchair.qsb
 import android.content.Context
 import androidx.annotation.ColorInt
 import androidx.annotation.DrawableRes
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.Image
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
@@ -29,10 +26,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ripple
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color as ComposeColor
@@ -44,6 +44,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import app.lawnchair.qsb.providers.Google
 import app.lawnchair.qsb.providers.GoogleGo
@@ -335,6 +336,8 @@ fun LawnQsbUi(
     style: QsbStyle,
     actions: QsbActions,
     modifier: Modifier = Modifier,
+    placeholder: String? = null,
+    hint: String? = null,
 ) {
     val density = LocalDensity.current
 
@@ -360,63 +363,63 @@ fun LawnQsbUi(
             border(strokeWidth, ComposeColor(style.strokeColor), shape)
         }
 
-    Row(
-        modifier = containerModifier,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            modifier = Modifier
-                .requiredWidth(dimensionResource(R.dimen.qsb_icon_width))
-                .fillMaxHeight()
-                .then(
-                    if (actions.onStartIconClick != null) {
-                        Modifier
-                            .clip(shape)
-                            .qsbClickable(
-                                onClick = actions.onStartIconClick,
-                                shape = shape,
-                            )
-                    } else {
-                        Modifier
-                    },
-                ),
-            contentAlignment = Alignment.Center,
+    // Nostromo command line: a ">" prompt, an optional dim placeholder and a blinking block cursor.
+    val promptRow: @Composable (Modifier) -> Unit = { rowModifier ->
+        Row(
+            modifier = rowModifier,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Image(
-                painter = rememberThemedIconPainter(
-                    resId = state.startIcon.resId,
-                    themed = state.startIcon.themed,
-                    method = state.startIcon.method,
-                ),
-                contentDescription = state.startIcon.contentDescription,
-                modifier = Modifier.size(24.dp),
+            Text(
+                text = ">",
+                style = MaterialTheme.typography.bodyLarge,
+                color = ComposeColor(style.strokeColor),
+                modifier = Modifier.padding(start = 16.dp, end = 10.dp),
             )
-        }
-
-        Spacer(Modifier.weight(1f))
-
-        val visibleIcons = state.endIcons.filter { it.visible }
-        AnimatedContent(
-            targetState = visibleIcons,
-            transitionSpec = {
-                fadeIn() togetherWith fadeOut() using SizeTransform(clip = false)
-            },
-            label = "endIcons",
-            contentAlignment = Alignment.CenterEnd,
-        ) { icons ->
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                icons.forEachIndexed { index, icon ->
-                    val isLast = index == icons.lastIndex
-                    QsbIcon(
-                        icon = icon,
-                        shape = shape,
-                        onClick = { actions.onEndIconClick(icon.id) },
-                        modifier = Modifier.addIf(isLast) {
-                            offset(x = (-6).dp)
+            if (placeholder != null) {
+                Text(
+                    text = placeholder,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                val blink by rememberInfiniteTransition(label = "cursor").animateFloat(
+                    initialValue = 1f,
+                    targetValue = 0f,
+                    animationSpec = infiniteRepeatable(
+                        animation = keyframes {
+                            durationMillis = 1000
+                            1f at 0
+                            1f at 499
+                            0f at 500
+                            0f at 999
                         },
-                    )
-                }
+                    ),
+                    label = "cursorAlpha",
+                )
+                Box(
+                    Modifier
+                        .padding(start = 8.dp)
+                        .size(width = 8.dp, height = 16.dp)
+                        .alpha(blink)
+                        .background(ComposeColor(style.strokeColor)),
+                )
             }
+        }
+    }
+
+    if (hint == null) {
+        promptRow(containerModifier)
+    } else {
+        Column(Modifier.fillMaxWidth()) {
+            promptRow(containerModifier.height(48.dp))
+            Text(
+                text = hint,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 6.dp),
+            )
         }
     }
 }

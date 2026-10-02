@@ -48,6 +48,7 @@ import com.android.launcher3.Flags;
 import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.LauncherSettings;
 import com.android.launcher3.Utilities;
+import com.android.launcher3.Workspace;
 import com.android.launcher3.logging.StatsLogManager;
 import com.android.launcher3.provider.LauncherDbUtils.SQLiteTransaction;
 import com.android.launcher3.util.GridOccupancy;
@@ -405,7 +406,7 @@ public class GridSizeMigrationDBController {
         final GridOccupancy occupied = new GridOccupancy(trgX, trgY);
         final Point trg = new Point(trgX, trgY);
         final Point next = new Point(0,
-                screenId == 0 && smartspaceEnabled ? 1 /* smartspace */ : 0);
+                screenId == 0 && smartspaceEnabled ? Workspace.SMARTSPACE_ROWS : 0);
         List<DbEntry> existedEntries = destReader.mWorkspaceEntriesByScreenId.get(screenId);
         if (existedEntries != null) {
             for (DbEntry entry : existedEntries) {

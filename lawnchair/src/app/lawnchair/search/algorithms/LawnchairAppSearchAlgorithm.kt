@@ -8,6 +8,7 @@ import app.lawnchair.search.adapter.SearchTargetCompat
 import app.lawnchair.search.adapter.SearchTargetFactory
 import app.lawnchair.util.isDefaultLauncher
 import com.android.launcher3.LauncherAppState
+import com.android.launcher3.R
 import com.android.launcher3.allapps.BaseAllAppsAdapter
 import com.android.launcher3.model.data.AppInfo
 import com.android.launcher3.search.SearchCallback
@@ -88,6 +89,7 @@ class LawnchairAppSearchAlgorithm(context: Context) : LawnchairSearchAlgorithm(c
         val searchTargets = mutableListOf<SearchTargetCompat>()
 
         if (appResults.isNotEmpty()) {
+            searchTargets.add(searchTargetFactory.createHeaderTarget(context.getString(R.string.nostromo_section_programs)))
             if (appResults.size == 1 && context.isDefaultLauncher()) {
                 val singleAppResult = appResults.firstOrNull()
                 val shortcuts = singleAppResult?.let { SearchUtils.getShortcuts(it, context) }

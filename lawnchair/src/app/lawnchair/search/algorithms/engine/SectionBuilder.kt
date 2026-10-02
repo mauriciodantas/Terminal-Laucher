@@ -197,6 +197,9 @@ data object AppsAndShortcutsSectionBuilder : SectionBuilder {
         val appResultCount = apps.size
 
         val targets = mutableListOf<SearchTargetCompat>()
+        if (apps.isNotEmpty()) {
+            targets.add(factory.createHeaderTarget(context.getString(R.string.nostromo_section_programs)))
+        }
 
         if (appResultCount == 1 && shortcuts.isNotEmpty()) {
             val singleApp = apps.first()

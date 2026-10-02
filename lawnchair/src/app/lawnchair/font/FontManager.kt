@@ -29,11 +29,9 @@ class FontManager @Inject constructor(
 
     private val specMap = createFontMap()
 
-    private val variableFonts = mutableMapOf<String, FontCache.Font>()
-
     private fun createFontMap(): Map<Int, FontSpec> {
-        val sansSerif = Typeface.SANS_SERIF
-        val sansSerifMedium = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+        val sansSerif = Typeface.MONOSPACE
+        val sansSerifMedium = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
 
         val prefs = PreferenceManager.getInstance(context)
         return mapOf(
@@ -83,10 +81,8 @@ class FontManager @Inject constructor(
 
             val gsfAxes = GoogleSansFlexVariableFont.axesFor(fontFamily)
             if (gsfAxes != null) {
-                val font = variableFonts.getOrPut(fontFamily!!) {
-                    fontCache.googleSansFlexVariable(gsfAxes)
-                }
-                applyFont(textView, font)
+                // Google Sans Flex families map to the terminal typeface.
+                applyFont(textView, fontCache.uiText)
                 return
             }
 

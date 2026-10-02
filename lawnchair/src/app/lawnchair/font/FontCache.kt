@@ -76,49 +76,16 @@ class FontCache @Inject constructor(
                 .toList()
         }
 
-    val uiRegular = ResourceFont(
-        context,
-        R.font.googlesansflex_variable,
-        "Google Sans Flex " + context.getString(R.string.font_weight_medium),
-        mapOf(
-            FontAxes.WEIGHT to FontWeight.Normal.weight.toFloat(),
-            FontAxes.ROUNDNESS to 100f,
-            FontAxes.GRADE to 100f,
-        ),
-    )
+    // Nostromo terminal typography: IBM Plex Mono for the interface, VT323 for large readouts.
+    val uiRegular = ResourceFont(context, R.font.ibm_plex_mono_regular, "IBM Plex Mono")
 
-    val uiMedium = ResourceFont(
-        context,
-        R.font.googlesansflex_variable,
-        "Google Sans Flex " + context.getString(R.string.font_weight_medium),
-        mapOf(
-            FontAxes.WEIGHT to FontWeight.Medium.weight.toFloat(),
-            FontAxes.ROUNDNESS to 100f,
-            FontAxes.GRADE to 0f,
-        ),
-    )
+    val uiMedium = ResourceFont(context, R.font.ibm_plex_mono_medium, "IBM Plex Mono Medium")
 
-    val uiText = ResourceFont(
-        context,
-        R.font.googlesansflex_variable,
-        "Google Sans Flex " + context.getString(R.string.font_weight_medium),
-        mapOf(
-            FontAxes.WEIGHT to FontWeight.Normal.weight.toFloat(),
-            FontAxes.ROUNDNESS to 100f,
-            FontAxes.GRADE to 0f,
-        ),
-    )
+    val uiText = ResourceFont(context, R.font.ibm_plex_mono_regular, "IBM Plex Mono")
 
-    val uiTextMedium = ResourceFont(
-        context,
-        R.font.googlesansflex_variable,
-        "Google Sans Flex " + context.getString(R.string.font_weight_medium),
-        mapOf(
-            FontAxes.WEIGHT to FontWeight.Medium.weight.toFloat(),
-            FontAxes.ROUNDNESS to 100f,
-            FontAxes.GRADE to 100f,
-        ),
-    )
+    val uiTextMedium = ResourceFont(context, R.font.ibm_plex_mono_medium, "IBM Plex Mono Medium")
+
+    val uiDisplay = ResourceFont(context, R.font.vt323_regular, "VT323")
 
     /**
      * A Google Sans Flex [ResourceFont] with the given variation [axes]. Used to back the AOSP

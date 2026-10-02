@@ -108,6 +108,10 @@ public class AppsSearchContainerLayout extends ExtendedEditText
         int iconVisibleSize = Math.round(ICON_VISIBLE_AREA_FACTOR * dp.iconSizePx);
         int iconPadding = cellWidth - iconVisibleSize;
 
+        if (dp.numShownAllAppsColumns == 1) {
+            // Directory list: the filter field spans the full row.
+            iconPadding = 0;
+        }
         int myWidth = rowWidth - iconPadding + getPaddingLeft() + getPaddingRight();
         super.onMeasure(makeMeasureSpec(myWidth, EXACTLY), heightMeasureSpec);
     }

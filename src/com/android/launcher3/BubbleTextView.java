@@ -18,6 +18,7 @@
 
 package com.android.launcher3;
 
+import androidx.core.graphics.ColorUtils;
 import static android.graphics.fonts.FontStyle.FONT_WEIGHT_BOLD;
 import static android.graphics.fonts.FontStyle.FONT_WEIGHT_NORMAL;
 import static com.android.launcher3.graphics.PreloadIconDrawable.newPendingIcon;
@@ -60,6 +61,7 @@ import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.TextUtils.TruncateAt;
+import android.text.style.ForegroundColorSpan;
 import android.text.style.ImageSpan;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -193,6 +195,9 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
     private final CheckLongPressHelper mLongPressHelper;
 
     private boolean mLayoutHorizontal;
+    /** 1-based position in the app directory list, or -1 when not shown as a directory entry. */
+    private int mDirectoryIndex = -1;
+    private final Paint mChevronPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final boolean mIsRtl;
     private final int mIconSize;
 
@@ -363,6 +368,7 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
 
         mLineIndicatorColor = Color.TRANSPARENT;
         mLineIndicatorWidth = 0;
+        mDirectoryIndex = -1;
 
         setTag(null);
         if (mIconLoadRequest != null) {
@@ -924,6 +930,36 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
         super.onDraw(canvas);
         drawDotIfNecessary(canvas);
         drawRunningAppIndicatorIfNecessary(canvas);
+        drawDirectoryChevron(canvas);
+    }
+
+    /**
+     * Marks this view as an entry of the app directory: the label gets an "A-01" style code prefix
+     * and a chevron is drawn at the end of the row.
+     */
+    public void setDirectoryIndex(int index) {
+        mDirectoryIndex = index;
+        if (index >= 0 && getTag() instanceof ItemInfo info && info.title != null) {
+            String code = String.format(Locale.ROOT, "A-%02d", index);
+            SpannableString label = new SpannableString(code + "  " + info.title);
+            int dim = ColorUtils.setAlphaComponent(getCurrentTextColor(), 0x99);
+            label.setSpan(new ForegroundColorSpan(dim), 0, code.length(),
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            setText(label);
+        }
+        invalidate();
+    }
+
+    private void drawDirectoryChevron(Canvas canvas) {
+        if (mDirectoryIndex < 0) return;
+        mChevronPaint.setTypeface(getTypeface());
+        mChevronPaint.setTextSize(getTextSize());
+        mChevronPaint.setColor(ColorUtils.setAlphaComponent(getCurrentTextColor(), 0x99));
+        String chevron = "\u25B8";
+        float x = getWidth() - getPaddingRight() - mChevronPaint.measureText(chevron);
+        Paint.FontMetrics fm = mChevronPaint.getFontMetrics();
+        float y = (getHeight() - (fm.ascent + fm.descent)) / 2f;
+        canvas.drawText(chevron, x, y, mChevronPaint);
     }
 
     /**
