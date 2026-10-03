@@ -24,7 +24,6 @@ class BugReportReceiver : BroadcastReceiver() {
         val report = intent.getParcelableExtra<BugReport>("report")!!
         when (intent.action) {
             COPY_ACTION -> copyReport(context, report)
-            UPLOAD_ACTION -> startUpload(context, report)
             UPLOAD_COMPLETE_ACTION -> notify(context, report)
         }
     }
@@ -33,14 +32,6 @@ class BugReportReceiver : BroadcastReceiver() {
         val clipData = ClipData.newPlainText(context.getString(R.string.lawnchair_bug_report), report.link ?: report.contents)
         context.requireSystemService<ClipboardManager>().setPrimaryClip(clipData)
         Toast.makeText(context, R.string.copied_toast, Toast.LENGTH_LONG).show()
-    }
-
-    private fun startUpload(context: Context, report: BugReport) {
-        notify(context, report, true)
-        context.startService(
-            Intent(context, UploaderService::class.java)
-                .putExtra("report", report),
-        )
     }
 
     companion object {

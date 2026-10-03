@@ -3,7 +3,7 @@ package app.lawnchair.bugreport
 object UploaderUtils {
 
     private val katbinService = KatbinService.create()
-    const val IS_ALIVE_AVAILABLE = true
+    const val IS_ALIVE_AVAILABLE = false
 
     suspend fun upload(report: BugReport): String {
         val body = KatbinUploadBody(KatbinPaste(content = report.contents))
