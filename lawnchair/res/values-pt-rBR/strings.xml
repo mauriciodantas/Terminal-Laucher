@@ -217,7 +217,9 @@
     Notifications
 
     -->
-    <string name="set_default_launcher_tip">Para acessar atalhos e recursos adicionais, configure o Lawnchair como sua launcher padrão</string>
+    <string name="set_default_launcher_tip">Para acessar atalhos e recursos adicionais, defina o Terminal como seu launcher padrão</string>
+    <string name="set_default_launcher_title">Definir como launcher padrão</string>
+    <string name="set_default_launcher_action">Definir agora</string>
     <string name="notification_dots">Pontos de notificação</string>
     <string name="show_notification_count">Mostrar contador de notificação</string>
     <string name="notification_dots_color">Cor do ponto de notificação</string>

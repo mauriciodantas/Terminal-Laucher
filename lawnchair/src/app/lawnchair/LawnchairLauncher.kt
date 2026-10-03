@@ -50,6 +50,7 @@ import app.lawnchair.preferences2.firstCached
 import app.lawnchair.root.RootHelperManager
 import app.lawnchair.root.RootNotAvailableException
 import app.lawnchair.theme.ThemeProvider
+import app.lawnchair.ui.onboarding.OnboardingActivity
 import app.lawnchair.ui.popup.LauncherOptionsPopup
 import app.lawnchair.ui.popup.LawnchairShortcut
 import app.lawnchair.util.unsafeLazy
@@ -194,6 +195,7 @@ class LawnchairLauncher : QuickstepLauncher() {
 
         applyNostromoWallpaper()
         installCrtOverlay()
+        if (OnboardingActivity.shouldShow(this)) OnboardingActivity.start(this)
 
         prefs.launcherTheme.subscribeChanges(this, ::updateTheme)
         prefs.feedProvider.subscribeChanges(this, defaultOverlay::reconnect)

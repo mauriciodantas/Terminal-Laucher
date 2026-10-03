@@ -24,13 +24,16 @@ import android.content.pm.LauncherApps
 import android.os.Process
 import android.provider.Settings
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Refresh
-import androidx.compose.material.icons.rounded.TipsAndUpdates
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuGroup
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -51,12 +54,11 @@ import app.lawnchair.preferences.preferenceManager
 import app.lawnchair.preferences2.firstCached
 import app.lawnchair.preferences2.preferenceManager2
 import app.lawnchair.ui.OverflowMenuGrouped
+import app.lawnchair.ui.onboarding.OnboardingActivity
 import app.lawnchair.ui.preferences.components.controls.PreferenceCategory
 import app.lawnchair.ui.preferences.components.controls.WarningPreference
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
-import app.lawnchair.ui.preferences.components.layout.PreferenceTemplate
-import app.lawnchair.ui.preferences.components.layout.ProvideDescriptionTextStyle
 import app.lawnchair.ui.preferences.data.liveinfo.SyncLiveInformation
 import app.lawnchair.ui.preferences.navigation.About
 import app.lawnchair.ui.preferences.navigation.AppDrawer
@@ -195,6 +197,15 @@ fun RowScope.PreferencesOverflowMenu(
                     Text(text = stringResource(id = R.string.debug_restart_launcher))
                 },
             )
+            DropdownMenuItem(
+                onClick = {
+                    OnboardingActivity.start(context)
+                    hideMenu()
+                },
+                text = {
+                    Text(text = stringResource(id = R.string.onboarding_redo_menu))
+                },
+            )
         }
 
         Spacer(Modifier.height(MenuDefaults.GroupSpacing))
@@ -225,33 +236,39 @@ fun PreferencesSetDefaultLauncherWarning(
     Surface(
         modifier = modifier.padding(horizontal = 16.dp),
         shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceVariant,
+        color = MaterialTheme.colorScheme.errorContainer,
     ) {
-        PreferenceTemplate(
-            modifier = Modifier,
-            onClick = {
-                mMSDLPlayerWrapper.playToken(MSDLToken.TAP_MEDIUM_EMPHASIS)
-                Intent(Settings.ACTION_HOME_SETTINGS)
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    .let { context.startActivity(it) }
-                (context as? Activity)?.finish()
-            },
-            title = {
-                ProvideDescriptionTextStyle {
-                    Text(
-                        text = stringResource(id = R.string.set_default_launcher_tip),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            },
-            startWidget = {
-                Icon(
-                    imageVector = Icons.Rounded.TipsAndUpdates,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    contentDescription = null,
-                )
-            },
-        )
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = stringResource(id = R.string.set_default_launcher_title),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onErrorContainer,
+            )
+            Text(
+                text = stringResource(id = R.string.set_default_launcher_tip),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onErrorContainer,
+            )
+            Button(
+                onClick = {
+                    mMSDLPlayerWrapper.playToken(MSDLToken.TAP_MEDIUM_EMPHASIS)
+                    Intent(Settings.ACTION_HOME_SETTINGS)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        .let { context.startActivity(it) }
+                    (context as? Activity)?.finish()
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError,
+                ),
+            ) {
+                Text(text = stringResource(id = R.string.set_default_launcher_action))
+            }
+        }
     }
 }
 

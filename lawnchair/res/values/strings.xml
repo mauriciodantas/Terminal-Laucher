@@ -285,6 +285,8 @@
     -->
 
     <string name="set_default_launcher_tip">To access shortcuts and additional features, set Terminal as your default launcher</string>
+    <string name="set_default_launcher_title">Set as default launcher</string>
+    <string name="set_default_launcher_action">Set now</string>
 
     <string name="notification_dots">Notification dots</string>
     <string name="show_notification_count">Show notification counter</string>
@@ -1091,6 +1093,52 @@
     <string name="smartspace_widget_summary" translatable="false">Relógio e painel da tela inicial</string>
     <string name="smartspace_widget_terminal_description" translatable="false">Mostra o relógio, a data e o rastreador de movimento no topo da tela inicial.</string>
     <string name="about_fork_heading" translatable="false">Sobre este projeto</string>
+    <!-- Onboarding (primeira execução) -->
+    <string name="onboarding_header_left" translatable="false">MU/TH/UR 6000</string>
+    <string name="onboarding_header_right" translatable="false">TERMINAL 03</string>
+    <string name="onboarding_boot_title" translatable="false">&gt; INICIALIZAÇÃO</string>
+    <string name="onboarding_boot_subtitle" translatable="false">TERMINAL · FORK DO LAWNCHAIR</string>
+    <string name="onboarding_wordmark" translatable="false">TERMINAL</string>
+    <string name="onboarding_boot_memory" translatable="false">VERIFICANDO MEMÓRIA</string>
+    <string name="onboarding_boot_icons" translatable="false">CARREGANDO TEMA DE ÍCONES</string>
+    <string name="onboarding_boot_apps" translatable="false">INDEXANDO PROGRAMAS</string>
+    <string name="onboarding_boot_default" translatable="false">LAUNCHER PADRÃO</string>
+    <string name="onboarding_boot_notifications" translatable="false">ACESSO A NOTIFICAÇÕES</string>
+    <string name="onboarding_status_ok" translatable="false">OK</string>
+    <string name="onboarding_status_undefined" translatable="false">[NÃO DEFINIDO]</string>
+    <string name="onboarding_status_pending" translatable="false">[PENDENTE]</string>
+    <string name="onboarding_status_skipped" translatable="false">[PULADO]</string>
+    <string name="onboarding_pending_actions" translatable="false">AÇÕES PENDENTES: %1$d</string>
+    <string name="onboarding_all_done" translatable="false">TODAS AS AÇÕES CONCLUÍDAS.</string>
+    <string name="onboarding_start" translatable="false">INICIAR CONFIGURAÇÃO</string>
+    <string name="onboarding_continue" translatable="false">CONTINUAR</string>
+    <string name="onboarding_skip" translatable="false">PULAR POR ENQUANTO</string>
+    <string name="onboarding_step_of" translatable="false">PASSO %1$d/3</string>
+    <string name="onboarding_default_heading" translatable="false">&gt; LAUNCHER PADRÃO</string>
+    <string name="onboarding_default_title" translatable="false">DEFINA O TERMINAL COMO LAUNCHER PADRÃO</string>
+    <string name="onboarding_default_unlocks" translatable="false">O QUE ISSO LIBERA</string>
+    <string name="onboarding_default_benefit_home" translatable="false">[+] BOTÃO INÍCIO ABRE O TERMINAL</string>
+    <string name="onboarding_default_benefit_shortcuts" translatable="false">[+] ATALHOS DE APPS E RECURSOS EXTRAS</string>
+    <string name="onboarding_default_active" translatable="false">LAUNCHER PADRÃO ATIVO</string>
+    <string name="onboarding_default_active_desc" translatable="false">O TERMINAL É O LAUNCHER PADRÃO DESTE APARELHO.</string>
+    <string name="onboarding_color_heading" translatable="false">&gt; COR DO FÓSFORO</string>
+    <string name="onboarding_color_title" translatable="false">ESCOLHA A COR DO FÓSFORO</string>
+    <string name="onboarding_color_hint" translatable="false">VOCÊ PODE MUDAR DEPOIS EM CONFIGURAÇÕES › GERAL › COR DO FÓSFORO.</string>
+    <string name="onboarding_notifications_heading" translatable="false">&gt; PONTOS DE NOTIFICAÇÃO</string>
+    <string name="onboarding_notifications_title" translatable="false">MOSTRE AVISOS NOS ÍCONES</string>
+    <string name="onboarding_notifications_desc" translatable="false">O Terminal precisa de acesso às notificações para marcar com um ponto os apps que têm avisos.</string>
+    <string name="onboarding_notifications_grant" translatable="false">CONCEDER ACESSO</string>
+    <string name="onboarding_notifications_granted" translatable="false">ACESSO CONCEDIDO</string>
+    <string name="onboarding_ready_heading" translatable="false">&gt; SISTEMA PRONTO</string>
+    <string name="onboarding_ready_title" translatable="false">PRONTO.</string>
+    <string name="onboarding_ready_skipped" translatable="false">ITENS PULADOS PODEM SER ATIVADOS DEPOIS EM CONFIGURAÇÕES.</string>
+    <string name="onboarding_ready_hint_swipe" translatable="false">▲ DESLIZE PARA O DIRETÓRIO DE PROGRAMAS</string>
+    <string name="onboarding_ready_hint_command" translatable="false">&gt; DIGITE UM COMANDO PARA BUSCAR APPS</string>
+    <string name="onboarding_ready_color" translatable="false">COR DO FÓSFORO</string>
+    <string name="onboarding_enter" translatable="false">ENTRAR NO TERMINAL</string>
+    <string name="onboarding_skip_all" translatable="false">PULAR CONFIGURAÇÃO</string>
+    <string name="onboarding_redo_menu" translatable="false">Rever configuração inicial</string>
+
     <string name="about_fork_intro" translatable="false">Terminal é um fork do Lawnchair, o launcher de código aberto baseado no Launcher3 do Android Open Source Project (AOSP). Este fork é mantido de forma independente e não tem afiliação, patrocínio nem aval da equipe do Lawnchair ou do Google.</string>
     <string name="about_fork_no_claim" translatable="false">O mantenedor deste fork não reivindica direitos sobre nenhuma propriedade intelectual do projeto original nem do AOSP: o código, o nome, a marca e os logotipos do Lawnchair e do Android pertencem aos seus respectivos titulares. As alterações deste fork são distribuídas sob a mesma Licença Apache 2.0 do projeto original.</string>
     <string name="about_fork_app_label" translatable="false">Aplicativo</string>

@@ -39,7 +39,7 @@ import app.lawnchair.ui.preferences.components.notificationDotsEnabled
 import app.lawnchair.ui.preferences.components.notificationServiceEnabled
 import com.android.launcher3.R
 
-private val phosphorEntries = listOf(
+internal val phosphorEntries = listOf(
     ListPreferenceEntry<ColorOption>(ColorOption.CustomColor(0xFF7DFFB2)) { "Verde" },
     ListPreferenceEntry<ColorOption>(ColorOption.CustomColor(0xFFFFA63D)) { "Âmbar" },
     ListPreferenceEntry<ColorOption>(ColorOption.CustomColor(0xFF6FD8FF)) { "Ciano" },
