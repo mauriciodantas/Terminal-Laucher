@@ -118,8 +118,12 @@ public class PreviewItemManager {
 
     public void recomputePreviewDrawingParams() {
         if (mReferenceDrawable != null) {
-            computePreviewDrawingParams(mReferenceDrawable.getIntrinsicWidth(),
-                    mIcon.getMeasuredWidth());
+            // A large folder spans several cells, but the open and close animations still start
+            // from a one-cell preview, so size the preview from a single cell.
+            int totalWidth = mIcon.isLargeMode()
+                    ? mIcon.mActivity.getDeviceProfile().cellWidthPx
+                    : mIcon.getMeasuredWidth();
+            computePreviewDrawingParams(mReferenceDrawable.getIntrinsicWidth(), totalWidth);
         }
     }
 

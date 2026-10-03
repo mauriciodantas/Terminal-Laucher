@@ -298,6 +298,12 @@ android {
     }
 
     sourceSets {
+        // Pure JVM unit tests for launcher rules that do not need a device.
+        test {
+            java.srcDirs = ['tests/unit/src']
+            kotlin.directories.addAll('tests/unit/src')
+        }
+
         main {
             res.srcDirs = ['res']
 
@@ -388,6 +394,8 @@ composeCompiler {
 addFrameworkJar('framework-16.jar')
 
 dependencies {
+    testImplementation libs.junit
+
     implementation projects.iconloaderlib
     implementation projects.searchuilib
     implementation projects.animationlib

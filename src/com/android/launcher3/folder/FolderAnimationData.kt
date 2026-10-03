@@ -76,7 +76,12 @@ data class FolderAnimationData(
             val scaledFolderRadius: Int = previewBackground.scaledRadius
             val baseIconSize: Float = getBubbleTextView(itemsInPreview[0]).iconSize.toFloat()
             val initialFolderSize = (scaledFolderRadius * 2) * scaleRelativeToDragLayer
-            val initialFolderScale = previewSize / baseIconSize * scaleRelativeToDragLayer
+            val initialFolderScale =
+                (previewSize / baseIconSize * scaleRelativeToDragLayer).let {
+                    // A preview that was never measured would give 0 or NaN and crash the
+                    // animation, so fall back to no scaling.
+                    if (it.isFinite() && it > 0f) it else scaleRelativeToDragLayer
+                }
 
             // Get offsets for Previews and Content
             val initialPreviewItemOffsetX =

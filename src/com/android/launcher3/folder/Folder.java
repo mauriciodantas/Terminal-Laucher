@@ -70,7 +70,9 @@ import android.view.WindowInsets;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.EditorInfo;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 import android.widget.TextView;
 
 import androidx.annotation.IntDef;
@@ -90,6 +92,7 @@ import com.android.launcher3.DropTarget;
 import com.android.launcher3.ExtendedEditText;
 import com.android.launcher3.Flags;
 import com.android.launcher3.Launcher;
+import com.android.launcher3.LauncherSettings;
 import com.android.launcher3.OnAlarmListener;
 import com.android.launcher3.R;
 import com.android.launcher3.ShortcutAndWidgetContainer;
@@ -228,6 +231,7 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
 
     @Thunk
     FolderIcon mFolderIcon;
+    private ImageButton mResizeButton;
 
     @Thunk
     FolderPagedView mContent;
@@ -348,6 +352,8 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
 
         mPageIndicator = findViewById(R.id.folder_page_indicator);
         mFooter = findViewById(R.id.folder_footer);
+        mResizeButton = findViewById(R.id.folder_resize);
+        mResizeButton.setOnClickListener(v -> cycleFolderSize());
         mFooterHeight = dp.folderFooterHeightPx;
         mFolderName = findViewById(R.id.folder_name);
         if (Flags.enableLauncherVisualRefresh()) {
@@ -679,8 +685,28 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
         return mInfo;
     }
 
+    /** Steps the folder through its sizes on the workspace: small, large 2x2, large 4x2. */
+    private void cycleFolderSize() {
+        LargeFolderMath.Size next = LargeFolderMath.nextSize(mInfo.spanX, mInfo.spanY);
+        int nextX = next.getSpanX();
+        int nextY = next.getSpanY();
+        if (mFolderIcon != null && mFolderIcon.resizeTo(nextX, nextY)) {
+            close(true);
+        } else {
+            Toast.makeText(getContext(), R.string.folder_resize_no_room, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /** The size button only makes sense for folders placed on the workspace. */
+    private void updateResizeButton() {
+        boolean onWorkspace = mInfo != null
+                && mInfo.container == LauncherSettings.Favorites.CONTAINER_DESKTOP;
+        mResizeButton.setVisibility(onWorkspace ? VISIBLE : GONE);
+    }
+
     void bind(FolderInfo info) {
         mInfo = info;
+        updateResizeButton();
         mFromTitle = info.title;
         mFromLabelState = info.getFromLabelState();
         updateItemLocationsInDatabaseBatch(true);

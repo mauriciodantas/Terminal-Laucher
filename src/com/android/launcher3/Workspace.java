@@ -2093,6 +2093,15 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
         return true;
     }
 
+    /**
+     * A large folder covers several cells, so a drop anywhere over it counts: the usual rule that
+     * the drag must be close to the center of one cell would make most of the folder unreachable.
+     */
+    private boolean isLargeFolderAt(CellLayout target, int[] targetCell) {
+        return target.getChildAt(targetCell[0], targetCell[1]) instanceof FolderIcon fi
+                && fi.isLargeMode();
+    }
+
     boolean willCreateUserFolder(ItemInfo info, CellLayout target, int[] targetCell,
                                  float distance, boolean considerTimeout) {
         if (distance > target.getFolderCreationRadius(targetCell)) return false;
@@ -2127,7 +2136,10 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
 
     boolean willAddToExistingUserFolder(ItemInfo dragInfo, CellLayout target, int[] targetCell,
                                         float distance) {
-        if (distance > target.getFolderCreationRadius(targetCell)) return false;
+        if (distance > target.getFolderCreationRadius(targetCell)
+                && !isLargeFolderAt(target, targetCell)) {
+            return false;
+        }
         View dropOverView = target.getChildAt(targetCell[0], targetCell[1]);
         return willAddToExistingUserFolder(dragInfo, dropOverView);
 
@@ -2210,7 +2222,10 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
 
     boolean addToExistingFolderIfNecessary(View newView, CellLayout target, int[] targetCell,
             float distance, DragObject d, boolean external) {
-        if (distance > target.getFolderCreationRadius(targetCell)) return false;
+        if (distance > target.getFolderCreationRadius(targetCell)
+                && !isLargeFolderAt(target, targetCell)) {
+            return false;
+        }
 
         View dropOverView = target.getChildAt(targetCell[0], targetCell[1]);
         if (!mAddToExistingFolderOnDrop) return false;
@@ -2931,7 +2946,8 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
     }
 
     private void manageFolderFeedback(float distance, DragObject dragObject) {
-        if (distance > mDragTargetLayout.getFolderCreationRadius(mTargetCell)) {
+        if (distance > mDragTargetLayout.getFolderCreationRadius(mTargetCell)
+                && !isLargeFolderAt(mDragTargetLayout, mTargetCell)) {
             if ((mDragMode == DRAG_MODE_ADD_TO_FOLDER
                     || mDragMode == DRAG_MODE_CREATE_FOLDER)) {
                 setDragMode(DRAG_MODE_NONE);

@@ -34,6 +34,7 @@ import com.android.launcher3.LauncherSettings.Favorites
 import com.android.launcher3.backuprestore.LauncherRestoreEventLogger.RestoreError
 import com.android.launcher3.folder.Folder
 import com.android.launcher3.folder.FolderGridOrganizer.createFolderGridOrganizer
+import com.android.launcher3.folder.LargeFolderMath
 import com.android.launcher3.Utilities
 import com.android.launcher3.icons.CacheableShortcutInfo
 import com.android.launcher3.icons.IconCache
@@ -518,8 +519,14 @@ class WorkspaceItemProcessor(
         c.applyCommonProperties(collection)
         // Do not trim the folder label, as is was set by the user.
         collection.title = c.getString(c.mTitleIndex)
-        collection.spanX = 1
-        collection.spanY = 1
+        if (collection is FolderInfo && c.container == Favorites.CONTAINER_DESKTOP) {
+            // Large folders keep their size in the same span columns used by widgets.
+            collection.spanX = LargeFolderMath.clampSpan(c.spanX)
+            collection.spanY = LargeFolderMath.clampSpan(c.spanY)
+        } else {
+            collection.spanX = 1
+            collection.spanY = 1
+        }
         if (collection is FolderInfo) {
             collection.options = c.options
         } else {

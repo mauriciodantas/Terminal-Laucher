@@ -83,6 +83,17 @@
             android:foregroundGravity="center"
             android:visibility="gone"
             android:elevation="1dp"/>
+
+        <ImageButton
+            android:id="@+id/folder_resize"
+            android:layout_width="@dimen/folder_arrow_touchbox_length"
+            android:layout_height="@dimen/folder_arrow_touchbox_length"
+            android:layout_gravity="center_vertical"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/folder_resize_label"
+            android:src="@drawable/ic_folder_resize"
+            android:scaleType="center"
+            android:visibility="gone"/>
     </LinearLayout>
 
 </com.android.launcher3.folder.Folder>

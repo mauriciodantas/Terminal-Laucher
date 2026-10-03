@@ -313,6 +313,8 @@
     <!-- Folder name format when folder has 4 or more items shown in preview-->
     <string name="folder_name_format_overflow">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> or more items</string>
     <!-- Accessibility announement for unnamed folders -->
+    <string name="folder_resize_label" translatable="false">Tamanho da pasta</string>
+    <string name="folder_resize_no_room" translatable="false">Sem espaço livre para esta pasta</string>
     <string name="unnamed_folder">Unnamed folder</string>
 
     <!-- App pair accessibility -->

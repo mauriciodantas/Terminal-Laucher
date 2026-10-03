@@ -59,6 +59,7 @@ import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.DropTarget.DragObject;
 import com.android.launcher3.Launcher;
 import com.android.launcher3.LauncherSettings;
+import com.android.launcher3.ShortcutAndWidgetContainer;
 import com.android.launcher3.OnAlarmListener;
 import com.android.launcher3.R;
 import com.android.launcher3.Reorderable;
@@ -138,6 +139,10 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
     private Animator mDotScaleAnim;
 
     private Rect mTouchArea = new Rect();
+
+    /** Content of a large folder (spans more than one cell); null for a regular folder icon. */
+    @Nullable private LargeFolderView mLargeView;
+    private boolean mLargeMode = false;
 
     private float mScaleForReorderBounce = 1f;
 
@@ -231,6 +236,7 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         icon.mPreviewVerifier = createFolderGridOrganizer(activity.getDeviceProfile());
         icon.mPreviewVerifier.setFolderInfo(folderInfo);
         icon.updatePreviewItems(false);
+        icon.refreshLargeMode();
 
         return icon;
     }
@@ -245,6 +251,10 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
     }
 
     public void getPreviewBounds(Rect outBounds) {
+        if (mLargeMode) {
+            outBounds.set(0, 0, getWidth(), getHeight());
+            return;
+        }
         mPreviewItemManager.recomputePreviewDrawingParams();
         mBackground.getBounds(outBounds);
         // The preview items go outside of the bounds of the background.
@@ -596,7 +606,7 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
     protected void dispatchDraw(Canvas canvas) {
         super.dispatchDraw(canvas);
 
-        if (!mBackgroundIsVisible) return;
+        if (mLargeMode || !mBackgroundIsVisible) return;
 
         mPreviewItemManager.recomputePreviewDrawingParams();
 
@@ -613,6 +623,82 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         }
 
         drawDot(canvas);
+    }
+
+    /** Whether this folder spans several workspace cells and shows its apps in place. */
+    public boolean isLargeMode() {
+        return mLargeMode;
+    }
+
+    /**
+     * Switches between the regular folder icon and the large folder, based on the item's span, and
+     * rebuilds the large content from the current folder contents.
+     */
+    public void refreshLargeMode() {
+        boolean large = mInfo != null
+                && mInfo.container == LauncherSettings.Favorites.CONTAINER_DESKTOP
+                && LargeFolderMath.isLarge(mInfo.spanX, mInfo.spanY);
+        if (large) {
+            if (mLargeView == null) {
+                mLargeView = new LargeFolderView(getContext(), this, mActivity);
+                addView(mLargeView, new FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            }
+            mLargeView.refreshColors();
+            mLargeView.bind(mInfo);
+            setPadding(0, 0, 0, 0);
+            mFolderName.setVisibility(GONE);
+        } else if (mLargeView != null) {
+            removeView(mLargeView);
+            mLargeView = null;
+            mFolderName.setVisibility(VISIBLE);
+        }
+        mLargeMode = large;
+        if (large) {
+            // dispatchDraw skips the preview in large mode, but the folder animations read these
+            // values, so compute them here.
+            mPreviewItemManager.recomputePreviewDrawingParams();
+        }
+        invalidate();
+        requestLayout();
+    }
+
+    /**
+     * Resizes this folder on the workspace, keeping it as close to its current cell as possible.
+     *
+     * @return false when the grid has no free room for the new size
+     */
+    public boolean resizeTo(int spanX, int spanY) {
+        if (mInfo.container != LauncherSettings.Favorites.CONTAINER_DESKTOP
+                || !(getParent() instanceof ShortcutAndWidgetContainer)
+                || !(getParent().getParent() instanceof CellLayout)
+                || !(getLayoutParams() instanceof CellLayoutLayoutParams)) {
+            return false;
+        }
+        CellLayout cl = (CellLayout) getParent().getParent();
+        CellLayoutLayoutParams lp = (CellLayoutLayoutParams) getLayoutParams();
+        LargeFolderMath.Origin origin = LargeFolderMath.resolveOrigin(
+                lp.getCellX(), lp.getCellY(), spanX, spanY, cl.getCountX(), cl.getCountY());
+        if (origin == null) return false;
+        int x = origin.getX();
+        int y = origin.getY();
+
+        cl.markCellsAsUnoccupiedForView(this);
+        if (!cl.isRegionVacant(x, y, spanX, spanY)) {
+            cl.markCellsAsOccupiedForView(this);
+            return false;
+        }
+        int modelX = mInfo.cellX + (x - lp.getCellX());
+        int modelY = mInfo.cellY + (y - lp.getCellY());
+        lp.setCellX(x);
+        lp.setCellY(y);
+        lp.cellHSpan = spanX;
+        lp.cellVSpan = spanY;
+        cl.markCellsAsOccupiedForView(this);
+        mActivity.getModelWriter().modifyItemInDatabase(
+                mInfo, mInfo.container, mInfo.screenId, modelX, modelY, spanX, spanY);
+        refreshLargeMode();
+        return true;
     }
 
     public void drawDot(Canvas canvas) {
@@ -637,7 +723,7 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        boolean shouldCenterIcon = mActivity.getDeviceProfile().iconCenterVertically;
+        boolean shouldCenterIcon = !mLargeMode && mActivity.getDeviceProfile().iconCenterVertically;
         if (shouldCenterIcon) {
             int iconSize = mActivity.getDeviceProfile().iconSizePx;
             Paint.FontMetrics fm = mFolderName.getPaint().getFontMetrics();
@@ -651,6 +737,7 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
 
     /** Sets the visibility of the icon's title text */
     public void setTextVisible(boolean visible) {
+        if (mLargeMode) return;
         if (visible) {
             mFolderName.setVisibility(VISIBLE);
         } else {
@@ -688,6 +775,7 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
     }
 
     public void onItemsChanged(boolean animate) {
+        if (mLargeMode) refreshLargeMode();
         updatePreviewItems(false);
         updateDotInfo();
         setContentDescription(getAccessiblityTitle(mInfo.title));
