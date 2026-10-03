@@ -313,4 +313,50 @@ class GlanceEngineTest {
         val second = GlanceEngine.build(input.reversed(), GlanceSettings(), now)
         assertEquals(first.tabs.map { it.id }, second.tabs.map { it.id })
     }
+
+    // ---- the big value on the left ----
+
+    @Test
+    fun lead_weatherTakesTheTemperature() {
+        val lead = GlanceEngine.lead(target("w", GlanceKind.CLIMA, title = "", subtitle = "18°C"))
+        assertEquals("18°", lead.value)
+        assertEquals("", lead.text)
+    }
+
+    @Test
+    fun lead_weatherKeepsTheRestOfTheText() {
+        val lead = GlanceEngine.lead(target("w", GlanceKind.CLIMA, title = "Nublado", subtitle = "22° · chuva 20%"))
+        assertEquals("22°", lead.value)
+        assertEquals("Nublado · chuva 20%", lead.text)
+    }
+
+    @Test
+    fun lead_weatherHandlesNegativeTemperatures() {
+        assertEquals("-3°", GlanceEngine.lead(target("w", GlanceKind.CLIMA, title = "", subtitle = "-3 °C")).value)
+    }
+
+    @Test
+    fun lead_agendaTakesTheTime() {
+        val lead = GlanceEngine.lead(target("e", GlanceKind.AGENDA, title = "Reunião", subtitle = "14:30 · Sala 4"))
+        assertEquals("14:30", lead.value)
+        assertEquals("Reunião · Sala 4", lead.text)
+    }
+
+    @Test
+    fun lead_acceptsTheHourFormatsWithAnH() {
+        assertEquals("09:05", GlanceEngine.lead(target("a", GlanceKind.ALARME, title = "Alarme 9h05", subtitle = "")).value)
+    }
+
+    @Test
+    fun lead_isNullWhenThereIsNothingToEnlarge() {
+        val lead = GlanceEngine.lead(target("m", GlanceKind.MIDIA, title = "Faixa 1", subtitle = "Artista"))
+        assertNull(lead.value)
+        assertEquals("Faixa 1 · Artista", lead.text)
+        assertNull(GlanceEngine.lead(target("e", GlanceKind.AGENDA, title = "Sem hora", subtitle = "")).value)
+    }
+
+    @Test
+    fun lead_aTimeInAMediaTitleIsNotEnlarged() {
+        assertNull(GlanceEngine.lead(target("m", GlanceKind.MIDIA, title = "Hits 12:30", subtitle = "")).value)
+    }
 }
