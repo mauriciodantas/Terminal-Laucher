@@ -113,14 +113,24 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
-            android:minHeight="56dp"
+            android:minHeight="62dp"
             android:orientation="horizontal"
             android:padding="4dp">
 
-            <app.lawnchair.smartspace.RadarView
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:importantForAccessibility="no" />
+            <TextView
+                android:id="@+id/nostromo_target_lead"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/vt323_regular"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:shadowColor="#667DFFB2"
+                android:shadowDx="0"
+                android:shadowDy="0"
+                android:shadowRadius="8"
+                android:textColor="#FF7DFFB2"
+                android:textSize="40sp"
+                android:visibility="gone" />
 
             <LinearLayout
                 android:id="@+id/nostromo_target_content"

@@ -153,13 +153,26 @@ class GlancePanelController(
         }
         bar?.setBackgroundColor(if (urgent) urgentColor else phosphor)
 
-        // Weather has no title, only a subtitle: show whichever text exists.
-        val main = selected.title.ifBlank { selected.subtitle }
-        val rest = if (selected.title.isBlank()) "" else selected.subtitle
-        primary?.text = main
+        // The time or temperature goes big on the left, like the prototype; the rest is the text.
+        val leadView = root.findViewById<TextView>(R.id.nostromo_target_lead)
+        val lead = GlanceEngine.lead(selected)
+        leadView?.visibility = if (lead.value == null) View.GONE else View.VISIBLE
+        leadView?.text = lead.value
+        leadView?.setTextColor(if (urgent) urgentColor else phosphor)
+        leadView?.setShadowLayer(8f, 0f, 0f, (if (urgent) urgentColor else phosphor) and 0x00FFFFFF or 0x66000000)
+
         val countdown = GlanceEngine.minutesUntil(selected.startsAtMillis, clock())
             ?.let { GlanceEngine.countdownLabel(it) }
-        secondary?.text = listOf(rest, countdown).filter { !it.isNullOrBlank() }.joinToString(" · ")
+        val parts = lead.text.split(" · ").filter { it.isNotBlank() }
+        // The title bar already says the kind, so a bare value gets a short unit label instead.
+        val main = parts.firstOrNull() ?: when (selected.kind) {
+            GlanceKind.CLIMA -> "TEMPERATURA"
+            GlanceKind.AGENDA -> "EVENTO"
+            GlanceKind.ALARME -> "ALARME"
+            else -> selected.kind.label
+        }
+        primary?.text = main
+        secondary?.text = (parts.drop(1) + listOfNotNull(countdown)).joinToString(" · ")
         secondary?.setTextColor(if (urgent) urgentColor else dim)
 
         val action = actions[selected.id]
@@ -189,7 +202,7 @@ class GlancePanelController(
             setTextColor(if (selected) color else dim)
             setBackgroundColor(if (selected) (color and 0x00FFFFFF) or 0x29000000 else Color.TRANSPARENT)
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-            minHeight = (40 * density).toInt()
+            minHeight = (36 * density).toInt()
             contentDescription = target.kind.label
             setOnClickListener {
                 userPicked = true

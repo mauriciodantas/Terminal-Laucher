@@ -140,4 +140,29 @@ object GlanceEngine {
         val limit = settings.maxTargets.coerceAtLeast(1)
         return GlancePanel(tabs = ordered.take(limit), urgentId = urgent?.id)
     }
+
+    private val timeRegex = Regex("""\b([01]?\d|2[0-3])[:h]([0-5]\d)\b""")
+    private val temperatureRegex = Regex("""(-?\d{1,2})\s?°\s?[CcFf]?""")
+
+    /**
+     * The big pixel-font value on the left of the panel (a time or a temperature), pulled out of the
+     * target text, and what is left of the text once it is removed. The value is null when the text
+     * has nothing worth enlarging.
+     */
+    data class Lead(val value: String?, val text: String)
+
+    fun lead(target: GlanceTarget): Lead {
+        val full = listOf(target.title, target.subtitle).filter { it.isNotBlank() }.joinToString(" · ")
+        val match = when (target.kind) {
+            GlanceKind.CLIMA -> temperatureRegex.find(full)?.let { it to (it.groupValues[1] + "°") }
+            GlanceKind.AGENDA, GlanceKind.ALARME ->
+                timeRegex.find(full)?.let { it to (it.groupValues[1].padStart(2, '0') + ":" + it.groupValues[2]) }
+            else -> null
+        } ?: return Lead(null, full)
+        val (found, value) = match
+        val rest = full.removeRange(found.range)
+            .replace(Regex("""\s*·\s*·\s*"""), " · ")
+            .trim(' ', '·', '-', ',')
+        return Lead(value, rest)
+    }
 }
