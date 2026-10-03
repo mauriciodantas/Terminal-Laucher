@@ -20,6 +20,7 @@ import android.app.Activity
 import android.view.ContextThemeWrapper
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -130,9 +131,7 @@ fun SmartspacePreview(
                 AndroidView(
                     factory = {
                         val view = SmartspaceViewContainer(it, previewMode = true)
-                        val height = it.resources
-                            .getDimensionPixelSize(R.dimen.enhanced_smartspace_height)
-                        view.layoutParams = ViewGroup.LayoutParams(MATCH_PARENT, height)
+                        view.layoutParams = ViewGroup.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
                         view
                     },
                     modifier = Modifier.padding(
