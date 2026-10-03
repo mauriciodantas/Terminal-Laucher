@@ -114,7 +114,11 @@ class OnboardingActivity : ComponentActivity() {
         }
 
         fun start(context: Context) {
-            context.startActivity(Intent(context, OnboardingActivity::class.java))
+            // Its own task: opened on top of the launcher's task, it kept a second launcher
+            // instance alive underneath when the user came back from the system home settings.
+            context.startActivity(
+                Intent(context, OnboardingActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
         }
     }
 }

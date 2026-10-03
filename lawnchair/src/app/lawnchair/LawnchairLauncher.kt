@@ -195,7 +195,8 @@ class LawnchairLauncher : QuickstepLauncher() {
 
         applyNostromoWallpaper()
         installCrtOverlay()
-        if (OnboardingActivity.shouldShow(this)) OnboardingActivity.start(this)
+        // Only on a real start: a recreation (rotation, theme change) must not open it again.
+        if (savedInstanceState == null && OnboardingActivity.shouldShow(this)) OnboardingActivity.start(this)
 
         prefs.launcherTheme.subscribeChanges(this, ::updateTheme)
         prefs.feedProvider.subscribeChanges(this, defaultOverlay::reconnect)

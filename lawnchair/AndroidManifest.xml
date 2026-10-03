@@ -119,6 +119,9 @@
         <activity
             android:name="app.lawnchair.ui.onboarding.OnboardingActivity"
             android:exported="false"
+            android:launchMode="singleTask"
+            android:taskAffinity="${applicationId}.onboarding"
+            android:excludeFromRecents="true"
             android:theme="@style/Theme.Lawnchair" />
 
         <activity
