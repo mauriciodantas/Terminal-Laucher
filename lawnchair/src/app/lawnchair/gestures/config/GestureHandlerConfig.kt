@@ -17,7 +17,6 @@ import app.lawnchair.gestures.handlers.OpenAssistantHandler
 import app.lawnchair.gestures.handlers.OpenNotificationsHandler
 import app.lawnchair.gestures.handlers.OpenQuickSettingsHandler
 import app.lawnchair.gestures.handlers.OpenSearchGestureHandler
-import app.lawnchair.gestures.handlers.RecentsGestureHandler
 import app.lawnchair.gestures.handlers.SleepGestureHandler
 import app.lawnchair.theme.color.tokens.ColorTokens
 import app.lawnchair.util.kotlinxJson
@@ -76,12 +75,6 @@ sealed class GestureHandlerConfig {
     @Serializable
     @SerialName("sleep")
     data object Sleep : Simple(R.string.gesture_handler_sleep, ::SleepGestureHandler)
-
-    @Serializable
-    @SerialName("recents")
-    data object Recents : Simple(R.string.gesture_handler_recents, ::RecentsGestureHandler) {
-        override val iconRes = R.drawable.ic_quickstep
-    }
 
     @Serializable
     @SerialName("openNotificationdata")

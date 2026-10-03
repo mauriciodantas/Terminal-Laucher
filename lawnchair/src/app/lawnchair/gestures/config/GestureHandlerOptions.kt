@@ -6,7 +6,6 @@ import android.content.Context
 val gestureHandlerOptions = listOf(
     GestureHandlerOption.NoOp,
     GestureHandlerOption.Sleep,
-    GestureHandlerOption.Recents,
     GestureHandlerOption.OpenNotifications,
     GestureHandlerOption.OpenQuickSettings,
     GestureHandlerOption.OpenAppDrawer,

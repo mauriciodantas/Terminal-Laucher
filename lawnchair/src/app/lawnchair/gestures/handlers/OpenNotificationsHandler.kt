@@ -1,6 +1,5 @@
 package app.lawnchair.gestures.handlers
 
-import android.accessibilityservice.AccessibilityService
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
@@ -19,13 +18,6 @@ class OpenNotificationsHandler(context: Context) : GestureHandler(context) {
                 .invoke(context.getSystemService("statusbar"))
         } catch (e: Exception) {
             e.printStackTrace()
-
-            // Fallback to a11y service
-            GestureWithAccessibilityHandler.onTrigger(
-                launcher,
-                R.string.notifications_fallback_a11y_hint,
-                AccessibilityService.GLOBAL_ACTION_NOTIFICATIONS,
-            )
         }
     }
 }

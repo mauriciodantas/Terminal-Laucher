@@ -22,26 +22,6 @@ import app.lawnchair.ui.ModalBottomSheetContent
 import app.lawnchair.views.ComposeBottomSheet
 import com.android.launcher3.R
 
-object GestureWithAccessibilityHandler {
-
-    fun onTrigger(launcher: LawnchairLauncher, stringAction: Int, action: Int) {
-        val app = launcher.lawnchairApp
-        if (!app.isAccessibilityServiceBound()) {
-            val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            ComposeBottomSheet.show(launcher) {
-                ServiceWarningDialog(
-                    title = R.string.d2ts_recents_a11y_hint_title,
-                    action = stringAction,
-                    settingsIntent = intent,
-                ) { close(true) }
-            }
-            return
-        }
-        app.performGlobalAction(action)
-    }
-}
-
 @Composable
 fun ServiceWarningDialog(
     title: Int,

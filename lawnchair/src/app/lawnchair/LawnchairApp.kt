@@ -61,7 +61,6 @@ class LawnchairApp : LauncherApplication() {
     private val isRecentsComponent: Boolean by unsafeLazy { checkRecentsComponent() }
     private val recentsEnabled: Boolean get() = compatible && isRecentsComponent
     private val isAtleastT = Utilities.ATLEAST_T
-    internal var accessibilityService: LawnchairAccessibilityService? = null
     val isVibrateOnIconAnimation: Boolean by unsafeLazy { getSystemUiBoolean("config_vibrateOnIconAnimation", false) }
 
     override fun onCreate() {
@@ -213,16 +212,6 @@ class LawnchairApp : LauncherApplication() {
         return true
     }
 
-    fun isAccessibilityServiceBound(): Boolean = accessibilityService != null
-
-    fun performGlobalAction(action: Int): Boolean {
-        return accessibilityService?.performGlobalAction(action) ?: run {
-            Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                .let(::startActivity)
-            false
-        }
-    }
 
     companion object {
         private const val TAG = "LawnchairApp"
