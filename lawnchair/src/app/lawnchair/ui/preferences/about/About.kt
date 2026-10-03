@@ -18,7 +18,8 @@ package app.lawnchair.ui.preferences.about
 
 import android.content.Intent
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -111,13 +112,22 @@ fun About(
                     .fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_launcher_home_comp),
-                    contentDescription = null,
+                Box(
                     modifier = Modifier
                         .size(72.dp)
                         .clip(CircleShape),
-                )
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_terminal_background),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_terminal_foreground),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
             }
         }
         item {
@@ -146,15 +156,6 @@ fun About(
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .combinedClickable(
-                            onClick = {},
-                            onLongClick = {
-                                val commitUrl =
-                                    "https://github.com/LawnchairLauncher/lawnchair/commit/${BuildConfig.COMMIT_HASH}"
-                                context.startActivity(Intent(Intent.ACTION_VIEW, commitUrl.toUri()))
-                            },
-                        ),
                 )
             }
         }
@@ -184,6 +185,13 @@ fun About(
         item {
             Spacer(modifier = Modifier.requiredHeight(16.dp))
         }
+        forkNoticeItems()
+        item {
+            PreferenceGroupHeading(stringResource(R.string.about_original_heading))
+        }
+        item {
+            OriginalProjectNotice()
+        }
         item {
             Row(
                 modifier = Modifier
@@ -203,7 +211,7 @@ fun About(
         preferenceGroupItems(
             items = uiState.coreTeam,
             isFirstChild = false,
-            heading = { stringResource(id = R.string.product) },
+            heading = { stringResource(id = R.string.about_original_team_heading) },
             key = { _, it -> it.name },
         ) { _, it ->
             ContributorRow(
@@ -213,7 +221,7 @@ fun About(
         preferenceGroupItems(
             items = uiState.supportAndPr,
             isFirstChild = false,
-            heading = { stringResource(id = R.string.support_and_pr) },
+            heading = { stringResource(id = R.string.about_original_support_heading) },
             key = { _, it -> it.name },
         ) { _, it ->
             ContributorRow(
@@ -223,7 +231,7 @@ fun About(
         preferenceGroupItems(
             items = uiState.bottomLinks,
             isFirstChild = false,
-            heading = { stringResource(id = R.string.community) },
+            heading = { stringResource(id = R.string.about_original_community_heading) },
             key = { _, it -> it.labelResId },
         ) { _, it ->
             HorizontalLawnchairLink(
@@ -254,10 +262,29 @@ fun About(
         item {
             PreferenceGroupItem(
                 cutTop = true,
+                cutBottom = true,
+            ) {
+                ClickablePreference(
+                    label = stringResource(id = R.string.about_apache_license),
+                    onClick = {
+                        val intent = Intent(Intent.ACTION_VIEW, APACHE_LICENSE.toUri())
+                        if (intent.resolveActivity(context.packageManager) != null) {
+                            context.startActivity(intent)
+                        }
+                    },
+                )
+            }
+        }
+        item {
+            Spacer(Modifier.height(3.dp))
+        }
+        item {
+            PreferenceGroupItem(
+                cutTop = true,
                 cutBottom = false,
             ) {
                 ClickablePreference(
-                    label = stringResource(id = R.string.privacy_policy),
+                    label = stringResource(id = R.string.about_original_privacy),
                     onClick = {
                         val webpage = PRIVACY_POLICY.toUri()
                         val intent = Intent(Intent.ACTION_VIEW, webpage)
@@ -272,3 +299,4 @@ fun About(
 }
 
 private const val PRIVACY_POLICY = "https://lawnchair.app/privacy_policy"
+private const val APACHE_LICENSE = "https://www.apache.org/licenses/LICENSE-2.0"

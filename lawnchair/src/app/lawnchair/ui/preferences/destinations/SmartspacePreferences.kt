@@ -20,16 +20,13 @@ import android.app.Activity
 import android.view.ContextThemeWrapper
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
-import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -40,11 +37,9 @@ import app.lawnchair.preferences.PreferenceAdapter
 import app.lawnchair.preferences.getAdapter
 import app.lawnchair.preferences2.preferenceManager2
 import app.lawnchair.smartspace.SmartspaceViewContainer
-import app.lawnchair.smartspace.model.LawnchairSmartspace
 import app.lawnchair.smartspace.model.SmartspaceCalendar
 import app.lawnchair.smartspace.model.SmartspaceMode
 import app.lawnchair.smartspace.model.SmartspaceTimeFormat
-import app.lawnchair.smartspace.model.Smartspacer
 import app.lawnchair.smartspace.provider.SmartspaceProvider
 import app.lawnchair.ui.preferences.LocalIsExpandedScreen
 import app.lawnchair.ui.preferences.components.controls.ClickablePreference
@@ -67,81 +62,26 @@ fun SmartspacePreferences(
     modifier: Modifier = Modifier,
 ) {
     val preferenceManager2 = preferenceManager2()
-    val smartspaceProvider = SmartspaceProvider.INSTANCE.get(LocalContext.current)
     val smartspaceAdapter = preferenceManager2.enableSmartspace.getAdapter()
-    val smartspaceModeAdapter = preferenceManager2.smartspaceMode.getAdapter()
-    val selectedMode = smartspaceModeAdapter.state.value
-    val modeIsLawnchair = selectedMode == LawnchairSmartspace
 
     PreferenceLayout(
         label = stringResource(id = R.string.smartspace_widget),
         backArrowVisible = !LocalIsExpandedScreen.current && !fromWidget,
         modifier = modifier,
     ) {
+        // The terminal readout replaces the stock At a Glance cards, so only the pieces that still
+        // apply are exposed here: the on/off switch and a live preview.
         if (fromWidget) {
             SmartspacePreview()
-            LawnchairSmartspaceSettings(smartspaceProvider)
         } else {
             MainSwitchPreference(
                 adapter = smartspaceAdapter,
                 label = stringResource(R.string.smartspace_widget_toggle_label),
-                description = stringResource(id = R.string.smartspace_widget_toggle_description).takeIf { modeIsLawnchair },
+                description = stringResource(id = R.string.smartspace_widget_terminal_description),
             ) {
-                if (modeIsLawnchair) {
-                    SmartspacePreview()
-                }
-                PreferenceGroup {
-                    SmartspaceProviderPreference(
-                        adapter = smartspaceModeAdapter,
-                    )
-                }
-
-                Crossfade(
-                    targetState = selectedMode,
-                    label = "Smartspace setting transition",
-                ) { targetState ->
-                    when (targetState) {
-                        LawnchairSmartspace -> {
-                            LawnchairSmartspaceSettings(smartspaceProvider)
-                        }
-
-                        Smartspacer -> {
-                            SmartspacerSettings()
-                        }
-
-                        else -> {}
-                    }
-                }
+                SmartspacePreview()
             }
         }
-    }
-}
-
-@Composable
-private fun LawnchairSmartspaceSettings(
-    smartspaceProvider: SmartspaceProvider,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier,
-    ) {
-        PreferenceGroup(
-            heading = stringResource(id = R.string.what_to_show),
-            modifier = Modifier.padding(top = 8.dp),
-        ) {
-            smartspaceProvider.dataSources
-                .asSequence()
-                .filter { it.isAvailable }
-                .forEach {
-                    key(it.providerName) {
-                        SwitchPreference(
-                            adapter = it.enabledPref.getAdapter(),
-                            label = stringResource(id = it.providerName),
-                        )
-                    }
-                }
-        }
-        SmartspaceDateAndTimePreferences()
     }
 }
 

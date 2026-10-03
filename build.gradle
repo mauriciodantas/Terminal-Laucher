@@ -17,6 +17,7 @@ plugins {
     alias(libs.plugins.cash.licensee)
     alias(libs.plugins.rikka.refine)
     alias(libs.plugins.diffplug.spotless)
+    id 'com.github.triplet.play' version '4.0.0'
 }
 
 allprojects {
@@ -154,8 +155,9 @@ android {
          * Lawnchair Launcher 16.0 Beta 1.0
          * see https://docs.lawnchair.app/developers/standards/development-workflow#versioning-scheme
          */
-        versionCode 16_00_02_01_00
-        versionName "${versionDisplayName}"
+        // release.sh overrides both through RELEASE_VERSION_CODE / RELEASE_VERSION_NAME.
+        versionCode((project.findProperty("RELEASE_VERSION_CODE") ?: 16_00_02_01_00).toString().toInteger())
+        versionName "${project.findProperty("RELEASE_VERSION_NAME") ?: versionDisplayName}"
         buildConfigField "String", "VERSION_DISPLAY_NAME", "\"${versionDisplayName}\""
         buildConfigField "String", "MAJOR_VERSION", "\"${majorVersion}\""
         buildConfigField "String", "COMMIT_HASH", "\"${buildCommit}\""
@@ -206,7 +208,15 @@ android {
     }.flatten().findAll { it.exists() }.toArray()
 
     def releaseSigning
-    try {
+    if (project.hasProperty("RELEASE_STORE_FILE")) {
+        // Credentials injected by release.sh (ORG_GRADLE_PROJECT_*), never written to disk.
+        releaseSigning = signingConfigs.create("release") {
+            storeFile file(project.property("RELEASE_STORE_FILE").toString())
+            storePassword project.findProperty("RELEASE_STORE_PASSWORD")?.toString()
+            keyAlias project.findProperty("RELEASE_KEY_ALIAS")?.toString()
+            keyPassword project.findProperty("RELEASE_KEY_PASSWORD")?.toString()
+        }
+    } else try {
         def keystoreProperties = new Properties()
         keystoreProperties.load(rootProject.file("keystore.properties").newInputStream())
         releaseSigning = signingConfigs.create("release") {
@@ -538,4 +548,10 @@ licensee {
 
     bundleAndroidAsset = true
     androidAssetReportPath = 'licenses.json'
+}
+
+play {
+    serviceAccountCredentials.set(file(project.properties["PLAY_STORE_KEY"]?.toString() ?: "key.json"))
+    track.set(project.findProperty("PLAY_TRACK")?.toString() ?: "internal")
+    defaultToAppBundles.set(true)
 }
