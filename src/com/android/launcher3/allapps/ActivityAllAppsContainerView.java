@@ -71,6 +71,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.graphics.ColorUtils;
 import androidx.core.math.MathUtils;
 import androidx.core.util.Consumer;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.launcher3.DeviceProfile;
@@ -184,6 +185,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     protected final List<AllAppsRow> mAdditionalHeaderRows = new ArrayList<>();
     protected View mBottomSheetBackground;
     protected RecyclerViewFastScroller mFastScroller;
+    private DirectoryIndexView mDirectoryIndex;
     private ConstraintLayout mFastScrollLetterLayout;
 
     /**
@@ -320,6 +322,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         mFastScroller.setPopupView(findViewById(R.id.fast_scroller_popup));
         mFastScroller.setVisibility(showFastScroller ? VISIBLE : INVISIBLE);
         mFastScrollLetterLayout = findViewById(R.id.scroll_letter_layout);
+        mDirectoryIndex = findViewById(R.id.directory_index);
         setClipChildren(false);
 
         mSearchContainer = inflateSearchBar();
@@ -481,6 +484,9 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         }
         mSearchExitInProgress = !goingToSearch;
         mFastScroller.setVisibility(goingToSearch ? INVISIBLE : VISIBLE);
+        if (mDirectoryIndex != null) {
+            mDirectoryIndex.setVisibility(goingToSearch ? INVISIBLE : VISIBLE);
+        }
         if (goingToSearch) {
             // Fade out the button to pause work apps.
             mWorkManager.onActivePageChanged(SEARCH);
@@ -671,6 +677,11 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         if (mAH.get(currentActivePage).mRecyclerView != null) {
             mAH.get(currentActivePage).mRecyclerView.bindFastScrollbar(mFastScroller,
                     ALL_APPS_SCROLLER);
+        }
+        if (mDirectoryIndex != null) {
+            // The index lists the sections of the main apps list only.
+            mDirectoryIndex.setVisibility(
+                    currentActivePage == AdapterHolder.MAIN ? VISIBLE : INVISIBLE);
         }
         // Header keeps track of active recycler view to properly render header protection.
         mHeader.setActiveRV(currentActivePage);
@@ -1807,6 +1818,45 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         return mBottomSheetBackground.getVisibility() == VISIBLE ? mBottomSheetBackground : this;
     }
 
+    /** Keeps the section letters of the directory in sync with the main apps list. */
+    private void bindDirectoryIndex(AdapterHolder holder) {
+        if (mDirectoryIndex == null) return;
+        Runnable refresh = () -> mDirectoryIndex.setSections(
+                holder.mAppsList.getFastScrollerSections());
+        holder.mAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onChanged() {
+                refresh.run();
+            }
+
+            @Override
+            public void onItemRangeChanged(int positionStart, int itemCount) {
+                refresh.run();
+            }
+
+            @Override
+            public void onItemRangeInserted(int positionStart, int itemCount) {
+                refresh.run();
+            }
+
+            @Override
+            public void onItemRangeRemoved(int positionStart, int itemCount) {
+                refresh.run();
+            }
+
+            @Override
+            public void onItemRangeMoved(int fromPosition, int toPosition, int itemCount) {
+                refresh.run();
+            }
+        });
+        mDirectoryIndex.setOnSectionSelectedListener(position -> {
+            if (holder.mLayoutManager instanceof LinearLayoutManager llm) {
+                llm.scrollToPositionWithOffset(position, 0);
+            }
+        });
+        refresh.run();
+    }
+
     protected void onInitializeRecyclerView(RecyclerView rv) {
         rv.addOnScrollListener(mScrollListener);
         mSearchUiDelegate.onInitializeRecyclerView(rv);
@@ -1848,6 +1898,9 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
             mRecyclerView.setLayoutManager(mLayoutManager);
             mRecyclerView.setAdapter(mAdapter);
             mRecyclerView.setHasFixedSize(true);
+            if (mType == MAIN) {
+                bindDirectoryIndex(this);
+            }
             // No animations will occur when changes occur to the items in this RecyclerView.
             mRecyclerView.setItemAnimator(null);
             onInitializeRecyclerView(mRecyclerView);

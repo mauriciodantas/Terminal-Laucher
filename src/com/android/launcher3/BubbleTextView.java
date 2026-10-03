@@ -927,6 +927,7 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
 
     @Override
     public void onDraw(Canvas canvas) {
+        drawDirectoryHighlight(canvas);
         super.onDraw(canvas);
         drawDotIfNecessary(canvas);
         drawRunningAppIndicatorIfNecessary(canvas);
@@ -950,6 +951,17 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
         invalidate();
     }
 
+    /** A directory row that is touched or focused is marked with a tinted band and a left bar. */
+    private void drawDirectoryHighlight(Canvas canvas) {
+        if (mDirectoryIndex < 0 || !(isPressed() || isFocused())) return;
+        float density = getResources().getDisplayMetrics().density;
+        int color = getCurrentTextColor();
+        mChevronPaint.setColor(ColorUtils.setAlphaComponent(color, 0x33));
+        canvas.drawRect(0, 0, getWidth(), getHeight(), mChevronPaint);
+        mChevronPaint.setColor(color);
+        canvas.drawRect(0, 0, 3 * density, getHeight(), mChevronPaint);
+    }
+
     private void drawDirectoryChevron(Canvas canvas) {
         if (mDirectoryIndex < 0) return;
         mChevronPaint.setTypeface(getTypeface());
@@ -960,6 +972,23 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
         Paint.FontMetrics fm = mChevronPaint.getFontMetrics();
         float y = (getHeight() - (fm.ascent + fm.descent)) / 2f;
         canvas.drawText(chevron, x, y, mChevronPaint);
+        drawDirectoryLeader(canvas, x, y);
+    }
+
+    /** Fills the gap between the label and the chevron with dots, like a terminal listing. */
+    private void drawDirectoryLeader(Canvas canvas, float chevronX, float baseline) {
+        android.text.Layout layout = getLayout();
+        if (layout == null || layout.getLineCount() == 0) return;
+        float gap = getResources().getDisplayMetrics().density * 8;
+        float start = getCompoundPaddingLeft() + layout.getLineRight(0) + gap;
+        float end = chevronX - gap;
+        String dot = "\u00B7";
+        float step = mChevronPaint.measureText(dot) * 2f;
+        if (step <= 0 || end - start < step) return;
+        mChevronPaint.setColor(ColorUtils.setAlphaComponent(getCurrentTextColor(), 0x55));
+        for (float x = start; x + step <= end; x += step) {
+            canvas.drawText(dot, x, baseline, mChevronPaint);
+        }
     }
 
     /**

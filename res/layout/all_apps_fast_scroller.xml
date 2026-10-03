@@ -36,6 +36,18 @@
         android:layout_marginEnd="@dimen/fastscroll_end_margin"
         launcher:canThumbDetach="true" />
 
+    <!-- Section letters of the app directory (A, C, D...); tap or drag to jump. -->
+    <com.android.launcher3.allapps.DirectoryIndexView
+        android:id="@+id/directory_index"
+        android:layout_width="@dimen/directory_index_width"
+        android:layout_height="match_parent"
+        android:layout_alignParentEnd="true"
+        android:layout_alignTop="@+id/all_apps_header"
+        android:layout_alignParentBottom="true"
+        android:layout_marginTop="@dimen/directory_index_vertical_margin"
+        android:layout_marginBottom="@dimen/directory_index_vertical_margin"
+        android:layout_marginEnd="@dimen/directory_index_end_margin" />
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/scroll_letter_layout"
         android:layout_width="@dimen/fastscroll_width"

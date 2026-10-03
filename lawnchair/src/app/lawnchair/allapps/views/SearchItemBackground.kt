@@ -73,13 +73,18 @@ class SearchItemBackground(
         var bottom = child.bottom.toFloat() - searchDecorationPadding
 
         if (child is SearchResultIcon) {
-            val iconSize = child.iconSize.toFloat()
-            val desiredWidth = iconSize + 48.dpToPx(resources)
-            val cellWidth = child.width.toFloat()
-            if (desiredWidth < cellWidth) {
-                val inset = (cellWidth - desiredWidth) / 2
-                left += inset
-                right -= inset
+            // Terminal rows span the full width, like the drawer rows. Only a tile (icon above its
+            // label) is narrower than its cell and needs the inset.
+            val isRow = child.compoundDrawablesRelative[0] != null || child.compoundDrawablesRelative[2] != null
+            if (!isRow) {
+                val iconSize = child.iconSize.toFloat()
+                val desiredWidth = iconSize + 48.dpToPx(resources)
+                val cellWidth = child.width.toFloat()
+                if (desiredWidth < cellWidth) {
+                    val inset = (cellWidth - desiredWidth) / 2
+                    left += inset
+                    right -= inset
+                }
             }
             val isTwoLine = child.lineCount > 1
             val insetTop = 6.dpToPx(resources)

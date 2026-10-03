@@ -221,11 +221,14 @@ fun resolveFolderBackgroundColor(context: Context): Int {
 }
 
 /** Apply Lawnchair custom allapps colour to the provided colour */
+@Suppress("UNUSED_PARAMETER")
 private fun getAllAppsBaseColor(context: Context, defaultColor: Int): Int {
     val prefs2 = PreferenceManager2.getInstance(context)
     val colorOptions: ColorOption = prefs2.appDrawerBackgroundColor.firstCached()
     val color = colorOptions.colorPreferenceEntry.lightColor.invoke(context)
-    val baseColor = if (color != 0) color else defaultColor
+    // Terminal: the drawer is black unless the user picked a color. The theme default (a tinted
+    // surface) is ignored on purpose.
+    val baseColor = if (color != 0) color else android.graphics.Color.BLACK
     return ColorUtils.setAlphaComponent(baseColor, 255)
 }
 

@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.util.contains
 import app.lawnchair.allapps.views.SearchItemDecorator
+import app.lawnchair.allapps.views.SearchResultIcon
 import app.lawnchair.allapps.views.SearchResultView
 import app.lawnchair.search.adapter.SearchAdapterItem
 import com.android.app.search.LayoutType
@@ -59,6 +60,12 @@ class LawnchairSearchAdapterProvider(
             adapterItem.searchTarget,
             emptyList(),
         )
+        // Same directory style as the app drawer: A-01 Name ····· ▸
+        (itemView as? SearchResultIcon)?.setDirectoryIndex(
+            appsView.mSearchRecyclerView.mApps.adapterItems
+                .take(position + 1)
+                .count { it.viewType == SEARCH_RESULT_ICON },
+        )
         if (itemView.isQuickLaunch) {
             quickLaunchItem = itemView
         }
@@ -90,7 +97,8 @@ class LawnchairSearchAdapterProvider(
         return BaseAllAppsAdapter.ViewHolder(view)
     }
 
-    override fun getItemsPerRow(viewType: Int, appsPerRow: Int) = if (viewType != SEARCH_RESULT_ICON) 1 else super.getItemsPerRow(viewType, appsPerRow)
+    // The directory lists one program per row, like the drawer.
+    override fun getItemsPerRow(viewType: Int, appsPerRow: Int) = 1
 
     override fun launchHighlightedItem(): Boolean = quickLaunchItem?.launch() ?: false
 

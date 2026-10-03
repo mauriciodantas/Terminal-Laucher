@@ -99,16 +99,13 @@ object ColorTokens {
 
     @JvmField val AllAppsTabBackgroundSelected = DayNightColorToken(Accent1_600, PhosphorColorToken(1.0f))
 
-    @JvmField val FocusHighlight = DayNightColorToken(Neutral1_0, Neutral1_700)
+    @JvmField val FocusHighlight = DayNightColorToken(PhosphorColorToken(0.2f), PhosphorColorToken(0.2f))
 
-    @JvmField val FocusHighlightBlur = DayNightColorToken(
-        Neutral1_0.setAlpha(0.32f),
-        Accent1_100.setAlpha(0.15f),
-    )
+    @JvmField val FocusHighlightBlur = DayNightColorToken(PhosphorColorToken(0.2f), PhosphorColorToken(0.2f))
 
-    @JvmField val GroupHighlight = Surface
+    @JvmField val GroupHighlight = DayNightColorToken(PhosphorColorToken(0f), PhosphorColorToken(0f))
 
-    @JvmField val GroupHighlightBlur = Surface.setAlpha(0.54f)
+    @JvmField val GroupHighlightBlur = DayNightColorToken(PhosphorColorToken(0f), PhosphorColorToken(0f))
 
     @JvmField val OverviewScrimColor = DayNightColorToken(Neutral2_100.setLStar(87.0), Neutral1_800)
 
