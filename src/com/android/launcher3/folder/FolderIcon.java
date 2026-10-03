@@ -143,6 +143,7 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
     /** Content of a large folder (spans more than one cell); null for a regular folder icon. */
     @Nullable private LargeFolderView mLargeView;
     private boolean mLargeMode = false;
+    private boolean mOpenForced = false;
 
     private float mScaleForReorderBounce = 1f;
 
@@ -699,6 +700,53 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
                 mInfo, mInfo.container, mInfo.screenId, modelX, modelY, spanX, spanY);
         refreshLargeMode();
         return true;
+    }
+
+    /** Whether a tap on this folder opens it. See {@link LargeFolderMath#opensOnTap}. */
+    public boolean opensOnTap() {
+        return LargeFolderMath.opensOnTap(mLargeMode,
+                mLargeView != null && mLargeView.hasHiddenApps(), mOpenForced);
+    }
+
+    /** Opens the folder even though a tap on its panel would not (a tap on the title). */
+    public void openFolder() {
+        mOpenForced = true;
+        try {
+            performClick();
+        } finally {
+            mOpenForced = false;
+        }
+    }
+
+    /**
+     * Lets the user pick the size of this folder: small, medium or large, with the current one
+     * marked. Used by both the opened folder and the large folder panel.
+     *
+     * @param onResized runs after the size changed, may be null
+     */
+    public void showSizeChooser(@Nullable Runnable onResized) {
+        Context context = getContext();
+        CharSequence[] labels = {
+                context.getString(R.string.folder_size_small),
+                context.getString(R.string.folder_size_medium),
+                context.getString(R.string.folder_size_large),
+        };
+        int current = LargeFolderMath.presetIndex(mInfo.spanX, mInfo.spanY);
+        new android.app.AlertDialog.Builder(context,
+                android.R.style.Theme_DeviceDefault_Dialog_Alert)
+                .setTitle(R.string.folder_resize_label)
+                .setSingleChoiceItems(labels, current, (dialog, which) -> {
+                    dialog.dismiss();
+                    if (which == current) return;
+                    LargeFolderMath.Size size = LargeFolderMath.PRESETS.get(which);
+                    if (resizeTo(size.getSpanX(), size.getSpanY())) {
+                        if (onResized != null) onResized.run();
+                    } else {
+                        android.widget.Toast.makeText(context, R.string.folder_resize_no_room,
+                                android.widget.Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .show();
     }
 
     public void drawDot(Canvas canvas) {

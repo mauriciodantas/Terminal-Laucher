@@ -28,6 +28,8 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.core.graphics.ColorUtils;
@@ -78,6 +80,8 @@ public class LargeFolderView extends ViewGroup {
     private int mColumns = 1;
     private int mRows = 1;
     private float mIconScale = 1f;
+    private boolean mHasHiddenApps;
+    private final ImageButton mSizeButton;
 
     public LargeFolderView(Context context, FolderIcon folderIcon, ActivityContext activity) {
         super(context);
@@ -118,7 +122,24 @@ public class LargeFolderView extends ViewGroup {
                 activity.getDeviceProfile().folderLabelTextSizePx);
         addView(mMore);
 
+        // The title opens the folder (to rename it); the button picks its size.
+        mTitle.setOnClickListener(view -> mFolderIcon.openFolder());
+
+        mSizeButton = new ImageButton(context);
+        mSizeButton.setImageResource(R.drawable.ic_folder_resize);
+        mSizeButton.setBackgroundColor(0);
+        mSizeButton.setScaleType(ImageView.ScaleType.CENTER);
+        mSizeButton.setContentDescription(context.getString(R.string.folder_resize_label));
+        mSizeButton.setColorFilter(textColor);
+        mSizeButton.setOnClickListener(view -> mFolderIcon.showSizeChooser(null));
+        addView(mSizeButton);
+
         refreshColors();
+    }
+
+    /** True when some apps do not fit in the panel, so opening the folder shows more. */
+    public boolean hasHiddenApps() {
+        return mHasHiddenApps;
     }
 
     /** Re-reads the folder colors and opacity from the user preferences. */
@@ -186,9 +207,12 @@ public class LargeFolderView extends ViewGroup {
         LargeFolderMath.Plan plan = LargeFolderMath.plan(mTotalApps, grid);
         boolean overflow = plan.getShowOverflowMarker();
         int shown = plan.getShown();
+        mHasHiddenApps = plan.getHidden() > 0;
 
+        mSizeButton.measure(MeasureSpec.makeMeasureSpec(mTitleHeight * 2, MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(mTitleHeight * 2, MeasureSpec.EXACTLY));
         mTitle.measure(
-                MeasureSpec.makeMeasureSpec(Math.max(0, width - 2 * mPadding), MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(Math.max(0, width - 2 * mPadding - mTitleHeight * 2), MeasureSpec.EXACTLY),
                 MeasureSpec.makeMeasureSpec(mTitleHeight, MeasureSpec.EXACTLY));
         int slotSpec = MeasureSpec.makeMeasureSpec(natural, MeasureSpec.EXACTLY);
         for (int i = 0; i < mIcons.size(); i++) {
@@ -215,7 +239,10 @@ public class LargeFolderView extends ViewGroup {
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         int width = r - l;
         int height = b - t;
-        mTitle.layout(mPadding, mPadding, width - mPadding, mPadding + mTitleHeight);
+        mTitle.layout(mPadding, mPadding, width - mPadding - mTitleHeight * 2, mPadding + mTitleHeight);
+        int buttonSize = mTitleHeight * 2;
+        mSizeButton.layout(width - buttonSize, mPadding + mTitleHeight / 2 - buttonSize / 2,
+                width, mPadding + mTitleHeight / 2 + buttonSize / 2);
 
         int availW = Math.max(0, width - 2 * mPadding);
         int availH = Math.max(0, height - 2 * mPadding - mTitleHeight);

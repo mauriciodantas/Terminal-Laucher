@@ -353,7 +353,7 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
         mPageIndicator = findViewById(R.id.folder_page_indicator);
         mFooter = findViewById(R.id.folder_footer);
         mResizeButton = findViewById(R.id.folder_resize);
-        mResizeButton.setOnClickListener(v -> cycleFolderSize());
+        mResizeButton.setOnClickListener(v -> chooseFolderSize());
         mFooterHeight = dp.folderFooterHeightPx;
         mFolderName = findViewById(R.id.folder_name);
         if (Flags.enableLauncherVisualRefresh()) {
@@ -685,15 +685,10 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
         return mInfo;
     }
 
-    /** Steps the folder through its sizes on the workspace: small, large 2x2, large 4x2. */
-    private void cycleFolderSize() {
-        LargeFolderMath.Size next = LargeFolderMath.nextSize(mInfo.spanX, mInfo.spanY);
-        int nextX = next.getSpanX();
-        int nextY = next.getSpanY();
-        if (mFolderIcon != null && mFolderIcon.resizeTo(nextX, nextY)) {
-            close(true);
-        } else {
-            Toast.makeText(getContext(), R.string.folder_resize_no_room, Toast.LENGTH_SHORT).show();
+    /** Opens the size chooser; the folder closes once the new size is applied. */
+    private void chooseFolderSize() {
+        if (mFolderIcon != null) {
+            mFolderIcon.showSizeChooser(() -> close(true));
         }
     }
 

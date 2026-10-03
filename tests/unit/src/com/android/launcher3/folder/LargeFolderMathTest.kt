@@ -52,28 +52,56 @@ class LargeFolderMathTest {
         assertTrue(LargeFolderMath.isLarge(4, 2))
     }
 
-    // ---- resize button cycle ----
+    // ---- size chooser ----
 
     @Test
-    fun nextSize_goesFromSmallToTwoByTwo() {
-        assertEquals(Size(2, 2), LargeFolderMath.nextSize(1, 1))
+    fun presets_areSmallMediumLargeInThatOrder() {
+        assertEquals(listOf(Size(1, 1), Size(2, 2), Size(4, 2)), LargeFolderMath.PRESETS)
     }
 
     @Test
-    fun nextSize_goesFromTwoByTwoToFourByTwo() {
-        assertEquals(Size(4, 2), LargeFolderMath.nextSize(2, 2))
+    fun presetIndex_findsTheExactPreset() {
+        assertEquals(0, LargeFolderMath.presetIndex(1, 1))
+        assertEquals(1, LargeFolderMath.presetIndex(2, 2))
+        assertEquals(2, LargeFolderMath.presetIndex(4, 2))
     }
 
     @Test
-    fun nextSize_goesFromFourByTwoBackToSmall() {
-        assertEquals(Size(1, 1), LargeFolderMath.nextSize(4, 2))
+    fun presetIndex_matchesAnOddSizeToTheSmallestPresetThatCoversIt() {
+        assertEquals(1, LargeFolderMath.presetIndex(2, 1))
+        assertEquals(1, LargeFolderMath.presetIndex(1, 2))
+        assertEquals(2, LargeFolderMath.presetIndex(3, 2))
+        assertEquals(2, LargeFolderMath.presetIndex(4, 4))
     }
 
     @Test
-    fun nextSize_cyclesBackToTheStartAfterThreeSteps() {
-        var size = Size(1, 1)
-        repeat(3) { size = LargeFolderMath.nextSize(size.spanX, size.spanY) }
-        assertEquals(Size(1, 1), size)
+    fun presetIndex_alwaysReturnsAValidIndex() {
+        for (x in 0..6) for (y in 0..6) {
+            assertTrue("$x x $y", LargeFolderMath.presetIndex(x, y) in LargeFolderMath.PRESETS.indices)
+        }
+    }
+
+    // ---- what a tap on the folder does ----
+
+    @Test
+    fun opensOnTap_aSmallFolderAlwaysOpens() {
+        assertTrue(LargeFolderMath.opensOnTap(isLarge = false, hasHiddenApps = false, forced = false))
+        assertTrue(LargeFolderMath.opensOnTap(isLarge = false, hasHiddenApps = true, forced = false))
+    }
+
+    @Test
+    fun opensOnTap_aLargeFolderWithEveryAppVisibleDoesNotOpen() {
+        assertFalse(LargeFolderMath.opensOnTap(isLarge = true, hasHiddenApps = false, forced = false))
+    }
+
+    @Test
+    fun opensOnTap_aLargeFolderOpensWhenSomeAppsAreHidden() {
+        assertTrue(LargeFolderMath.opensOnTap(isLarge = true, hasHiddenApps = true, forced = false))
+    }
+
+    @Test
+    fun opensOnTap_aLargeFolderOpensWhenTheUserAsksForIt() {
+        assertTrue(LargeFolderMath.opensOnTap(isLarge = true, hasHiddenApps = false, forced = true))
     }
 
     // ---- grid of app slots ----

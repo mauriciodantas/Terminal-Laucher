@@ -53,13 +53,32 @@ object LargeFolderMath {
     @JvmStatic
     fun isLarge(spanX: Int, spanY: Int): Boolean = spanX > 1 || spanY > 1
 
-    /** The size the resize button moves to: small, then 2x2, then 4x2, then small again. */
+    /** The sizes a folder can have, in the order the size chooser lists them: small, medium, large. */
+    @JvmField
+    val PRESETS: List<Size> = listOf(Size(1, 1), Size(2, 2), Size(4, 2))
+
+    /**
+     * The index in [PRESETS] of the size a folder has now. A span that is not a preset (for example
+     * from an older version) maps to the smallest preset that covers its area, so the chooser never
+     * marks a size smaller than the folder really is.
+     */
     @JvmStatic
-    fun nextSize(spanX: Int, spanY: Int): Size = when {
-        !isLarge(spanX, spanY) -> Size(2, 2)
-        spanX < MAX_SPAN -> Size(MAX_SPAN, 2)
-        else -> Size(1, 1)
+    fun presetIndex(spanX: Int, spanY: Int): Int {
+        val exact = PRESETS.indexOf(Size(spanX, spanY))
+        if (exact >= 0) return exact
+        val area = spanX * spanY
+        val covering = PRESETS.indexOfFirst { it.spanX * it.spanY >= area }
+        return if (covering >= 0) covering else PRESETS.lastIndex
     }
+
+    /**
+     * Whether tapping a folder on the home screen opens it. A small folder always does. A large one
+     * shows its apps in place, so opening it would only repeat them: it opens only when some apps
+     * do not fit, or when the user asks for it explicitly (the title).
+     */
+    @JvmStatic
+    fun opensOnTap(isLarge: Boolean, hasHiddenApps: Boolean, forced: Boolean): Boolean =
+        !isLarge || hasHiddenApps || forced
 
     /**
      * How many square slots of [slot] pixels fit in a folder of [width] x [height] pixels, after

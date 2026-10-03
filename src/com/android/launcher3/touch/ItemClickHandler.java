@@ -138,6 +138,8 @@ public class ItemClickHandler {
      * @param v The view that was clicked. Must be an instance of {@link FolderIcon}.
      */
     private static void onClickFolderIcon(View v) {
+        // A large folder that already shows all of its apps has nothing more to show when opened.
+        if (!((FolderIcon) v).opensOnTap()) return;
         Folder folder = ((FolderIcon) v).getFolder();
         if (!folder.isOpen() && !folder.isDestroyed()) {
             // Open the requested folder

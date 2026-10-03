@@ -182,6 +182,12 @@ public class ShortcutAndWidgetContainer extends ViewGroup implements FolderIcon.
             // No need to add padding for Qsb, which is either Smartspace (actual or
             // preview), or
             // QsbContainerView.
+        } else if (child instanceof FolderIcon folderIcon && folderIcon.isLargeMode()) {
+            lp.setup(mCellWidth, mCellHeight, invertLayoutHorizontally(), mCountX, mCountY,
+                    mBorderSpace);
+            // A large folder fills all of its cells, like a widget. The centering padding below
+            // is sized for one cell and would push it down by half a cell.
+            child.setPadding(0, 0, 0, 0);
         } else {
             lp.setup(mCellWidth, mCellHeight, invertLayoutHorizontally(), mCountX, mCountY,
                     mBorderSpace);
