@@ -21,27 +21,40 @@ import android.view.ContextThemeWrapper
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.lawnchair.preferences.PreferenceAdapter
 import app.lawnchair.preferences.getAdapter
 import app.lawnchair.preferences2.preferenceManager2
 import app.lawnchair.smartspace.SmartspaceViewContainer
+import app.lawnchair.smartspace.glance.GlanceSetup
+import app.lawnchair.smartspace.glance.GlanceSetupIntents
+import app.lawnchair.smartspace.glance.MediaSetupStep
 import app.lawnchair.smartspace.model.SmartspaceCalendar
 import app.lawnchair.smartspace.model.SmartspaceMode
 import app.lawnchair.smartspace.model.SmartspaceTimeFormat
 import app.lawnchair.smartspace.provider.SmartspaceProvider
+import app.lawnchair.smartspace.provider.SmartspaceWidgetReader
 import app.lawnchair.ui.preferences.LocalIsExpandedScreen
 import app.lawnchair.ui.preferences.components.controls.ClickablePreference
 import app.lawnchair.ui.preferences.components.controls.ListPreference
@@ -52,10 +65,13 @@ import app.lawnchair.ui.preferences.components.controls.SwitchPreference
 import app.lawnchair.ui.preferences.components.layout.ExpandAndShrink
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
+import app.lawnchair.ui.preferences.components.notificationDotsEnabled
+import app.lawnchair.ui.preferences.components.notificationServiceEnabled
 import app.lawnchair.ui.theme.isSelectedThemeDark
 import app.lawnchair.ui.theme.preferenceGroupColor
 import com.android.launcher3.R
 import com.kieronquinn.app.smartspacer.sdk.SmartspacerConstants
+import kotlinx.coroutines.launch
 
 @Composable
 fun SmartspacePreferences(
@@ -81,8 +97,59 @@ fun SmartspacePreferences(
                 description = stringResource(id = R.string.smartspace_widget_terminal_description),
             ) {
                 SmartspacePreview()
+                GlanceTargetsPreferences()
             }
         }
+    }
+}
+
+/** Which kinds of information the At a Glance panel may show, and how it prioritizes them. */
+@Composable
+private fun GlanceTargetsPreferences(modifier: Modifier = Modifier) {
+    val prefs2 = preferenceManager2()
+
+    GlanceSetupCards(modifier = modifier.padding(top = 8.dp))
+
+    PreferenceGroup(
+        heading = stringResource(id = R.string.glance_group_targets),
+        modifier = modifier.padding(top = 8.dp),
+    ) {
+        SwitchPreference(
+            adapter = prefs2.glanceAgenda.getAdapter(),
+            label = stringResource(id = R.string.glance_agenda),
+            description = stringResource(id = R.string.glance_agenda_desc),
+        )
+        SwitchPreference(
+            adapter = prefs2.glanceWeather.getAdapter(),
+            label = stringResource(id = R.string.glance_weather),
+            description = stringResource(id = R.string.glance_weather_desc),
+        )
+        SwitchPreference(
+            adapter = prefs2.smartspaceNowPlaying.getAdapter(),
+            label = stringResource(id = R.string.glance_media),
+            description = stringResource(id = R.string.glance_media_desc),
+        )
+        SwitchPreference(
+            adapter = prefs2.glanceAlarm.getAdapter(),
+            label = stringResource(id = R.string.glance_alarm),
+            description = stringResource(id = R.string.glance_alarm_desc),
+        )
+        SliderPreference(
+            label = stringResource(id = R.string.glance_max_targets),
+            adapter = prefs2.smartspacerMaxCount.getAdapter(),
+            step = 1,
+            valueRange = 1..5,
+        )
+    }
+    PreferenceGroup(
+        heading = stringResource(id = R.string.glance_priority_group),
+        modifier = modifier.padding(top = 8.dp),
+    ) {
+        SwitchPreference(
+            adapter = prefs2.glanceAutoPriority.getAdapter(),
+            label = stringResource(id = R.string.glance_auto_priority),
+            description = stringResource(id = R.string.glance_auto_priority_desc),
+        )
     }
 }
 
@@ -142,9 +209,6 @@ fun SmartspacePreview(
                     ),
                 )
             }
-        }
-        LaunchedEffect(key1 = null) {
-            SmartspaceProvider.INSTANCE.get(context).startSetup(context as Activity)
         }
     }
 }
@@ -253,6 +317,109 @@ fun SmartspacerSettings(
                 )
                 context.startActivity(intent)
             }
+        }
+    }
+}
+
+/**
+ * Explains, on the screen itself, what is missing for each source and takes the user straight to
+ * the system screen that fixes it. Nothing here pops up on its own or turns a source off.
+ */
+@Composable
+private fun GlanceSetupCards(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val prefs2 = preferenceManager2()
+    val scope = rememberCoroutineScope()
+
+    val mediaEnabled by prefs2.smartspaceNowPlaying.getAdapter().state
+    val serviceEnabled = notificationServiceEnabled()
+    val dotsEnabled by remember { notificationDotsEnabled(context) }
+        .collectAsStateWithLifecycle(initialValue = true)
+    val mediaStep = GlanceSetup.mediaStep(serviceEnabled, dotsEnabled)
+
+    val provider = remember { SmartspaceProvider.INSTANCE.get(context) }
+
+    // The system dialog lives in another activity, so the screen may have been recreated while it
+    // was open. Re-read the state every time the user comes back instead of trusting the result.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        provider.dataSources.forEach { it.restart() }
+    }
+    val targets by provider.targets.collectAsStateWithLifecycle(initialValue = emptyList())
+    val widgetNeedsSetup = targets.any { it.id == "smartspaceSetup" }
+
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (mediaEnabled && mediaStep != MediaSetupStep.NONE) {
+            GlanceSetupCard(
+                title = stringResource(R.string.glance_media_setup_title),
+                message = stringResource(
+                    if (mediaStep == MediaSetupStep.GRANT_ACCESS) {
+                        R.string.glance_media_access_message
+                    } else {
+                        R.string.glance_media_dots_message
+                    },
+                ),
+                action = stringResource(R.string.glance_open_settings),
+                onClick = {
+                    GlanceSetupIntents.forStep(mediaStep)?.let { context.startActivity(it) }
+                },
+            )
+        }
+        if (widgetNeedsSetup) {
+            GlanceSetupCard(
+                title = stringResource(R.string.glance_widget_setup_title),
+                message = stringResource(R.string.glance_widget_setup_message),
+                action = stringResource(R.string.glance_allow),
+                onClick = {
+                    val activity = context as? Activity ?: return@GlanceSetupCard
+                    scope.launch {
+                        provider.dataSources.filterIsInstance<SmartspaceWidgetReader>().forEach {
+                            it.startSetup(activity)
+                            it.restart()
+                        }
+                    }
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun GlanceSetupCard(
+    title: String,
+    message: String,
+    action: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.errorContainer,
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onErrorContainer,
+            )
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onErrorContainer,
+            )
+            Button(
+                onClick = onClick,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError,
+                ),
+            ) { Text(text = action) }
         }
     }
 }

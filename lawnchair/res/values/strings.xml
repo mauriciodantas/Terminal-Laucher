@@ -1139,6 +1139,31 @@
     <string name="onboarding_skip_all" translatable="false">PULAR CONFIGURAÇÃO</string>
     <string name="onboarding_redo_menu" translatable="false">Rever configuração inicial</string>
 
+    <!-- At a Glance -->
+    <string name="glance_group_targets" translatable="false">Alvos</string>
+    <string name="glance_agenda" translatable="false">Agenda</string>
+    <string name="glance_agenda_desc" translatable="false">Próximo evento, local e rota</string>
+    <string name="glance_weather" translatable="false">Clima</string>
+    <string name="glance_weather_desc" translatable="false">Temperatura e condição atual</string>
+    <string name="glance_media" translatable="false">Mídia tocando</string>
+    <string name="glance_media_desc" translatable="false">Controles da faixa atual</string>
+    <string name="glance_alarm" translatable="false">Alarme</string>
+    <string name="glance_alarm_desc" translatable="false">Próximo alarme programado</string>
+    <string name="glance_priority_group" translatable="false">Prioridade</string>
+    <string name="glance_auto_priority" translatable="false">Prioridade automática</string>
+    <string name="glance_auto_priority_desc" translatable="false">Sobe o evento para o topo e destaca em vermelho 30 minutos antes</string>
+    <string name="glance_max_targets" translatable="false">Número máximo de alvos</string>
+    <string name="glance_empty_primary" translatable="false">NENHUM ALVO ATIVO</string>
+    <string name="glance_empty_secondary" translatable="false">ATIVE ALVOS EM CONFIGURAÇÕES</string>
+    <string name="glance_tag_priority" translatable="false">[PRIORIDADE]</string>
+    <string name="glance_open_settings" translatable="false">Abrir configurações</string>
+    <string name="glance_allow" translatable="false">Permitir</string>
+    <string name="glance_media_setup_title" translatable="false">Mídia tocando precisa de acesso</string>
+    <string name="glance_media_access_message" translatable="false">Para mostrar a música que está tocando, o Terminal precisa de acesso às notificações. Na próxima tela, ative o Terminal na lista.</string>
+    <string name="glance_media_dots_message" translatable="false">Para mostrar a música que está tocando, ative os pontos de notificação do Terminal. Na próxima tela, ative a opção de pontos de notificação.</string>
+    <string name="glance_widget_setup_title" translatable="false">Clima e agenda precisam do widget do Google</string>
+    <string name="glance_widget_setup_message" translatable="false">Permita que o Terminal leia o widget At a Glance do Google. O Android vai pedir uma confirmação; toque em Criar.</string>
+
     <string name="about_fork_intro" translatable="false">Terminal é um fork do Lawnchair, o launcher de código aberto baseado no Launcher3 do Android Open Source Project (AOSP). Este fork é mantido de forma independente e não tem afiliação, patrocínio nem aval da equipe do Lawnchair ou do Google.</string>
     <string name="about_fork_no_claim" translatable="false">O mantenedor deste fork não reivindica direitos sobre nenhuma propriedade intelectual do projeto original nem do AOSP: o código, o nome, a marca e os logotipos do Lawnchair e do Android pertencem aos seus respectivos titulares. As alterações deste fork são distribuídas sob a mesma Licença Apache 2.0 do projeto original.</string>
     <string name="about_fork_app_label" translatable="false">Aplicativo</string>

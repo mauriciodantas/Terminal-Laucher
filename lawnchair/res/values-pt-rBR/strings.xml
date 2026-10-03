@@ -424,7 +424,7 @@
     <string name="smartspacer_settings">Configurações do Smartspacer</string>
     <!-- Setup settings -->
     <string name="smartspace_requires_setup">Toque para configurar</string>
-    <string name="event_provider_missing_notification_dots">Para usar <xliff:g example="My Provider" id="providerName">%1$s</xliff:g> desligue os pontos de notificações</string>
+    <string name="event_provider_missing_notification_dots">Para usar <xliff:g example="My Provider" id="providerName">%1$s</xliff:g>, ative os pontos de notificação</string>
     <!-- Toggle button for enabling Smartspace -->
     <string name="smartspace_widget_toggle_label">Mostrar na tela inicial</string>
     <string name="smartspace_widget_toggle_description">At a Glance pode ser adicionado á tela inicial com o widget do Lawnchair</string>

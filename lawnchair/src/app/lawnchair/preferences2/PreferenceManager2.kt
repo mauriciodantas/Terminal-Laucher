@@ -783,6 +783,28 @@ class PreferenceManager2 @Inject constructor(
         save = { it.toString() },
     )
 
+    /** At a Glance targets: which kinds of information the panel may show. */
+    val glanceAgenda = preference(
+        key = booleanPreferencesKey("glance_agenda"),
+        defaultValue = true,
+    )
+
+    val glanceWeather = preference(
+        key = booleanPreferencesKey("glance_weather"),
+        defaultValue = true,
+    )
+
+    val glanceAlarm = preference(
+        key = booleanPreferencesKey("glance_alarm"),
+        defaultValue = true,
+    )
+
+    /** Moves an event that is about to start to the front of the panel and marks it in red. */
+    val glanceAutoPriority = preference(
+        key = booleanPreferencesKey("glance_auto_priority"),
+        defaultValue = true,
+    )
+
     val smartspacerMaxCount = preference(
         key = intPreferencesKey(name = "smartspace_max_count"),
         defaultValue = 5,

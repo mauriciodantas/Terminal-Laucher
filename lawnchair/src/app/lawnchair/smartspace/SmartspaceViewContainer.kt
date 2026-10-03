@@ -21,6 +21,7 @@ import kotlin.random.Random
 import app.lawnchair.theme.color.tokens.PhosphorColorToken
 import app.lawnchair.LawnchairLauncher
 import app.lawnchair.launcher
+import app.lawnchair.smartspace.glance.GlancePanelController
 import app.lawnchair.ui.preferences.PreferenceActivity
 import app.lawnchair.ui.preferences.navigation.Smartspace
 import com.android.launcher3.CheckLongPressHelper
@@ -37,12 +38,14 @@ class SmartspaceViewContainer @JvmOverloads constructor(
 
     private val longPressHelper = CheckLongPressHelper(this) { performLongClick() }
     private val smartspaceView: View
+    private val glance: GlancePanelController
 
     init {
         val inflater = LayoutInflater.from(context)
         // Nostromo terminal readout (clock, date, motion tracker) replaces the stock smartspace cards.
         smartspaceView = inflater.inflate(R.layout.smartspace_widget, this, false)
         applyPhosphor(smartspaceView)
+        glance = GlancePanelController(context, smartspaceView, previewMode)
         val dp = InvariantDeviceProfile.INSTANCE.get(context).getDeviceProfile(context)
         val leftPadding = dp.widgetPadding.left
         val rightPadding = dp.widgetPadding.right
@@ -80,22 +83,7 @@ class SmartspaceViewContainer @JvmOverloads constructor(
             setStroke(density.toInt().coerceAtLeast(1), PhosphorColorToken(0.32f).resolveColor(context))
         }
         root.findViewById<View>(R.id.nostromo_panel_title)?.setBackgroundColor(phosphor)
-        root.findViewById<TextView>(R.id.nostromo_panel_name)?.typeIn(
-            context.getString(R.string.nostromo_panel_title),
-            startDelayMs = 600,
-        )
-        listOf(
-            R.id.nostromo_label_range,
-            R.id.nostromo_label_azimuth,
-            R.id.nostromo_label_contact,
-        ).forEach { root.findViewById<TextView>(it)?.setTextColor(dim) }
-        listOf(R.id.nostromo_value_range, R.id.nostromo_value_azimuth).forEach {
-            root.findViewById<TextView>(it)?.setTextColor(phosphor)
-        }
-        root.findViewById<TextView>(R.id.nostromo_contact)?.typeIn(
-            context.getString(R.string.nostromo_contact_value),
-            startDelayMs = 1100,
-        )
+        root.findViewById<TextView>(R.id.nostromo_target_secondary)?.setTextColor(dim)
     }
 
     /** Battery percentage and a five-segment bar, e.g. "87% ▮▮▮▮▯". */
@@ -119,6 +107,7 @@ class SmartspaceViewContainer @JvmOverloads constructor(
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
+        glance.start()
         if (animationsEnabled(context)) {
             glitchHandler.postDelayed(glitchRunnable, Random.nextLong(8_000, 20_000))
         }
@@ -126,6 +115,7 @@ class SmartspaceViewContainer @JvmOverloads constructor(
 
     override fun onDetachedFromWindow() {
         glitchHandler.removeCallbacksAndMessages(null)
+        glance.stop()
         super.onDetachedFromWindow()
     }
 

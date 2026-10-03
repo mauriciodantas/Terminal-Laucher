@@ -5,13 +5,14 @@ import android.content.Context
 import android.graphics.drawable.Icon
 import app.lawnchair.BlankActivity
 import app.lawnchair.getAppName
+import app.lawnchair.smartspace.glance.GlanceSetup
+import app.lawnchair.smartspace.glance.GlanceSetupIntents
+import app.lawnchair.smartspace.glance.MediaSetupStep
 import app.lawnchair.smartspace.model.SmartspaceAction
 import app.lawnchair.smartspace.model.SmartspaceScores
 import app.lawnchair.smartspace.model.SmartspaceTarget
-import app.lawnchair.ui.preferences.PreferenceActivity
 import app.lawnchair.ui.preferences.components.isNotificationServiceEnabled
 import app.lawnchair.ui.preferences.components.notificationDotsEnabled
-import app.lawnchair.ui.preferences.navigation.General
 import com.android.launcher3.R
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
@@ -65,17 +66,24 @@ class NowPlayingProvider(context: Context) :
         notificationDotsEnabled(context = context).first().not()
 
     override suspend fun startSetup(activity: Activity) {
-        val intent = PreferenceActivity.createIntent(activity, General)
+        val step = GlanceSetup.mediaStep(
+            serviceEnabled = isNotificationServiceEnabled(context = context),
+            dotsEnabled = notificationDotsEnabled(context = context).first(),
+        )
+        val intent = GlanceSetupIntents.forStep(step) ?: return
         val message = activity.getString(
-            R.string.event_provider_missing_notification_dots,
-            activity.getString(providerName),
+            if (step == MediaSetupStep.GRANT_ACCESS) {
+                R.string.glance_media_access_message
+            } else {
+                R.string.glance_media_dots_message
+            },
         )
         BlankActivity.startBlankActivityDialog(
             activity,
             intent,
-            activity.getString(R.string.title_missing_notification_access),
+            activity.getString(R.string.glance_media_setup_title),
             message,
-            context.getString(R.string.title_change_settings),
+            activity.getString(R.string.glance_open_settings),
         )
     }
 }
