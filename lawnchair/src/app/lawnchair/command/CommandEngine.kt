@@ -15,7 +15,12 @@ sealed interface CommandAction {
     data class SetAlarm(val hour: Int, val minute: Int) : CommandAction
     data class Calc(val expression: String, val result: String) : CommandAction
     data class Call(val contact: ContactEntry) : CommandAction
-    data class Message(val contact: ContactEntry, val text: String = "") : CommandAction
+    /** A user-defined command: [action] filled with the contact and/or text that was typed. */
+    data class Custom(
+        val action: CustomAction,
+        val contact: ContactEntry? = null,
+        val text: String = "",
+    ) : CommandAction
     data class Route(val query: String) : CommandAction
     data class NewTask(val title: String) : CommandAction
     data class WebSearch(val query: String) : CommandAction
@@ -46,7 +51,6 @@ object CommandEngine {
         "ligar" to "ligar [contato]",
         "rota" to "rota [lugar]",
         "t" to "t [tarefa] · nova tarefa",
-        "w" to "w [contato] · whatsapp",
         "c" to "c [conta] · atalho de calc",
     )
 
@@ -57,6 +61,7 @@ object CommandEngine {
         apps: List<AppEntry>,
         contacts: List<ContactEntry>,
         contactsGranted: Boolean,
+        custom: List<CustomAction> = CustomActions.DEFAULTS,
     ): Analysis {
         val text = typed.trimStart()
         val m = splitter.find(text)
@@ -64,32 +69,43 @@ object CommandEngine {
         val hasArg = m != null && m.groups[2] != null
         val arg = if (hasArg) m?.groups?.get(3)?.value.orEmpty() else ""
 
-        if (!hasArg) return analyzeCommandName(text, token, apps)
+        if (!hasArg) {
+            val bare = custom.firstOrNull { it.letter == token && it.arg == ArgKind.NONE }
+            if (bare != null) return analyzeCustom(bare, "", contacts, contactsGranted)
+            return analyzeCommandName(text, token, apps, custom)
+        }
 
         return when (if (token == "c") "calc" else token) {
             "abrir" -> analyzeOpen(arg, apps)
             "ligar" -> analyzeContact(arg, contacts, contactsGranted, "ligar", "LIGAR PARA") {
                 CommandAction.Call(it)
             }
-            "w" -> analyzeMessage(arg, contacts, contactsGranted)
             "alarme" -> analyzeAlarm(arg)
             "calc" -> analyzeCalc(arg)
             "t" -> analyzeTask(arg)
             "rota" -> analyzeRoute(arg)
-            else -> Analysis(
-                suggestions = emptyList(),
-                listTitle = "SUGESTÕES",
-                needsContacts = false,
-                previewTitle = "COMANDO DESCONHECIDO",
-                preview = "ENTER PARA PESQUISAR NA REDE",
-                tone = Tone.ERROR,
-                action = text.trim().takeIf { it.isNotEmpty() }?.let { CommandAction.WebSearch(it) },
-            )
+            else -> custom.firstOrNull { it.letter == token }
+                ?.let { analyzeCustom(it, arg, contacts, contactsGranted) }
+                ?: Analysis(
+                    suggestions = emptyList(),
+                    listTitle = "SUGESTÕES",
+                    needsContacts = false,
+                    previewTitle = "COMANDO DESCONHECIDO",
+                    preview = "ENTER PARA PESQUISAR NA REDE",
+                    tone = Tone.ERROR,
+                    action = text.trim().takeIf { it.isNotEmpty() }?.let { CommandAction.WebSearch(it) },
+                )
         }
     }
 
-    private fun analyzeCommandName(text: String, token: String, apps: List<AppEntry>): Analysis {
-        val commands = COMMANDS.filter { it.first.startsWith(token) }.map {
+    private fun analyzeCommandName(
+        text: String,
+        token: String,
+        apps: List<AppEntry>,
+        custom: List<CustomAction>,
+    ): Analysis {
+        val all = COMMANDS + custom.map { it.letter to it.usage }
+        val commands = all.filter { it.first.startsWith(token) }.map {
             Suggestion(it.first + " ", it.second, if (it.first.length == 1) "ATALHO" else "COMANDO")
         }
         val matchingApps = if (token.isEmpty()) {
@@ -216,18 +232,56 @@ object CommandEngine {
     /** Drops the spoken lead-in: "dizendo que chego logo" becomes "chego logo". */
     fun cleanMessage(message: String): String = message.trim().replace(messageLeadIn, "").trim()
 
-    private fun analyzeMessage(arg: String, contacts: List<ContactEntry>, granted: Boolean): Analysis {
-        if (!granted) {
-            return Analysis(
+    private fun needsContactsAnalysis() = Analysis(
+        suggestions = emptyList(),
+        listTitle = "CONTATOS",
+        needsContacts = true,
+        previewTitle = "PRÉ-VISUALIZAÇÃO",
+        preview = "ACESSO A CONTATOS PENDENTE",
+        tone = Tone.WARN,
+        action = null,
+    )
+
+    private fun analyzeCustom(
+        action: CustomAction,
+        arg: String,
+        contacts: List<ContactEntry>,
+        granted: Boolean,
+    ): Analysis = when (action.arg) {
+        ArgKind.CONTACT_AND_TEXT -> analyzeContactAndText(action, arg, contacts, granted)
+        ArgKind.CONTACT -> analyzeContact(
+            arg, contacts, granted, action.letter, action.label.uppercase() + " PARA",
+        ) { CommandAction.Custom(action, it) }
+        ArgKind.TEXT -> {
+            val text = arg.trim()
+            Analysis(
                 suggestions = emptyList(),
-                listTitle = "CONTATOS",
-                needsContacts = true,
-                previewTitle = "PRÉ-VISUALIZAÇÃO",
-                preview = "ACESSO A CONTATOS PENDENTE",
-                tone = Tone.WARN,
-                action = null,
+                listTitle = action.label.uppercase(),
+                needsContacts = false,
+                previewTitle = action.label.uppercase(),
+                preview = if (text.isEmpty()) "DIGITE O TEXTO" else text.uppercase(),
+                tone = if (text.isEmpty()) Tone.IDLE else Tone.OK,
+                action = text.takeIf { it.isNotEmpty() }?.let { CommandAction.Custom(action, text = it) },
             )
         }
+        ArgKind.NONE -> Analysis(
+            suggestions = emptyList(),
+            listTitle = action.label.uppercase(),
+            needsContacts = false,
+            previewTitle = action.label.uppercase(),
+            preview = "ENTER PARA EXECUTAR",
+            tone = Tone.OK,
+            action = CommandAction.Custom(action),
+        )
+    }
+
+    private fun analyzeContactAndText(
+        action: CustomAction,
+        arg: String,
+        contacts: List<ContactEntry>,
+        granted: Boolean,
+    ): Analysis {
+        if (!granted) return needsContactsAnalysis()
         val (name, rawMessage) = splitNameAndMessage(arg, contacts)
         val message = cleanMessage(rawMessage)
         val q = name.trim()
@@ -236,11 +290,11 @@ object CommandEngine {
         val tail = if (message.isEmpty()) "" else " $message"
         return Analysis(
             suggestions = matches.take(MAX_SUGGESTIONS).map {
-                Suggestion("w ${it.name.lowercase()}$tail", it.name, "CONTATO")
+                Suggestion("${action.letter} ${it.name.lowercase()}$tail", it.name, "CONTATO")
             },
             listTitle = "CONTATOS",
             needsContacts = false,
-            previewTitle = "WHATSAPP PARA",
+            previewTitle = action.label.uppercase() + " PARA",
             preview = when {
                 q.isEmpty() -> "INFORME O CONTATO"
                 first == null -> "CONTATO NÃO ENCONTRADO"
@@ -252,7 +306,7 @@ object CommandEngine {
                 first != null -> Tone.OK
                 else -> Tone.ERROR
             },
-            action = if (q.isNotEmpty() && first != null) CommandAction.Message(first, message) else null,
+            action = if (q.isNotEmpty() && first != null) CommandAction.Custom(action, first, message) else null,
         )
     }
 

@@ -65,6 +65,7 @@ import app.lawnchair.ui.preferences.navigation.AppDrawer
 import app.lawnchair.ui.preferences.navigation.General
 import app.lawnchair.ui.preferences.navigation.HomeScreen
 import app.lawnchair.ui.preferences.navigation.PreferenceRootRoute
+import app.lawnchair.ui.preferences.navigation.CommandActions
 import app.lawnchair.ui.preferences.navigation.Smartspace
 import app.lawnchair.util.isDefaultLauncher
 import app.lawnchair.util.restartLauncher
@@ -130,6 +131,14 @@ fun PreferencesDashboard(
                 iconResource = if (isSmartspaceEnabled) R.drawable.ic_smartspace else R.drawable.ic_smartspace_off,
                 onNavigate = { onNavigate(Smartspace) },
                 isSelected = currentRoute is Smartspace,
+            )
+
+            PreferenceCategory(
+                label = stringResource(R.string.command_actions_title),
+                description = stringResource(R.string.command_actions_desc),
+                iconResource = R.drawable.ic_search,
+                onNavigate = { onNavigate(CommandActions) },
+                isSelected = currentRoute is CommandActions,
             )
 
             PreferenceCategory(

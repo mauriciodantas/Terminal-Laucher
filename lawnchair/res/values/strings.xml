@@ -1141,6 +1141,8 @@
 
     <!-- At a Glance -->
     <string name="command_bar_setting" translatable="false">Barra de comando</string>
+    <string name="command_actions_title" translatable="false">Ações da barra de comando</string>
+    <string name="command_actions_desc" translatable="false">Atribua uma letra a ações de outros apps (w = WhatsApp)</string>
     <string name="command_bar_setting_desc" translatable="false">Tocar na barra abre o terminal de comandos com autocompletar (abrir, calc, alarme, ligar, voz...)</string>
     <string name="command_title" translatable="false">&gt; ENTRADA DE COMANDO</string>
     <string name="command_subtitle" translatable="false">AUTOCOMPLETAR · HISTÓRICO</string>

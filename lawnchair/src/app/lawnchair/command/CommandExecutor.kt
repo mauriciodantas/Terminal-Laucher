@@ -75,7 +75,7 @@ object CommandExecutor {
                 // Calls straight away when allowed; otherwise the dialer opens with the number.
                 start(context, Intent(if (hasCallPermission(context)) Intent.ACTION_CALL else Intent.ACTION_DIAL, uri))
             }
-            is CommandAction.Message -> openWhatsapp(context, action.contact.number, action.text)
+            is CommandAction.Custom -> return runCustom(context, action)
             is CommandAction.Route -> start(
                 context,
                 Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=" + Uri.encode(action.query))),
@@ -99,31 +99,104 @@ object CommandExecutor {
         context.checkSelfPermission(android.Manifest.permission.CALL_PHONE) ==
             android.content.pm.PackageManager.PERMISSION_GRANTED
 
-    /** The number as WhatsApp wants it: country code and digits, no plus sign. */
-    private fun whatsappNumber(raw: String): String {
+    /** The number with country code and digits only, as most deep links want it. */
+    private fun normalizedNumber(raw: String): String {
         val region = java.util.Locale.getDefault().country
         val e164 = runCatching { android.telephony.PhoneNumberUtils.formatNumberToE164(raw, region) }.getOrNull()
         return (e164 ?: raw).filter { it.isDigit() }
     }
 
-    /** Opens the chat in WhatsApp (or WhatsApp Business); falls back to an SMS when neither is installed. */
-    private fun openWhatsapp(context: Context, number: String, text: String) {
-        val base = "https://wa.me/" + whatsappNumber(number)
-        val uri = Uri.parse(if (text.isEmpty()) base else base + "?text=" + Uri.encode(text))
-        for (pkg in WHATSAPP_PACKAGES) {
-            val intent = Intent(Intent.ACTION_VIEW, uri).setPackage(pkg)
-            if (context.packageManager.resolveActivity(intent, 0) != null) {
-                start(context, intent)
-                return
-            }
-        }
-        start(
-            context,
-            Intent(Intent.ACTION_SENDTO, Uri.fromParts("sms", number, null)).putExtra("sms_body", text),
+    /** Fills the placeholders of [template]; an empty `?text=` style parameter is dropped. */
+    fun fillTemplate(template: String, contact: ContactEntry?, text: String, normalize: (String) -> String): String {
+        val values = mapOf(
+            "{number}" to contact?.let { normalize(it.number) }.orEmpty(),
+            "{phone}" to Uri.encode(contact?.number.orEmpty()),
+            "{name}" to Uri.encode(contact?.name.orEmpty()),
+            "{text}" to Uri.encode(text),
         )
+        var result = template
+        values.forEach { (key, value) -> result = result.replace(key, value) }
+        // "…?text=" with nothing after it would open the chat with an empty draft parameter.
+        return result.replace(Regex("[?&][^?&=]+=$"), "")
     }
 
-    private val WHATSAPP_PACKAGES = listOf("com.whatsapp", "com.whatsapp.w4b")
+    private fun runCustom(context: Context, action: CommandAction.Custom): Boolean {
+        val spec = action.action
+        if (spec.kind == ActionKind.SHORTCUT) return startShortcut(context, spec)
+        val targets = if (spec.packages.isEmpty()) listOf<String?>(null) else spec.packages
+        for (pkg in targets) {
+            val intent = buildIntent(spec, action.contact, action.text, pkg)
+            if (context.packageManager.resolveActivity(intent, 0) != null) {
+                start(context, intent)
+                return true
+            }
+        }
+        val contact = action.contact
+        if (spec.smsFallback && contact != null) {
+            start(
+                context,
+                Intent(Intent.ACTION_SENDTO, Uri.fromParts("sms", contact.number, null))
+                    .putExtra("sms_body", action.text),
+            )
+            return true
+        }
+        return false
+    }
+
+    /** The intent of [spec] filled with what was typed, aimed at [pkg] when given. */
+    fun buildIntent(spec: CustomAction, contact: ContactEntry?, text: String, pkg: String?): Intent {
+        val intent = Intent(spec.intentAction)
+        if (spec.template.isNotEmpty()) {
+            val uri = Uri.parse(fillTemplate(spec.template, contact, text, ::normalizedNumber))
+            if (spec.mimeType != null) intent.setDataAndType(uri, spec.mimeType) else intent.data = uri
+        } else if (spec.mimeType != null) {
+            intent.type = spec.mimeType
+        }
+        spec.textExtra?.let { intent.putExtra(it, text) }
+        pkg?.let { intent.setPackage(it) }
+        return intent
+    }
+
+    /** Recipes from [CustomActions.PROBES] that [packageName] answers to, ready to bind to a letter. */
+    fun probeIntents(context: Context, packageName: String): List<CustomAction> =
+        CustomActions.PROBES.filter {
+            val sample = ContactEntry("", "1")
+            val intent = buildIntent(it, sample, "x", packageName)
+            context.packageManager.resolveActivity(intent, 0) != null
+        }.map { it.copy(packages = listOf(packageName)) }
+
+    private fun startShortcut(context: Context, spec: CustomAction): Boolean {
+        val pkg = spec.packages.firstOrNull() ?: return false
+        context.getSystemService(LauncherApps::class.java)
+            .startShortcut(pkg, spec.template, null, null, Process.myUserHandle())
+        return true
+    }
+
+    /** Launcher shortcuts an app publishes (manifest, dynamic and pinned), usable as actions. */
+    fun loadShortcuts(context: Context, packageName: String): List<CustomAction> {
+        val launcherApps = context.getSystemService(LauncherApps::class.java) ?: return emptyList()
+        val query = LauncherApps.ShortcutQuery()
+            .setPackage(packageName)
+            .setQueryFlags(
+                LauncherApps.ShortcutQuery.FLAG_MATCH_MANIFEST or
+                    LauncherApps.ShortcutQuery.FLAG_MATCH_DYNAMIC or
+                    LauncherApps.ShortcutQuery.FLAG_MATCH_PINNED,
+            )
+        return runCatching {
+            launcherApps.getShortcuts(query, Process.myUserHandle()).orEmpty()
+                .filter { it.isEnabled }
+                .map {
+                    CustomAction(
+                        letter = "",
+                        label = it.shortLabel?.toString() ?: it.id,
+                        kind = ActionKind.SHORTCUT,
+                        template = it.id,
+                        packages = listOf(packageName),
+                        arg = ArgKind.NONE,
+                    )
+                }
+        }.getOrDefault(emptyList())
+    }
 
     private fun start(context: Context, intent: Intent) {
         context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))

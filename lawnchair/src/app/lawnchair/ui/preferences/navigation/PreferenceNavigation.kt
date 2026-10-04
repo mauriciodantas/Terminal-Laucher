@@ -39,6 +39,7 @@ import app.lawnchair.ui.preferences.destinations.FolderPreferences
 import app.lawnchair.ui.preferences.destinations.FontSelection
 import app.lawnchair.ui.preferences.destinations.GeneralPreferences
 import app.lawnchair.ui.preferences.destinations.GesturePreferences
+import app.lawnchair.ui.preferences.destinations.CommandActionsPreferences
 import app.lawnchair.ui.preferences.destinations.HiddenAppsPreferences
 import app.lawnchair.ui.preferences.destinations.HomeScreenGridPreferences
 import app.lawnchair.ui.preferences.destinations.HomeScreenPreferences
@@ -148,6 +149,10 @@ fun PreferenceNavigation(
         composable<DockSearchProvider>(
             deepLinks = getDeepLink(DockSearchProvider),
         ) { SearchProviderPreferences() }
+
+        composable<CommandActions>(
+            deepLinks = getDeepLink(CommandActions),
+        ) { CommandActionsPreferences() }
 
         composable<Smartspace>(
             deepLinks = getDeepLink(Smartspace),

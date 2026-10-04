@@ -148,6 +148,7 @@ private fun CommandScreen(onClose: () -> Unit) {
     var contacts by remember { mutableStateOf(CommandExecutor.loadContacts(context)) }
     var granted by remember { mutableStateOf(CommandExecutor.hasContactsPermission(context)) }
     var history by remember { mutableStateOf(CommandActivity.loadHistory(context)) }
+    val custom = remember { CustomActionStore.load(context) }
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
         granted = CommandExecutor.hasContactsPermission(context)
         contacts = CommandExecutor.loadContacts(context)
@@ -163,8 +164,8 @@ private fun CommandScreen(onClose: () -> Unit) {
     val focus = remember { FocusRequester() }
 
     val text = field.text
-    val analysis = remember(text, apps, contacts, granted) {
-        CommandEngine.analyze(text, apps, contacts, granted)
+    val analysis = remember(text, apps, contacts, granted, custom) {
+        CommandEngine.analyze(text, apps, contacts, granted, custom)
     }
     val sel = selected.coerceIn(0, maxOf(0, analysis.suggestions.size - 1))
     val top = analysis.suggestions.getOrNull(sel)
@@ -219,7 +220,7 @@ private fun CommandScreen(onClose: () -> Unit) {
     /** A suggestion that is already a complete, runnable command runs on the tap, without Enter. */
     fun pick(suggestion: Suggestion) {
         setText(suggestion.completion)
-        CommandEngine.analyze(suggestion.completion, apps, contacts, granted).action
+        CommandEngine.analyze(suggestion.completion, apps, contacts, granted, custom).action
             ?.let { runAction(it, suggestion.completion.trim()) }
     }
 
@@ -233,7 +234,7 @@ private fun CommandScreen(onClose: () -> Unit) {
             selected = 0
             done = null
             // A spoken command that is already complete and runnable runs on its own.
-            val action = CommandEngine.analyze(value, apps, contacts, granted).action
+            val action = CommandEngine.analyze(value, apps, contacts, granted, custom).action
             if (action != null) {
                 runAction(action, value.trim())
                 return@rememberLauncherForActivityResult

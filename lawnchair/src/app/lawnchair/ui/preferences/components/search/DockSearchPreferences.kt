@@ -50,6 +50,7 @@ import app.lawnchair.ui.preferences.components.controls.SwitchPreference
 import app.lawnchair.ui.preferences.components.layout.ExpandAndShrink
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceTemplate
+import app.lawnchair.ui.preferences.navigation.CommandActions
 import app.lawnchair.ui.preferences.navigation.DockSearchProvider
 import app.lawnchair.ui.theme.isSelectedThemeDark
 import app.lawnchair.ui.theme.preferenceGroupColor
@@ -101,6 +102,11 @@ fun DockSearchPreference(
                                 adapter = prefs2.commandBarEnabled.getAdapter(),
                                 label = stringResource(id = R.string.command_bar_setting),
                                 description = stringResource(id = R.string.command_bar_setting_desc),
+                            )
+                            NavigationActionPreference(
+                                label = stringResource(R.string.command_actions_title),
+                                destination = CommandActions,
+                                subtitle = stringResource(R.string.command_actions_desc),
                             )
                             NavigationActionPreference(
                                 label = stringResource(R.string.search_provider),

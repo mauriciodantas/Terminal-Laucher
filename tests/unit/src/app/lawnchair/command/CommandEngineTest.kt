@@ -109,7 +109,7 @@ class CommandEngineTest {
     }
 
     @Test fun messageUsesTheShortcutW() {
-        assertEquals(CommandAction.Message(contacts[2]), run("w bea").action)
+        assertEquals(CommandAction.Custom(CustomActions.WHATSAPP, contacts[2]), run("w bea").action)
         assertEquals("WHATSAPP PARA", run("w bea").previewTitle)
     }
 
@@ -239,16 +239,16 @@ class CommandEngineTest {
 
     @Test fun messageTextFollowsTheContactName() {
         val a = run("w ana chego em 10 min")
-        assertEquals(CommandAction.Message(contacts[0], "chego em 10 min"), a.action)
+        assertEquals(CommandAction.Custom(CustomActions.WHATSAPP, contacts[0], "chego em 10 min"), a.action)
         assertEquals("ANA SOUZA · “chego em 10 min”", a.preview)
     }
 
     @Test fun fullNameThenMessage() {
-        assertEquals(CommandAction.Message(contacts[0], "oi"), run("w ana souza oi").action)
+        assertEquals(CommandAction.Custom(CustomActions.WHATSAPP, contacts[0], "oi"), run("w ana souza oi").action)
     }
 
     @Test fun colonSeparatesNameFromMessage() {
-        assertEquals(CommandAction.Message(contacts[0], "sou eu"), run("w ana: sou eu").action)
+        assertEquals(CommandAction.Custom(CustomActions.WHATSAPP, contacts[0], "sou eu"), run("w ana: sou eu").action)
     }
 
     @Test fun suggestionsKeepTheMessage() {
@@ -258,14 +258,14 @@ class CommandEngineTest {
 
     @Test fun pickingASuggestionKeepsTheMessageRunnable() {
         val pick = run("w an oi").suggestions.first().completion
-        assertEquals(CommandAction.Message(contacts[0], "oi"), run(pick).action)
+        assertEquals(CommandAction.Custom(CustomActions.WHATSAPP, contacts[0], "oi"), run(pick).action)
     }
 
     @Test fun spokenLeadInIsDropped() {
         assertEquals("chego logo", CommandEngine.cleanMessage("dizendo que chego logo"))
         assertEquals("oi", CommandEngine.cleanMessage("falando oi"))
         assertEquals("que horas?", CommandEngine.cleanMessage("que horas?"))
-        assertEquals(CommandAction.Message(contacts[0], "chego logo"), run("w ana dizendo que chego logo").action)
+        assertEquals(CommandAction.Custom(CustomActions.WHATSAPP, contacts[0], "chego logo"), run("w ana dizendo que chego logo").action)
     }
 
     @Test fun splitPrefersTheLongestName() {
@@ -278,5 +278,67 @@ class CommandEngineTest {
         assertNull(run("w zzz oi").action)
         assertNull(run("w ").action)
         assertTrue(run("w ana", granted = false).needsContacts)
+    }
+
+    // ---- ações personalizadas ----
+
+    private fun runWith(text: String, vararg actions: CustomAction) =
+        CommandEngine.analyze(text, apps, contacts, true, actions.toList())
+
+    private val youtube = CustomAction(
+        "yt", "YouTube", ActionKind.INTENT, "https://youtube.com/results?search_query={text}",
+        emptyList(), ArgKind.TEXT,
+    )
+    private val flashlight = CustomAction(
+        "f", "Lanterna", ActionKind.SHORTCUT, "torch", listOf("pkg"), ArgKind.NONE,
+    )
+
+    @Test fun customLetterAppearsInTheCommandList() {
+        val s = runWith("y", youtube).suggestions
+        assertEquals("yt ", s.first().completion)
+    }
+
+    @Test fun customTextActionTakesTheRest() {
+        assertEquals(CommandAction.Custom(youtube, text = "gatos"), runWith("yt gatos", youtube).action)
+        assertNull(runWith("yt ", youtube).action)
+    }
+
+    @Test fun customActionWithoutArgumentRunsOnTheBareLetter() {
+        assertEquals(CommandAction.Custom(flashlight), runWith("f", flashlight).action)
+    }
+
+    @Test fun removedPresetStopsAnswering() {
+        assertNull(runWith("w ana oi").action?.takeIf { it is CommandAction.Custom })
+    }
+
+    @Test fun contactActionUsesItsOwnLetterAndTitle() {
+        val tg = CustomAction("tg", "Telegram", ActionKind.INTENT, "tg://resolve?phone={number}", emptyList(), ArgKind.CONTACT)
+        val a = runWith("tg bea", tg)
+        assertEquals(CommandAction.Custom(tg, contacts[2]), a.action)
+        assertEquals("TELEGRAM PARA", a.previewTitle)
+    }
+
+    @Test fun letterValidation() {
+        val existing = listOf(CustomActions.WHATSAPP)
+        assertNull(CustomActions.validateLetter("x", existing))
+        assertEquals("\"w\" já está em uso", CustomActions.validateLetter("w", existing))
+        assertNull(CustomActions.validateLetter("w", existing, ignore = CustomActions.WHATSAPP))
+        assertEquals("\"calc\" já é um comando do sistema", CustomActions.validateLetter("calc", existing))
+        assertEquals("Informe uma letra", CustomActions.validateLetter(" ", existing))
+    }
+
+    @Test fun probesAreNotBoundToALetterYet() {
+        assertTrue(CustomActions.PROBES.all { it.letter.isEmpty() && it.packages.isEmpty() })
+        assertTrue(CustomActions.PROBES.any { it.textExtra != null && it.template.isEmpty() })
+    }
+
+    @Test fun importKeepsWhatTheUserHasAndSkipsConflicts() {
+        val tg = CustomAction("TG", "Telegram", ActionKind.INTENT, "tg://x", emptyList(), ArgKind.CONTACT)
+        val clash = CustomAction("w", "Outro", ActionKind.INTENT, "x://", emptyList(), ArgKind.TEXT)
+        val reserved = CustomAction("calc", "Calc", ActionKind.INTENT, "x://", emptyList(), ArgKind.TEXT)
+        val (list, skipped) = CustomActions.merge(listOf(CustomActions.WHATSAPP), listOf(tg, clash, reserved, tg))
+        assertEquals(listOf("w", "tg"), list.map { it.letter })
+        assertEquals(3, skipped)
+        assertEquals(CustomActions.WHATSAPP, list.first())
     }
 }
