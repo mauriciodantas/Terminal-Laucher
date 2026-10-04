@@ -49,4 +49,20 @@ class VoiceCommandTest {
     @Test fun aBareCommandKeepsTheSpaceForAutocomplete() {
         assertEquals("ligar ", n("ligar"))
     }
+
+    @Test fun spokenCommandsBecomeRunnableActions() {
+        val apps = listOf(AppEntry("Camera", "pkg/Camera"))
+        val contacts = listOf(ContactEntry("Ana Souza", "111"))
+        fun action(spoken: String) =
+            CommandEngine.analyze(n(spoken), apps, contacts, true).action
+
+        assertEquals(CommandAction.OpenApp(apps[0]), action("abrir o camera"))
+        assertEquals(CommandAction.Call(contacts[0]), action("chamar a ana"))
+        assertEquals(CommandAction.Message(contacts[0]), action("mensagem para ana"))
+        assertEquals(CommandAction.SetAlarm(6, 30), action("alarme às 6:30"))
+        assertEquals(CommandAction.Calc("12*8", "96"), action("calcular 12 vezes 8"))
+        // Incomplete or unknown speech does not run anything.
+        assertEquals(null, action("ligar"))
+        assertEquals(null, action("abrir xyz"))
+    }
 }

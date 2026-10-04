@@ -232,6 +232,12 @@ private fun CommandScreen(onClose: () -> Unit) {
             field = TextFieldValue(value, TextRange(value.length))
             selected = 0
             done = null
+            // A spoken command that is already complete and runnable runs on its own.
+            val action = CommandEngine.analyze(value, apps, contacts, granted).action
+            if (action != null) {
+                runAction(action, value.trim())
+                return@rememberLauncherForActivityResult
+            }
         }
         runCatching { focus.requestFocus() }
     }
