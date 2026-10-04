@@ -146,6 +146,11 @@ private fun GlanceTargetsPreferences(modifier: Modifier = Modifier) {
         modifier = modifier.padding(top = 8.dp),
     ) {
         SwitchPreference(
+            adapter = prefs2.glanceStatusLine.getAdapter(),
+            label = stringResource(id = R.string.glance_status_line),
+            description = stringResource(id = R.string.glance_status_line_desc),
+        )
+        SwitchPreference(
             adapter = prefs2.glanceAutoPriority.getAdapter(),
             label = stringResource(id = R.string.glance_auto_priority),
             description = stringResource(id = R.string.glance_auto_priority_desc),

@@ -1156,6 +1156,8 @@
     <string name="glance_empty_primary" translatable="false">NENHUM ALVO ATIVO</string>
     <string name="glance_empty_secondary" translatable="false">ATIVE ALVOS EM CONFIGURAÇÕES</string>
     <string name="glance_tag_priority" translatable="false">[PRIORIDADE]</string>
+    <string name="glance_status_line" translatable="false">Linha de status dinâmica</string>
+    <string name="glance_status_line_desc" translatable="false">Perfil de som, armazenamento e memória no lugar do texto fixo sob a data</string>
     <string name="glance_open_settings" translatable="false">Abrir configurações</string>
     <string name="glance_allow" translatable="false">Permitir</string>
     <string name="glance_media_setup_title" translatable="false">Mídia tocando precisa de acesso</string>

@@ -91,7 +91,34 @@ class GlancePanelController(
         autoPriority = prefs2.glanceAutoPriority.firstCached(),
     )
 
+    /** Updates the line under the date: sound profile, storage and memory, or the fixed text. */
+    private fun renderStatusLine() {
+        val view = root.findViewById<TextView>(R.id.nostromo_status) ?: return
+        if (!prefs2.glanceStatusLine.firstCached()) {
+            view.text = StatusLine.FALLBACK
+            return
+        }
+        val audio = context.getSystemService(android.media.AudioManager::class.java)
+        val notifications = context.getSystemService(android.app.NotificationManager::class.java)
+        val dnd = notifications?.currentInterruptionFilter.let {
+            it != null && it != android.app.NotificationManager.INTERRUPTION_FILTER_ALL &&
+                it != android.app.NotificationManager.INTERRUPTION_FILTER_UNKNOWN
+        }
+        val profile = audio?.let { StatusLine.soundProfile(it.ringerMode, dnd) }
+        val storage = runCatching {
+            val stat = android.os.StatFs(android.os.Environment.getDataDirectory().path)
+            StatusLine.percentUsed(stat.totalBytes - stat.availableBytes, stat.totalBytes)
+        }.getOrNull()
+        val ram = runCatching {
+            val info = android.app.ActivityManager.MemoryInfo()
+            context.getSystemService(android.app.ActivityManager::class.java).getMemoryInfo(info)
+            StatusLine.percentUsed(info.totalMem - info.availMem, info.totalMem)
+        }.getOrNull()
+        view.text = StatusLine.format(profile, storage, ram)
+    }
+
     private fun refresh() {
+        renderStatusLine()
         val glanceTargets = latest.map { it.toGlanceTarget() }
         actions = latest.associate { it.id to (it.headerAction ?: it.baseAction) }
         panel = GlanceEngine.build(glanceTargets, settings(), clock())

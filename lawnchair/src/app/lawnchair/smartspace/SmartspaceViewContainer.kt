@@ -66,10 +66,7 @@ class SmartspaceViewContainer @JvmOverloads constructor(
             setShadowLayer(8f, 0f, 0f, ColorUtils.setAlphaComponent(phosphor, 0x66))
         }
         root.findViewById<TextView>(R.id.nostromo_date)?.setTextColor(phosphor)
-        root.findViewById<TextView>(R.id.nostromo_status)?.apply {
-            setTextColor(dim)
-            typeIn(text, startDelayMs = 450)
-        }
+        root.findViewById<TextView>(R.id.nostromo_status)?.setTextColor(dim)
         root.findViewById<TextView>(R.id.nostromo_header)?.apply {
             setTextColor(phosphor)
             typeIn(context.getString(R.string.nostromo_header, batteryReadout()))

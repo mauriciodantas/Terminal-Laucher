@@ -799,6 +799,12 @@ class PreferenceManager2 @Inject constructor(
         defaultValue = true,
     )
 
+    /** Replaces the fixed text under the date with the sound profile, storage and memory. */
+    val glanceStatusLine = preference(
+        key = booleanPreferencesKey("glance_status_line"),
+        defaultValue = true,
+    )
+
     /** Moves an event that is about to start to the front of the panel and marks it in red. */
     val glanceAutoPriority = preference(
         key = booleanPreferencesKey("glance_auto_priority"),
