@@ -821,6 +821,28 @@ class PreferenceManager2 @Inject constructor(
         defaultValue = true,
     )
 
+    /** The row of WhatsApp chat shortcuts ("Conversas rápidas") under the panel. */
+    val glanceChats = preference(
+        key = booleanPreferencesKey("glance_chats"),
+        defaultValue = true,
+    )
+
+    /** Keys of the chats the user picked, in order, separated by line breaks. Empty: the pinned ones. */
+    val glanceChatKeys = preference(
+        key = stringPreferencesKey("glance_chat_keys"),
+        defaultValue = "",
+    )
+
+    val glanceChatBusiness = preference(
+        key = booleanPreferencesKey("glance_chat_business"),
+        defaultValue = false,
+    )
+
+    val glanceChatBadge = preference(
+        key = booleanPreferencesKey("glance_chat_badge"),
+        defaultValue = true,
+    )
+
     /** Minutes before its start that an event is moved to the front and marked in red. */
     val glanceLeadMinutes = preference(
         key = intPreferencesKey("glance_lead_minutes"),

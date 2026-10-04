@@ -52,4 +52,20 @@ class BluetoothBatteryTest {
         assertEquals(labels.size, labels.toSet().size)
         assertEquals(true, labels.all { it.length <= 8 })
     }
+
+    @Test
+    fun looksLikeCalculator_matchesEnglishAndPortugueseLabels() {
+        listOf("Calculator", "Calculadora", "Samsung Calculator", "calc").forEach {
+            assertEquals(it, true, GlanceShortcut.looksLikeCalculator(it))
+        }
+        listOf("Calendar", "Camera", "Contacts").forEach {
+            assertEquals(it, false, GlanceShortcut.looksLikeCalculator(it))
+        }
+    }
+
+    @Test
+    fun calculatorPackages_includeSamsungAndGoogle() {
+        assertEquals(true, "com.sec.android.app.popupcalculator" in GlanceShortcut.CALCULATOR_PACKAGES)
+        assertEquals(true, "com.google.android.calculator" in GlanceShortcut.CALCULATOR_PACKAGES)
+    }
 }

@@ -70,8 +70,12 @@ object CommandExecutor {
                 val clipboard = context.getSystemService(ClipboardManager::class.java)
                 clipboard.setPrimaryClip(ClipData.newPlainText("calc", action.result))
             }
-            is CommandAction.Call -> start(context, Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", action.contact.number, null)))
-            is CommandAction.Message -> start(context, Intent(Intent.ACTION_SENDTO, Uri.fromParts("sms", action.contact.number, null)))
+            is CommandAction.Call -> {
+                val uri = Uri.fromParts("tel", action.contact.number, null)
+                // Calls straight away when allowed; otherwise the dialer opens with the number.
+                start(context, Intent(if (hasCallPermission(context)) Intent.ACTION_CALL else Intent.ACTION_DIAL, uri))
+            }
+            is CommandAction.Message -> openWhatsapp(context, action.contact.number)
             is CommandAction.Route -> start(
                 context,
                 Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=" + Uri.encode(action.query))),
@@ -90,6 +94,32 @@ object CommandExecutor {
         }
         true
     }.getOrDefault(false)
+
+    fun hasCallPermission(context: Context): Boolean =
+        context.checkSelfPermission(android.Manifest.permission.CALL_PHONE) ==
+            android.content.pm.PackageManager.PERMISSION_GRANTED
+
+    /** The number as WhatsApp wants it: country code and digits, no plus sign. */
+    private fun whatsappNumber(raw: String): String {
+        val region = java.util.Locale.getDefault().country
+        val e164 = runCatching { android.telephony.PhoneNumberUtils.formatNumberToE164(raw, region) }.getOrNull()
+        return (e164 ?: raw).filter { it.isDigit() }
+    }
+
+    /** Opens the chat in WhatsApp (or WhatsApp Business); falls back to an SMS when neither is installed. */
+    private fun openWhatsapp(context: Context, number: String) {
+        val uri = Uri.parse("https://wa.me/" + whatsappNumber(number))
+        for (pkg in WHATSAPP_PACKAGES) {
+            val intent = Intent(Intent.ACTION_VIEW, uri).setPackage(pkg)
+            if (context.packageManager.resolveActivity(intent, 0) != null) {
+                start(context, intent)
+                return
+            }
+        }
+        start(context, Intent(Intent.ACTION_SENDTO, Uri.fromParts("sms", number, null)))
+    }
+
+    private val WHATSAPP_PACKAGES = listOf("com.whatsapp", "com.whatsapp.w4b")
 
     private fun start(context: Context, intent: Intent) {
         context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))

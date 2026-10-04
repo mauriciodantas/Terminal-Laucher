@@ -3,6 +3,7 @@ package app.lawnchair.command
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.speech.RecognizerIntent
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -23,6 +24,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicTextField
@@ -137,6 +139,8 @@ private fun CommandScreen(onClose: () -> Unit) {
         contacts = CommandExecutor.loadContacts(context)
     }
 
+    var pendingAction by remember { mutableStateOf<CommandAction?>(null) }
+
     var field by remember { mutableStateOf(TextFieldValue("")) }
     var selected by remember { mutableIntStateOf(0) }
     var historyIndex by remember { mutableIntStateOf(-1) }
@@ -160,8 +164,7 @@ private fun CommandScreen(onClose: () -> Unit) {
     val executedLabel = stringResource(R.string.command_executed)
     val failedLabel = stringResource(R.string.command_failed)
 
-    fun run() {
-        val action = analysis.action ?: return
+    fun finishRun(action: CommandAction) {
         val ok = CommandExecutor.execute(context, action)
         if (!ok) {
             done = failedLabel
@@ -175,6 +178,39 @@ private fun CommandScreen(onClose: () -> Unit) {
         } else {
             done = executedLabel
             onClose()
+        }
+    }
+
+    val callPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+        // Allowed: the call starts. Denied: the dialer opens with the number instead.
+        pendingAction?.let { finishRun(it) }
+        pendingAction = null
+    }
+
+    fun run() {
+        val action = analysis.action ?: return
+        if (action is CommandAction.Call && !CommandExecutor.hasCallPermission(context)) {
+            pendingAction = action
+            callPermission.launch(android.Manifest.permission.CALL_PHONE)
+            return
+        }
+        finishRun(action)
+    }
+
+    val voiceIntent = remember {
+        Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+            .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            .putExtra(RecognizerIntent.EXTRA_LANGUAGE, java.util.Locale.getDefault().toLanguageTag())
+            .putExtra(RecognizerIntent.EXTRA_PROMPT, context.getString(R.string.command_voice_prompt))
+    }
+    val voiceAvailable = remember { context.packageManager.resolveActivity(voiceIntent, 0) != null }
+    val voice = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        val spoken = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
+        if (result.resultCode == android.app.Activity.RESULT_OK && !spoken.isNullOrBlank()) {
+            val value = VoiceCommand.normalize(spoken)
+            field = TextFieldValue(value, TextRange(value.length))
+            selected = 0
+            done = null
         }
     }
 
@@ -296,6 +332,19 @@ private fun CommandScreen(onClose: () -> Unit) {
                                 }
                             },
                     )
+                }
+                if (voiceAvailable) {
+                    Spacer(Modifier.width(6.dp))
+                    val voiceLabel = stringResource(R.string.command_voice)
+                    Box(
+                        Modifier
+                            .size(44.dp)
+                            .clickable { runCatching { voice.launch(voiceIntent) } }
+                            .semantics { contentDescription = voiceLabel },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text("[MIC]", color = phosphor, fontFamily = Mono, fontSize = 10.sp, letterSpacing = 0.5.sp)
+                    }
                 }
             }
 

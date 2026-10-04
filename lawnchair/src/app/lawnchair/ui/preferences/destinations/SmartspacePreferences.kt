@@ -21,6 +21,10 @@ import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.mutableStateOf
+import android.content.pm.LauncherApps
+import app.lawnchair.smartspace.glance.ChatCandidate
+import app.lawnchair.smartspace.glance.ChatShortcuts
+import app.lawnchair.smartspace.glance.WhatsAppChatSource
 import androidx.compose.runtime.setValue
 import app.lawnchair.smartspace.glance.GlanceEngine
 import app.lawnchair.smartspace.provider.BluetoothBatteryProvider
@@ -191,6 +195,76 @@ private fun GlanceTargetsPreferences(modifier: Modifier = Modifier) {
             label = stringResource(id = R.string.glance_shortcuts),
             description = stringResource(id = R.string.glance_shortcuts_desc),
         )
+    }
+    GlanceChatsPreferences(modifier = modifier.padding(top = 8.dp))
+}
+
+/** The "Conversas rápidas" row: which WhatsApp chat shortcuts appear under the panel. */
+@Composable
+private fun GlanceChatsPreferences(modifier: Modifier = Modifier) {
+    val prefs2 = preferenceManager2()
+    val context = LocalContext.current
+    val includeBusiness = prefs2.glanceChatBusiness.getAdapter()
+    val chosenAdapter = prefs2.glanceChatKeys.getAdapter()
+    var available by remember { mutableStateOf<List<ChatCandidate>>(emptyList()) }
+    var hasPermission by remember { mutableStateOf(true) }
+    // The list is read again when the screen comes back, so a shortcut just added in WhatsApp shows up.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        hasPermission = context.getSystemService(LauncherApps::class.java)?.hasShortcutHostPermission() == true
+        available = WhatsAppChatSource.load(context, includeBusiness.state.value)
+    }
+    val picked = ChatShortcuts.parseKeys(chosenAdapter.state.value)
+
+    PreferenceGroup(
+        heading = stringResource(id = R.string.glance_group_chats),
+        modifier = modifier,
+    ) {
+        SwitchPreference(
+            adapter = prefs2.glanceChats.getAdapter(),
+            label = stringResource(id = R.string.glance_chats),
+            description = stringResource(id = R.string.glance_chats_desc),
+        )
+        SwitchPreference(
+            adapter = prefs2.glanceChatBadge.getAdapter(),
+            label = stringResource(id = R.string.glance_chats_badge),
+            description = stringResource(id = R.string.glance_chats_badge_desc),
+        )
+        SwitchPreference(
+            checked = includeBusiness.state.value,
+            onCheckedChange = {
+                includeBusiness.onChange(it)
+                available = WhatsAppChatSource.load(context, it)
+            },
+            label = stringResource(id = R.string.glance_chats_business),
+            description = stringResource(id = R.string.glance_chats_business_desc),
+        )
+    }
+    PreferenceGroup(
+        heading = stringResource(id = R.string.glance_chats_limit, picked.size, ChatShortcuts.MAX),
+        description = stringResource(
+            id = if (hasPermission) R.string.glance_chats_howto else R.string.glance_chats_need_default,
+        ),
+        modifier = modifier,
+    ) {
+        if (available.isEmpty()) {
+            Text(
+                text = stringResource(id = R.string.glance_chats_empty),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(16.dp),
+            )
+        }
+        available.forEach { chat ->
+            SwitchPreference(
+                checked = chat.key in picked,
+                onCheckedChange = {
+                    chosenAdapter.onChange(ChatShortcuts.serializeKeys(ChatShortcuts.toggle(picked, chat.key)))
+                },
+                label = chat.label,
+                description = stringResource(
+                    id = if (chat.pinned) R.string.glance_chats_pinned else R.string.glance_chats_recent,
+                ),
+            )
+        }
     }
 }
 

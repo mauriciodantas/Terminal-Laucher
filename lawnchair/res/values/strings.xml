@@ -1141,7 +1141,7 @@
 
     <!-- At a Glance -->
     <string name="command_bar_setting" translatable="false">Barra de comando</string>
-    <string name="command_bar_setting_desc" translatable="false">Tocar na barra abre o terminal de comandos com autocompletar (abrir, calc, alarme, ligar...)</string>
+    <string name="command_bar_setting_desc" translatable="false">Tocar na barra abre o terminal de comandos com autocompletar (abrir, calc, alarme, ligar, voz...)</string>
     <string name="command_title" translatable="false">&gt; ENTRADA DE COMANDO</string>
     <string name="command_subtitle" translatable="false">AUTOCOMPLETAR · HISTÓRICO</string>
     <string name="command_header_right" translatable="false">TERMINAL 03</string>
@@ -1153,6 +1153,8 @@
     <string name="command_executed" translatable="false">EXECUTADO</string>
     <string name="command_copied" translatable="false">COPIADO · %1$s</string>
     <string name="command_failed" translatable="false">NENHUM APP PODE EXECUTAR ESTE COMANDO</string>
+    <string name="command_voice" translatable="false">Falar o comando</string>
+    <string name="command_voice_prompt" translatable="false">Diga o comando</string>
     <string name="command_input_label" translatable="false">Comando</string>
     <string name="glance_group_targets" translatable="false">Alvos</string>
     <string name="glance_agenda" translatable="false">Agenda</string>
@@ -1169,7 +1171,23 @@
     <string name="glance_reminders_desc" translatable="false">Tarefas e lembretes que o Smartspacer fornece</string>
     <string name="glance_shortcuts" translatable="false">Atalhos de utilidade</string>
     <string name="glance_shortcuts_desc" translatable="false">Lanterna, calculadora, câmera e relógio sob o painel</string>
+    <string name="glance_no_calculator" translatable="false">Nenhuma calculadora encontrada</string>
     <string name="glance_group_shortcuts" translatable="false">Atalhos</string>
+    <string name="glance_group_chats" translatable="false">Conversas rápidas</string>
+    <string name="glance_chats" translatable="false">Conversas do WhatsApp</string>
+    <string name="glance_chats_desc" translatable="false">Atalhos de conversa sob o painel, abrem direto no chat</string>
+    <string name="glance_chats_howto" translatable="false">No WhatsApp, abra a conversa e toque em ⋮ › Mais › Adicionar atalho. O atalho fixado aparece aqui. Sem escolha, a linha mostra os fixados e depois os mais recentes.</string>
+    <string name="glance_chats_need_default" translatable="false">Defina o Terminal como launcher padrão para ler os atalhos do WhatsApp.</string>
+    <string name="glance_chats_empty" translatable="false">Nenhum atalho de conversa encontrado.</string>
+    <string name="glance_chats_pinned" translatable="false">Atalho fixado</string>
+    <string name="glance_chats_recent" translatable="false">Recente</string>
+    <string name="glance_chats_limit" translatable="false">%1$d de %2$d na tela inicial</string>
+    <string name="glance_chats_badge" translatable="false">Mostrar não lidas</string>
+    <string name="glance_chats_badge_desc" translatable="false">Contador por conversa, lido das notificações</string>
+    <string name="glance_chats_business" translatable="false">Incluir WhatsApp Business</string>
+    <string name="glance_chats_business_desc" translatable="false">Lê também os atalhos de com.whatsapp.w4b</string>
+    <string name="glance_chats_label" translatable="false">› CONVERSAS · WHATSAPP</string>
+    <string name="glance_chat_open" translatable="false">Abrir conversa com %1$s</string>
     <string name="glance_lead_time" translatable="false">Antecedência do evento</string>
     <string name="glance_lead_time_desc" translatable="false">Só destaca o compromisso a partir deste prazo</string>
     <string name="glance_lead_time_value" translatable="false">%1$d min</string>

@@ -46,7 +46,7 @@ object CommandEngine {
         "ligar" to "ligar [contato]",
         "rota" to "rota [lugar]",
         "t" to "t [tarefa] · nova tarefa",
-        "w" to "w [contato] · mensagem",
+        "w" to "w [contato] · whatsapp",
         "c" to "c [conta] · atalho de calc",
     )
 
@@ -71,7 +71,7 @@ object CommandEngine {
             "ligar" -> analyzeContact(arg, contacts, contactsGranted, "ligar", "LIGAR PARA") {
                 CommandAction.Call(it)
             }
-            "w" -> analyzeContact(arg, contacts, contactsGranted, "w", "MENSAGEM PARA") {
+            "w" -> analyzeContact(arg, contacts, contactsGranted, "w", "WHATSAPP PARA") {
                 CommandAction.Message(it)
             }
             "alarme" -> analyzeAlarm(arg)

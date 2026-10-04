@@ -110,7 +110,7 @@ class CommandEngineTest {
 
     @Test fun messageUsesTheShortcutW() {
         assertEquals(CommandAction.Message(contacts[2]), run("w bea").action)
-        assertEquals("MENSAGEM PARA", run("w bea").previewTitle)
+        assertEquals("WHATSAPP PARA", run("w bea").previewTitle)
     }
 
     @Test fun contactWithoutArgumentDoesNotCallAnyone() {

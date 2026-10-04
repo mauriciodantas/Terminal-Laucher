@@ -38,6 +38,23 @@ enum class GlanceShortcut(val label: String) {
 
     companion object {
         /** Label of the flashlight shortcut, which shows whether the torch is on. */
+        /** Calculator apps to try when the system has no default calculator category (Samsung, Xiaomi...). */
+        val CALCULATOR_PACKAGES = listOf(
+            "com.sec.android.app.popupcalculator",
+            "com.google.android.calculator",
+            "com.android.calculator2",
+            "com.miui.calculator",
+            "com.oneplus.calculator",
+            "com.coloros.calculator",
+            "com.huawei.calculator",
+        )
+
+        /** True for a launcher label that is a calculator, in English or Portuguese. */
+        fun looksLikeCalculator(label: String): Boolean {
+            val l = label.lowercase()
+            return l.contains("calculator") || l.contains("calculadora") || l == "calc"
+        }
+
         fun torchLabel(on: Boolean): String = if (on) "[LANTERNA]" else TORCH.label
     }
 }
