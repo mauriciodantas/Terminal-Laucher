@@ -196,12 +196,11 @@ private fun GlanceTargetsPreferences(modifier: Modifier = Modifier) {
             description = stringResource(id = R.string.glance_shortcuts_desc),
         )
     }
-    GlanceChatsPreferences(modifier = modifier.padding(top = 8.dp))
 }
 
-/** The "Conversas rápidas" row: which WhatsApp chat shortcuts appear under the panel. */
+/** "Conversas rápidas": which WhatsApp chat shortcuts appear above the dock icons. */
 @Composable
-private fun GlanceChatsPreferences(modifier: Modifier = Modifier) {
+fun ChatShortcutsPreferences(modifier: Modifier = Modifier) {
     val prefs2 = preferenceManager2()
     val context = LocalContext.current
     val includeBusiness = prefs2.glanceChatBusiness.getAdapter()

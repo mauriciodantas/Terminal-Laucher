@@ -29,7 +29,10 @@ import android.os.Bundle
 import android.util.Pair
 import android.view.Display
 import android.view.View
+import android.view.Gravity
 import android.view.ViewGroup
+import android.widget.FrameLayout
+import app.lawnchair.chats.ChatsStripView
 import android.view.ViewTreeObserver
 import android.window.SplashScreen
 import androidx.core.view.WindowInsetsCompat
@@ -178,6 +181,23 @@ class LawnchairLauncher : QuickstepLauncher() {
         )
     }
 
+    /** Adds "Conversas rápidas" right above the dock icons, hidden whenever the home screen is not in front. */
+    private fun installChatsStrip() {
+        val strip = ChatsStripView(this)
+        dragLayer.addView(
+            strip,
+            dragLayer.indexOfChild(hotseat) + 1,
+            FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM),
+        )
+        stateManager.addStateListener(
+            object : StateManager.StateListener<LauncherState> {
+                override fun onStateTransitionStart(toState: LauncherState) {
+                    strip.animate().alpha(if (toState === LauncherState.NORMAL) 1f else 0f).setDuration(150).start()
+                }
+            },
+        )
+    }
+
     /** Sets a solid terminal-black wallpaper once, on the first run of this launcher. */
     private fun applyNostromoWallpaper() {
         val store = getSharedPreferences("nostromo", Context.MODE_PRIVATE)
@@ -195,6 +215,7 @@ class LawnchairLauncher : QuickstepLauncher() {
 
         applyNostromoWallpaper()
         installCrtOverlay()
+        installChatsStrip()
         // Only on a real start: a recreation (rotation, theme change) must not open it again.
         if (savedInstanceState == null && OnboardingActivity.shouldShow(this)) OnboardingActivity.start(this)
 

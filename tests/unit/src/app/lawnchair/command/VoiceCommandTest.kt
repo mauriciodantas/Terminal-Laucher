@@ -65,4 +65,10 @@ class VoiceCommandTest {
         assertEquals(null, action("ligar"))
         assertEquals(null, action("abrir xyz"))
     }
+
+    @Test fun spokenMessageCarriesItsText() {
+        val contacts = listOf(ContactEntry("Ana Souza", "111"))
+        val a = CommandEngine.analyze(n("enviar mensagem para a ana dizendo que chego logo"), emptyList(), contacts, true)
+        assertEquals(CommandAction.Message(contacts[0], "chego logo"), a.action)
+    }
 }

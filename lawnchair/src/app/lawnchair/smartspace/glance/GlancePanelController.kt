@@ -5,7 +5,6 @@ import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
-import android.service.notification.StatusBarNotification
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
 import android.provider.AlarmClock
@@ -16,7 +15,6 @@ import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 import app.lawnchair.preferences2.PreferenceManager2
@@ -25,18 +23,13 @@ import app.lawnchair.smartspace.model.SmartspaceAction
 import app.lawnchair.smartspace.model.SmartspaceTarget
 import app.lawnchair.smartspace.provider.SmartspaceProvider
 import app.lawnchair.theme.color.tokens.PhosphorColorToken
-import androidx.core.content.res.ResourcesCompat
 import com.android.launcher3.R
-import com.android.launcher3.notification.NotificationKeyData
-import com.android.launcher3.notification.NotificationListener
-import com.android.launcher3.util.PackageUserKey
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 /**
  * Feeds the At a Glance panel of the home screen: it reads the smartspace targets, lets
@@ -68,22 +61,6 @@ class GlancePanelController(
         }
     }
 
-    /** A chat notification came or went: the unread counters of the chat row may have changed. */
-    private val notificationsListener = object : NotificationListener.NotificationsChangedListener {
-        override fun onNotificationPosted(postedPackageUserKey: PackageUserKey?, notificationKey: NotificationKeyData?) =
-            onNotificationsChanged()
-
-        override fun onNotificationRemoved(removedPackageUserKey: PackageUserKey?, notificationKey: NotificationKeyData?) =
-            onNotificationsChanged()
-
-        override fun onNotificationFullRefresh(activeNotifications: MutableList<StatusBarNotification>?) =
-            onNotificationsChanged()
-
-        private fun onNotificationsChanged() {
-            handler.post { renderChats() }
-        }
-    }
-
     fun start() {
         refresh()
         val newScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -104,12 +81,10 @@ class GlancePanelController(
                 context.getSystemService(CameraManager::class.java)
                     ?.registerTorchCallback(torchCallback, handler)
             }
-            NotificationListener.addNotificationsChangedListener(notificationsListener)
         }
     }
 
     fun stop() {
-        NotificationListener.removeNotificationsChangedListener(notificationsListener)
         runCatching { context.getSystemService(CameraManager::class.java)?.unregisterTorchCallback(torchCallback) }
         scope?.cancel()
         scope = null
@@ -209,112 +184,6 @@ class GlancePanelController(
         }
     }
 
-    /**
-     * The "Conversas rápidas" row: WhatsApp chat shortcuts the user picked (or pinned inside
-     * WhatsApp), each one opening its chat directly, with an optional unread counter.
-     */
-    private fun renderChats() {
-        val row = root.findViewById<LinearLayout>(R.id.nostromo_chats) ?: return
-        if (previewMode || !prefs2.glanceChats.firstCached()) {
-            row.removeAllViews()
-            row.visibility = View.GONE
-            return
-        }
-        val includeBusiness = prefs2.glanceChatBusiness.firstCached()
-        val chosen = ChatShortcuts.parseKeys(prefs2.glanceChatKeys.firstCached())
-        val showBadge = prefs2.glanceChatBadge.firstCached()
-        scope?.launch {
-            val shown = withContext(Dispatchers.Default) {
-                ChatShortcuts.select(WhatsAppChatSource.load(context, includeBusiness), chosen)
-            }
-            val unread = if (showBadge && shown.isNotEmpty()) {
-                withContext(Dispatchers.Default) { WhatsAppChatSource.unread(shown) }
-            } else {
-                emptyMap()
-            }
-            drawChats(row, shown, unread)
-        }
-    }
-
-    private fun drawChats(row: LinearLayout, chats: List<ChatCandidate>, unread: Map<String, Int>) {
-        row.removeAllViews()
-        if (chats.isEmpty()) {
-            row.visibility = View.GONE
-            return
-        }
-        row.visibility = View.VISIBLE
-        // Like the utility shortcuts, the chats take the place of the "quick access" label.
-        root.findViewById<View>(R.id.nostromo_quick_label)?.visibility = View.GONE
-        val density = context.resources.displayMetrics.density
-        val pixel = ResourcesCompat.getFont(context, R.font.vt323_regular)
-        chats.forEach { chat ->
-            val count = ChatShortcuts.badge(unread[chat.key] ?: 0)
-            val square = FrameLayout(context).apply {
-                background = GradientDrawable().apply {
-                    setColor((phosphor and 0x00FFFFFF) or 0x14000000)
-                    setStroke(density.toInt().coerceAtLeast(1), (dim and 0x00FFFFFF) or 0x66000000)
-                }
-                addView(
-                    TextView(context).apply {
-                        text = ChatShortcuts.initial(chat.label)
-                        setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
-                        typeface = pixel
-                        includeFontPadding = false
-                        gravity = Gravity.CENTER
-                        setTextColor(phosphor)
-                    },
-                    FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),
-                )
-                if (count != null) {
-                    addView(
-                        TextView(context).apply {
-                            text = count
-                            setTextSize(TypedValue.COMPLEX_UNIT_SP, 8f)
-                            typeface = Typeface.MONOSPACE
-                            includeFontPadding = false
-                            gravity = Gravity.CENTER
-                            setTextColor(Color.parseColor("#FF05140C"))
-                            setBackgroundColor(phosphor)
-                            minWidth = (11 * density).toInt()
-                            setPadding((3 * density).toInt(), 0, (3 * density).toInt(), 0)
-                        },
-                        FrameLayout.LayoutParams(
-                            ViewGroup.LayoutParams.WRAP_CONTENT,
-                            (11 * density).toInt(),
-                            Gravity.TOP or Gravity.END,
-                        ),
-                    )
-                }
-            }
-            row.addView(
-                LinearLayout(context).apply {
-                    orientation = LinearLayout.HORIZONTAL
-                    gravity = Gravity.CENTER_VERTICAL
-                    minimumHeight = (32 * density).toInt()
-                    contentDescription = context.getString(R.string.glance_chat_open, chat.label)
-                    addView(square, LinearLayout.LayoutParams((26 * density).toInt(), (26 * density).toInt()))
-                    addView(
-                        TextView(context).apply {
-                            text = chat.label
-                            setTextSize(TypedValue.COMPLEX_UNIT_SP, 9.5f)
-                            typeface = Typeface.MONOSPACE
-                            includeFontPadding = false
-                            maxLines = 1
-                            ellipsize = android.text.TextUtils.TruncateAt.END
-                            gravity = Gravity.CENTER_VERTICAL
-                            setTextColor(dim)
-                        },
-                        LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
-                            marginStart = (4 * density).toInt()
-                        },
-                    )
-                    setOnClickListener { WhatsAppChatSource.open(context, chat) }
-                },
-                LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f),
-            )
-        }
-    }
-
     private fun run(shortcut: GlanceShortcut) {
         runCatching {
             when (shortcut) {
@@ -361,7 +230,6 @@ class GlancePanelController(
     private fun refresh() {
         renderStatusLine()
         renderShortcuts()
-        renderChats()
         val glanceTargets = latest.map { it.toGlanceTarget() }
         actions = latest.associate { it.id to (it.headerAction ?: it.baseAction) }
         panel = GlanceEngine.build(glanceTargets, settings(), clock())

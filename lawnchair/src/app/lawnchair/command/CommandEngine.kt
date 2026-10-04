@@ -15,7 +15,7 @@ sealed interface CommandAction {
     data class SetAlarm(val hour: Int, val minute: Int) : CommandAction
     data class Calc(val expression: String, val result: String) : CommandAction
     data class Call(val contact: ContactEntry) : CommandAction
-    data class Message(val contact: ContactEntry) : CommandAction
+    data class Message(val contact: ContactEntry, val text: String = "") : CommandAction
     data class Route(val query: String) : CommandAction
     data class NewTask(val title: String) : CommandAction
     data class WebSearch(val query: String) : CommandAction
@@ -71,9 +71,7 @@ object CommandEngine {
             "ligar" -> analyzeContact(arg, contacts, contactsGranted, "ligar", "LIGAR PARA") {
                 CommandAction.Call(it)
             }
-            "w" -> analyzeContact(arg, contacts, contactsGranted, "w", "WHATSAPP PARA") {
-                CommandAction.Message(it)
-            }
+            "w" -> analyzeMessage(arg, contacts, contactsGranted)
             "alarme" -> analyzeAlarm(arg)
             "calc" -> analyzeCalc(arg)
             "t" -> analyzeTask(arg)
@@ -184,6 +182,77 @@ object CommandEngine {
                 else -> Tone.ERROR
             },
             action = if (q.isNotEmpty() && first != null) build(first) else null,
+        )
+    }
+
+    private fun contactMatches(contacts: List<ContactEntry>, query: String, wholeNamePrefix: Boolean): List<ContactEntry> {
+        val q = query.trim().lowercase()
+        return contacts.filter { c ->
+            val name = c.name.lowercase()
+            name.startsWith(q) || (!wholeNamePrefix && name.split(' ').any { it.startsWith(q) })
+        }
+    }
+
+    /**
+     * Splits "ana souza chego logo" into the contact and the message. A ":" is an explicit
+     * separator; otherwise the longest run of words that names a contact is the name and the rest
+     * is the message.
+     */
+    fun splitNameAndMessage(arg: String, contacts: List<ContactEntry>): Pair<String, String> {
+        val trimmed = arg.trim()
+        if (':' in trimmed) return trimmed.substringBefore(':').trim() to trimmed.substringAfter(':').trim()
+        val words = trimmed.split(Regex("\\s+")).filter { it.isNotEmpty() }
+        for (k in words.size downTo 1) {
+            val name = words.take(k).joinToString(" ")
+            if (contactMatches(contacts, name, wholeNamePrefix = k > 1).isNotEmpty()) {
+                return name to words.drop(k).joinToString(" ")
+            }
+        }
+        return trimmed to ""
+    }
+
+    private val messageLeadIn = Regex("^(dizendo|falando|avisando|escrevendo|perguntando)(\\s+que)?\\s+", RegexOption.IGNORE_CASE)
+
+    /** Drops the spoken lead-in: "dizendo que chego logo" becomes "chego logo". */
+    fun cleanMessage(message: String): String = message.trim().replace(messageLeadIn, "").trim()
+
+    private fun analyzeMessage(arg: String, contacts: List<ContactEntry>, granted: Boolean): Analysis {
+        if (!granted) {
+            return Analysis(
+                suggestions = emptyList(),
+                listTitle = "CONTATOS",
+                needsContacts = true,
+                previewTitle = "PRÉ-VISUALIZAÇÃO",
+                preview = "ACESSO A CONTATOS PENDENTE",
+                tone = Tone.WARN,
+                action = null,
+            )
+        }
+        val (name, rawMessage) = splitNameAndMessage(arg, contacts)
+        val message = cleanMessage(rawMessage)
+        val q = name.trim()
+        val matches = contactMatches(contacts, q, wholeNamePrefix = false)
+        val first = matches.firstOrNull()
+        val tail = if (message.isEmpty()) "" else " $message"
+        return Analysis(
+            suggestions = matches.take(MAX_SUGGESTIONS).map {
+                Suggestion("w ${it.name.lowercase()}$tail", it.name, "CONTATO")
+            },
+            listTitle = "CONTATOS",
+            needsContacts = false,
+            previewTitle = "WHATSAPP PARA",
+            preview = when {
+                q.isEmpty() -> "INFORME O CONTATO"
+                first == null -> "CONTATO NÃO ENCONTRADO"
+                message.isEmpty() -> first.name.uppercase()
+                else -> first.name.uppercase() + " · “" + message + "”"
+            },
+            tone = when {
+                q.isEmpty() -> Tone.IDLE
+                first != null -> Tone.OK
+                else -> Tone.ERROR
+            },
+            action = if (q.isNotEmpty() && first != null) CommandAction.Message(first, message) else null,
         )
     }
 

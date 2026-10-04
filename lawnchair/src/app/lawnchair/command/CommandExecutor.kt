@@ -75,7 +75,7 @@ object CommandExecutor {
                 // Calls straight away when allowed; otherwise the dialer opens with the number.
                 start(context, Intent(if (hasCallPermission(context)) Intent.ACTION_CALL else Intent.ACTION_DIAL, uri))
             }
-            is CommandAction.Message -> openWhatsapp(context, action.contact.number)
+            is CommandAction.Message -> openWhatsapp(context, action.contact.number, action.text)
             is CommandAction.Route -> start(
                 context,
                 Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=" + Uri.encode(action.query))),
@@ -107,8 +107,9 @@ object CommandExecutor {
     }
 
     /** Opens the chat in WhatsApp (or WhatsApp Business); falls back to an SMS when neither is installed. */
-    private fun openWhatsapp(context: Context, number: String) {
-        val uri = Uri.parse("https://wa.me/" + whatsappNumber(number))
+    private fun openWhatsapp(context: Context, number: String, text: String) {
+        val base = "https://wa.me/" + whatsappNumber(number)
+        val uri = Uri.parse(if (text.isEmpty()) base else base + "?text=" + Uri.encode(text))
         for (pkg in WHATSAPP_PACKAGES) {
             val intent = Intent(Intent.ACTION_VIEW, uri).setPackage(pkg)
             if (context.packageManager.resolveActivity(intent, 0) != null) {
@@ -116,7 +117,10 @@ object CommandExecutor {
                 return
             }
         }
-        start(context, Intent(Intent.ACTION_SENDTO, Uri.fromParts("sms", number, null)))
+        start(
+            context,
+            Intent(Intent.ACTION_SENDTO, Uri.fromParts("sms", number, null)).putExtra("sms_body", text),
+        )
     }
 
     private val WHATSAPP_PACKAGES = listOf("com.whatsapp", "com.whatsapp.w4b")

@@ -1175,7 +1175,7 @@
     <string name="glance_group_shortcuts" translatable="false">Atalhos</string>
     <string name="glance_group_chats" translatable="false">Conversas rápidas</string>
     <string name="glance_chats" translatable="false">Conversas do WhatsApp</string>
-    <string name="glance_chats_desc" translatable="false">Atalhos de conversa sob o painel, abrem direto no chat</string>
+    <string name="glance_chats_desc" translatable="false">Seção acima dos ícones fixos, abre direto no chat</string>
     <string name="glance_chats_howto" translatable="false">No WhatsApp, abra a conversa e toque em ⋮ › Mais › Adicionar atalho. O atalho fixado aparece aqui. Sem escolha, a linha mostra os fixados e depois os mais recentes.</string>
     <string name="glance_chats_need_default" translatable="false">Defina o Terminal como launcher padrão para ler os atalhos do WhatsApp.</string>
     <string name="glance_chats_empty" translatable="false">Nenhum atalho de conversa encontrado.</string>
@@ -1187,6 +1187,7 @@
     <string name="glance_chats_business" translatable="false">Incluir WhatsApp Business</string>
     <string name="glance_chats_business_desc" translatable="false">Lê também os atalhos de com.whatsapp.w4b</string>
     <string name="glance_chats_label" translatable="false">› CONVERSAS · WHATSAPP</string>
+    <string name="glance_chats_count" translatable="false">%1$d FIXADAS</string>
     <string name="glance_chat_open" translatable="false">Abrir conversa com %1$s</string>
     <string name="glance_lead_time" translatable="false">Antecedência do evento</string>
     <string name="glance_lead_time_desc" translatable="false">Só destaca o compromisso a partir deste prazo</string>

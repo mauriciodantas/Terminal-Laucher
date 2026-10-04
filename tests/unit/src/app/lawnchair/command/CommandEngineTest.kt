@@ -234,4 +234,49 @@ class CommandEngineTest {
         assertNull(run("abrir ").action)
         run("ca").suggestions.filter { it.kind == "COMANDO" }.forEach { assertNull(it.completion, run(it.completion).action) }
     }
+
+    // ---- the message of "w" ----
+
+    @Test fun messageTextFollowsTheContactName() {
+        val a = run("w ana chego em 10 min")
+        assertEquals(CommandAction.Message(contacts[0], "chego em 10 min"), a.action)
+        assertEquals("ANA SOUZA · “chego em 10 min”", a.preview)
+    }
+
+    @Test fun fullNameThenMessage() {
+        assertEquals(CommandAction.Message(contacts[0], "oi"), run("w ana souza oi").action)
+    }
+
+    @Test fun colonSeparatesNameFromMessage() {
+        assertEquals(CommandAction.Message(contacts[0], "sou eu"), run("w ana: sou eu").action)
+    }
+
+    @Test fun suggestionsKeepTheMessage() {
+        val s = run("w an oi tudo bem").suggestions
+        assertEquals(listOf("w ana souza oi tudo bem", "w andré lima oi tudo bem"), s.map { it.completion })
+    }
+
+    @Test fun pickingASuggestionKeepsTheMessageRunnable() {
+        val pick = run("w an oi").suggestions.first().completion
+        assertEquals(CommandAction.Message(contacts[0], "oi"), run(pick).action)
+    }
+
+    @Test fun spokenLeadInIsDropped() {
+        assertEquals("chego logo", CommandEngine.cleanMessage("dizendo que chego logo"))
+        assertEquals("oi", CommandEngine.cleanMessage("falando oi"))
+        assertEquals("que horas?", CommandEngine.cleanMessage("que horas?"))
+        assertEquals(CommandAction.Message(contacts[0], "chego logo"), run("w ana dizendo que chego logo").action)
+    }
+
+    @Test fun splitPrefersTheLongestName() {
+        assertEquals("ana souza" to "oi", CommandEngine.splitNameAndMessage("ana souza oi", contacts))
+        assertEquals("ana" to "oi tudo", CommandEngine.splitNameAndMessage("ana oi tudo", contacts))
+        assertEquals("zzz" to "", CommandEngine.splitNameAndMessage("zzz", contacts))
+    }
+
+    @Test fun messageWithoutAContactIsNotRunnable() {
+        assertNull(run("w zzz oi").action)
+        assertNull(run("w ").action)
+        assertTrue(run("w ana", granted = false).needsContacts)
+    }
 }

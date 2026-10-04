@@ -16,9 +16,11 @@
 
 package app.lawnchair.ui.preferences.destinations
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
 import app.lawnchair.preferences.getAdapter
 import app.lawnchair.preferences.preferenceManager
@@ -69,6 +71,7 @@ fun HomeScreenPreferences(
                 label = stringResource(id = R.string.show_labels),
             )
         }
+        ChatShortcutsPreferences(modifier = Modifier.padding(top = 8.dp))
     }
 }
 
