@@ -486,6 +486,18 @@ class PreferenceManager2 @Inject constructor(
         onSet = { reloadHelper.reloadGrid() },
     )
 
+    /** The Nostromo icon look: phosphor glyph on a dark panel. Off shows each app's own icon. */
+    val terminalIconEffect = preference(
+        key = booleanPreferencesKey("terminal_icon_effect"),
+        defaultValue = true,
+    )
+
+    /** The CRT layer over the whole launcher: scanlines, rolling band, flicker and vignette. */
+    val crtEffect = preference(
+        key = booleanPreferencesKey("crt_effect"),
+        defaultValue = true,
+    )
+
     val folderPreviewBackgroundOpacity = preference(
         key = floatPreferencesKey(name = "folder_preview_background_opacity"),
         defaultValue = resourceProvider.getFloat(R.dimen.config_default_folder_preview_background_opacity),

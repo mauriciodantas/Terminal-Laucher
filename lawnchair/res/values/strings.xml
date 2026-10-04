@@ -1175,6 +1175,13 @@
     <string name="glance_shortcuts_desc" translatable="false">Lanterna, calculadora, câmera e relógio sob o painel</string>
     <string name="glance_no_calculator" translatable="false">Nenhuma calculadora encontrada</string>
     <string name="glance_group_shortcuts" translatable="false">Atalhos</string>
+    <string name="effects_group" translatable="false">Efeitos do terminal</string>
+    <string name="terminal_icon_effect" translatable="false">Efeito dos ícones</string>
+    <string name="terminal_icon_effect_desc" translatable="false">Glifo de fósforo sobre painel escuro. Desligado, cada app mostra o ícone original</string>
+    <string name="crt_effect" translatable="false">Efeito de monitor</string>
+    <string name="crt_effect_desc" translatable="false">Linhas de varredura, faixa de brilho, cintilação e vinheta sobre a tela</string>
+    <string name="home_icon_size" translatable="false">Tamanho dos ícones da tela inicial</string>
+    <string name="drawer_icon_size" translatable="false">Tamanho dos ícones da gaveta</string>
     <string name="glance_group_chats" translatable="false">Conversas rápidas</string>
     <string name="glance_chats" translatable="false">Conversas do WhatsApp</string>
     <string name="glance_chats_desc" translatable="false">Seção acima dos ícones fixos, abre direto no chat</string>

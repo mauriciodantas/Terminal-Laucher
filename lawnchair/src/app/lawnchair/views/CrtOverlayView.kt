@@ -77,14 +77,26 @@ class CrtOverlayView(context: Context) : View(context) {
 
     /** Short bright flash, as when a terminal screen switches. */
     fun pulse() {
-        if (!animated) return
+        if (!animated || visibility != VISIBLE) return
         flashAnimator.cancel()
         flashAnimator.start()
     }
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        if (animated) ticker.start()
+        if (animated && visibility == VISIBLE) ticker.start()
+    }
+
+    /** A hidden layer must not keep animating. */
+    override fun onVisibilityChanged(changedView: View, visibility: Int) {
+        super.onVisibilityChanged(changedView, visibility)
+        if (changedView !== this) return
+        if (visibility == VISIBLE) {
+            if (animated && isAttachedToWindow && !ticker.isStarted) ticker.start()
+        } else {
+            ticker.cancel()
+            flashAnimator.cancel()
+        }
     }
 
     override fun onDetachedFromWindow() {

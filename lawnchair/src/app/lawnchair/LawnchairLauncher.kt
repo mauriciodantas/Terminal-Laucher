@@ -179,6 +179,9 @@ class LawnchairLauncher : QuickstepLauncher() {
                 }
             },
         )
+        preferenceManager2.crtEffect.get().distinctUntilChanged().onEach { enabled ->
+            crt.visibility = if (enabled) View.VISIBLE else View.GONE
+        }.launchIn(scope = lifecycleScope)
     }
 
     /** Adds "Conversas rápidas" right above the dock icons, hidden whenever the home screen is not in front. */

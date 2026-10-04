@@ -29,6 +29,7 @@ import app.lawnchair.theme.color.ColorMode
 import app.lawnchair.ui.preferences.LocalIsExpandedScreen
 import app.lawnchair.ui.preferences.components.NavigationActionPreference
 import app.lawnchair.ui.preferences.components.controls.ListPreference
+import app.lawnchair.ui.preferences.components.controls.SliderPreference
 import app.lawnchair.ui.preferences.components.controls.SwitchPreference
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
@@ -66,9 +67,31 @@ fun HomeScreenPreferences(
             )
         }
         PreferenceGroup(heading = stringResource(id = R.string.icons)) {
+            SliderPreference(
+                label = stringResource(id = R.string.home_icon_size),
+                adapter = prefs2.homeIconSizeFactor.getAdapter(),
+                valueRange = 0.5f..1.5f,
+                step = 0.05f,
+                showAsPercentage = true,
+            )
             SwitchPreference(
                 adapter = prefs2.showIconLabelsOnHomeScreen.getAdapter(),
                 label = stringResource(id = R.string.show_labels),
+            )
+            SwitchPreference(
+                adapter = prefs2.terminalIconEffect.getAdapter(),
+                label = stringResource(id = R.string.terminal_icon_effect),
+                description = stringResource(id = R.string.terminal_icon_effect_desc),
+            )
+        }
+        PreferenceGroup(
+            heading = stringResource(id = R.string.effects_group),
+            modifier = Modifier.padding(top = 8.dp),
+        ) {
+            SwitchPreference(
+                adapter = prefs2.crtEffect.getAdapter(),
+                label = stringResource(id = R.string.crt_effect),
+                description = stringResource(id = R.string.crt_effect_desc),
             )
         }
         ChatShortcutsPreferences(modifier = Modifier.padding(top = 8.dp))

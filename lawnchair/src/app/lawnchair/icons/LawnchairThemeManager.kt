@@ -63,6 +63,7 @@ constructor(
             prefs2.customIconShape.get(),
             prefs2.folderShape.get(),
             prefs2.customFolderShape.get(),
+            prefs2.terminalIconEffect.get(),
         ).onEach { verifyIconState() }
             .launchIn(scope)
 
@@ -119,7 +120,10 @@ constructor(
             }
 
         // Terminal theme: one controller for every icon, themed or not (see TerminalIconThemeController).
-        val themeController = iconControllerFactory.createThemeController()?.let { TERMINAL_THEME_CONTROLLER }
+        // With the effect off no controller is used, so every app keeps its own icon.
+        val themeController = iconControllerFactory.createThemeController()
+            ?.takeIf { prefs2.terminalIconEffect.firstCached() }
+            ?.let { TERMINAL_THEME_CONTROLLER }
 
         return IconState(
             iconMask = combinedKey,

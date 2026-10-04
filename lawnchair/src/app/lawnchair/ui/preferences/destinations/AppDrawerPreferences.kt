@@ -25,6 +25,7 @@ import app.lawnchair.preferences.getAdapter
 import app.lawnchair.preferences2.preferenceManager2
 import app.lawnchair.ui.preferences.LocalIsExpandedScreen
 import app.lawnchair.ui.preferences.components.NavigationActionPreference
+import app.lawnchair.ui.preferences.components.controls.SliderPreference
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
 import app.lawnchair.ui.preferences.navigation.AppDrawerHiddenApps
@@ -52,6 +53,13 @@ fun AppDrawerPreferences(
                 label = stringResource(id = R.string.hidden_apps_label),
                 destination = AppDrawerHiddenApps,
                 subtitle = resources.getQuantityString(R.plurals.apps_count, hiddenApps.size, hiddenApps.size),
+            )
+            SliderPreference(
+                label = stringResource(id = R.string.drawer_icon_size),
+                adapter = prefs2.drawerIconSizeFactor.getAdapter(),
+                valueRange = 0.5f..1.5f,
+                step = 0.05f,
+                showAsPercentage = true,
             )
         }
     }
