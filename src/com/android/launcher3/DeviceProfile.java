@@ -257,6 +257,8 @@ public class DeviceProfile {
     // Insets
     private final Rect mInsets = new Rect();
     public final Rect workspacePadding = new Rect();
+    /** Lawnchair: height of the pinned-chats strip that covers the bottom of the workspace. */
+    public int chatStripReservePx = 0;
     // Additional padding added to the widget inside its cellSpace. It is applied outside
     // the widgetView, such that the actual view size is same as the widget size.
     public final Rect widgetPadding = new Rect();
@@ -361,6 +363,7 @@ public class DeviceProfile {
             @NonNull final Consumer<DeviceProfile> dimensionOverrideProvider,
             boolean isTransientTaskbar, DisplayOptionSpec displayOptionSpec) {
         mTextFactors = DeviceProfileOverrides.INSTANCE.get(context).getTextFactors();
+        chatStripReservePx = app.lawnchair.chats.ChatsStripState.reservedPx(context);
 
         preferenceManager2 = PreferenceManager2.INSTANCE.get(context);
         allAppsCellHeightMultiplier = PreferenceCacheExtensionsKt
@@ -1786,6 +1789,10 @@ public class DeviceProfile {
             int bottomHotseatReserve = Math.min(hotseatBarSizePx, paddingBottom);
             paddingBottom = bottomHotseatReserve
                     + Math.round((paddingBottom - bottomHotseatReserve) * workspacePaddingVerticalFactor);
+
+            // Lawnchair: the pinned-chats strip covers this much of the workspace, so the icon
+            // area ends above it. Kept out of the vertical factor above, which only scales slack.
+            paddingBottom += chatStripReservePx;
 
             padding.set(paddingLeft, paddingTop, paddingRight, paddingBottom);
         }

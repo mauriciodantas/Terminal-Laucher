@@ -27,6 +27,7 @@ import app.lawnchair.theme.color.tokens.PhosphorColorToken
 import app.lawnchair.util.repeatOnAttached
 import com.android.launcher3.BaseActivity
 import com.android.launcher3.Insettable
+import com.android.launcher3.LauncherAppState
 import com.android.launcher3.R
 import com.android.launcher3.notification.NotificationKeyData
 import com.android.launcher3.notification.NotificationListener
@@ -175,6 +176,10 @@ class ChatsStripView(context: Context) :
         chats = shown
         unread = counts
         cells.removeAllViews()
+        // The workspace gives up the strip's height while there are chats, so no icon hides under it.
+        if (ChatsStripState.setShown(context, shown.isNotEmpty())) {
+            LauncherAppState.getInstance(context).invariantDeviceProfile.onPreferencesChanged(context)
+        }
         // The landscape layout moves the dock to the side, where there is no room for the strip.
         if (shown.isEmpty() || deviceProfile().isVerticalBarLayout) {
             visibility = GONE
@@ -271,7 +276,7 @@ class ChatsStripView(context: Context) :
         val lp = layoutParams as? FrameLayout.LayoutParams ?: return
         lp.gravity = Gravity.BOTTOM
         lp.width = ViewGroup.LayoutParams.MATCH_PARENT
-        lp.height = ViewGroup.LayoutParams.WRAP_CONTENT
+        lp.height = ChatsStripState.heightPx(context)
         lp.bottomMargin = deviceProfile().hotseatBarSizePx
         layoutParams = lp
     }
