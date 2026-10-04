@@ -57,7 +57,7 @@
         android:id="@+id/nostromo_status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
+        android:layout_marginTop="4dp"
         android:fontFamily="@font/ibm_plex_mono_regular"
         android:includeFontPadding="false"
         android:letterSpacing="0.08"
@@ -70,7 +70,7 @@
         android:id="@+id/nostromo_panel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"
+        android:layout_marginTop="8dp"
         android:orientation="vertical">
 
         <LinearLayout
@@ -79,9 +79,9 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:paddingStart="8dp"
-            android:paddingTop="2dp"
+            android:paddingTop="3dp"
             android:paddingEnd="8dp"
-            android:paddingBottom="2dp">
+            android:paddingBottom="3dp">
 
             <TextView
                 android:id="@+id/nostromo_panel_name"
@@ -113,9 +113,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
-            android:minHeight="62dp"
+            android:minHeight="52dp"
             android:orientation="horizontal"
-            android:padding="4dp">
+            android:paddingStart="4dp"
+            android:paddingTop="6dp"
+            android:paddingEnd="4dp"
+            android:paddingBottom="6dp">
 
             <TextView
                 android:id="@+id/nostromo_target_lead"
@@ -156,7 +159,7 @@
                     android:id="@+id/nostromo_target_secondary"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
+                    android:layout_marginTop="3dp"
                     android:ellipsize="end"
                     android:fontFamily="@font/ibm_plex_mono_regular"
                     android:includeFontPadding="false"
@@ -171,6 +174,14 @@
             android:id="@+id/nostromo_tabs"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:orientation="horizontal" />
+
+        <LinearLayout
+            android:id="@+id/nostromo_shortcuts"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
             android:orientation="horizontal" />
     </LinearLayout>
 
@@ -178,7 +189,7 @@
         android:id="@+id/nostromo_quick_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="3dp"
+        android:layout_marginTop="6dp"
         android:fontFamily="@font/ibm_plex_mono_regular"
         android:includeFontPadding="false"
         android:letterSpacing="0.1"

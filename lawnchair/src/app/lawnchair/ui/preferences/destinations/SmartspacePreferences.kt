@@ -16,7 +16,14 @@
 
 package app.lawnchair.ui.preferences.destinations
 
+import android.Manifest
 import android.app.Activity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import app.lawnchair.smartspace.glance.GlanceEngine
+import app.lawnchair.smartspace.provider.BluetoothBatteryProvider
 import android.view.ContextThemeWrapper
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
@@ -134,6 +141,16 @@ private fun GlanceTargetsPreferences(modifier: Modifier = Modifier) {
             label = stringResource(id = R.string.glance_alarm),
             description = stringResource(id = R.string.glance_alarm_desc),
         )
+        SwitchPreference(
+            adapter = prefs2.glanceBluetooth.getAdapter(),
+            label = stringResource(id = R.string.glance_bluetooth),
+            description = stringResource(id = R.string.glance_bluetooth_desc),
+        )
+        SwitchPreference(
+            adapter = prefs2.glanceReminders.getAdapter(),
+            label = stringResource(id = R.string.glance_reminders),
+            description = stringResource(id = R.string.glance_reminders_desc),
+        )
         SliderPreference(
             label = stringResource(id = R.string.glance_max_targets),
             adapter = prefs2.smartspacerMaxCount.getAdapter(),
@@ -154,6 +171,25 @@ private fun GlanceTargetsPreferences(modifier: Modifier = Modifier) {
             adapter = prefs2.glanceAutoPriority.getAdapter(),
             label = stringResource(id = R.string.glance_auto_priority),
             description = stringResource(id = R.string.glance_auto_priority_desc),
+        )
+        ListPreference(
+            adapter = prefs2.glanceLeadMinutes.getAdapter(),
+            entries = remember {
+                GlanceEngine.LEAD_TIME_OPTIONS.map { minutes ->
+                    ListPreferenceEntry(value = minutes, label = { stringResource(R.string.glance_lead_time_value, minutes) })
+                }
+            },
+            label = stringResource(id = R.string.glance_lead_time),
+        )
+    }
+    PreferenceGroup(
+        heading = stringResource(id = R.string.glance_group_shortcuts),
+        modifier = modifier.padding(top = 8.dp),
+    ) {
+        SwitchPreference(
+            adapter = prefs2.glanceShortcuts.getAdapter(),
+            label = stringResource(id = R.string.glance_shortcuts),
+            description = stringResource(id = R.string.glance_shortcuts_desc),
         )
     }
 }
@@ -344,9 +380,17 @@ private fun GlanceSetupCards(modifier: Modifier = Modifier) {
 
     val provider = remember { SmartspaceProvider.INSTANCE.get(context) }
 
+    val bluetoothEnabled by prefs2.glanceBluetooth.getAdapter().state
+    var bluetoothGranted by remember { mutableStateOf(BluetoothBatteryProvider.hasPermission(context)) }
+    val bluetoothLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+        bluetoothGranted = BluetoothBatteryProvider.hasPermission(context)
+        provider.dataSources.forEach { source -> source.restart() }
+    }
+
     // The system dialog lives in another activity, so the screen may have been recreated while it
     // was open. Re-read the state every time the user comes back instead of trusting the result.
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        bluetoothGranted = BluetoothBatteryProvider.hasPermission(context)
         provider.dataSources.forEach { it.restart() }
     }
     val targets by provider.targets.collectAsStateWithLifecycle(initialValue = emptyList())
@@ -367,6 +411,14 @@ private fun GlanceSetupCards(modifier: Modifier = Modifier) {
                 onClick = {
                     GlanceSetupIntents.forStep(mediaStep)?.let { context.startActivity(it) }
                 },
+            )
+        }
+        if (bluetoothEnabled && !bluetoothGranted) {
+            GlanceSetupCard(
+                title = stringResource(R.string.glance_bluetooth_setup_title),
+                message = stringResource(R.string.glance_bluetooth_setup_message),
+                action = stringResource(R.string.glance_allow),
+                onClick = { bluetoothLauncher.launch(Manifest.permission.BLUETOOTH_CONNECT) },
             )
         }
         if (widgetNeedsSetup) {

@@ -4,6 +4,11 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CameraManager
+import android.provider.AlarmClock
+import android.provider.MediaStore
 import android.os.Handler
 import android.os.Looper
 import android.util.TypedValue
@@ -71,9 +76,16 @@ class GlancePanelController(
                 }
         }
         handler.postDelayed(tick, REFRESH_MS)
+        if (!previewMode) {
+            runCatching {
+                context.getSystemService(CameraManager::class.java)
+                    ?.registerTorchCallback(torchCallback, handler)
+            }
+        }
     }
 
     fun stop() {
+        runCatching { context.getSystemService(CameraManager::class.java)?.unregisterTorchCallback(torchCallback) }
         scope?.cancel()
         scope = null
         handler.removeCallbacksAndMessages(null)
@@ -87,8 +99,11 @@ class GlancePanelController(
             if (prefs2.glanceWeather.firstCached()) add(GlanceKind.CLIMA)
             if (prefs2.smartspaceNowPlaying.firstCached()) add(GlanceKind.MIDIA)
             if (prefs2.glanceAlarm.firstCached()) add(GlanceKind.ALARME)
+            if (prefs2.glanceReminders.firstCached()) add(GlanceKind.LEMBRETE)
+            if (prefs2.glanceBluetooth.firstCached()) add(GlanceKind.BATERIA)
         },
         autoPriority = prefs2.glanceAutoPriority.firstCached(),
+        urgentWindowMinutes = GlanceEngine.normalizeLeadMinutes(prefs2.glanceLeadMinutes.firstCached()),
     )
 
     /** Updates the line under the date: sound profile, storage and memory, or the fixed text. */
@@ -117,8 +132,86 @@ class GlancePanelController(
         view.text = StatusLine.format(profile, storage, ram)
     }
 
+    private var torchOn = false
+    private val torchCallback = object : CameraManager.TorchCallback() {
+        override fun onTorchModeChanged(cameraId: String, enabled: Boolean) {
+            torchOn = enabled
+            renderShortcuts()
+        }
+
+        override fun onTorchModeUnavailable(cameraId: String) {
+            torchOn = false
+            renderShortcuts()
+        }
+    }
+
+    /** The row of utility shortcuts under the panel, or nothing when the user turned it off. */
+    private fun renderShortcuts() {
+        val row = root.findViewById<LinearLayout>(R.id.nostromo_shortcuts) ?: return
+        row.removeAllViews()
+        if (!prefs2.glanceShortcuts.firstCached()) {
+            row.visibility = View.GONE
+            root.findViewById<View>(R.id.nostromo_quick_label)?.visibility = View.VISIBLE
+            return
+        }
+        row.visibility = View.VISIBLE
+        // The panel only has two cell rows: the shortcuts take the place of the "quick access" label.
+        root.findViewById<View>(R.id.nostromo_quick_label)?.visibility = View.GONE
+        val density = context.resources.displayMetrics.density
+        GlanceShortcut.values().forEachIndexed { index, shortcut ->
+            val active = shortcut == GlanceShortcut.TORCH && torchOn
+            row.addView(
+                TextView(context).apply {
+                    text = if (shortcut == GlanceShortcut.TORCH) GlanceShortcut.torchLabel(torchOn) else shortcut.label
+                    setTextSize(TypedValue.COMPLEX_UNIT_SP, 9.5f)
+                    typeface = Typeface.MONOSPACE
+                    letterSpacing = 0.05f
+                    gravity = Gravity.CENTER
+                    maxLines = 1
+                    setTextColor(if (active) phosphor else dim)
+                    background = GradientDrawable().apply {
+                        setColor(if (active) (phosphor and 0x00FFFFFF) or 0x29000000 else Color.TRANSPARENT)
+                        setStroke(density.toInt().coerceAtLeast(1), (dim and 0x00FFFFFF) or 0x66000000)
+                    }
+                    minHeight = (30 * density).toInt()
+                    contentDescription = shortcut.label
+                    layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
+                        if (index > 0) marginStart = (6 * density).toInt()
+                    }
+                    if (!previewMode) setOnClickListener { run(shortcut) }
+                },
+            )
+        }
+    }
+
+    private fun run(shortcut: GlanceShortcut) {
+        runCatching {
+            when (shortcut) {
+                GlanceShortcut.TORCH -> toggleTorch()
+                GlanceShortcut.CALCULATOR -> startApp(
+                    Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_CALCULATOR),
+                )
+                GlanceShortcut.CAMERA -> startApp(Intent(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA))
+                GlanceShortcut.CLOCK -> startApp(Intent(AlarmClock.ACTION_SHOW_ALARMS))
+            }
+        }
+    }
+
+    private fun startApp(intent: Intent) {
+        context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    }
+
+    private fun toggleTorch() {
+        val manager = context.getSystemService(CameraManager::class.java) ?: return
+        val id = manager.cameraIdList.firstOrNull {
+            manager.getCameraCharacteristics(it).get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true
+        } ?: return
+        manager.setTorchMode(id, !torchOn)
+    }
+
     private fun refresh() {
         renderStatusLine()
+        renderShortcuts()
         val glanceTargets = latest.map { it.toGlanceTarget() }
         actions = latest.associate { it.id to (it.headerAction ?: it.baseAction) }
         panel = GlanceEngine.build(glanceTargets, settings(), clock())
@@ -169,6 +262,7 @@ class GlancePanelController(
             content?.setOnClickListener(null)
             content?.isClickable = false
             tabs.removeAllViews()
+            bar?.setOnClickListener(null)
             return
         }
 
@@ -196,6 +290,8 @@ class GlancePanelController(
             GlanceKind.CLIMA -> "TEMPERATURA"
             GlanceKind.AGENDA -> "EVENTO"
             GlanceKind.ALARME -> "ALARME"
+            GlanceKind.BATERIA -> "BATERIA"
+            GlanceKind.LEMBRETE -> "LEMBRETE"
             else -> selected.kind.label
         }
         primary?.text = main
@@ -211,8 +307,22 @@ class GlancePanelController(
         }
 
         tabs.removeAllViews()
-        panel.tabs.forEachIndexed { index, target ->
-            tabs.addView(tabView(index, target, target.id == selectedId))
+        if (prefs2.glanceShortcuts.firstCached()) {
+            // The shortcut row takes the place of the tabs; a tap on the title bar shows the next target.
+            tabs.visibility = View.GONE
+            bar?.setOnClickListener {
+                val next = panel.tabs.indexOfFirst { it.id == selectedId } + 1
+                userPicked = true
+                selectedId = panel.tabs[next % panel.tabs.size].id
+                render()
+            }
+        } else {
+            tabs.visibility = View.VISIBLE
+            bar?.setOnClickListener(null)
+            bar?.isClickable = false
+            panel.tabs.forEachIndexed { index, target ->
+                tabs.addView(tabView(index, target, target.id == selectedId))
+            }
         }
     }
 

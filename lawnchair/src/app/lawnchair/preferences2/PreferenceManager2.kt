@@ -799,6 +799,28 @@ class PreferenceManager2 @Inject constructor(
         defaultValue = true,
     )
 
+    val glanceReminders = preference(
+        key = booleanPreferencesKey("glance_reminders"),
+        defaultValue = true,
+    )
+
+    val glanceBluetooth = preference(
+        key = booleanPreferencesKey("glance_bluetooth"),
+        defaultValue = true,
+    )
+
+    /** The row of utility shortcuts (flashlight, calculator, camera, clock) under the panel. */
+    val glanceShortcuts = preference(
+        key = booleanPreferencesKey("glance_shortcuts"),
+        defaultValue = true,
+    )
+
+    /** Minutes before its start that an event is moved to the front and marked in red. */
+    val glanceLeadMinutes = preference(
+        key = intPreferencesKey("glance_lead_minutes"),
+        defaultValue = 30,
+    )
+
     /** Replaces the fixed text under the date with the sound profile, storage and memory. */
     val glanceStatusLine = preference(
         key = booleanPreferencesKey("glance_status_line"),

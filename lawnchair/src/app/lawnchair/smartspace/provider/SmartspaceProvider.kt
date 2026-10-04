@@ -30,6 +30,7 @@ class SmartspaceProvider @Inject constructor(
         BatteryStatusProvider(context),
         TorchProvider(context),
         NowPlayingProvider(context),
+        BluetoothBatteryProvider(context),
         OnboardingProvider(context),
     )
 

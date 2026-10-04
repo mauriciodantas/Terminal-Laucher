@@ -30,7 +30,6 @@ class GlanceEngineTest {
             FeatureType.FEATURE_TIME_TO_LEAVE,
             FeatureType.FEATURE_COMMUTE_TIME,
             FeatureType.FEATURE_FLIGHT,
-            FeatureType.FEATURE_REMINDER,
         ).forEach { assertEquals(it.name, GlanceKind.AGENDA, GlanceKind.from(it)) }
     }
 
@@ -358,5 +357,61 @@ class GlanceEngineTest {
     @Test
     fun lead_aTimeInAMediaTitleIsNotEnlarged() {
         assertNull(GlanceEngine.lead(target("m", GlanceKind.MIDIA, title = "Hits 12:30", subtitle = "")).value)
+    }
+
+    // ---- reminders, bluetooth battery and the lead time ----
+
+    @Test
+    fun from_remindersAreTheirOwnKind() {
+        assertEquals(GlanceKind.LEMBRETE, GlanceKind.from(FeatureType.FEATURE_REMINDER))
+    }
+
+    @Test
+    fun from_bluetoothBatteryIsRecognizedByIdWhateverTheFeatureType() {
+        assertEquals(GlanceKind.BATERIA, GlanceKind.from(FeatureType.FEATURE_TIPS, GlanceKind.BLUETOOTH_ID))
+        assertEquals(GlanceKind.BATERIA, GlanceKind.from(FeatureType.FEATURE_CALENDAR, GlanceKind.BLUETOOTH_ID))
+    }
+
+    @Test
+    fun lead_batteryTakesThePercent() {
+        val lead = GlanceEngine.lead(target("b", GlanceKind.BATERIA, title = "Buds Pro", subtitle = "80% · Watch 55%"))
+        assertEquals("80%", lead.value)
+        assertEquals("Buds Pro · Watch 55%", lead.text)
+    }
+
+    @Test
+    fun lead_reminderTakesTheTime() {
+        assertEquals("09:30", GlanceEngine.lead(target("r", GlanceKind.LEMBRETE, title = "Pagar conta 9:30")).value)
+    }
+
+    @Test
+    fun isUrgent_aReminderCloseToItsTimeIsUrgent() {
+        val reminder = target("r", GlanceKind.LEMBRETE, startsInMinutes = 10)
+        assertTrue(GlanceEngine.isUrgent(reminder, GlanceSettings(), now))
+    }
+
+    @Test
+    fun isUrgent_followsTheLeadTimeTheUserPicked() {
+        val event = target("e", GlanceKind.AGENDA, startsInMinutes = 20)
+        assertTrue(GlanceEngine.isUrgent(event, GlanceSettings(urgentWindowMinutes = 30), now))
+        assertFalse(GlanceEngine.isUrgent(event, GlanceSettings(urgentWindowMinutes = 15), now))
+    }
+
+    @Test
+    fun normalizeLeadMinutes_keepsAllowedValuesAndFallsBackOtherwise() {
+        GlanceEngine.LEAD_TIME_OPTIONS.forEach { assertEquals(it, GlanceEngine.normalizeLeadMinutes(it)) }
+        assertEquals(GlanceEngine.DEFAULT_LEAD_MINUTES, GlanceEngine.normalizeLeadMinutes(7))
+        assertEquals(GlanceEngine.DEFAULT_LEAD_MINUTES, GlanceEngine.normalizeLeadMinutes(-1))
+    }
+
+    @Test
+    fun build_dropsBatteryAndReminderWhenTheirKindIsOff() {
+        val targets = listOf(
+            target("b", GlanceKind.BATERIA, subtitle = "50%"),
+            target("r", GlanceKind.LEMBRETE),
+            target("a", GlanceKind.AGENDA),
+        )
+        val settings = GlanceSettings(enabledKinds = setOf(GlanceKind.AGENDA))
+        assertEquals(listOf("a"), GlanceEngine.build(targets, settings, now).tabs.map { it.id })
     }
 }

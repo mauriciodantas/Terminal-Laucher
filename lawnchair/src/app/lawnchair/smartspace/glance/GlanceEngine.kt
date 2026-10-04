@@ -8,6 +8,8 @@ enum class GlanceKind(val label: String, val panelTitle: String) {
     CLIMA("CLIMA", "CLIMA AGORA"),
     MIDIA("MÍDIA", "TOCANDO AGORA"),
     ALARME("ALARME", "PRÓXIMO ALARME"),
+    LEMBRETE("LEMBRETES", "LEMBRETE"),
+    BATERIA("BATERIA", "BATERIA BLUETOOTH"),
     AVISO("AVISO", "AVISO DO SISTEMA"),
     ;
 
@@ -18,6 +20,9 @@ enum class GlanceKind(val label: String, val panelTitle: String) {
         /** Ids of targets that are system notices even though their feature type says otherwise. */
         private val noticeIdPrefixes = listOf("batteryStatus", "torchStatus", "onboarding", "smartspaceSetup")
 
+        /** Id of the target the Bluetooth battery provider reports. */
+        const val BLUETOOTH_ID = "bluetoothBattery"
+
         fun isPlaceholder(id: String): Boolean = id in placeholderIds
 
         /**
@@ -25,14 +30,16 @@ enum class GlanceKind(val label: String, val panelTitle: String) {
          * reports itself as a calendar feature.
          */
         fun from(featureType: FeatureType, id: String = ""): GlanceKind {
+            if (id.startsWith(BLUETOOTH_ID)) return BATERIA
             if (noticeIdPrefixes.any { id.startsWith(it) }) return AVISO
             return when (featureType) {
                 FeatureType.FEATURE_CALENDAR,
                 FeatureType.FEATURE_TIME_TO_LEAVE,
                 FeatureType.FEATURE_COMMUTE_TIME,
                 FeatureType.FEATURE_FLIGHT,
-                FeatureType.FEATURE_REMINDER,
                 -> AGENDA
+
+                FeatureType.FEATURE_REMINDER -> LEMBRETE
 
                 FeatureType.FEATURE_WEATHER,
                 FeatureType.FEATURE_WEATHER_ALERT,
@@ -72,7 +79,7 @@ data class GlanceSettings(
     /** Moves an event that is about to start to the front and marks it as urgent. */
     val autoPriority: Boolean = true,
     /** How many minutes before its start an event counts as about to start. */
-    val urgentWindowMinutes: Int = 30,
+    val urgentWindowMinutes: Int = GlanceEngine.DEFAULT_LEAD_MINUTES,
 )
 
 /** What the panel shows: the tabs in order, and which one (if any) is urgent. */
@@ -87,13 +94,24 @@ object GlanceEngine {
 
     private const val MINUTE_MS = 60_000L
 
+    /** Kinds that can become urgent when their start is close. */
+    private val urgentKinds = setOf(GlanceKind.AGENDA, GlanceKind.LEMBRETE)
+
+    /** Lead times the user may pick, in minutes. */
+    val LEAD_TIME_OPTIONS = listOf(15, 30, 60)
+    const val DEFAULT_LEAD_MINUTES = 30
+
+    /** The closest allowed lead time, so a stale or odd stored value never breaks the panel. */
+    fun normalizeLeadMinutes(minutes: Int): Int =
+        if (minutes in LEAD_TIME_OPTIONS) minutes else DEFAULT_LEAD_MINUTES
+
     /** Whole minutes from [nowMillis] to the start, or null when the start is unknown. */
     fun minutesUntil(startsAtMillis: Long?, nowMillis: Long): Long? =
         startsAtMillis?.let { Math.floorDiv(it - nowMillis, MINUTE_MS) }
 
     /** True for an event that starts within the window, and has not started more than a minute ago. */
     fun isUrgent(target: GlanceTarget, settings: GlanceSettings, nowMillis: Long): Boolean {
-        if (!settings.autoPriority || target.kind != GlanceKind.AGENDA) return false
+        if (!settings.autoPriority || target.kind !in urgentKinds) return false
         val minutes = minutesUntil(target.startsAtMillis, nowMillis) ?: return false
         return minutes in -1..settings.urgentWindowMinutes.toLong()
     }
@@ -142,6 +160,7 @@ object GlanceEngine {
     }
 
     private val timeRegex = Regex("""\b([01]?\d|2[0-3])[:h]([0-5]\d)\b""")
+    private val percentRegex = Regex("""(\d{1,3})\s?%""")
     private val temperatureRegex = Regex("""(-?\d{1,2})\s?°\s?[CcFf]?""")
 
     /**
@@ -155,7 +174,8 @@ object GlanceEngine {
         val full = listOf(target.title, target.subtitle).filter { it.isNotBlank() }.joinToString(" · ")
         val match = when (target.kind) {
             GlanceKind.CLIMA -> temperatureRegex.find(full)?.let { it to (it.groupValues[1] + "°") }
-            GlanceKind.AGENDA, GlanceKind.ALARME ->
+            GlanceKind.BATERIA -> percentRegex.find(full)?.let { it to (it.groupValues[1] + "%") }
+            GlanceKind.AGENDA, GlanceKind.ALARME, GlanceKind.LEMBRETE ->
                 timeRegex.find(full)?.let { it to (it.groupValues[1].padStart(2, '0') + ":" + it.groupValues[2]) }
             else -> null
         } ?: return Lead(null, full)

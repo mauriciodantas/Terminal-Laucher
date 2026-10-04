@@ -1149,9 +1149,21 @@
     <string name="glance_media_desc" translatable="false">Controles da faixa atual</string>
     <string name="glance_alarm" translatable="false">Alarme</string>
     <string name="glance_alarm_desc" translatable="false">Próximo alarme programado</string>
+    <string name="glance_bluetooth" translatable="false">Bateria Bluetooth</string>
+    <string name="glance_bluetooth_desc" translatable="false">Fones e relógio conectados</string>
+    <string name="glance_reminders" translatable="false">Lembretes</string>
+    <string name="glance_reminders_desc" translatable="false">Tarefas e lembretes que o Smartspacer fornece</string>
+    <string name="glance_shortcuts" translatable="false">Atalhos de utilidade</string>
+    <string name="glance_shortcuts_desc" translatable="false">Lanterna, calculadora, câmera e relógio sob o painel</string>
+    <string name="glance_group_shortcuts" translatable="false">Atalhos</string>
+    <string name="glance_lead_time" translatable="false">Antecedência do evento</string>
+    <string name="glance_lead_time_desc" translatable="false">Só destaca o compromisso a partir deste prazo</string>
+    <string name="glance_lead_time_value" translatable="false">%1$d min</string>
+    <string name="glance_bluetooth_setup_title" translatable="false">Bateria Bluetooth precisa de permissão</string>
+    <string name="glance_bluetooth_setup_message" translatable="false">Para mostrar a bateria dos fones e do relógio, o Terminal precisa ver quais dispositivos Bluetooth estão conectados. O Android vai pedir uma confirmação.</string>
     <string name="glance_priority_group" translatable="false">Prioridade</string>
     <string name="glance_auto_priority" translatable="false">Prioridade automática</string>
-    <string name="glance_auto_priority_desc" translatable="false">Sobe o evento para o topo e destaca em vermelho 30 minutos antes</string>
+    <string name="glance_auto_priority_desc" translatable="false">Sobe o evento para o topo e destaca em vermelho pouco antes de começar</string>
     <string name="glance_max_targets" translatable="false">Número máximo de alvos</string>
     <string name="glance_empty_primary" translatable="false">NENHUM ALVO ATIVO</string>
     <string name="glance_empty_secondary" translatable="false">ATIVE ALVOS EM CONFIGURAÇÕES</string>
