@@ -783,6 +783,12 @@ class PreferenceManager2 @Inject constructor(
         save = { it.toString() },
     )
 
+    /** Tapping the bar on the home screen opens the command bar instead of the app search. */
+    val commandBarEnabled = preference(
+        key = booleanPreferencesKey("command_bar_enabled"),
+        defaultValue = true,
+    )
+
     /** At a Glance targets: which kinds of information the panel may show. */
     val glanceAgenda = preference(
         key = booleanPreferencesKey("glance_agenda"),

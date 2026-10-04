@@ -37,6 +37,7 @@
     <uses-permission android:name="android.permission.FLASHLIGHT" />
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
 
     <!-- Support non-cellular enabled devices -->
     <uses-feature android:name="android.hardware.telephony" android:required="false" />
@@ -124,6 +125,13 @@
             android:launchMode="singleTask"
             android:taskAffinity="${applicationId}.onboarding"
             android:excludeFromRecents="true"
+            android:theme="@style/Theme.Lawnchair" />
+
+        <activity
+            android:name="app.lawnchair.command.CommandActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.Lawnchair" />
 
         <activity

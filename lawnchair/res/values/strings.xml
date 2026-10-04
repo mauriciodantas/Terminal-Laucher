@@ -1140,6 +1140,20 @@
     <string name="onboarding_redo_menu" translatable="false">Rever configuração inicial</string>
 
     <!-- At a Glance -->
+    <string name="command_bar_setting" translatable="false">Barra de comando</string>
+    <string name="command_bar_setting_desc" translatable="false">Tocar na barra abre o terminal de comandos com autocompletar (abrir, calc, alarme, ligar...)</string>
+    <string name="command_title" translatable="false">&gt; ENTRADA DE COMANDO</string>
+    <string name="command_subtitle" translatable="false">AUTOCOMPLETAR · HISTÓRICO</string>
+    <string name="command_header_right" translatable="false">TERMINAL 03</string>
+    <string name="command_contacts_needed" translatable="false">ACESSO A CONTATOS NECESSÁRIO PARA ESTE COMANDO.</string>
+    <string name="command_grant" translatable="false">CONCEDER</string>
+    <string name="command_key_history" translatable="false">[▲] HISTÓRICO</string>
+    <string name="command_key_complete" translatable="false">[TAB] COMPLETAR</string>
+    <string name="command_key_next" translatable="false">[▼] PRÓXIMA</string>
+    <string name="command_executed" translatable="false">EXECUTADO</string>
+    <string name="command_copied" translatable="false">COPIADO · %1$s</string>
+    <string name="command_failed" translatable="false">NENHUM APP PODE EXECUTAR ESTE COMANDO</string>
+    <string name="command_input_label" translatable="false">Comando</string>
     <string name="glance_group_targets" translatable="false">Alvos</string>
     <string name="glance_agenda" translatable="false">Agenda</string>
     <string name="glance_agenda_desc" translatable="false">Próximo evento, local e rota</string>

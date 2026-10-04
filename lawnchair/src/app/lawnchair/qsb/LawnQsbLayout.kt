@@ -18,6 +18,7 @@ import androidx.core.view.children
 import androidx.lifecycle.lifecycleScope
 import app.lawnchair.LawnchairLauncher
 import app.lawnchair.animateToAllApps
+import app.lawnchair.command.CommandActivity
 import app.lawnchair.launcher
 import app.lawnchair.preferences.observeAsState
 import app.lawnchair.preferences.preferenceManager
@@ -106,7 +107,9 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
                             onQsbClick = {
                                 val launcher = context.launcher
                                 launcher.lifecycleScope.launch {
-                                    if (prefs2.matchHotseatQsbStyle.firstCached()) {
+                                    if (prefs2.commandBarEnabled.firstCached()) {
+                                        CommandActivity.start(launcher)
+                                    } else if (prefs2.matchHotseatQsbStyle.firstCached()) {
                                         val searchUiManager = launcher.appsView.searchUiManager
                                         searchUiManager.setDirectFocus(true)
                                         searchUiManager.editText?.showKeyboard()

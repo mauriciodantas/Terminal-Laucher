@@ -97,6 +97,11 @@ fun DockSearchPreference(
                         PreferenceGroup(
                             heading = stringResource(R.string.search_bar_settings),
                         ) {
+                            SwitchPreference(
+                                adapter = prefs2.commandBarEnabled.getAdapter(),
+                                label = stringResource(id = R.string.command_bar_setting),
+                                description = stringResource(id = R.string.command_bar_setting_desc),
+                            )
                             NavigationActionPreference(
                                 label = stringResource(R.string.search_provider),
                                 destination = DockSearchProvider,
