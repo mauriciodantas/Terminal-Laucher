@@ -76,6 +76,7 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
                             getSearchProvider(context, searchProviderPref)
                         }
                         val themed by prefs2.themedHotseatQsb.asState()
+                        val commandBarEnabled by prefs2.commandBarEnabled.asState()
 
                         val supportsLens = searchProvider == Google || searchProvider == PixelSearch
                         val voiceIntent = remember(searchProvider, context) {
@@ -138,6 +139,12 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
                             actions = actions,
                             placeholder = stringResource(R.string.nostromo_prompt_hint),
                             hint = stringResource(R.string.nostromo_swipe_hint),
+                            onVoiceClick = if (commandBarEnabled && CommandActivity.voiceAvailable(context)) {
+                                { CommandActivity.start(context.launcher, voice = true) }
+                            } else {
+                                null
+                            },
+                            voiceLabel = stringResource(R.string.command_voice),
                         )
                     }
                 }

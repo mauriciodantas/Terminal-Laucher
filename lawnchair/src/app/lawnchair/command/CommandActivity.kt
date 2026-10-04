@@ -95,9 +95,23 @@ class CommandActivity : ComponentActivity() {
         private const val STORE = "nostromo"
         private const val KEY_HISTORY = "command_history"
 
-        fun start(context: Context) {
-            context.startActivity(Intent(context, CommandActivity::class.java))
+        private const val EXTRA_VOICE = "start_voice"
+
+        /** [voice] opens the speech recognizer right away, for the microphone on the home screen. */
+        fun start(context: Context, voice: Boolean = false) {
+            context.startActivity(Intent(context, CommandActivity::class.java).putExtra(EXTRA_VOICE, voice))
         }
+
+        fun voiceIntent(context: Context): Intent =
+            Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+                .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                .putExtra(RecognizerIntent.EXTRA_LANGUAGE, java.util.Locale.getDefault().toLanguageTag())
+                .putExtra(RecognizerIntent.EXTRA_PROMPT, context.getString(R.string.command_voice_prompt))
+
+        fun voiceAvailable(context: Context): Boolean =
+            context.packageManager.resolveActivity(voiceIntent(context), 0) != null
+
+        internal fun wantsVoice(intent: Intent?): Boolean = intent?.getBooleanExtra(EXTRA_VOICE, false) == true
 
         fun loadHistory(context: Context): List<String> =
             context.getSharedPreferences(STORE, Context.MODE_PRIVATE)
@@ -197,13 +211,8 @@ private fun CommandScreen(onClose: () -> Unit) {
         finishRun(action)
     }
 
-    val voiceIntent = remember {
-        Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-            .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            .putExtra(RecognizerIntent.EXTRA_LANGUAGE, java.util.Locale.getDefault().toLanguageTag())
-            .putExtra(RecognizerIntent.EXTRA_PROMPT, context.getString(R.string.command_voice_prompt))
-    }
-    val voiceAvailable = remember { context.packageManager.resolveActivity(voiceIntent, 0) != null }
+    val voiceIntent = remember { CommandActivity.voiceIntent(context) }
+    val voiceAvailable = remember { CommandActivity.voiceAvailable(context) }
     val voice = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         val spoken = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
         if (result.resultCode == android.app.Activity.RESULT_OK && !spoken.isNullOrBlank()) {
@@ -212,6 +221,7 @@ private fun CommandScreen(onClose: () -> Unit) {
             selected = 0
             done = null
         }
+        runCatching { focus.requestFocus() }
     }
 
     fun complete() {
@@ -231,7 +241,12 @@ private fun CommandScreen(onClose: () -> Unit) {
         selected = CommandEngine.nextSuggestion(sel, analysis.suggestions.size)
     }
 
-    LaunchedEffect(Unit) { focus.requestFocus() }
+    val startWithVoice = remember {
+        voiceAvailable && CommandActivity.wantsVoice((context as? android.app.Activity)?.intent)
+    }
+    LaunchedEffect(Unit) {
+        if (startWithVoice) runCatching { voice.launch(voiceIntent) } else focus.requestFocus()
+    }
 
     Box(
         Modifier

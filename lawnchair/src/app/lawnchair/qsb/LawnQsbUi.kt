@@ -15,6 +15,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -338,6 +339,8 @@ fun LawnQsbUi(
     modifier: Modifier = Modifier,
     placeholder: String? = null,
     hint: String? = null,
+    onVoiceClick: (() -> Unit)? = null,
+    voiceLabel: String? = null,
 ) {
     val density = LocalDensity.current
 
@@ -402,6 +405,22 @@ fun LawnQsbUi(
                         .alpha(blink)
                         .background(ComposeColor(style.strokeColor)),
                 )
+            }
+            if (onVoiceClick != null) {
+                Spacer(Modifier.weight(1f))
+                Box(
+                    Modifier
+                        .size(width = 56.dp, height = 48.dp)
+                        .clickable(onClick = onVoiceClick, role = Role.Button)
+                        .semantics { voiceLabel?.let { contentDescription = it } },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "[MIC]",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = ComposeColor(style.strokeColor),
+                    )
+                }
             }
         }
     }
