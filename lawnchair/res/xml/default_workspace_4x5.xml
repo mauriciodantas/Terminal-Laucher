@@ -15,149 +15,84 @@
 -->
 
 <favorites xmlns:launcher="http://schemas.android.com/apk/res-auto/com.android.launcher3">
-    <!-- Hotseat: same dock apps as the Samsung One UI Home (WhatsApp, Phone, Spotify, Chrome) -->
-    <resolve
-        launcher:container="-101"
-        launcher:screen="0"
-        launcher:x="0"
-        launcher:y="0" >
-        <favorite launcher:packageName="com.whatsapp" launcher:className="com.whatsapp.Main" />
+    <!--
+        Default layout of the 4-column phone grid: only what every user needs, Google apps first.
+        Each slot lists fallbacks in order and the first one installed wins, so the same file works
+        on Pixel, Samsung and other OEMs. Rows 0 and 1 of screen 0 stay free for the terminal readout.
+    -->
+
+    <!-- Hotseat: Phone, Messages, Chrome, Camera -->
+    <resolve launcher:container="-101" launcher:screen="0" launcher:x="0" launcher:y="0" >
+        <favorite launcher:uri="#Intent;action=android.intent.action.DIAL;end" />
+        <favorite launcher:uri="#Intent;action=android.intent.action.CALL_BUTTON;end" />
     </resolve>
 
-    <resolve
-        launcher:container="-101"
-        launcher:screen="1"
-        launcher:x="1"
-        launcher:y="0" >
-        <favorite launcher:packageName="com.samsung.android.dialer" launcher:className="com.samsung.android.dialer.DialtactsActivity" />
+    <resolve launcher:container="-101" launcher:screen="1" launcher:x="1" launcher:y="0" >
+        <favorite launcher:uri="#Intent;action=android.intent.action.MAIN;category=android.intent.category.APP_MESSAGING;end" />
+        <favorite launcher:uri="sms:" />
+        <favorite launcher:uri="smsto:" />
     </resolve>
 
-    <resolve
-        launcher:container="-101"
-        launcher:screen="2"
-        launcher:x="2"
-        launcher:y="0" >
-        <favorite launcher:packageName="com.spotify.music" launcher:className="com.spotify.music.MainActivity" />
-    </resolve>
-
-    <resolve
-        launcher:container="-101"
-        launcher:screen="3"
-        launcher:x="3"
-        launcher:y="0" >
+    <resolve launcher:container="-101" launcher:screen="2" launcher:x="2" launcher:y="0" >
         <favorite launcher:packageName="com.android.chrome" launcher:className="com.google.android.apps.chrome.Main" />
+        <favorite launcher:uri="#Intent;action=android.intent.action.MAIN;category=android.intent.category.APP_BROWSER;end" />
     </resolve>
 
-    <!-- Screen 0: apps from the One UI Home grid, in a 4x4 block under the two-row terminal readout -->
-    <resolve
-        launcher:screen="0"
-        launcher:x="0"
-        launcher:y="2" >
-        <favorite launcher:packageName="com.sec.android.app.camera" launcher:className="com.sec.android.app.camera.Camera" />
+    <resolve launcher:container="-101" launcher:screen="3" launcher:x="3" launcher:y="0" >
+        <favorite launcher:uri="#Intent;action=android.media.action.STILL_IMAGE_CAMERA;end" />
+        <favorite launcher:uri="#Intent;action=android.intent.action.CAMERA_BUTTON;end" />
     </resolve>
 
-    <resolve
-        launcher:screen="0"
-        launcher:x="1"
-        launcher:y="2" >
-        <favorite launcher:packageName="org.mozilla.focus" launcher:className="org.mozilla.focus.activity.MainActivity" />
-    </resolve>
-
-    <resolve
-        launcher:screen="0"
-        launcher:x="2"
-        launcher:y="2" >
-        <favorite launcher:packageName="com.google.android.youtube" launcher:className="com.google.android.youtube.app.honeycomb.Shell$HomeActivity" />
-    </resolve>
-
-    <resolve
-        launcher:screen="0"
-        launcher:x="3"
-        launcher:y="2" >
-        <favorite launcher:packageName="com.android.vending" launcher:className="com.android.vending.AssetBrowserActivity" />
-    </resolve>
-
-    <resolve
-        launcher:screen="0"
-        launcher:x="0"
-        launcher:y="3" >
-        <favorite launcher:packageName="com.google.android.apps.tachyon" launcher:className="com.google.android.apps.tachyon.MainActivity" />
-    </resolve>
-
-    <resolve
-        launcher:screen="0"
-        launcher:x="1"
-        launcher:y="3" >
+    <!-- Screen 0, row 2: mail, maps, photos, calendar -->
+    <resolve launcher:screen="0" launcher:x="0" launcher:y="2" >
         <favorite launcher:packageName="com.google.android.gm" launcher:className="com.google.android.gm.ConversationListActivityGmail" />
+        <favorite launcher:uri="#Intent;action=android.intent.action.MAIN;category=android.intent.category.APP_EMAIL;end" />
     </resolve>
 
-    <resolve
-        launcher:screen="0"
-        launcher:x="2"
-        launcher:y="3" >
+    <resolve launcher:screen="0" launcher:x="1" launcher:y="2" >
         <favorite launcher:packageName="com.google.android.apps.maps" launcher:className="com.google.android.maps.MapsActivity" />
     </resolve>
 
-    <resolve
-        launcher:screen="0"
-        launcher:x="3"
-        launcher:y="3" >
-        <favorite launcher:packageName="com.google.android.apps.bard" launcher:className="com.google.android.apps.bard.shellapp.BardEntryPointActivity" />
-    </resolve>
-
-    <resolve
-        launcher:screen="0"
-        launcher:x="0"
-        launcher:y="4" >
-        <favorite launcher:packageName="com.google.android.apps.youtube.music" launcher:className="com.google.android.apps.youtube.music.activities.MusicActivity" />
-    </resolve>
-
-    <resolve
-        launcher:screen="0"
-        launcher:x="1"
-        launcher:y="4" >
+    <resolve launcher:screen="0" launcher:x="2" launcher:y="2" >
         <favorite launcher:packageName="com.google.android.apps.photos" launcher:className="com.google.android.apps.photos.home.HomeActivity" />
+        <favorite launcher:uri="#Intent;action=android.intent.action.MAIN;category=android.intent.category.APP_GALLERY;end" />
     </resolve>
 
-    <resolve
-        launcher:screen="0"
-        launcher:x="2"
-        launcher:y="4" >
-        <favorite launcher:packageName="com.sec.android.app.popupcalculator" launcher:className="com.sec.android.app.popupcalculator.Calculator" />
+    <resolve launcher:screen="0" launcher:x="3" launcher:y="2" >
+        <favorite launcher:packageName="com.google.android.calendar" launcher:className="com.android.calendar.AllInOneActivity" />
+        <favorite launcher:uri="#Intent;action=android.intent.action.MAIN;category=android.intent.category.APP_CALENDAR;end" />
     </resolve>
 
-    <resolve
-        launcher:screen="0"
-        launcher:x="3"
-        launcher:y="4" >
-        <favorite launcher:packageName="com.sec.android.daemonapp" launcher:className="com.samsung.android.weather.app.AppLauncherActivity" />
+    <!-- Row 3: video, store, settings -->
+    <resolve launcher:screen="0" launcher:x="0" launcher:y="3" >
+        <favorite launcher:packageName="com.google.android.youtube" launcher:className="com.google.android.youtube.app.honeycomb.Shell$HomeActivity" />
     </resolve>
 
-    <resolve
+    <resolve launcher:screen="0" launcher:x="1" launcher:y="3" >
+        <favorite launcher:packageName="com.android.vending" launcher:className="com.android.vending.AssetBrowserActivity" />
+        <favorite launcher:uri="#Intent;action=android.intent.action.MAIN;category=android.intent.category.APP_MARKET;end" />
+    </resolve>
+
+
+    <resolve launcher:screen="0" launcher:x="2" launcher:y="3" >
+        <favorite launcher:uri="#Intent;action=android.settings.SETTINGS;end" />
+    </resolve>
+
+    <!-- Row 4: the Google folder (a folder with fewer than two installed apps is dropped) and contacts -->
+    <folder
+        launcher:title="@string/google_folder_title"
         launcher:screen="0"
         launcher:x="0"
-        launcher:y="5" >
-        <favorite launcher:packageName="com.sec.android.app.shealth" launcher:className="com.samsung.android.app.shealth.home.HomeMainActivity" />
-    </resolve>
+        launcher:y="4">
+        <favorite launcher:packageName="com.google.android.googlequicksearchbox" launcher:className="com.google.android.googlequicksearchbox.SearchActivity" />
+        <favorite launcher:packageName="com.google.android.apps.docs" launcher:className="com.google.android.apps.docs.app.NewMainProxyActivity" />
+        <favorite launcher:packageName="com.google.android.apps.tachyon" launcher:className="com.google.android.apps.tachyon.MainActivity" />
+        <favorite launcher:packageName="com.google.android.apps.youtube.music" launcher:className="com.google.android.apps.youtube.music.activities.MusicActivity" />
+        <favorite launcher:packageName="com.google.android.apps.bard" launcher:className="com.google.android.apps.bard.shellapp.BardEntryPointActivity" />
+        <favorite launcher:packageName="com.google.android.keep" launcher:className="com.google.android.keep.activities.BrowseActivity" />
+    </folder>
 
-    <resolve
-        launcher:screen="0"
-        launcher:x="1"
-        launcher:y="5" >
-        <favorite launcher:packageName="com.onepassword.android" launcher:className="com.onepassword.android.app.StartActivity" />
-    </resolve>
-
-    <resolve
-        launcher:screen="0"
-        launcher:x="2"
-        launcher:y="5" >
-        <favorite launcher:packageName="com.fujifilm.instaxpal" launcher:className="com.fujifilm.instaxeye.ui.startup.SplashActivity" />
-    </resolve>
-
-    <resolve
-        launcher:screen="0"
-        launcher:x="3"
-        launcher:y="5" >
-        <favorite launcher:packageName="com.zhiliaoapp.musically" launcher:className="com.ss.android.ugc.aweme.splash.SplashActivity" />
+    <resolve launcher:screen="0" launcher:x="1" launcher:y="4" >
+        <favorite launcher:uri="#Intent;action=android.intent.action.MAIN;category=android.intent.category.APP_CONTACTS;end" />
     </resolve>
 </favorites>
