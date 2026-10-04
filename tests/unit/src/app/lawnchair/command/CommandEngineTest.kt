@@ -222,4 +222,16 @@ class CommandEngineTest {
             assertFalse(it, run(it).action == null)
         }
     }
+
+    @Test fun pickingAFinishedSuggestionIsRunnableButACommandNameIsNot() {
+        listOf("abrir ca", "ligar an", "alarme 630").forEach { typed ->
+            run(typed).suggestions.forEach {
+                assertFalse(it.completion, run(it.completion).action == null)
+            }
+        }
+        // "calc " only completes the command name, there is nothing to run yet.
+        assertNull(run("calc ").action)
+        assertNull(run("abrir ").action)
+        run("ca").suggestions.filter { it.kind == "COMANDO" }.forEach { assertNull(it.completion, run(it.completion).action) }
+    }
 }

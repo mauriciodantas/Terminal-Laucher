@@ -154,6 +154,7 @@ private fun CommandScreen(onClose: () -> Unit) {
     }
 
     var pendingAction by remember { mutableStateOf<CommandAction?>(null) }
+    var pendingCommand by remember { mutableStateOf("") }
 
     var field by remember { mutableStateOf(TextFieldValue("")) }
     var selected by remember { mutableIntStateOf(0) }
@@ -178,13 +179,13 @@ private fun CommandScreen(onClose: () -> Unit) {
     val executedLabel = stringResource(R.string.command_executed)
     val failedLabel = stringResource(R.string.command_failed)
 
-    fun finishRun(action: CommandAction) {
+    fun finishRun(action: CommandAction, command: String) {
         val ok = CommandExecutor.execute(context, action)
         if (!ok) {
             done = failedLabel
             return
         }
-        history = CommandEngine.pushHistory(history, text)
+        history = CommandEngine.pushHistory(history, command)
         CommandActivity.saveHistory(context, history)
         historyIndex = -1
         if (action is CommandAction.Calc) {
@@ -197,18 +198,29 @@ private fun CommandScreen(onClose: () -> Unit) {
 
     val callPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
         // Allowed: the call starts. Denied: the dialer opens with the number instead.
-        pendingAction?.let { finishRun(it) }
+        pendingAction?.let { finishRun(it, pendingCommand) }
         pendingAction = null
     }
 
-    fun run() {
-        val action = analysis.action ?: return
+    fun runAction(action: CommandAction, command: String) {
         if (action is CommandAction.Call && !CommandExecutor.hasCallPermission(context)) {
             pendingAction = action
+            pendingCommand = command
             callPermission.launch(android.Manifest.permission.CALL_PHONE)
             return
         }
-        finishRun(action)
+        finishRun(action, command)
+    }
+
+    fun run() {
+        analysis.action?.let { runAction(it, text) }
+    }
+
+    /** A suggestion that is already a complete, runnable command runs on the tap, without Enter. */
+    fun pick(suggestion: Suggestion) {
+        setText(suggestion.completion)
+        CommandEngine.analyze(suggestion.completion, apps, contacts, granted).action
+            ?.let { runAction(it, suggestion.completion.trim()) }
     }
 
     val voiceIntent = remember { CommandActivity.voiceIntent(context) }
@@ -420,7 +432,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                             .fillMaxWidth()
                             .height(44.dp)
                             .background(if (active) phosphor else Color.Transparent)
-                            .clickable { setText(suggestion.completion) }
+                            .clickable { pick(suggestion) }
                             .padding(horizontal = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
