@@ -276,16 +276,6 @@ android {
             minSdk = 26
         }
 
-        github {
-            applicationId 'net.mdantas.terminal.github'
-            dimension "channel"
-        }
-
-        nightly {
-            applicationId 'net.mdantas.terminal.nightly'
-            dimension "channel"
-        }
-
         play {
             applicationId "net.mdantas.terminal"
             dimension "channel"
@@ -329,23 +319,6 @@ android {
             proto {
                 srcDirs = ['lawnchair/protos/']
             }
-        }
-
-        github {
-            manifest.srcFile "github/AndroidManifest.xml"
-        }
-
-        nightly {
-            manifest.srcFile "nightly/AndroidManifest.xml"
-            res.srcDirs = ["nightly/res"]
-        }
-
-        lawnWithQuickstepGithub {
-            manifest.srcFile "quickstep/AndroidManifest-launcher.xml"
-        }
-
-        lawnWithQuickstepNightly {
-            manifest.srcFile "quickstep/AndroidManifest-launcher.xml"
         }
 
         lawnWithQuickstepPlay {

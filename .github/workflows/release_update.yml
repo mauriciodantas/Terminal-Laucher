@@ -48,7 +48,7 @@ jobs:
             echo ${{ secrets.KEYSTORE }} | base64 --decode > ${{ github.workspace }}/key.jks
           fi
       - name: Build release APK
-        run: ./gradlew assembleLawnWithQuickstepGithubRelease
+        run: ./gradlew assembleLawnWithQuickstepPlayRelease
       - name: Rename artifact
         env:
           ARTIFACT_NAME: ${{ github.event.inputs.artifactName }}
