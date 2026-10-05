@@ -27,6 +27,7 @@ import static com.android.launcher3.allapps.UserProfileManager.STATE_ENABLED;
 
 import android.content.Context;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -303,8 +304,20 @@ public abstract class BaseAllAppsAdapter<T extends Context & ActivityContext> ex
                                 || (privateProfileManager != null
                                         && privateProfileManager.isPrivateSpaceItem(adapterItem)));
                 icon.setSkipUserBadge(skipUserBadge);
+                // One column is the directory list (label beside the icon); more is an icon grid.
+                boolean directoryList =
+                        mActivityContext.getDeviceProfile().numShownAllAppsColumns == 1;
+                icon.setLayoutHorizontal(directoryList);
+                icon.setGravity(directoryList
+                        ? Gravity.START | Gravity.CENTER_VERTICAL
+                        : Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL);
+                icon.setPaddingRelative(icon.getPaddingStart(), icon.getPaddingTop(),
+                        directoryList
+                                ? (int) (32 * icon.getResources().getDisplayMetrics().density)
+                                : icon.getPaddingStart(),
+                        icon.getPaddingBottom());
                 icon.applyFromApplicationInfo(adapterItem.itemInfo);
-                icon.setDirectoryIndex(directoryIndexOf(position));
+                icon.setDirectoryIndex(directoryList ? directoryIndexOf(position) : -1);
                 icon.setOnFocusChangeListener(mIconFocusListener);
                 if (privateProfileManager != null) {
                     // Set the alpha of the private space icon to 0 upon expanding the header so the

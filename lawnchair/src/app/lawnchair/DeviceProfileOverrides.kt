@@ -117,7 +117,12 @@ class DeviceProfileOverrides @Inject constructor(
             deviceType: Int,
             previewOverrides: PreviewOverrides,
         ) : this(
-            numAllAppsColumns = prefs2.drawerColumns.firstCached(gridOption = defaultGrid),
+            // The directory list has one column; a grid uses the chosen number.
+            numAllAppsColumns = if (prefs2.drawerGrid.firstCached()) {
+                prefs2.drawerColumns.firstCached(gridOption = defaultGrid)
+            } else {
+                1
+            },
             numFolderRows = prefs.folderRows.get(defaultGrid),
             numFolderColumns = prefs2.folderColumns.firstCached(gridOption = defaultGrid),
 
@@ -148,9 +153,13 @@ class DeviceProfileOverrides @Inject constructor(
                 -1
             },
             foldableDatabaseAllAppsColumns = if (deviceType == InvariantDeviceProfile.TYPE_MULTI_DISPLAY) {
-                val folded = prefs2.drawerColumns.firstCached(gridOption = defaultGrid)
-                val unfolded = prefs2.drawerColumnsUnfolded.firstCached(gridOption = defaultGrid)
-                folded.coerceAtLeast(unfolded)
+                if (prefs2.drawerGrid.firstCached()) {
+                    val folded = prefs2.drawerColumns.firstCached(gridOption = defaultGrid)
+                    val unfolded = prefs2.drawerColumnsUnfolded.firstCached(gridOption = defaultGrid)
+                    folded.coerceAtLeast(unfolded)
+                } else {
+                    1
+                }
             } else {
                 -1
             },

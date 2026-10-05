@@ -485,7 +485,8 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         mSearchExitInProgress = !goingToSearch;
         mFastScroller.setVisibility(goingToSearch ? INVISIBLE : VISIBLE);
         if (mDirectoryIndex != null) {
-            mDirectoryIndex.setVisibility(goingToSearch ? INVISIBLE : VISIBLE);
+            mDirectoryIndex.setVisibility(
+                    goingToSearch || !isDirectoryList() ? INVISIBLE : VISIBLE);
         }
         if (goingToSearch) {
             // Fade out the button to pause work apps.
@@ -681,7 +682,8 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         if (mDirectoryIndex != null) {
             // The index lists the sections of the main apps list only.
             mDirectoryIndex.setVisibility(
-                    currentActivePage == AdapterHolder.MAIN ? VISIBLE : INVISIBLE);
+                    currentActivePage == AdapterHolder.MAIN && isDirectoryList()
+                            ? VISIBLE : INVISIBLE);
         }
         // Header keeps track of active recycler view to properly render header protection.
         mHeader.setActiveRV(currentActivePage);
@@ -1818,11 +1820,16 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         return mBottomSheetBackground.getVisibility() == VISIBLE ? mBottomSheetBackground : this;
     }
 
+    /** True when the drawer is the single-column directory list, false for the icon grid. */
+    private boolean isDirectoryList() {
+        return mActivityContext.getDeviceProfile().numShownAllAppsColumns == 1;
+    }
+
     /** Keeps the section letters of the directory in sync with the main apps list. */
     private void bindDirectoryIndex(AdapterHolder holder) {
         if (mDirectoryIndex == null) return;
-        Runnable refresh = () -> mDirectoryIndex.setSections(
-                holder.mAppsList.getFastScrollerSections());
+        Runnable refresh = () -> mDirectoryIndex.setSections(isDirectoryList()
+                ? holder.mAppsList.getFastScrollerSections() : new ArrayList<>());
         holder.mAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
             @Override
             public void onChanged() {

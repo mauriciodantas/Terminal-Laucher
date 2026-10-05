@@ -108,10 +108,15 @@ data class AllAppsProfile(
                 }
             }
 
-            // Directory rows: icon and label sit side by side, so the row only needs the taller of the two.
+            // Directory rows (one column): icon and label sit side by side, so the row only needs
+            // the taller of the two. In a grid the label is under the icon.
+            val textHeightPx = Utilities.calculateTextHeight(allAppsIconTextSizePx)
             val cellContentHeight: Int =
-                (max(allAppsIconSizePx, Utilities.calculateTextHeight(allAppsIconTextSizePx)) +
-                    allAppsBorderSpacePx.y)
+                (if (inv.numAllAppsColumns == 1) {
+                    max(allAppsIconSizePx, textHeightPx)
+                } else {
+                    allAppsIconSizePx + allAppsIconDrawablePaddingPx + textHeightPx
+                } + allAppsBorderSpacePx.y)
             if (allAppsCellHeightPx < cellContentHeight) {
                 // Increase allAppsCellHeight to fit its content.
                 allAppsCellHeightPx = cellContentHeight

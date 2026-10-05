@@ -710,10 +710,17 @@ class PreferenceManager2 @Inject constructor(
         defaultValue = context.resources.getBoolean(R.bool.config_default_show_component_names),
     )
 
+    /** Shows the drawer as an icon grid instead of the single-column directory list. */
+    val drawerGrid = preference(
+        key = booleanPreferencesKey(name = "drawer_grid"),
+        defaultValue = false,
+        onSet = { reloadHelper.reloadGrid() },
+    )
+
+    /** Columns of the drawer when it is shown as a grid. */
     val drawerColumns = idpPreference(
         key = intPreferencesKey(name = "drawer_columns"),
-        // The app directory is a single-column list.
-        defaultSelector = { 1 },
+        defaultSelector = { numAllAppsColumns.coerceAtLeast(3) },
         onSet = { reloadHelper.reloadGrid() },
     )
 

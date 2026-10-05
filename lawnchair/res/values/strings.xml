@@ -1184,6 +1184,9 @@
     <string name="crt_effect_desc" translatable="false">Linhas de varredura, faixa de brilho, cintilação e vinheta sobre a tela</string>
     <string name="home_icon_size" translatable="false">Tamanho dos ícones da tela inicial</string>
     <string name="drawer_icon_size" translatable="false">Tamanho dos ícones da gaveta</string>
+    <string name="drawer_grid_layout" translatable="false">Exibir em grade</string>
+    <string name="drawer_grid_layout_description" translatable="false">Ícones em grade, com pastas, no lugar da lista em linhas</string>
+    <string name="drawer_grid_columns" translatable="false">Colunas da gaveta</string>
     <string name="glance_group_chats" translatable="false">Conversas rápidas</string>
     <string name="glance_chats" translatable="false">Conversas do WhatsApp</string>
     <string name="glance_chats_desc" translatable="false">Seção acima dos ícones fixos, abre direto no chat</string>

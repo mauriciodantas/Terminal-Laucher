@@ -26,6 +26,8 @@ import app.lawnchair.preferences2.preferenceManager2
 import app.lawnchair.ui.preferences.LocalIsExpandedScreen
 import app.lawnchair.ui.preferences.components.NavigationActionPreference
 import app.lawnchair.ui.preferences.components.controls.SliderPreference
+import app.lawnchair.ui.preferences.components.controls.SwitchPreference
+import app.lawnchair.ui.preferences.components.layout.ExpandAndShrink
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
 import app.lawnchair.ui.preferences.navigation.AppDrawerHiddenApps
@@ -54,6 +56,20 @@ fun AppDrawerPreferences(
                 destination = AppDrawerHiddenApps,
                 subtitle = resources.getQuantityString(R.plurals.apps_count, hiddenApps.size, hiddenApps.size),
             )
+            val gridAdapter = prefs2.drawerGrid.getAdapter()
+            SwitchPreference(
+                adapter = gridAdapter,
+                label = stringResource(id = R.string.drawer_grid_layout),
+                description = stringResource(id = R.string.drawer_grid_layout_description),
+            )
+            ExpandAndShrink(visible = gridAdapter.state.value) {
+                SliderPreference(
+                    label = stringResource(id = R.string.drawer_grid_columns),
+                    adapter = prefs2.drawerColumns.getAdapter(),
+                    step = 1,
+                    valueRange = 3..7,
+                )
+            }
             SliderPreference(
                 label = stringResource(id = R.string.drawer_icon_size),
                 adapter = prefs2.drawerIconSizeFactor.getAdapter(),

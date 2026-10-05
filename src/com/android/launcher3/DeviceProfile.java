@@ -366,8 +366,11 @@ public class DeviceProfile {
         chatStripReservePx = app.lawnchair.chats.ChatsStripState.reservedPx(context);
 
         preferenceManager2 = PreferenceManager2.INSTANCE.get(context);
-        allAppsCellHeightMultiplier = PreferenceCacheExtensionsKt
-                .firstCached(preferenceManager2.getDrawerCellHeightFactor());
+        // The compact row height is for the one-column directory list; a grid needs full cells.
+        allAppsCellHeightMultiplier = displayOptionSpec.numAllAppsColumns > 1
+                ? 1f
+                : PreferenceCacheExtensionsKt
+                        .firstCached(preferenceManager2.getDrawerCellHeightFactor());
         // Lawnchair: clamp the user padding factors to their slider ranges so a restored or
         // manually edited preference can't feed out-of-range values into the layout math.
         workspacePaddingHorizontalFactor = Utilities.boundToRange(PreferenceCacheExtensionsKt
@@ -1435,6 +1438,8 @@ public class DeviceProfile {
     }
 
 
+    private static final int DIRECTORY_SHEET_WIDTH_DP = 640;
+
     private void updateAllAppsContainerWidth() {
         int cellLayoutHorizontalPadding =
                 (cellLayoutPaddingPx.left + cellLayoutPaddingPx.right) / 2;
@@ -1442,6 +1447,12 @@ public class DeviceProfile {
             int usedWidth = (getAllAppsProfile().getCellWidthPx() * numShownAllAppsColumns)
                     + (getAllAppsProfile().getBorderSpacePx().x * (numShownAllAppsColumns - 1))
                     + allAppsPadding.left + allAppsPadding.right;
+            if (numShownAllAppsColumns == 1) {
+                // Directory list: one cell wide would be a sliver, so the sheet gets a fixed
+                // reading width instead.
+                usedWidth = Math.min(mDeviceProperties.getAvailableWidthPx(),
+                        pxFromDp(DIRECTORY_SHEET_WIDTH_DP, mMetrics));
+            }
             allAppsLeftRightMargin = Math.max(1, (mDeviceProperties.getAvailableWidthPx() - usedWidth) / 2);
         } else if (!mIsResponsiveGrid) {
             allAppsPadding.left = allAppsPadding.right =
