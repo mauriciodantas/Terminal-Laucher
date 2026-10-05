@@ -8,7 +8,6 @@ import app.lawnchair.preferences2.PreferenceManager2.Companion.getInstance
 import app.lawnchair.preferences2.firstCached
 import com.android.launcher3.Launcher
 import com.android.launcher3.R
-import com.android.launcher3.Utilities
 import com.android.launcher3.logging.StatsLogManager.LauncherEvent
 import com.android.launcher3.popup.SystemShortcut
 import com.android.launcher3.views.OptionsPopupView.OptionItem
@@ -19,7 +18,6 @@ object LauncherOptionsPopup {
         LauncherOptionPopupItem("carousel", true),
         LauncherOptionPopupItem("lock", false),
         LauncherOptionPopupItem("edit_mode", false),
-        LauncherOptionPopupItem("wallpaper", true),
         LauncherOptionPopupItem("widgets", true),
         LauncherOptionPopupItem("all_apps", true),
         LauncherOptionPopupItem("home_settings", true),
@@ -65,11 +63,6 @@ object LauncherOptionsPopup {
         val optionOrder = prefs2
             .launcherPopupOrder.firstCached().toLauncherOptions()
 
-        val wallpaperResString =
-            if (Utilities.existsStyleWallpapers(launcher)) R.string.styles_wallpaper_button_text else R.string.wallpapers
-        val wallpaperResDrawable =
-            if (Utilities.existsStyleWallpapers(launcher)) R.drawable.ic_palette else R.drawable.ic_wallpaper
-
         val optionsList = mapOf(
             "lock" to OptionItem(
                 launcher,
@@ -98,13 +91,6 @@ object LauncherOptionsPopup {
                 R.drawable.ic_apps,
                 LauncherEvent.LAUNCHER_ALL_APPS_TAP_OR_LONGPRESS,
                 onStartAllApps,
-            ),
-            "wallpaper" to OptionItem(
-                launcher,
-                wallpaperResString,
-                wallpaperResDrawable,
-                LauncherEvent.IGNORE,
-                onStartWallpaperPicker,
             ),
             "widgets" to OptionItem(
                 launcher,
@@ -186,11 +172,6 @@ object LauncherOptionsPopup {
                 icon = R.drawable.enter_home_gardening_icon,
             )
 
-            "wallpaper" -> LauncherOptionMetadata(
-                label = R.string.styles_wallpaper_button_text,
-                icon = R.drawable.ic_palette,
-            )
-
             "widgets" -> LauncherOptionMetadata(
                 label = R.string.widget_button_text,
                 icon = SystemShortcut.Widgets.getDrawableId(),
@@ -261,7 +242,7 @@ data class LauncherOptionMetadata(
 )
 
 fun String.toLauncherOptions(): List<LauncherOptionPopupItem> {
-    return this.split("|").map { item ->
+    return this.split("|").filter { it.removePrefix("+").removePrefix("-") != "wallpaper" }.map { item ->
         val (identifier, isEnabled) = when {
             item.startsWith("+") -> item.drop(1) to true
             item.startsWith("-") -> item.drop(1) to false

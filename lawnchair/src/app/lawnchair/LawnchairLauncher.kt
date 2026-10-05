@@ -18,16 +18,14 @@ package app.lawnchair
 
 import android.animation.AnimatorSet
 import android.app.ActivityOptions
-import android.app.WallpaperManager
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.Color
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Pair
 import android.view.Display
+import android.view.MotionEvent
 import android.view.View
 import android.view.Gravity
 import android.view.ViewGroup
@@ -57,6 +55,7 @@ import app.lawnchair.ui.onboarding.OnboardingActivity
 import app.lawnchair.ui.popup.LauncherOptionsPopup
 import app.lawnchair.ui.popup.LawnchairShortcut
 import app.lawnchair.util.unsafeLazy
+import app.lawnchair.views.BurnInGuard
 import app.lawnchair.views.CrtOverlayView
 import app.lawnchair.views.LawnchairFloatingSurfaceView
 import com.android.launcher3.AbstractFloatingView
@@ -166,6 +165,28 @@ class LawnchairLauncher : QuickstepLauncher() {
     val gestureController by unsafeLazy { GestureController(this) }
 
     /** Adds the CRT screen layer on top of everything and flashes it on screen changes. */
+    private var burnInGuard: BurnInGuard? = null
+
+    /** Slides the home screen a few dp now and then and dims it while untouched, to spare OLED panels. */
+    private fun installBurnInGuard() {
+        val guard = BurnInGuard(this, dragLayer)
+        (dragLayer.parent as ViewGroup).addView(
+            guard,
+            ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),
+        )
+        burnInGuard = guard
+    }
+
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        burnInGuard?.onUserActivity()
+        return super.dispatchTouchEvent(ev)
+    }
+
+    override fun onPause() {
+        burnInGuard?.stop()
+        super.onPause()
+    }
+
     private fun installCrtOverlay() {
         val crt = CrtOverlayView(this)
         (dragLayer.parent as ViewGroup).addView(
@@ -201,23 +222,12 @@ class LawnchairLauncher : QuickstepLauncher() {
         )
     }
 
-    /** Sets a solid terminal-black wallpaper once, on the first run of this launcher. */
-    private fun applyNostromoWallpaper() {
-        val store = getSharedPreferences("nostromo", Context.MODE_PRIVATE)
-        if (store.getBoolean("wallpaper_applied", false)) return
-        runCatching {
-            val bitmap = Bitmap.createBitmap(2, 2, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.parseColor("#07090A")) }
-            WallpaperManager.getInstance(this).setBitmap(bitmap, null, true, WallpaperManager.FLAG_SYSTEM)
-            store.edit().putBoolean("wallpaper_applied", true).apply()
-        }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         layoutInflater.factory2 = LawnchairLayoutFactory(this)
         super.onCreate(savedInstanceState)
 
-        applyNostromoWallpaper()
         installCrtOverlay()
+        installBurnInGuard()
         installChatsStrip()
         // Only on a real start: a recreation (rotation, theme change) must not open it again.
         if (savedInstanceState == null && OnboardingActivity.shouldShow(this)) OnboardingActivity.start(this)
@@ -522,6 +532,7 @@ class LawnchairLauncher : QuickstepLauncher() {
 
     override fun onResume() {
         super.onResume()
+        burnInGuard?.start()
         restartIfPending()
         refreshPredictionContainersFromModel()
 
