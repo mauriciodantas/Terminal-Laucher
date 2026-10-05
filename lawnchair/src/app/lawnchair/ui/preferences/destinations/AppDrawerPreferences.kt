@@ -30,6 +30,7 @@ import app.lawnchair.ui.preferences.components.controls.SwitchPreference
 import app.lawnchair.ui.preferences.components.layout.ExpandAndShrink
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
+import app.lawnchair.ui.preferences.navigation.AppDrawerFolder
 import app.lawnchair.ui.preferences.navigation.AppDrawerHiddenApps
 import com.android.launcher3.R
 
@@ -55,6 +56,10 @@ fun AppDrawerPreferences(
                 label = stringResource(id = R.string.hidden_apps_label),
                 destination = AppDrawerHiddenApps,
                 subtitle = resources.getQuantityString(R.plurals.apps_count, hiddenApps.size, hiddenApps.size),
+            )
+            NavigationActionPreference(
+                label = stringResource(id = R.string.app_drawer_folder),
+                destination = AppDrawerFolder,
             )
             val gridAdapter = prefs2.drawerGrid.getAdapter()
             SwitchPreference(
