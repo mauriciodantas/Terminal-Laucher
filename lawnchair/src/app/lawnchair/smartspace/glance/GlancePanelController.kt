@@ -2,6 +2,7 @@ package app.lawnchair.smartspace.glance
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
@@ -205,7 +206,7 @@ class GlancePanelController(
         // The panel only has two cell rows: the shortcuts take the place of the "quick access" label.
         root.findViewById<View>(R.id.nostromo_quick_label)?.visibility = View.GONE
         val density = context.resources.displayMetrics.density
-        GlanceShortcut.values().forEachIndexed { index, shortcut ->
+        GlanceShortcut.values().filter { it.isAvailable() }.forEachIndexed { index, shortcut ->
             val active = shortcut == GlanceShortcut.TORCH && torchOn
             row.addView(
                 TextView(context).apply {
@@ -228,6 +229,17 @@ class GlancePanelController(
                     if (!previewMode) setOnClickListener { run(shortcut) }
                 },
             )
+        }
+    }
+
+    /** Hides the flashlight and camera shortcuts on devices without a flash or a camera app. */
+    private fun GlanceShortcut.isAvailable(): Boolean {
+        val pm = context.packageManager
+        return when (this) {
+            GlanceShortcut.TORCH -> pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH)
+            GlanceShortcut.CAMERA -> pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY) ||
+                pm.resolveActivity(Intent(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA), 0) != null
+            else -> true
         }
     }
 
