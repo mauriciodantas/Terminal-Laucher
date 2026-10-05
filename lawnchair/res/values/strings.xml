@@ -1178,6 +1178,8 @@
     <string name="effects_group" translatable="false">Efeitos do terminal</string>
     <string name="terminal_icon_effect" translatable="false">Efeito dos ícones</string>
     <string name="terminal_icon_effect_desc" translatable="false">Glifo de fósforo sobre painel escuro. Desligado, cada app mostra o ícone original</string>
+    <string name="widget_effect" translatable="false">Efeito dos widgets</string>
+    <string name="widget_effect_desc" translatable="false">Tom e linhas de varredura na cor do fósforo sobre os widgets adicionados. Desligado, cada widget mostra suas cores</string>
     <string name="crt_effect" translatable="false">Efeito de monitor</string>
     <string name="crt_effect_desc" translatable="false">Linhas de varredura, faixa de brilho, cintilação e vinheta sobre a tela</string>
     <string name="home_icon_size" translatable="false">Tamanho dos ícones da tela inicial</string>

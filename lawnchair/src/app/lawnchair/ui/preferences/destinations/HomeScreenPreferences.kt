@@ -89,6 +89,11 @@ fun HomeScreenPreferences(
             modifier = Modifier.padding(top = 8.dp),
         ) {
             SwitchPreference(
+                adapter = prefs2.widgetEffect.getAdapter(),
+                label = stringResource(id = R.string.widget_effect),
+                description = stringResource(id = R.string.widget_effect_desc),
+            )
+            SwitchPreference(
                 adapter = prefs2.crtEffect.getAdapter(),
                 label = stringResource(id = R.string.crt_effect),
                 description = stringResource(id = R.string.crt_effect_desc),

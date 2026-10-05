@@ -89,8 +89,12 @@ public class LauncherAppWidgetHostView extends BaseLauncherAppWidgetHostView
 
     private int mFocusRectOutsets = 0;
 
+    /** Lawnchair (Terminal): phosphor tone and scanlines over the widget, when enabled. */
+    private final app.lawnchair.widgets.WidgetPhosphorEffect mPhosphorEffect;
+
     public LauncherAppWidgetHostView(Context context) {
         super(context);
+        mPhosphorEffect = new app.lawnchair.widgets.WidgetPhosphorEffect(this);
         mActivityContext = ActivityContext.lookupContext(context);
         mLongPressHelper = new CheckLongPressHelper(this, this);
         setAccessibilityDelegate(mActivityContext.getAccessibilityDelegate());
@@ -264,6 +268,12 @@ public class LauncherAppWidgetHostView extends BaseLauncherAppWidgetHostView
         mLongPressHelper.onTouchEvent(ev);
         // We want to keep receiving though events to be able to cancel long press on ACTION_UP
         return true;
+    }
+
+    @Override
+    protected void dispatchDraw(android.graphics.Canvas canvas) {
+        super.dispatchDraw(canvas);
+        mPhosphorEffect.drawOverlay(canvas);
     }
 
     @Override

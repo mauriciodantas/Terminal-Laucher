@@ -492,6 +492,12 @@ class PreferenceManager2 @Inject constructor(
         defaultValue = true,
     )
 
+    /** Phosphor tone and scanlines over the widgets the user adds, in the chosen phosphor color. */
+    val widgetEffect = preference(
+        key = booleanPreferencesKey("widget_effect"),
+        defaultValue = true,
+    )
+
     /** The CRT layer over the whole launcher: scanlines, rolling band, flicker and vignette. */
     val crtEffect = preference(
         key = booleanPreferencesKey("crt_effect"),
