@@ -17,6 +17,7 @@
 package app.lawnchair.preferences
 
 import android.content.Context
+import androidx.core.content.edit
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import app.lawnchair.LawnchairLauncher
@@ -219,6 +220,14 @@ class PreferenceManager @Inject constructor(
     }
 
     init {
+        // Terminal: uninstalling any app used to switch themed icons off (see PackageUpdatedTask),
+        // which dropped the phosphor icon theme for good. Turn it back on once, for installs that were
+        // hit by it; fresh installs have no version yet and skip this. It runs before this manager
+        // listens to the preferences: the change must not trigger an icon reload while the app is
+        // still being created.
+        if (sp.getInt("version", 9999) < 3) {
+            sp.edit { putBoolean("themed_icons", true) }
+        }
         sp.registerOnSharedPreferenceChangeListener(this)
         migratePrefs(CURRENT_VERSION) { oldVersion ->
             if (oldVersion < 2) {
@@ -235,7 +244,7 @@ class PreferenceManager @Inject constructor(
     }
 
     companion object {
-        private const val CURRENT_VERSION = 2
+        private const val CURRENT_VERSION = 3
 
         @JvmField
         val INSTANCE = DaggerSingletonObject(LauncherAppComponent::getPreferenceManager)

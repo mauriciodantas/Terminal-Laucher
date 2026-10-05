@@ -29,7 +29,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.LauncherActivityInfo;
 import android.content.pm.LauncherApps;
-import android.content.pm.PackageManager;
 import android.content.pm.ShortcutInfo;
 import android.os.UserHandle;
 import android.os.UserManager;
@@ -40,7 +39,6 @@ import androidx.annotation.NonNull;
 import com.android.launcher3.Flags;
 import com.android.launcher3.LauncherModel.ModelUpdateTask;
 import com.android.launcher3.LauncherSettings.Favorites;
-import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.config.FeatureFlags;
 import com.android.launcher3.icons.IconCache;
@@ -52,7 +50,6 @@ import com.android.launcher3.pm.PackageInstallInfo;
 import com.android.launcher3.pm.UserCache;
 import com.android.launcher3.shortcuts.ShortcutRequest;
 import com.android.launcher3.util.ApiWrapper;
-import com.android.launcher3.util.ApplicationInfoWrapper;
 import com.android.launcher3.util.FlagOp;
 import com.android.launcher3.util.IntSet;
 import com.android.launcher3.util.ItemInfoMatcher;
@@ -175,19 +172,9 @@ public class PackageUpdatedTask implements ModelUpdateTask {
                     if (packages[i].equals(pm.getThemedIconPackPackage().get())) {
                         pm.getThemedIconPackPackage().set("");
                     }
-                    final boolean isThemedIconsAvailable = context.getPackageManager()
-                            .queryIntentActivityOptions(
-                                    new ComponentName(context.getApplicationInfo().packageName,
-                                            context.getApplicationInfo().className),
-                                    null,
-                                    new Intent(context.getResources().getString(R.string.icon_packs_intent_name)),
-                                    PackageManager.GET_RESOLVED_FILTER)
-                            .stream().map(it -> it.activityInfo.packageName)
-                            .noneMatch(it -> new ApplicationInfoWrapper(context, it, mUser)
-                                .isInstalled());
-                    if (isThemedIconsAvailable) {
-                        pm.getThemedIcons().set(false);
-                    }
+                    // Lawnchair (Terminal): removing an app never turns themed icons off. It used to,
+                    // whenever no icon pack app was installed, which is the normal case, and the
+                    // phosphor icon theme was lost after any uninstall.
                 }
                 // Fall through
             }
