@@ -25,6 +25,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -44,6 +45,8 @@ import app.lawnchair.ui.preferences.components.controls.ClickablePreference
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
 import com.android.launcher3.R
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /** Where the user is in the "add or edit an action" flow. */
 private sealed interface Step {
@@ -156,20 +159,35 @@ fun CommandActionsPreferences() {
             onDismiss = { step = null },
         )
         Step.Apps -> {
-            val apps = remember { CommandExecutor.loadApps(context) }
-            PickerDialog(
-                title = "Escolha o app",
-                items = apps,
-                label = { it.label },
-                onPick = { step = Step.Shortcuts(it) },
-                onDismiss = { step = null },
-            )
+            // Scanning every installed app takes a moment, so it runs off the main thread.
+            val apps by produceState<List<AppEntry>?>(initialValue = null) {
+                value = withContext(Dispatchers.Default) { CommandExecutor.loadIntegrationApps(context) }
+            }
+            val list = apps
+            if (list == null || list.isEmpty()) {
+                AlertDialog(
+                    onDismissRequest = { step = null },
+                    confirmButton = { TextButton(onClick = { step = null }) { Text("Fechar") } },
+                    title = { Text("Apps com integrações") },
+                    text = {
+                        Text(
+                            if (list == null) "Procurando apps…" else "Nenhum app com integrações externas. Use o modo Avançado.",
+                        )
+                    },
+                )
+            } else {
+                PickerDialog(
+                    title = "Apps com integrações",
+                    items = list,
+                    label = { it.label },
+                    onPick = { step = Step.Shortcuts(it) },
+                    onDismiss = { step = null },
+                )
+            }
         }
         is Step.Shortcuts -> {
             val pkg = ComponentName.unflattenFromString(s.app.id)?.packageName.orEmpty()
-            val found = remember(pkg) {
-                CommandExecutor.loadShortcuts(context, pkg) + CommandExecutor.probeIntents(context, pkg)
-            }
+            val found = remember(pkg) { CommandExecutor.loadIntegrations(context, pkg) }
             if (found.isEmpty()) {
                 AlertDialog(
                     onDismissRequest = { step = null },
@@ -181,8 +199,18 @@ fun CommandActionsPreferences() {
                 PickerDialog(
                     title = s.app.label,
                     items = found,
-                    label = { (if (it.kind == ActionKind.SHORTCUT) "Atalho · " else "Intent · ") + it.label },
-                    onPick = { step = Step.Letter(it.copy(label = "${s.app.label} · ${it.label}"), editing = null) },
+                    label = {
+                        when {
+                            it.kind == ActionKind.SHORTCUT -> "Atalho · "
+                            it.letter.isNotEmpty() -> "Receita · "
+                            else -> "Intent · "
+                        } + it.label
+                    },
+                    onPick = {
+                        // A catalog recipe already carries the app's name; the others get it as a prefix.
+                        val label = if (it.label.startsWith(s.app.label, ignoreCase = true)) it.label else "${s.app.label} · ${it.label}"
+                        step = Step.Letter(it.copy(label = label), editing = null)
+                    },
                     onDismiss = { step = null },
                 )
             }

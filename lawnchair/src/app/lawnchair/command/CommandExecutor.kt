@@ -172,6 +172,25 @@ object CommandExecutor {
         return true
     }
 
+    private fun packageOf(app: AppEntry): String? = ComponentName.unflattenFromString(app.id)?.packageName
+
+    /** What [packageName] offers to bind to a letter: catalog recipes, intents it answers to and launcher shortcuts. */
+    fun loadIntegrations(context: Context, packageName: String): List<CustomAction> =
+        CustomActions.CATALOG.filter { packageName in it.packages } +
+            loadShortcuts(context, packageName) +
+            probeIntents(context, packageName)
+
+    /** Only the apps with something to bind, one entry per package; apps that just open are left out. */
+    fun loadIntegrationApps(context: Context): List<AppEntry> =
+        loadApps(context)
+            .distinctBy { packageOf(it) }
+            .filter { app ->
+                val pkg = packageOf(app) ?: return@filter false
+                CustomActions.CATALOG.any { pkg in it.packages } ||
+                    loadShortcuts(context, pkg).isNotEmpty() ||
+                    probeIntents(context, pkg).isNotEmpty()
+            }
+
     /** Launcher shortcuts an app publishes (manifest, dynamic and pinned), usable as actions. */
     fun loadShortcuts(context: Context, packageName: String): List<CustomAction> {
         val launcherApps = context.getSystemService(LauncherApps::class.java) ?: return emptyList()
