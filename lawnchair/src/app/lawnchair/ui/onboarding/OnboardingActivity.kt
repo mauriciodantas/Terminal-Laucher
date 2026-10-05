@@ -1,8 +1,11 @@
 package app.lawnchair.ui.onboarding
 
+import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -57,6 +60,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import app.lawnchair.preferences2.asState
 import app.lawnchair.preferences2.preferenceManager2
+import app.lawnchair.LawnchairLauncher
 import app.lawnchair.theme.color.ColorOption
 import app.lawnchair.ui.preferences.components.isNotificationServiceEnabled
 import app.lawnchair.ui.preferences.destinations.phosphorEntries
@@ -83,6 +87,7 @@ class OnboardingActivity : ComponentActivity() {
                 OnboardingScreen(
                     onFinish = {
                         markDone(this@OnboardingActivity)
+                        if (isDefaultLauncher()) goHomeAndCloseStrayLaunchers(applicationContext)
                         finish()
                     },
                 )
@@ -112,6 +117,38 @@ class OnboardingActivity : ComponentActivity() {
         private fun markDone(context: Context) {
             context.getSharedPreferences(STORE, Context.MODE_PRIVATE).edit().putBoolean(KEY_DONE, true).apply()
         }
+
+        /**
+         * Opens the home screen and, once the home instance exists, closes the other launcher tasks.
+         *
+         * Terminal opened from its icon lives in an ordinary task. When the user then makes it the
+         * default launcher, the system starts a second instance in the home task, and both stay
+         * alive on the same model. The stale one answers model updates against an outdated layout,
+         * which makes a folder drop collide and drops the icons involved from the home screen.
+         */
+        private fun goHomeAndCloseStrayLaunchers(context: Context) {
+            context.startActivity(
+                Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
+            // The home instance is created asynchronously; give it a moment before looking for it.
+            Handler(Looper.getMainLooper()).postDelayed({ closeStrayLauncherTasks(context) }, STRAY_CLOSE_DELAY_MS)
+        }
+
+        /** Closes the launcher tasks that are not the home task, but only when the home task exists. */
+        fun closeStrayLauncherTasks(context: Context) {
+            val tasks = runCatching { context.getSystemService(ActivityManager::class.java).appTasks }.getOrNull()
+                ?: return
+            val launcher = tasks
+                .mapNotNull { task -> runCatching { task to task.taskInfo }.getOrNull() }
+                .filter { (_, info) -> info.baseActivity?.className == LawnchairLauncher::class.java.name }
+            val hasHomeTask = launcher.any { (_, info) -> info.baseIntent.hasCategory(Intent.CATEGORY_HOME) }
+            if (!hasHomeTask) return
+            launcher
+                .filterNot { (_, info) -> info.baseIntent.hasCategory(Intent.CATEGORY_HOME) }
+                .forEach { (task, _) -> runCatching { task.finishAndRemoveTask() } }
+        }
+
+        private const val STRAY_CLOSE_DELAY_MS = 800L
 
         fun start(context: Context) {
             // Its own task: opened on top of the launcher's task, it kept a second launcher
