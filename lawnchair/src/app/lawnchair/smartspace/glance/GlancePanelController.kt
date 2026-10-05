@@ -61,7 +61,53 @@ class GlancePanelController(
         }
     }
 
+    private var fitScheduled = false
+
+    /**
+     * The panel sits in two rows of the grid, and the height of a row changes from phone to phone.
+     * When the content is taller than that, the least useful parts give way one at a time (status
+     * line, header, a smaller clock, the date), so the shortcut row at the bottom is never cut off.
+     */
+    private fun fitToHeight() {
+        fitScheduled = false
+        val width = root.width
+        val available = root.height
+        if (width <= 0 || available <= 0) return
+        val status = root.findViewById<View>(R.id.nostromo_status)
+        val header = root.findViewById<View>(R.id.nostromo_header)
+        val date = root.findViewById<View>(R.id.nostromo_date)
+        val clock = root.findViewById<TextView>(R.id.nostromo_clock)
+        listOfNotNull(status, header, date).forEach { it.visibility = View.VISIBLE }
+        clock?.setTextSize(TypedValue.COMPLEX_UNIT_SP, CLOCK_SP)
+        val steps = listOf<() -> Unit>(
+            { status?.visibility = View.GONE },
+            { header?.visibility = View.GONE },
+            { clock?.setTextSize(TypedValue.COMPLEX_UNIT_SP, CLOCK_COMPACT_SP) },
+            { date?.visibility = View.GONE },
+        )
+        for (step in steps) {
+            root.measure(
+                View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+            )
+            if (root.measuredHeight <= available) break
+            step()
+        }
+        root.requestLayout()
+    }
+
+    private fun scheduleFit() {
+        if (fitScheduled) return
+        fitScheduled = true
+        root.post { fitToHeight() }
+    }
+
+    private val sizeListener = View.OnLayoutChangeListener { _, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
+        if (bottom - top != oldBottom - oldTop || right - left != oldRight - oldLeft) scheduleFit()
+    }
+
     fun start() {
+        root.addOnLayoutChangeListener(sizeListener)
         refresh()
         val newScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
         scope = newScope
@@ -85,6 +131,7 @@ class GlancePanelController(
     }
 
     fun stop() {
+        root.removeOnLayoutChangeListener(sizeListener)
         runCatching { context.getSystemService(CameraManager::class.java)?.unregisterTorchCallback(torchCallback) }
         scope?.cancel()
         scope = null
@@ -173,7 +220,7 @@ class GlancePanelController(
                         setColor(if (active) (phosphor and 0x00FFFFFF) or 0x29000000 else Color.TRANSPARENT)
                         setStroke(density.toInt().coerceAtLeast(1), (dim and 0x00FFFFFF) or 0x66000000)
                     }
-                    minHeight = (30 * density).toInt()
+                    minHeight = (28 * density).toInt()
                     contentDescription = shortcut.label
                     layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
                         if (index > 0) marginStart = (6 * density).toInt()
@@ -230,6 +277,7 @@ class GlancePanelController(
     private fun refresh() {
         renderStatusLine()
         renderShortcuts()
+        scheduleFit()
         val glanceTargets = latest.map { it.toGlanceTarget() }
         actions = latest.associate { it.id to (it.headerAction ?: it.baseAction) }
         panel = GlanceEngine.build(glanceTargets, settings(), clock())
@@ -381,5 +429,9 @@ class GlancePanelController(
         /** Optional extra a provider may set on an action: the event start, in epoch millis. */
         const val EXTRA_STARTS_AT = "glance_starts_at_millis"
         private const val REFRESH_MS = 60_000L
+
+        /** The clock size of the layout, and the smaller one used when the panel is short on height. */
+        private const val CLOCK_SP = 44f
+        private const val CLOCK_COMPACT_SP = 34f
     }
 }
