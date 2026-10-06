@@ -463,6 +463,10 @@ dependencies {
     implementation libs.bundles.room
     ksp libs.room.compiler
 
+    // App Functions: lets agents such as Gemini call the launcher (Android 16+)
+    implementation libs.androidx.appfunctions
+    ksp libs.androidx.appfunctions.compiler
+
     implementation libs.libsu.service
 
     implementation libs.airbnb.lottie
@@ -494,6 +498,7 @@ dependencies {
 ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
     arg("dagger.hilt.disableModulesHaveInstallInCheck", "true")
+    arg("appfunctions:aggregateAppFunctions", "true")
 }
 
 

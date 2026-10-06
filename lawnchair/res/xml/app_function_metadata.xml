@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AppFunctionAppMetadata xmlns:appfn="http://schemas.android.com/apk/androidx.appfunctions"
+    appfn:description="The Android home screen launcher. Opens apps, runs command bar commands, calculates and reads the home screen panel.
+Operational Patterns:
+  - Call 'searchApps' first when the app name is uncertain, then call 'openApp' with the exact name.
+  - 'runCommand' accepts the command bar syntax: 'abrir [app]', 'alarme HH:MM', 'calc [expression]', 'rota [place]', 't [task]', plus the user's aliases (see 'listAliases').
+Constraints:
+  - Commands that call a contact or send a message are never run; 'runCommand' answers NEEDS_CONFIRMATION and the user must confirm on the device.
+  - The launcher does not change settings through these functions."
+    appfn:displayDescription="@string/app_function_display_description" />

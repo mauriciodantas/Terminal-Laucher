@@ -1244,4 +1244,5 @@
     <string name="about_original_community_heading" translatable="false">Comunidade do Lawnchair</string>
     <string name="about_apache_license" translatable="false">Licença Apache 2.0</string>
     <string name="about_original_privacy" translatable="false">Política de privacidade do Lawnchair (projeto original)</string>
+    <string name="app_function_display_description" translatable="false">Abre apps, executa comandos da barra de comando e mostra o painel da tela inicial.</string>
 </resources>
