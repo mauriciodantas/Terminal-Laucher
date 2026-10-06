@@ -62,6 +62,7 @@ import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
 import app.lawnchair.ui.preferences.data.liveinfo.SyncLiveInformation
 import app.lawnchair.ui.preferences.navigation.About
 import app.lawnchair.ui.preferences.navigation.AppDrawer
+import app.lawnchair.ui.preferences.navigation.BackupAndRestore
 import app.lawnchair.ui.preferences.navigation.General
 import app.lawnchair.ui.preferences.navigation.HomeScreen
 import app.lawnchair.ui.preferences.navigation.PreferenceRootRoute
@@ -147,6 +148,14 @@ fun PreferencesDashboard(
                 iconResource = R.drawable.ic_apps,
                 onNavigate = { onNavigate(AppDrawer) },
                 isSelected = currentRoute is AppDrawer,
+            )
+
+            PreferenceCategory(
+                label = stringResource(R.string.backup_and_restore_label),
+                description = stringResource(R.string.backup_and_restore_description),
+                iconResource = R.drawable.backup_restore,
+                onNavigate = { onNavigate(BackupAndRestore) },
+                isSelected = currentRoute is BackupAndRestore,
             )
 
             PreferenceCategory(

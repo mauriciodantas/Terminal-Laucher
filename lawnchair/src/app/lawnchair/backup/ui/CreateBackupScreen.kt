@@ -114,14 +114,6 @@ fun CreateBackupScreen(
         backArrowVisible = !LocalIsExpandedScreen.current,
         scrollState = if (isPortrait) null else scrollState,
     ) {
-        DisposableEffect(contents, hasLiveWallpaper, hasWallpaperPermission) {
-            val canBackupWallpaper = hasLiveWallpaper || !hasWallpaperPermission
-            if (contents.hasFlag(LawnchairBackup.INCLUDE_WALLPAPER) && canBackupWallpaper) {
-                viewModel.setBackupContents(contents.removeFlag(LawnchairBackup.INCLUDE_WALLPAPER))
-            }
-            onDispose { }
-        }
-
         if (isPortrait) {
             WithWallpaper(
                 displayWallpaperButton = false,
@@ -133,12 +125,6 @@ fun CreateBackupScreen(
                         .align(Alignment.CenterHorizontally)
                         .clip(MaterialTheme.shapes.large),
                 ) {
-                    if (contents.hasFlag(LawnchairBackup.INCLUDE_WALLPAPER)) {
-                        WallpaperPreview(
-                            wallpaper = wallpaper,
-                            modifier = Modifier.fillMaxSize(),
-                        )
-                    }
                     if (contents.hasFlag(LawnchairBackup.INCLUDE_LAYOUT_AND_SETTINGS)) {
                         Image(
                             bitmap = screenshot.asImageBitmap(),
@@ -157,19 +143,6 @@ fun CreateBackupScreen(
                 setFlags = viewModel::setBackupContents,
                 mask = LawnchairBackup.INCLUDE_LAYOUT_AND_SETTINGS,
                 label = stringResource(id = R.string.backup_content_layout_and_settings),
-            )
-            FlagSwitchPreference(
-                flags = contents,
-                setFlags = {
-                    if (it.hasFlag(LawnchairBackup.INCLUDE_WALLPAPER) && !hasWallpaperPermission) {
-                        showPermissionDialog = true
-                    } else {
-                        viewModel.setBackupContents(it)
-                    }
-                },
-                mask = LawnchairBackup.INCLUDE_WALLPAPER,
-                label = stringResource(id = R.string.backup_content_wallpaper),
-                enabled = !hasLiveWallpaper,
             )
         }
         Box(

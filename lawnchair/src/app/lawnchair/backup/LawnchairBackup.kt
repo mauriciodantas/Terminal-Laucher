@@ -1,5 +1,6 @@
 package app.lawnchair.backup
 
+import LawnchairLockedStateController
 import android.annotation.SuppressLint
 import android.app.WallpaperManager
 import android.content.Context
@@ -8,6 +9,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.core.graphics.drawable.toBitmap
 import app.lawnchair.LawnchairProto.BackupInfo
+import app.lawnchair.data.AppDatabase
 import app.lawnchair.util.hasFlag
 import app.lawnchair.util.scaleDownTo
 import app.lawnchair.util.scaleDownToDisplaySize
@@ -40,21 +42,17 @@ class LawnchairBackup(
 ) {
     lateinit var info: BackupInfo
     var screenshot: Bitmap? = null
-    var wallpaper: Bitmap? = null
 
     suspend fun readInfoAndPreview() {
         var tmpScreenshot: Bitmap? = null
-        var tmpWallpaper: Bitmap? = null
         readZip(
             mapOf(
                 INFO_FILE_NAME to { info = BackupInfo.newBuilder().mergeFrom(it).build() },
                 SCREENSHOT_FILE_NAME to { tmpScreenshot = BitmapFactory.decodeStream(it) },
-                WALLPAPER_FILE_NAME to { tmpWallpaper = BitmapFactory.decodeStream(it) },
             ),
         )
         val size = max(info.previewWidth, info.previewHeight).coerceAtMost(4000)
         screenshot = tmpScreenshot?.scaleDownTo(size)
-        wallpaper = tmpWallpaper?.scaleDownToDisplaySize(context)
     }
 
     suspend fun restore(selectedContents: Int) {
@@ -71,21 +69,30 @@ class LawnchairBackup(
                 },
             )
         }
-        if (contents.hasFlag(INCLUDE_WALLPAPER)) {
-            handlers[WALLPAPER_FILE_NAME] = {
-                val wallpaperManager = WallpaperManager.getInstance(context)
-                wallpaperManager.setBitmap(BitmapFactory.decodeStream(it))
-            }
-        }
         context.getDatabasePath(LAUNCHER_DB_FILE_NAME).parentFile?.deleteRecursively()
         DeviceGridState(info.gridState).writeToPrefs(context, true)
-        readZip(handlers)
+        val fontsDir = fontsDir(context)
+        var fonts: (suspend (String, InputStream) -> Unit)? = null
+        if (contents.hasFlag(INCLUDE_LAYOUT_AND_SETTINGS)) {
+            fontsDir.deleteRecursively()
+            fontsDir.mkdirs()
+            fonts = { name, input ->
+                if (name.startsWith(FONTS_PREFIX)) {
+                    // Keep the font files inside the fonts folder, whatever the entry name says.
+                    File(fontsDir, File(name).name).outputStream().use { input.copyTo(it) }
+                }
+            }
+        }
+        readZip(handlers, fonts)
 
         var dbController = ModelDbController(context)
         RestoreDbTask.performRestore(context, dbController)
     }
 
-    private suspend fun readZip(handlers: Map<String, suspend (InputStream) -> Unit>) {
+    private suspend fun readZip(
+        handlers: Map<String, suspend (InputStream) -> Unit>,
+        fallback: (suspend (String, InputStream) -> Unit)? = null,
+    ) {
         withContext(Dispatchers.IO) {
             val pfd = context.contentResolver.openFileDescriptor(uri, "r")!!
             pfd.use {
@@ -95,7 +102,8 @@ class LawnchairBackup(
                         while (true) {
                             entry = zipIs.nextEntry
                             if (entry == null) break
-                            handlers[entry.name]?.invoke(zipIs)
+                            val handler = handlers[entry.name]
+                            if (handler != null) handler.invoke(zipIs) else fallback?.invoke(entry.name, zipIs)
                         }
                     }
                 }
@@ -106,24 +114,29 @@ class LawnchairBackup(
     companion object {
         private const val BACKUP_VERSION = 1
         private const val PREFS_FILE_NAME = "${LauncherFiles.SHARED_PREFERENCES_KEY}.xml"
+
+        // Command bar actions and history, chat strip and onboarding state.
+        private const val NOSTROMO_FILE_NAME = "nostromo.xml"
+
+        // Locked apps in recents, the live information switch and the user's own fonts.
+        private const val TASK_LOCK_FILE_NAME = "${LawnchairLockedStateController.TASK_LOCK_STATE}.xml"
+        private const val LIVE_INFO_FILE_NAME = "live-information.preferences_pb"
+        private const val FONTS_PREFIX = "customFonts/"
         private const val PREFS_DB_FILE_NAME = "preferences"
         private const val PREFS_DATASTORE_FILE_NAME = "preferences.preferences_pb"
 
         const val INFO_FILE_NAME = "info.pb"
-        const val WALLPAPER_FILE_NAME = "wallpaper.png"
         const val SCREENSHOT_FILE_NAME = "screenshot.png"
         const val LAUNCHER_DB_FILE_NAME = "launcher.db"
         const val RESTORED_DB_FILE_NAME = "restored.db"
 
         const val INCLUDE_LAYOUT_AND_SETTINGS = 1 shl 0
-        const val INCLUDE_WALLPAPER = 1 shl 1
 
         const val MIME_TYPE = "application/zip"
         val EXTRA_MIME_TYPES = arrayOf(MIME_TYPE, "application/x-zip", "application/octet-stream")
 
         val contentOptions = listOf(
             INCLUDE_LAYOUT_AND_SETTINGS to R.string.backup_content_layout_and_settings,
-            INCLUDE_WALLPAPER to R.string.backup_content_wallpaper,
         )
 
         fun generateBackupFileName(): String {
@@ -135,6 +148,9 @@ class LawnchairBackup(
             return mapOf(
                 LAUNCHER_DB_FILE_NAME to launcherDbFile(context, forRestore),
                 PREFS_FILE_NAME to prefsFile(context),
+                NOSTROMO_FILE_NAME to File(context.cacheDir.parent, "shared_prefs/$NOSTROMO_FILE_NAME"),
+                TASK_LOCK_FILE_NAME to File(context.cacheDir.parent, "shared_prefs/$TASK_LOCK_FILE_NAME"),
+                LIVE_INFO_FILE_NAME to File(context.filesDir, "datastore/$LIVE_INFO_FILE_NAME"),
                 PREFS_DB_FILE_NAME to prefsDbFile(context),
                 PREFS_DATASTORE_FILE_NAME to prefsDataStoreFile(context),
             )
@@ -158,6 +174,12 @@ class LawnchairBackup(
                 .setPreviewDarkText(wallpaperSupportsDarkText)
                 .build()
 
+            // Folders and icon overrides sit in the write-ahead log until it is merged into the
+            // database file, so merge it first or the newest changes would be left out.
+            withContext(Dispatchers.IO) {
+                runCatching { AppDatabase.INSTANCE.get(context).checkpointSync() }
+            }
+
             val pfd = context.contentResolver.openFileDescriptor(fileUri, "w")!!
             withContext(Dispatchers.IO) {
                 pfd.use {
@@ -165,14 +187,6 @@ class LawnchairBackup(
                         out.putNextEntry(ZipEntry(INFO_FILE_NAME))
                         info.writeTo(out)
 
-                        if (contents.hasFlag(INCLUDE_WALLPAPER)) {
-                            val wallpaperManager = WallpaperManager.getInstance(context)
-                            val wallpaperBitmap = wallpaperManager.drawable?.toBitmap()
-                            if (wallpaperBitmap != null) {
-                                out.putNextEntry(ZipEntry(WALLPAPER_FILE_NAME))
-                                wallpaperBitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
-                            }
-                        }
                         if (contents.hasFlag(INCLUDE_LAYOUT_AND_SETTINGS)) {
                             out.putNextEntry(ZipEntry(SCREENSHOT_FILE_NAME))
                             screenshotBitmap.compress(Bitmap.CompressFormat.PNG, 85, out)
@@ -183,10 +197,17 @@ class LawnchairBackup(
                             out.putNextEntry(ZipEntry(it.key))
                             it.value.inputStream().copyTo(out)
                         }
+
+                        fontsDir(context).listFiles()?.filter { it.isFile }?.forEach {
+                            out.putNextEntry(ZipEntry(FONTS_PREFIX + it.name))
+                            it.inputStream().copyTo(out)
+                        }
                     }
                 }
             }
         }
+
+        private fun fontsDir(context: Context): File = File(context.filesDir, "customFonts")
 
         private fun launcherDbFile(context: Context, forRestore: Boolean): File {
             val dbName = if (forRestore) RESTORED_DB_FILE_NAME else LauncherAppState.getIDP(context).dbFile
