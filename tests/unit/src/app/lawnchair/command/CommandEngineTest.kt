@@ -399,4 +399,28 @@ class AliasTest {
         assertEquals("w oi", VoiceCommand.normalize("zap oi"))
         assertEquals("ligar maria", VoiceCommand.normalize("chamar maria", zap))
     }
+
+    // ---- accents and bare app names ----
+
+    @Test fun accentsAreIgnoredWhenOpeningApps() {
+        val itau = listOf(AppEntry("Itaú", "pkg/itau"))
+        val a = CommandEngine.analyze("abrir itau", itau, contacts, true)
+        val b = CommandEngine.analyze("abrir itáu", itau, contacts, true)
+        assertEquals(CommandAction.OpenApp(itau[0]), a.action)
+        assertEquals(a.action, b.action)
+    }
+
+    @Test fun accentsAreIgnoredForContacts() {
+        assertEquals("ANDRÉ LIMA", run("ligar andre").preview)
+    }
+
+    @Test fun bareAppNameOpensTheApp() {
+        val a = run("gmail")
+        assertEquals(CommandAction.OpenApp(apps[5]), a.action)
+        assertEquals(a.action, run("abrir gmail").action)
+    }
+
+    @Test fun bareNameWithNoMatchStillSearchesTheWeb() {
+        assertEquals(CommandAction.WebSearch("zzzz"), run("zzzz").action)
+    }
 }

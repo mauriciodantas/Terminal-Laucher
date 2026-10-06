@@ -1,5 +1,7 @@
 package app.lawnchair.command
 
+import app.lawnchair.util.foldAccents
+
 data class AppEntry(val label: String, val id: String)
 
 data class ContactEntry(val name: String, val number: String)
@@ -67,7 +69,7 @@ object CommandEngine {
         // An alias typed in full stands for its command; a partial one is only suggested.
         val text = Aliases.resolve(typed, aliases).trimStart()
         val m = splitter.find(text)
-        val token = m?.groupValues?.get(1).orEmpty().lowercase()
+        val token = m?.groupValues?.get(1).orEmpty().foldAccents()
         val hasArg = m != null && m.groups[2] != null
         val arg = if (hasArg) m?.groups?.get(3)?.value.orEmpty() else ""
 
@@ -88,6 +90,7 @@ object CommandEngine {
             "rota" -> analyzeRoute(arg)
             else -> custom.firstOrNull { it.letter == token }
                 ?.let { analyzeCustom(it, arg, contacts, contactsGranted) }
+                ?: analyzeOpen(text.trim(), apps).takeIf { it.action != null }
                 ?: Analysis(
                     suggestions = emptyList(),
                     listTitle = "SUGESTÕES",
@@ -115,13 +118,18 @@ object CommandEngine {
         val matchingApps = if (token.isEmpty()) {
             emptyList()
         } else {
-            apps.filter { it.label.lowercase().startsWith(token) }.map {
+            apps.filter { it.label.foldAccents().startsWith(token) }.map {
                 Suggestion("abrir " + it.label.lowercase(), it.label, "PROGRAMA")
             }
         }
         // A partial word puts the user's own aliases first; with nothing typed the commands lead.
         val items = (if (token.isEmpty()) commands + aliasItems + matchingApps else aliasItems + commands + matchingApps)
             .take(MAX_SUGGESTIONS)
+        // Nothing is a command or alias: a bare word is taken as "abrir <word>".
+        if (commands.isEmpty() && aliasItems.isEmpty() && token.isNotEmpty()) {
+            val open = analyzeOpen(text.trim(), apps)
+            if (open.action != null) return open
+        }
         val none = items.isEmpty() && text.isNotBlank()
         return Analysis(
             suggestions = items,
@@ -135,9 +143,9 @@ object CommandEngine {
     }
 
     private fun analyzeOpen(arg: String, apps: List<AppEntry>): Analysis {
-        val q = arg.trim().lowercase()
-        val matches = apps.filter { it.label.lowercase().startsWith(q) }
-            .ifEmpty { if (q.isEmpty()) emptyList() else apps.filter { it.label.lowercase().contains(q) } }
+        val q = arg.trim().foldAccents()
+        val matches = apps.filter { it.label.foldAccents().startsWith(q) }
+            .ifEmpty { if (q.isEmpty()) emptyList() else apps.filter { it.label.foldAccents().contains(q) } }
         val items = matches.take(MAX_SUGGESTIONS).map {
             Suggestion("abrir " + it.label.lowercase(), it.label, "PROGRAMA")
         }
@@ -180,9 +188,9 @@ object CommandEngine {
                 action = null,
             )
         }
-        val q = arg.trim().lowercase()
+        val q = arg.trim().foldAccents()
         val matches = contacts.filter { c ->
-            val name = c.name.lowercase()
+            val name = c.name.foldAccents()
             name.startsWith(q) || name.split(' ').any { it.startsWith(q) }
         }
         val first = matches.firstOrNull()
@@ -208,9 +216,9 @@ object CommandEngine {
     }
 
     private fun contactMatches(contacts: List<ContactEntry>, query: String, wholeNamePrefix: Boolean): List<ContactEntry> {
-        val q = query.trim().lowercase()
+        val q = query.trim().foldAccents()
         return contacts.filter { c ->
-            val name = c.name.lowercase()
+            val name = c.name.foldAccents()
             name.startsWith(q) || (!wholeNamePrefix && name.split(' ').any { it.startsWith(q) })
         }
     }
@@ -394,7 +402,7 @@ object CommandEngine {
     /** The part of the selected suggestion that is not typed yet, drawn dim after the cursor. */
     fun ghost(text: String, suggestion: Suggestion?): String {
         val completion = suggestion?.completion ?: return ""
-        return if (completion.length > text.length && completion.lowercase().startsWith(text.lowercase())) {
+        return if (completion.length > text.length && completion.foldAccents().startsWith(text.foldAccents())) {
             completion.substring(text.length)
         } else {
             ""
