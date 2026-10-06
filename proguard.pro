@@ -32,3 +32,6 @@
 # This shouldn't concern us much
 -dontwarn androidx.window.extensions.**
 -dontwarn androidx.window.sidecar.**
+
+# App Functions: classes opcionais da plataforma (Android 16+) que a biblioteca referencia
+-dontwarn com.android.extensions.appfunctions.**
