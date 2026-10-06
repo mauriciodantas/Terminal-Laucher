@@ -101,7 +101,10 @@ public class ClippedFolderIconLayoutRule {
         if (numItemsInPage <= MAX_NUM_ITEMS_IN_PREVIEW) {
             getPosition(index, numItemsInPage, mTmpPoint);
         } else {
-            getGridPosition(index / mNumFolderColumns, index % mNumFolderColumns, mTmpPoint);
+            // The rule may be used before init() ran (e.g. a folder that was never laid out as a
+            // preview), which leaves the column count at 0.
+            int columns = Math.max(1, mNumFolderColumns);
+            getGridPosition(index / columns, index % columns, mTmpPoint);
         }
 
         transX = mTmpPoint[0];
