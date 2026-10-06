@@ -156,10 +156,12 @@ private fun CommandScreen(onClose: () -> Unit) {
     var granted by remember { mutableStateOf(CommandExecutor.hasContactsPermission(context)) }
     var history by remember { mutableStateOf<List<String>>(emptyList()) }
     var custom by remember { mutableStateOf(CustomActions.DEFAULTS) }
+    var aliases by remember { mutableStateOf<List<CommandAlias>>(emptyList()) }
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
             history = CommandActivity.loadHistory(context)
             custom = CustomActionStore.load(context)
+            aliases = AliasStore.load(context)
             contacts = CommandExecutor.loadContacts(context)
             apps = CommandExecutor.loadApps(context)
         }
@@ -179,8 +181,8 @@ private fun CommandScreen(onClose: () -> Unit) {
     val focus = remember { FocusRequester() }
 
     val text = field.text
-    val analysis = remember(text, apps, contacts, granted, custom) {
-        CommandEngine.analyze(text, apps, contacts, granted, custom)
+    val analysis = remember(text, apps, contacts, granted, custom, aliases) {
+        CommandEngine.analyze(text, apps, contacts, granted, custom, aliases)
     }
     val sel = selected.coerceIn(0, maxOf(0, analysis.suggestions.size - 1))
     val top = analysis.suggestions.getOrNull(sel)
@@ -235,7 +237,7 @@ private fun CommandScreen(onClose: () -> Unit) {
     /** A suggestion that is already a complete, runnable command runs on the tap, without Enter. */
     fun pick(suggestion: Suggestion) {
         setText(suggestion.completion)
-        CommandEngine.analyze(suggestion.completion, apps, contacts, granted, custom).action
+        CommandEngine.analyze(suggestion.completion, apps, contacts, granted, custom, aliases).action
             ?.let { runAction(it, suggestion.completion.trim()) }
     }
 
@@ -244,12 +246,12 @@ private fun CommandScreen(onClose: () -> Unit) {
     val voice = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         val spoken = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
         if (result.resultCode == android.app.Activity.RESULT_OK && !spoken.isNullOrBlank()) {
-            val value = VoiceCommand.normalize(spoken)
+            val value = VoiceCommand.normalize(spoken, aliases)
             field = TextFieldValue(value, TextRange(value.length))
             selected = 0
             done = null
             // A spoken command that is already complete and runnable runs on its own.
-            val action = CommandEngine.analyze(value, apps, contacts, granted, custom).action
+            val action = CommandEngine.analyze(value, apps, contacts, granted, custom, aliases).action
             if (action != null) {
                 runAction(action, value.trim())
                 return@rememberLauncherForActivityResult

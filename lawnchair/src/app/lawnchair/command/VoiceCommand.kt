@@ -26,9 +26,14 @@ object VoiceCommand {
         "mais" to "+", "menos" to "-", "por cento" to "%", "vírgula" to ",", "x" to "*",
     )
 
-    fun normalize(spoken: String): String {
+    /**
+     * [aliases] are the user's own words: a sentence that starts with one is left as spoken, so the
+     * command bar expands it instead of the built-in verbs ("zap" can be an alias, not only "w").
+     */
+    fun normalize(spoken: String, aliases: List<CommandAlias> = emptyList()): String {
         val words = spoken.trim().lowercase().replace(Regex("\\s+"), " ")
         if (words.isEmpty()) return ""
+        if (Aliases.find(words.substringBefore(' '), aliases) != null) return words
         var first = words.substringBefore(' ')
         var rest = if (' ' in words) words.substringAfter(' ') else ""
 

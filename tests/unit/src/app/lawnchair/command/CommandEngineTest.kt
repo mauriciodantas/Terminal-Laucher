@@ -342,3 +342,61 @@ class CommandEngineTest {
         assertEquals(CustomActions.WHATSAPP, list.first())
     }
 }
+
+class AliasTest {
+
+    private val apps = listOf("Chrome", "Maps").map { AppEntry(it, "pkg/$it") }
+    private val contacts = listOf(ContactEntry("Maria Souza", "111"), ContactEntry("Ana Lima", "222"))
+    private val aliases = listOf(
+        CommandAlias("mae", "ligar maria"),
+        CommandAlias("z", "w ana"),
+        CommandAlias("net", "abrir chrome"),
+    )
+
+    private fun run(text: String) = CommandEngine.analyze(text, apps, contacts, true, CustomActions.DEFAULTS, aliases)
+
+    @Test fun anAliasTypedInFullRunsItsCommand() {
+        val a = run("net")
+        assertEquals(CommandAction.OpenApp(apps[0]), a.action)
+    }
+
+    @Test fun aliasesIgnoreCaseAndAccents() {
+        assertEquals("ligar maria", Aliases.resolve("MÃE", listOf(CommandAlias("mãe", "ligar maria"))).trim())
+        assertEquals("ligar maria", Aliases.resolve("mae", listOf(CommandAlias("Mãe", "ligar maria"))).trim())
+    }
+
+    @Test fun whatFollowsTheAliasIsKept() {
+        assertEquals("w ana oi tudo bem", Aliases.resolve("z oi tudo bem", aliases))
+        val a = run("z oi")
+        val action = a.action as CommandAction.Custom
+        assertEquals("Ana Lima", action.contact?.name)
+        assertEquals("oi", action.text)
+    }
+
+    @Test fun aWordThatIsNotAnAliasIsUntouched() {
+        assertEquals("abrir chrome", Aliases.resolve("abrir chrome", aliases))
+        assertEquals("maria", Aliases.resolve("maria", aliases))
+    }
+
+    @Test fun aPartialAliasIsSuggestedFirst() {
+        val a = run("ma")
+        assertEquals("mae", a.suggestions.first().completion)
+        assertEquals("APELIDO", a.suggestions.first().kind)
+    }
+
+    @Test fun anAliasCannotShadowACommandOrACustomLetter() {
+        assertTrue(Aliases.validate("abrir", "ligar maria", emptyList(), CustomActions.DEFAULTS) != null)
+        assertTrue(Aliases.validate("w", "ligar maria", emptyList(), CustomActions.DEFAULTS) != null)
+        assertTrue(Aliases.validate("mae", "ligar maria", aliases, CustomActions.DEFAULTS) != null)
+        assertTrue(Aliases.validate("dois palavras", "ligar maria", emptyList(), CustomActions.DEFAULTS) != null)
+        assertTrue(Aliases.validate("loop", "loop agora", emptyList(), CustomActions.DEFAULTS) != null)
+        assertNull(Aliases.validate("pai", "ligar joao", aliases, CustomActions.DEFAULTS))
+    }
+
+    @Test fun spokenAliasIsNotTurnedIntoABuiltInVerb() {
+        val zap = listOf(CommandAlias("zap", "w ana"))
+        assertEquals("zap oi", VoiceCommand.normalize("Zap oi", zap))
+        assertEquals("w oi", VoiceCommand.normalize("zap oi"))
+        assertEquals("ligar maria", VoiceCommand.normalize("chamar maria", zap))
+    }
+}

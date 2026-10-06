@@ -62,8 +62,10 @@ object CommandEngine {
         contacts: List<ContactEntry>,
         contactsGranted: Boolean,
         custom: List<CustomAction> = CustomActions.DEFAULTS,
+        aliases: List<CommandAlias> = emptyList(),
     ): Analysis {
-        val text = typed.trimStart()
+        // An alias typed in full stands for its command; a partial one is only suggested.
+        val text = Aliases.resolve(typed, aliases).trimStart()
         val m = splitter.find(text)
         val token = m?.groupValues?.get(1).orEmpty().lowercase()
         val hasArg = m != null && m.groups[2] != null
@@ -72,7 +74,7 @@ object CommandEngine {
         if (!hasArg) {
             val bare = custom.firstOrNull { it.letter == token && it.arg == ArgKind.NONE }
             if (bare != null) return analyzeCustom(bare, "", contacts, contactsGranted)
-            return analyzeCommandName(text, token, apps, custom)
+            return analyzeCommandName(text, token, apps, custom, aliases)
         }
 
         return when (if (token == "c") "calc" else token) {
@@ -103,7 +105,9 @@ object CommandEngine {
         token: String,
         apps: List<AppEntry>,
         custom: List<CustomAction>,
+        aliases: List<CommandAlias>,
     ): Analysis {
+        val aliasItems = Aliases.matching(token, aliases).map { Suggestion(it.name, it.expansion, "APELIDO") }
         val all = COMMANDS + custom.map { it.letter to it.usage }
         val commands = all.filter { it.first.startsWith(token) }.map {
             Suggestion(it.first + " ", it.second, if (it.first.length == 1) "ATALHO" else "COMANDO")
@@ -115,7 +119,9 @@ object CommandEngine {
                 Suggestion("abrir " + it.label.lowercase(), it.label, "PROGRAMA")
             }
         }
-        val items = (commands + matchingApps).take(MAX_SUGGESTIONS)
+        // A partial word puts the user's own aliases first; with nothing typed the commands lead.
+        val items = (if (token.isEmpty()) commands + aliasItems + matchingApps else aliasItems + commands + matchingApps)
+            .take(MAX_SUGGESTIONS)
         val none = items.isEmpty() && text.isNotBlank()
         return Analysis(
             suggestions = items,

@@ -33,6 +33,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.lawnchair.command.ACTION_VIEW
+import app.lawnchair.command.AliasStore
+import app.lawnchair.command.Aliases
+import app.lawnchair.command.CommandAlias
 import app.lawnchair.command.ActionKind
 import app.lawnchair.command.AppEntry
 import app.lawnchair.command.ArgKind
@@ -66,6 +69,14 @@ fun CommandActionsPreferences() {
     val context = LocalContext.current
     var actions by remember { mutableStateOf(CustomActionStore.load(context)) }
     var step by remember { mutableStateOf<Step?>(null) }
+    var aliases by remember { mutableStateOf(AliasStore.load(context)) }
+    // The alias being edited, or a blank one for a new alias; null when no dialog is open.
+    var aliasDraft by remember { mutableStateOf<AliasDraft?>(null) }
+
+    fun updateAliases(list: List<CommandAlias>) {
+        aliases = list
+        AliasStore.save(context, list)
+    }
 
     fun update(list: List<CustomAction>) {
         actions = list
@@ -115,6 +126,20 @@ fun CommandActionsPreferences() {
                 )
             }
         }
+        PreferenceGroup(heading = "Apelidos") {
+            aliases.forEach { alias ->
+                ClickablePreference(
+                    label = alias.name,
+                    subtitle = "→ ${alias.expansion}",
+                    onClick = { aliasDraft = AliasDraft(alias) },
+                )
+            }
+            ClickablePreference(
+                label = "Novo apelido",
+                subtitle = "Uma palavra sua para um comando inteiro (mae = ligar maria). Vale digitado e falado",
+                onClick = { aliasDraft = AliasDraft(null) },
+            )
+        }
         PreferenceGroup(heading = "Adicionar") {
             ClickablePreference(
                 label = "Receitas prontas",
@@ -147,6 +172,25 @@ fun CommandActionsPreferences() {
                 onClick = { update(CustomActions.DEFAULTS) },
             )
         }
+    }
+
+    aliasDraft?.let { draft ->
+        AliasDialog(
+            editing = draft.editing,
+            aliases = aliases,
+            custom = actions,
+            onSave = { saved ->
+                updateAliases(
+                    if (draft.editing == null) aliases + saved else aliases.map { if (it === draft.editing) saved else it },
+                )
+                aliasDraft = null
+            },
+            onRemove = {
+                updateAliases(aliases.filter { it !== draft.editing })
+                aliasDraft = null
+            },
+            onDismiss = { aliasDraft = null },
+        )
     }
 
     when (val s = step) {
@@ -316,6 +360,64 @@ private fun LetterDialog(
         },
     )
 }
+
+private class AliasDraft(val editing: CommandAlias?)
+
+/** Creates or edits an alias: the word and the command it stands for. */
+@Composable
+private fun AliasDialog(
+    editing: CommandAlias?,
+    aliases: List<CommandAlias>,
+    custom: List<CustomAction>,
+    onSave: (CommandAlias) -> Unit,
+    onRemove: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var name by remember { mutableStateOf(editing?.name.orEmpty()) }
+    var expansion by remember { mutableStateOf(editing?.expansion.orEmpty()) }
+    val error = Aliases.validate(name, expansion, aliases, custom, editing)
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (editing == null) "Novo apelido" else "Editar apelido") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it.filter { c -> !c.isWhitespace() }.take(MAX_ALIAS) },
+                    singleLine = true,
+                    label = { Text("Apelido") },
+                    supportingText = { Text("Digitado ou falado. Acentos não importam") },
+                )
+                OutlinedTextField(
+                    value = expansion,
+                    onValueChange = { expansion = it },
+                    singleLine = true,
+                    label = { Text("Comando") },
+                    supportingText = { Text("Ex.: ligar maria · abrir chrome · w ana · rota casa") },
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+                // An empty form needs no complaint; the error appears as soon as something is typed.
+                if (error != null && (name.isNotBlank() || expansion.isNotBlank())) {
+                    Text(error, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 8.dp))
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = error == null,
+                onClick = { onSave(CommandAlias(name.trim().lowercase(), expansion.trim())) },
+            ) { Text("Salvar") }
+        },
+        dismissButton = {
+            Column {
+                if (editing != null) TextButton(onClick = onRemove) { Text("Remover") }
+                TextButton(onClick = onDismiss) { Text("Cancelar") }
+            }
+        },
+    )
+}
+
+private const val MAX_ALIAS = 20
 
 /** Manual recipe: the intent action, an optional URI template, the package and what to type. */
 @Composable
