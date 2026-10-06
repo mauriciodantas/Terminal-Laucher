@@ -7,10 +7,12 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
 import android.content.Context
+import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.drawable.Icon
 import android.os.Build
+import android.util.Log
 import androidx.core.content.getSystemService
 import app.lawnchair.smartspace.glance.BluetoothBattery
 import app.lawnchair.smartspace.glance.BluetoothDeviceBattery
@@ -24,7 +26,6 @@ import kotlin.coroutines.resume
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
@@ -49,12 +50,22 @@ class BluetoothBatteryProvider(context: Context) :
         addAction(ACTION_BATTERY_LEVEL_CHANGED)
     }
 
-    override val internalTargets: Flow<List<SmartspaceTarget>> = merge(
-        broadcastReceiverFlow(context, filter).map { },
-    )
+    /** Last level announced by the system per device address, for devices that only report it that way. */
+    private val announced = java.util.concurrent.ConcurrentHashMap<String, Int>()
+
+    override val internalTargets: Flow<List<SmartspaceTarget>> = broadcastReceiverFlow(context, filter)
+        .map { remember(it) }
         .onStart { emit(Unit) }
         .map { listOfNotNull(readTarget()) }
         .catch { emit(emptyList()) }
+
+    @SuppressLint("MissingPermission")
+    private fun remember(intent: Intent) {
+        if (intent.action != ACTION_BATTERY_LEVEL_CHANGED) return
+        val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE) ?: return
+        val level = intent.getIntExtra(EXTRA_BATTERY_LEVEL, -1)
+        if (level in 0..100) announced[device.address] = level else announced.remove(device.address)
+    }
 
     private suspend fun readTarget(): SmartspaceTarget? {
         if (!hasPermission(context)) return null
@@ -77,7 +88,7 @@ class BluetoothBatteryProvider(context: Context) :
     private suspend fun connectedDevices(): List<BluetoothDeviceBattery> {
         val adapter = adapter?.takeIf { it.isEnabled } ?: return emptyList()
         val devices = linkedSetOf<BluetoothDevice>()
-        for (profile in listOf(BluetoothProfile.A2DP, BluetoothProfile.HEADSET)) {
+        for (profile in PROFILES) {
             devices += proxyDevices(adapter, profile)
         }
         return devices.mapNotNull { device ->
@@ -106,17 +117,55 @@ class BluetoothBatteryProvider(context: Context) :
             }
         } ?: emptyList()
 
-    /** The battery the device reports, 0 to 100, or null when it does not report one. */
-    private fun batteryLevel(device: BluetoothDevice): Int? = runCatching {
-        // getBatteryLevel is not part of the public SDK, so it is read by reflection and a device
-        // or Android version that does not answer is simply left out.
-        val level = BluetoothDevice::class.java.getMethod("getBatteryLevel").invoke(device) as Int
-        level.takeIf { it in 0..100 }
+    /**
+     * The battery the device reports, 0 to 100, or null when it does not report one. Tries the
+     * system level first, then the level the system announced, then the per-bud metadata that
+     * earbuds use (the single-device battery, then the lowest of left, right and case).
+     */
+    @SuppressLint("MissingPermission")
+    private fun batteryLevel(device: BluetoothDevice): Int? {
+        // These are hidden APIs, read by reflection; a device or Android version that does not
+        // answer is simply left out, but the failure is logged so it can be diagnosed.
+        val level = hiddenInt(device, "getBatteryLevel")?.takeIf { it in 0..100 }
+        if (level != null) return level
+        announced[device.address]?.let { return it }
+        metadataLevel(device, METADATA_MAIN_BATTERY)?.let { return it }
+        return listOf(METADATA_LEFT_BATTERY, METADATA_RIGHT_BATTERY, METADATA_CASE_BATTERY)
+            .mapNotNull { metadataLevel(device, it) }
+            .minOrNull()
+    }
+
+    private fun hiddenInt(device: BluetoothDevice, method: String): Int? =
+        runCatching { BluetoothDevice::class.java.getMethod(method).invoke(device) as Int }
+            .onFailure { Log.w(TAG, "BluetoothDevice.$method unavailable", it) }
+            .getOrNull()
+
+    private fun metadataLevel(device: BluetoothDevice, key: Int): Int? = runCatching {
+        val bytes = BluetoothDevice::class.java.getMethod("getMetadata", Int::class.javaPrimitiveType)
+            .invoke(device, key) as? ByteArray
+        bytes?.toString(Charsets.UTF_8)?.trim()?.toIntOrNull()?.takeIf { it in 0..100 }
     }.getOrNull()
 
     companion object {
         private const val ACTION_BATTERY_LEVEL_CHANGED = "android.bluetooth.device.action.BATTERY_LEVEL_CHANGED"
+        private const val EXTRA_BATTERY_LEVEL = "android.bluetooth.device.extra.BATTERY_LEVEL"
         private const val PROXY_TIMEOUT_MS = 2_000L
+        private const val TAG = "BluetoothBattery"
+
+        // Profiles that list connected devices: classic audio, BLE (watches, trackers), hearing aids, LE Audio.
+        private val PROFILES = listOf(
+            BluetoothProfile.A2DP,
+            BluetoothProfile.HEADSET,
+            BluetoothProfile.GATT,
+            21, // HEARING_AID
+            22, // LE_AUDIO
+        )
+
+        // BluetoothDevice.METADATA_* keys: the main battery of a single device, and the earbuds' parts.
+        private const val METADATA_LEFT_BATTERY = 10
+        private const val METADATA_RIGHT_BATTERY = 11
+        private const val METADATA_CASE_BATTERY = 12
+        private const val METADATA_MAIN_BATTERY = 18
 
         /** True when the app may read the connected devices (needs the runtime permission from Android 12). */
         fun hasPermission(context: Context): Boolean =
