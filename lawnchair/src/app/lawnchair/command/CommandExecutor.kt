@@ -15,12 +15,24 @@ import android.app.SearchManager
 /** Runs a [CommandAction] and loads the data the command bar completes from. */
 object CommandExecutor {
 
+    /** The last app list, shown right away while a fresh one loads. */
+    @Volatile
+    var cachedApps: List<AppEntry>? = null
+        private set
+
+    /** Loads the app list on a background thread so the first open of the command bar is not slow. */
+    fun prewarm(context: Context) {
+        val app = context.applicationContext
+        Thread { runCatching { loadApps(app) } }.start()
+    }
+
     fun loadApps(context: Context): List<AppEntry> {
         val launcherApps = context.getSystemService(LauncherApps::class.java) ?: return emptyList()
         return launcherApps.getActivityList(null, Process.myUserHandle())
             .map { AppEntry(it.label.toString(), it.componentName.flattenToString()) }
             .distinctBy { it.id }
             .sortedBy { it.label.lowercase() }
+            .also { cachedApps = it }
     }
 
     /** Contacts with a phone number, or nothing when the permission is not granted. */

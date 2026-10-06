@@ -37,6 +37,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -71,6 +72,9 @@ import androidx.compose.ui.unit.sp
 import app.lawnchair.theme.color.tokens.PhosphorColorToken
 import app.lawnchair.ui.theme.LawnchairTheme
 import com.android.launcher3.R
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * The terminal command bar: a command line with autocomplete, a list of suggestions, a preview of
@@ -99,6 +103,7 @@ class CommandActivity : ComponentActivity() {
 
         /** [voice] opens the speech recognizer right away, for the microphone on the home screen. */
         fun start(context: Context, voice: Boolean = false) {
+            CommandExecutor.prewarm(context)
             context.startActivity(Intent(context, CommandActivity::class.java).putExtra(EXTRA_VOICE, voice))
         }
 
@@ -140,18 +145,28 @@ private val OnPhosphor = Color(0xFF04140B)
 @Composable
 private fun CommandScreen(onClose: () -> Unit) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val phosphor = remember { Color(PhosphorColorToken(1f).resolveColor(context)) }
     val dim = remember { Color(PhosphorColorToken(0.62f).resolveColor(context)) }
     val line = remember { Color(PhosphorColorToken(0.4f).resolveColor(context)) }
 
-    val apps = remember { CommandExecutor.loadApps(context) }
-    var contacts by remember { mutableStateOf(CommandExecutor.loadContacts(context)) }
+    // Heavy lookups (app labels, contacts) run off the main thread; the screen opens empty and fills in.
+    var apps by remember { mutableStateOf(CommandExecutor.cachedApps ?: emptyList()) }
+    var contacts by remember { mutableStateOf<List<ContactEntry>>(emptyList()) }
     var granted by remember { mutableStateOf(CommandExecutor.hasContactsPermission(context)) }
-    var history by remember { mutableStateOf(CommandActivity.loadHistory(context)) }
-    val custom = remember { CustomActionStore.load(context) }
+    var history by remember { mutableStateOf<List<String>>(emptyList()) }
+    var custom by remember { mutableStateOf(CustomActions.DEFAULTS) }
+    LaunchedEffect(Unit) {
+        withContext(Dispatchers.IO) {
+            history = CommandActivity.loadHistory(context)
+            custom = CustomActionStore.load(context)
+            contacts = CommandExecutor.loadContacts(context)
+            apps = CommandExecutor.loadApps(context)
+        }
+    }
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
         granted = CommandExecutor.hasContactsPermission(context)
-        contacts = CommandExecutor.loadContacts(context)
+        scope.launch { contacts = withContext(Dispatchers.IO) { CommandExecutor.loadContacts(context) } }
     }
 
     var pendingAction by remember { mutableStateOf<CommandAction?>(null) }
