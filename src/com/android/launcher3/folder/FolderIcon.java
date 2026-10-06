@@ -143,6 +143,7 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
     /** Content of a large folder (spans more than one cell); null for a regular folder icon. */
     @Nullable private LargeFolderView mLargeView;
     private boolean mLargeMode = false;
+    private boolean mDirectoryRow = false;
     private boolean mOpenForced = false;
 
     private float mScaleForReorderBounce = 1f;
@@ -607,7 +608,7 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
     protected void dispatchDraw(Canvas canvas) {
         super.dispatchDraw(canvas);
 
-        if (mLargeMode || !mBackgroundIsVisible) return;
+        if (mLargeMode || mDirectoryRow || !mBackgroundIsVisible) return;
 
         mPreviewItemManager.recomputePreviewDrawingParams();
 
@@ -624,6 +625,25 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         }
 
         drawDot(canvas);
+    }
+
+    /**
+     * Shows this folder as a row of the app directory list (a submenu entry) instead of a large
+     * icon: no preview, just the name with a code prefix and a chevron, [startPx] from the left so
+     * it lines up with the labels of the app rows.
+     */
+    public void setDirectoryRow(int startPx) {
+        mDirectoryRow = true;
+        FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) mFolderName.getLayoutParams();
+        lp.topMargin = 0;
+        lp.height = ViewGroup.LayoutParams.MATCH_PARENT;
+        mFolderName.setLayoutParams(lp);
+        mFolderName.setGravity(android.view.Gravity.START | android.view.Gravity.CENTER_VERTICAL);
+        mFolderName.setPaddingRelative(startPx, 0,
+                (int) (32 * getResources().getDisplayMetrics().density), 0);
+        mFolderName.setDirectoryLabel("DIR", mInfo.title + "/");
+        setPadding(0, 0, 0, 0);
+        invalidate();
     }
 
     /** Whether this folder spans several workspace cells and shows its apps in place. */

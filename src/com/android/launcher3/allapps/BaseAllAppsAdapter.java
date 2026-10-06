@@ -44,6 +44,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.android.launcher3.BubbleTextView;
 import com.android.launcher3.R;
 import com.android.launcher3.allapps.search.SearchAdapterProvider;
+import com.android.launcher3.deviceprofile.AllAppsProfile;
 import com.android.launcher3.folder.FolderIcon;
 import com.android.launcher3.model.data.AppInfo;
 import com.android.launcher3.model.data.FolderInfo;
@@ -307,15 +308,7 @@ public abstract class BaseAllAppsAdapter<T extends Context & ActivityContext> ex
                 // One column is the directory list (label beside the icon); more is an icon grid.
                 boolean directoryList =
                         mActivityContext.getDeviceProfile().numShownAllAppsColumns == 1;
-                icon.setLayoutHorizontal(directoryList);
-                icon.setGravity(directoryList
-                        ? Gravity.START | Gravity.CENTER_VERTICAL
-                        : Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL);
-                icon.setPaddingRelative(icon.getPaddingStart(), icon.getPaddingTop(),
-                        directoryList
-                                ? (int) (32 * icon.getResources().getDisplayMetrics().density)
-                                : icon.getPaddingStart(),
-                        icon.getPaddingBottom());
+                icon.setDirectoryRowStyle(directoryList);
                 icon.applyFromApplicationInfo(adapterItem.itemInfo);
                 icon.setDirectoryIndex(directoryList ? directoryIndexOf(position) : -1);
                 icon.setOnFocusChangeListener(mIconFocusListener);
@@ -393,6 +386,16 @@ public abstract class BaseAllAppsAdapter<T extends Context & ActivityContext> ex
                 FolderIcon folderIcon = FolderIcon.inflateFolderAndIcon(
                         R.layout.all_apps_folder_icon, mActivityContext, container, folderInfo);
                 folderIcon.setOnLongClickListener(mOnIconLongClickListener);
+                if (mActivityContext.getDeviceProfile().numShownAllAppsColumns == 1) {
+                    // Directory list: the folder is a submenu row, not a large icon.
+                    AllAppsProfile profile =
+                            mActivityContext.getDeviceProfile().getAllAppsProfile();
+                    folderIcon.setLayoutParams(new FrameLayout.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT));
+                    folderIcon.setDirectoryRow(folderIcon.getPaddingStart()
+                            + profile.getIconSizePx() + profile.getIconDrawablePaddingPx());
+                }
                 container.addView(folderIcon);
                 break;
             default:

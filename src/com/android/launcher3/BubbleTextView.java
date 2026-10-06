@@ -69,6 +69,7 @@ import android.util.Property;
 import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewDebug;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -941,13 +942,32 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
     public void setDirectoryIndex(int index) {
         mDirectoryIndex = index;
         if (index >= 0 && getTag() instanceof ItemInfo info && info.title != null) {
-            String code = String.format(Locale.ROOT, "A-%02d", index);
-            SpannableString label = new SpannableString(code + "  " + info.title);
-            int dim = ColorUtils.setAlphaComponent(getCurrentTextColor(), 0x99);
-            label.setSpan(new ForegroundColorSpan(dim), 0, code.length(),
-                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-            setText(label);
+            setDirectoryLabel(String.format(Locale.ROOT, "A-%02d", index), info.title);
         }
+        invalidate();
+    }
+
+    /** Lays this icon out as a row of the directory list (icon, label beside it) or as a grid cell. */
+    public void setDirectoryRowStyle(boolean directoryList) {
+        setLayoutHorizontal(directoryList);
+        setGravity(directoryList
+                ? Gravity.START | Gravity.CENTER_VERTICAL
+                : Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL);
+        setPaddingRelative(getPaddingStart(), getPaddingTop(),
+                directoryList
+                        ? (int) (32 * getResources().getDisplayMetrics().density)
+                        : getPaddingStart(),
+                getPaddingBottom());
+    }
+
+    /** Makes this view a directory row with an explicit dim [code] before the [title]. */
+    public void setDirectoryLabel(String code, CharSequence title) {
+        mDirectoryIndex = 0;
+        SpannableString label = new SpannableString(code + "  " + title);
+        int dim = ColorUtils.setAlphaComponent(getCurrentTextColor(), 0x99);
+        label.setSpan(new ForegroundColorSpan(dim), 0, code.length(),
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        setText(label);
         invalidate();
     }
 

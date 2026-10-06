@@ -88,7 +88,7 @@ public class FolderPagedView extends PagedView<PageIndicatorDots> implements Cli
 
     @Thunk final ArrayMap<View, Runnable> mPendingAnimations = new ArrayMap<>();
 
-    private final FolderGridOrganizer mOrganizer;
+    private FolderGridOrganizer mOrganizer;
     private final ViewCache mViewCache;
 
     private int mAllocatedContentSize;
@@ -130,6 +130,15 @@ public class FolderPagedView extends PagedView<PageIndicatorDots> implements Cli
 
         mFocusIndicatorHelper = new ViewGroupFocusHelper(this);
         mViewCache = activityContext.getViewCache();
+    }
+
+    private static final int DIRECTORY_ROWS_PER_PAGE = 8;
+    private static final int DIRECTORY_WIDTH_DP = 420;
+
+    /** An app drawer folder opened from the one-column directory list is itself a list. */
+    private boolean isDirectoryMode() {
+        return mFolder != null && mFolder.isInAppDrawer()
+                && mFolder.mActivityContext.getDeviceProfile().numShownAllAppsColumns == 1;
     }
 
     public void setFolder(Folder folder) {
@@ -390,7 +399,11 @@ public class FolderPagedView extends PagedView<PageIndicatorDots> implements Cli
         DeviceProfile grid = mFolder.mActivityContext.getDeviceProfile();
         CellLayout page = mViewCache.getView(R.layout.folder_page, getContext(), this);
         // Lawnchair: Find the correct folder size depending on which parent owned them
-        if (mFolder.isInAppDrawer()) {
+        if (isDirectoryMode()) {
+            int width = Math.min((int) (grid.getDeviceProperties().getAvailableWidthPx() * 0.9f),
+                    (int) (DIRECTORY_WIDTH_DP * getResources().getDisplayMetrics().density));
+            page.setCellDimensions(width, grid.getAllAppsProfile().getCellHeightPx());
+        } else if (mFolder.isInAppDrawer()) {
             page.setCellDimensions(grid.getAllAppsProfile().getCellWidthPx(), grid.getAllAppsProfile().getCellHeightPx());
         } else {
             page.setCellDimensions(grid.folderCellWidthPx, grid.folderCellHeightPx);
@@ -444,6 +457,9 @@ public class FolderPagedView extends PagedView<PageIndicatorDots> implements Cli
             page.removeAllViews();
             pages.add(page);
         }
+        if (isDirectoryMode() && mOrganizer.getMaxItemsPerPage() != DIRECTORY_ROWS_PER_PAGE) {
+            mOrganizer = new FolderGridOrganizer(1, DIRECTORY_ROWS_PER_PAGE);
+        }
         mOrganizer.setFolderInfo(mFolder.getInfo());
         setupContentDimensions(itemCount);
 
@@ -471,6 +487,10 @@ public class FolderPagedView extends PagedView<PageIndicatorDots> implements Cli
                 lp.setCellXY(mOrganizer.getPosForRank(rank));
                 currentPage.addViewToCellLayout(v, -1, info.getViewId(), lp, true);
 
+                if (isDirectoryMode() && v instanceof BubbleTextView directoryRow) {
+                    directoryRow.setDirectoryRowStyle(true);
+                    directoryRow.setDirectoryIndex(rank + 1);
+                }
                 if (mOrganizer.isItemInPreview(rank) && v instanceof BubbleTextView) {
                     ((BubbleTextView) v).verifyHighRes();
                 }
