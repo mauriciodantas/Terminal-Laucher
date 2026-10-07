@@ -1,0 +1,19 @@
+{
+  "format": "terminal-commands",
+  "version": 1,
+  "actions": [
+    {
+      "letter": "imdb",
+      "label": "IMDb · filme/ator",
+      "kind": "INTENT",
+      "template": "https://www.imdb.com/find/?q={text}",
+      "packages": [],
+      "arg": "TEXT",
+      "sms": false,
+      "action": "android.intent.action.VIEW",
+      "mime": null,
+      "extra": null
+    }
+  ],
+  "aliases": []
+}
