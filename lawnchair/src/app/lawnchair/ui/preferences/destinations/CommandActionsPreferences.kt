@@ -1,6 +1,7 @@
 package app.lawnchair.ui.preferences.destinations
 
 import android.content.ComponentName
+import android.content.Intent
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -41,6 +42,8 @@ import app.lawnchair.command.AppEntry
 import app.lawnchair.command.ArgKind
 import app.lawnchair.command.CommandAction
 import app.lawnchair.command.CommandExecutor
+import app.lawnchair.command.CommandPacks
+import app.lawnchair.command.ImportCommandsActivity
 import app.lawnchair.command.CustomAction
 import app.lawnchair.command.CustomActionStore
 import app.lawnchair.command.CustomActions
@@ -84,33 +87,25 @@ fun CommandActionsPreferences() {
     }
 
     val exporter = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument("application/json"),
+        ActivityResultContracts.CreateDocument(CommandPacks.MIME),
     ) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
         val ok = runCatching {
             context.contentResolver.openOutputStream(uri)?.use {
-                it.write(CustomActionStore.encode(actions).toByteArray())
+                it.write(CommandPacks.encode(actions, aliases).toByteArray())
             } != null
         }.getOrDefault(false)
-        Toast.makeText(context, if (ok) "Ações exportadas" else "Falha ao exportar", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, if (ok) "Comandos exportados" else "Falha ao exportar", Toast.LENGTH_SHORT).show()
     }
     val importer = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
-        val imported = runCatching {
-            context.contentResolver.openInputStream(uri)?.use { CustomActionStore.decode(it.readBytes().decodeToString()) }
-        }.getOrNull()
-        if (imported == null) {
-            Toast.makeText(context, "Arquivo inválido", Toast.LENGTH_SHORT).show()
-        } else {
-            val (merged, skipped) = CustomActions.merge(actions, imported)
-            val added = merged.size - actions.size
-            update(merged)
-            Toast.makeText(
-                context,
-                "$added importadas" + if (skipped > 0) ", $skipped ignoradas (letra em uso)" else "",
-                Toast.LENGTH_LONG,
-            ).show()
-        }
+        // Same confirmation as a file opened from a chat.
+        context.startActivity(
+            Intent(context, ImportCommandsActivity::class.java)
+                .setAction(Intent.ACTION_VIEW)
+                .setData(uri)
+                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION),
+        )
     }
 
     PreferenceLayout(label = stringResource(R.string.command_actions_title)) {
@@ -157,13 +152,22 @@ fun CommandActionsPreferences() {
                 onClick = { step = Step.Advanced },
             )
             ClickablePreference(
-                label = "Exportar ações",
-                subtitle = "Salva as ações cadastradas em um arquivo",
-                onClick = { exporter.launch("acoes-barra-de-comando.json") },
+                label = "Compartilhar comandos",
+                subtitle = "Envia ações e apelidos como arquivo por conversa, e-mail ou nuvem",
+                onClick = {
+                    val send = CommandPacks.shareIntent(context, actions, aliases)
+                    if (send != null) context.startActivity(send)
+                    else Toast.makeText(context, "Falha ao compartilhar", Toast.LENGTH_SHORT).show()
+                },
             )
             ClickablePreference(
-                label = "Importar ações",
-                subtitle = "Adiciona as de um arquivo, sem trocar as existentes",
+                label = "Exportar comandos",
+                subtitle = "Salva ações e apelidos em um arquivo",
+                onClick = { exporter.launch(CommandPacks.FILE_NAME) },
+            )
+            ClickablePreference(
+                label = "Importar comandos",
+                subtitle = "Adiciona os de um arquivo, sem trocar os existentes",
                 onClick = { importer.launch(arrayOf("*/*")) },
             )
             ClickablePreference(
