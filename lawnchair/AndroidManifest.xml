@@ -135,6 +135,33 @@
             android:theme="@style/Theme.Lawnchair" />
 
         <activity
+            android:name="app.lawnchair.command.ImportCommandsActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:label="Importar comandos"
+            android:theme="@style/Theme.Transparent">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/x-terminal-commands" />
+            </intent-filter>
+            <!-- Chats and file managers often hand the file over as octet-stream, so match the extension too. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:mimeType="*/*" />
+                <data android:host="*" />
+                <data android:pathPattern=".*\\.tcmd" />
+                <data android:pathPattern=".*\\..*\\.tcmd" />
+                <data android:pathPattern=".*\\..*\\..*\\.tcmd" />
+            </intent-filter>
+        </activity>
+
+        <activity
             android:name="app.lawnchair.BlankActivity"
             android:theme="@style/Theme.Transparent" />
 

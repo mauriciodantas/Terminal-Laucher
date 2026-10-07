@@ -79,12 +79,15 @@ object AliasStore {
             .putString(KEY, encode(aliases)).apply()
     }
 
-    fun encode(aliases: List<CommandAlias>): String = JSONArray().also { array ->
-        aliases.forEach { array.put(JSONObject().put("name", it.name).put("expansion", it.expansion)) }
-    }.toString()
+    fun encode(aliases: List<CommandAlias>): String = toJson(aliases).toString()
 
-    fun decode(raw: String): List<CommandAlias> {
-        val array = JSONArray(raw)
+    fun toJson(aliases: List<CommandAlias>): JSONArray = JSONArray().also { array ->
+        aliases.forEach { array.put(JSONObject().put("name", it.name).put("expansion", it.expansion)) }
+    }
+
+    fun decode(raw: String): List<CommandAlias> = fromJson(JSONArray(raw))
+
+    fun fromJson(array: JSONArray): List<CommandAlias> {
         return (0 until array.length()).mapNotNull { i ->
             runCatching {
                 val o = array.getJSONObject(i)

@@ -22,7 +22,9 @@ object CustomActionStore {
             .putString(KEY, encode(actions)).apply()
     }
 
-    fun encode(actions: List<CustomAction>): String = JSONArray().also { array ->
+    fun encode(actions: List<CustomAction>): String = toJson(actions).toString()
+
+    fun toJson(actions: List<CustomAction>): JSONArray = JSONArray().also { array ->
         actions.forEach {
             array.put(
                 JSONObject()
@@ -38,10 +40,11 @@ object CustomActionStore {
                     .put("extra", it.textExtra ?: JSONObject.NULL),
             )
         }
-    }.toString()
+    }
 
-    fun decode(raw: String): List<CustomAction> {
-        val array = JSONArray(raw)
+    fun decode(raw: String): List<CustomAction> = fromJson(JSONArray(raw))
+
+    fun fromJson(array: JSONArray): List<CustomAction> {
         return (0 until array.length()).mapNotNull { i ->
             runCatching {
                 val o = array.getJSONObject(i)
