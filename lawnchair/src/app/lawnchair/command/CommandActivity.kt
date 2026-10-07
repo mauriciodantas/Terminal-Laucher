@@ -26,6 +26,9 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -64,7 +67,10 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
@@ -73,6 +79,7 @@ import app.lawnchair.theme.color.tokens.PhosphorColorToken
 import app.lawnchair.ui.theme.LawnchairTheme
 import com.android.launcher3.R
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -140,6 +147,30 @@ private val Mono = FontFamily(
 
 private val Ground = Color(0xFF07090A)
 private val Danger = Color(0xFFFF5A45)
+private val Amber = Color(0xFFF2B84B)
+
+/** How long a command waits before it runs, so a stray tap or a misheard word can be undone. */
+private const val UNDO_MS = 3000L
+
+/** Colors the command word fully and the argument softer, so where one ends and the other starts is clear. */
+private class CommandHighlight(private val command: Color, private val argument: Color) : VisualTransformation {
+    override fun filter(text: AnnotatedString): TransformedText {
+        val raw = text.text
+        val start = raw.indexOfFirst { !it.isWhitespace() }.let { if (it < 0) raw.length else it }
+        val end = raw.indexOfFirst(start) { it.isWhitespace() }.let { if (it < 0) raw.length else it }
+        val styled = buildAnnotatedString {
+            append(raw)
+            addStyle(SpanStyle(color = command), start, end)
+            addStyle(SpanStyle(color = argument), end, raw.length)
+        }
+        return TransformedText(styled, OffsetMapping.Identity)
+    }
+
+    private fun String.indexOfFirst(from: Int, predicate: (Char) -> Boolean): Int {
+        for (i in from until length) if (predicate(this[i])) return i
+        return -1
+    }
+}
 private val OnPhosphor = Color(0xFF04140B)
 
 @Composable
@@ -178,6 +209,8 @@ private fun CommandScreen(onClose: () -> Unit) {
     var selected by remember { mutableIntStateOf(0) }
     var historyIndex by remember { mutableIntStateOf(-1) }
     var done by remember { mutableStateOf<String?>(null) }
+    // A command that is about to run; the toast lets the user cancel it during [UNDO_MS].
+    var pending by remember { mutableStateOf<Pair<CommandAction, String>?>(null) }
     val focus = remember { FocusRequester() }
 
     val text = field.text
@@ -197,7 +230,7 @@ private fun CommandScreen(onClose: () -> Unit) {
     val executedLabel = stringResource(R.string.command_executed)
     val failedLabel = stringResource(R.string.command_failed)
 
-    fun finishRun(action: CommandAction, command: String) {
+    fun commit(action: CommandAction, command: String) {
         val ok = CommandExecutor.execute(context, action)
         if (!ok) {
             done = failedLabel
@@ -205,6 +238,7 @@ private fun CommandScreen(onClose: () -> Unit) {
         }
         history = CommandEngine.pushHistory(history, command)
         CommandActivity.saveHistory(context, history)
+        CommandUsage.record(context, CommandUsage.keysFor(action, command, aliases))
         historyIndex = -1
         if (action is CommandAction.Calc) {
             done = context.getString(R.string.command_copied, action.result)
@@ -212,6 +246,19 @@ private fun CommandScreen(onClose: () -> Unit) {
             done = executedLabel
             onClose()
         }
+    }
+
+    fun finishRun(action: CommandAction, command: String) {
+        if (pending != null) return
+        // A calculation only copies a result, so it needs no undo; everything else starts another app.
+        if (action is CommandAction.Calc) commit(action, command) else pending = action to command
+    }
+
+    LaunchedEffect(pending) {
+        val run = pending ?: return@LaunchedEffect
+        delay(UNDO_MS)
+        pending = null
+        commit(run.first, run.second)
     }
 
     val callPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
@@ -330,6 +377,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                 letterSpacing = 0.9.sp,
             )
             val inputLabel = stringResource(R.string.command_input_label)
+            val highlight = remember(phosphor, dim) { CommandHighlight(phosphor, phosphor.copy(alpha = 0.72f)) }
             Row(
                 Modifier
                     .padding(top = 12.dp)
@@ -361,6 +409,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                             field = it
                         },
                         textStyle = style.copy(color = phosphor),
+                        visualTransformation = highlight,
                         cursorBrush = SolidColor(phosphor),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(
@@ -399,6 +448,46 @@ private fun CommandScreen(onClose: () -> Unit) {
                 }
             }
 
+            // One-tap starts while nothing is typed: recent commands, aliases and letters.
+            if (text.isEmpty() && done == null) {
+                val chips = remember(history, aliases, custom) { CommandEngine.quickChips(history, aliases, custom) }
+                if (chips.isNotEmpty()) {
+                    Label(
+                        stringResource(R.string.command_chips_title),
+                        dim,
+                        10.sp,
+                        Modifier.padding(top = 10.dp),
+                    )
+                    Row(
+                        Modifier
+                            .padding(top = 6.dp)
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        chips.forEach { chip ->
+                            Row(
+                                Modifier
+                                    .heightIn(min = 40.dp)
+                                    .border(1.dp, line)
+                                    .clickable { setText(chip.fill) }
+                                    .padding(horizontal = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    if (chip.kind == "RECENTE") "↺" else "★",
+                                    color = dim,
+                                    fontFamily = Mono,
+                                    fontSize = 10.sp,
+                                    modifier = Modifier.padding(end = 6.dp),
+                                )
+                                Text(chip.label, color = phosphor, fontFamily = Mono, fontWeight = FontWeight.Medium, fontSize = 11.5.sp)
+                            }
+                        }
+                    }
+                }
+            }
+
             // Suggestions.
             Column(
                 Modifier
@@ -415,65 +504,75 @@ private fun CommandScreen(onClose: () -> Unit) {
                         .fillMaxWidth()
                         .padding(horizontal = 8.dp, vertical = 5.dp),
                 )
-                if (analysis.needsContacts) {
-                    Row(
-                        Modifier
-                            .padding(6.dp)
-                            .fillMaxWidth()
-                            .border(1.dp, Danger)
-                            .padding(10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            stringResource(R.string.command_contacts_needed),
-                            color = Danger,
-                            fontFamily = Mono,
-                            fontSize = 11.5.sp,
-                            modifier = Modifier.weight(1f),
-                        )
-                        Box(
+                Column(Modifier.heightIn(max = 280.dp).verticalScroll(rememberScrollState())) {
+                    if (analysis.needsContacts) {
+                        Row(
                             Modifier
-                                .width(92.dp)
-                                .height(44.dp)
-                                .background(Danger)
-                                .clickable { permission.launch(android.Manifest.permission.READ_CONTACTS) },
-                            contentAlignment = Alignment.Center,
+                                .padding(6.dp)
+                                .fillMaxWidth()
+                                .border(1.dp, Danger)
+                                .padding(10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
-                                stringResource(R.string.command_grant),
-                                color = Color(0xFF1A0502),
+                                stringResource(R.string.command_contacts_needed),
+                                color = Danger,
                                 fontFamily = Mono,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 11.sp,
+                                fontSize = 11.5.sp,
+                                modifier = Modifier.weight(1f),
                             )
+                            Box(
+                                Modifier
+                                    .width(92.dp)
+                                    .height(44.dp)
+                                    .background(Danger)
+                                    .clickable { permission.launch(android.Manifest.permission.READ_CONTACTS) },
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    stringResource(R.string.command_grant),
+                                    color = Color(0xFF1A0502),
+                                    fontFamily = Mono,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 11.sp,
+                                )
+                            }
+                        }
+                    }
+                    analysis.suggestions.forEachIndexed { index, suggestion ->
+                        val active = index == sel
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .height(44.dp)
+                                .background(if (active) phosphor else Color.Transparent)
+                                .clickable { pick(suggestion) }
+                                .padding(horizontal = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            val color = if (active) OnPhosphor else phosphor
+                            Text(if (active) ">" else "", color = color, fontFamily = Mono, fontSize = 12.5.sp, modifier = Modifier.width(14.dp))
+                            Text(
+                                suggestion.label,
+                                color = color,
+                                fontFamily = Mono,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 12.5.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f),
+                            )
+                            Text(suggestion.kind, color = color.copy(alpha = 0.75f), fontFamily = Mono, fontSize = 9.5.sp)
                         }
                     }
                 }
-                analysis.suggestions.forEachIndexed { index, suggestion ->
-                    val active = index == sel
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .height(44.dp)
-                            .background(if (active) phosphor else Color.Transparent)
-                            .clickable { pick(suggestion) }
-                            .padding(horizontal = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        val color = if (active) OnPhosphor else phosphor
-                        Text(if (active) ">" else "", color = color, fontFamily = Mono, fontSize = 12.5.sp, modifier = Modifier.width(14.dp))
-                        Text(
-                            suggestion.label,
-                            color = color,
-                            fontFamily = Mono,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 12.5.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f),
-                        )
-                        Text(suggestion.kind, color = color.copy(alpha = 0.75f), fontFamily = Mono, fontSize = 9.5.sp)
-                    }
+                if (analysis.total > analysis.suggestions.size) {
+                    Label(
+                        stringResource(R.string.command_more, analysis.suggestions.size, analysis.total),
+                        dim,
+                        9.5.sp,
+                        Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 5.dp),
+                    )
                 }
             }
 
@@ -505,6 +604,17 @@ private fun CommandScreen(onClose: () -> Unit) {
                     letterSpacing = 0.9.sp,
                     modifier = Modifier.padding(top = 3.dp),
                 )
+                if (done == null && analysis.intent.isNotEmpty()) {
+                    Text(
+                        "⇢ " + analysis.intent,
+                        color = Amber,
+                        fontFamily = Mono,
+                        fontSize = 10.5.sp,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(top = 5.dp),
+                    )
+                }
             }
 
             Spacer(Modifier.weight(1f))
@@ -514,6 +624,44 @@ private fun CommandScreen(onClose: () -> Unit) {
                 FKey(stringResource(R.string.command_key_history), phosphor, Modifier.weight(1f)) { older() }
                 FKey(stringResource(R.string.command_key_complete), phosphor, Modifier.weight(1f)) { complete() }
                 FKey(stringResource(R.string.command_key_next), phosphor, Modifier.weight(1f)) { next() }
+            }
+        }
+
+        pending?.let { run ->
+            Row(
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(start = 20.dp, end = 20.dp, bottom = 72.dp)
+                    .fillMaxWidth()
+                    .background(phosphor)
+                    .padding(start = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    stringResource(R.string.command_running, CommandEngine.describe(run.first)),
+                    color = OnPhosphor,
+                    fontFamily = Mono,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 11.5.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+                Box(
+                    Modifier
+                        .heightIn(min = 44.dp)
+                        .clickable { pending = null }
+                        .padding(horizontal = 12.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        stringResource(R.string.command_undo),
+                        color = OnPhosphor,
+                        fontFamily = Mono,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 11.sp,
+                    )
+                }
             }
         }
     }

@@ -1158,6 +1158,103 @@
     <string name="command_voice" translatable="false">Falar o comando</string>
     <string name="command_voice_prompt" translatable="false">Diga o comando</string>
     <string name="command_input_label" translatable="false">Comando</string>
+    <string name="command_chips_title" translatable="false">RECENTES · FIXADOS</string>
+    <string name="command_more" translatable="false">MOSTRANDO %1$d DE %2$d · DIGITE ? PARA VER TODOS</string>
+    <string name="command_running" translatable="false">EXECUTANDO · %1$s</string>
+    <string name="command_undo" translatable="false">DESFAZER</string>
+    <string name="cmd_pref_undo" translatable="false">Desfazer</string>
+    <string name="cmd_pref_cancel" translatable="false">Cancelar</string>
+    <string name="cmd_pref_save" translatable="false">Salvar</string>
+    <string name="cmd_pref_remove" translatable="false">Remover</string>
+    <string name="cmd_pref_test" translatable="false">Testar</string>
+    <string name="cmd_pref_close" translatable="false">Fechar</string>
+    <string name="cmd_pref_back" translatable="false">Voltar</string>
+    <string name="cmd_pref_search" translatable="false">Buscar ação ou apelido</string>
+    <string name="cmd_pref_group_actions" translatable="false">Ações cadastradas</string>
+    <string name="cmd_pref_group_actions_short" translatable="false">Ações</string>
+    <string name="cmd_pref_group_aliases" translatable="false">Apelidos</string>
+    <string name="cmd_pref_group_add" translatable="false">Adicionar</string>
+    <string name="cmd_pref_group_backup" translatable="false">Backup e compartilhamento</string>
+    <string name="cmd_pref_no_actions" translatable="false">Nenhuma ação</string>
+    <string name="cmd_pref_no_actions_hint" translatable="false">Adicione abaixo</string>
+    <string name="cmd_pref_no_match" translatable="false">Nada na busca</string>
+    <string name="cmd_pref_new_alias" translatable="false">Novo apelido</string>
+    <string name="cmd_pref_new_alias_hint" translatable="false">Uma palavra sua para um comando inteiro (mae = ligar maria). Vale digitado e falado</string>
+    <string name="cmd_pref_recipes" translatable="false">Receitas prontas</string>
+    <string name="cmd_pref_recipes_hint" translatable="false">WhatsApp, Telegram, SMS, YouTube, Spotify</string>
+    <string name="cmd_pref_app_functions" translatable="false">Funções de um app</string>
+    <string name="cmd_pref_app_functions_hint" translatable="false">Atalhos do launcher e intents que o app aceita</string>
+    <string name="cmd_pref_advanced" translatable="false">Avançado</string>
+    <string name="cmd_pref_advanced_hint" translatable="false">Monte a intent manualmente (ação, URI, pacote)</string>
+    <string name="cmd_pref_backup" translatable="false">Compartilhar, exportar ou importar</string>
+    <string name="cmd_pref_backup_hint" translatable="false">Envie ações e apelidos como arquivo ou abra um arquivo .tcmd</string>
+    <string name="cmd_pref_share" translatable="false">Compartilhar comandos</string>
+    <string name="cmd_pref_share_hint" translatable="false">Escolha ações e apelidos e envie como arquivo</string>
+    <string name="cmd_pref_export" translatable="false">Exportar comandos</string>
+    <string name="cmd_pref_export_hint" translatable="false">Escolha o que salvar em um arquivo</string>
+    <string name="cmd_pref_import" translatable="false">Importar comandos</string>
+    <string name="cmd_pref_import_hint" translatable="false">Adiciona os de um arquivo, sem trocar os existentes</string>
+    <string name="cmd_pref_restore" translatable="false">Restaurar padrão</string>
+    <string name="cmd_pref_restore_hint" translatable="false">Volta apenas o w (WhatsApp)</string>
+    <string name="cmd_pref_restore_title" translatable="false">Restaurar o padrão?</string>
+    <string name="cmd_pref_restore_text" translatable="false">As ações cadastradas serão trocadas apenas pelo w (WhatsApp). Os apelidos não mudam. Dá para desfazer logo depois.</string>
+    <string name="cmd_pref_restore_ok" translatable="false">Restaurar</string>
+    <string name="cmd_pref_restored" translatable="false">Padrão restaurado</string>
+    <string name="cmd_pref_action_removed" translatable="false">Ação %1$s removida</string>
+    <string name="cmd_pref_alias_removed" translatable="false">Apelido %1$s removido</string>
+    <string name="cmd_pref_exported" translatable="false">Comandos exportados</string>
+    <string name="cmd_pref_export_failed" translatable="false">Falha ao exportar</string>
+    <string name="cmd_pref_share_failed" translatable="false">Falha ao compartilhar</string>
+    <string name="cmd_pref_share_title" translatable="false">Compartilhar comandos</string>
+    <string name="cmd_pref_export_title" translatable="false">Exportar comandos</string>
+    <string name="cmd_pref_apps_title" translatable="false">Apps com integrações</string>
+    <string name="cmd_pref_searching_apps" translatable="false">Procurando apps…</string>
+    <string name="cmd_pref_no_integrations" translatable="false">Nenhum app com integrações externas. Use o modo Avançado.</string>
+    <string name="cmd_pref_no_functions" translatable="false">Nenhuma função encontrada. Use o modo Avançado para informar a intent.</string>
+    <string name="cmd_pref_kind_shortcut" translatable="false">Atalho · </string>
+    <string name="cmd_pref_kind_recipe" translatable="false">Receita · </string>
+    <string name="cmd_pref_kind_intent" translatable="false">Intent · </string>
+    <string name="cmd_pref_letter_label" translatable="false">Letra do atalho</string>
+    <string name="cmd_pref_try_label" translatable="false">Experimente</string>
+    <string name="cmd_pref_sample_text" translatable="false">exemplo</string>
+    <string name="cmd_pref_sample_contact" translatable="false">ana</string>
+    <string name="cmd_pref_sample_both" translatable="false">ana chego logo</string>
+    <string name="cmd_pref_preview" translatable="false">Pré-visualização</string>
+    <string name="cmd_pref_needs_contacts" translatable="false">Conceda acesso a contatos na barra de comando para conferir</string>
+    <string name="cmd_pref_alias_new_title" translatable="false">Novo apelido</string>
+    <string name="cmd_pref_alias_edit_title" translatable="false">Editar apelido</string>
+    <string name="cmd_pref_alias_label" translatable="false">Apelido</string>
+    <string name="cmd_pref_alias_hint" translatable="false">Digitado ou falado. Acentos não importam</string>
+    <string name="cmd_pref_alias_command" translatable="false">Comando</string>
+    <string name="cmd_pref_alias_command_hint" translatable="false">Ex.: ligar maria · abrir chrome · w ana · rota casa</string>
+    <string name="cmd_pref_alias_typing" translatable="false">Digitando %1$s:</string>
+    <string name="cmd_pref_nothing_to_send" translatable="false">Não há ações nem apelidos cadastrados.</string>
+    <string name="cmd_pref_continue" translatable="false">Continuar</string>
+    <string name="cmd_pref_continue_count" translatable="false">Continuar (%1$d)</string>
+    <string name="cmd_pref_none" translatable="false">Nenhum</string>
+    <string name="cmd_pref_all" translatable="false">Todos</string>
+    <string name="cmd_pref_manual_title" translatable="false">Ação manual</string>
+    <string name="cmd_pref_manual_name" translatable="false">Nome</string>
+    <string name="cmd_pref_manual_action" translatable="false">Ação da intent</string>
+    <string name="cmd_pref_manual_action_hint" translatable="false">VIEW, SEND, SENDTO, DIAL ou um nome completo</string>
+    <string name="cmd_pref_manual_uri" translatable="false">URI</string>
+    <string name="cmd_pref_manual_uri_hint" translatable="false">Ex.: tg://resolve?phone={number} · use {text}, {name}, {phone}</string>
+    <string name="cmd_pref_manual_package" translatable="false">Pacote (opcional)</string>
+    <string name="cmd_pref_manual_arg" translatable="false">O que digitar depois da letra</string>
+    <string name="cmd_pref_manual_share" translatable="false">Enviar o texto como EXTRA_TEXT (tipo text/plain)</string>
+    <string name="cmd_pref_arg_none" translatable="false">Nada (roda só com a letra)</string>
+    <string name="cmd_pref_arg_text" translatable="false">Um texto</string>
+    <string name="cmd_pref_arg_contact" translatable="false">Um contato</string>
+    <string name="cmd_pref_arg_contact_text" translatable="false">Um contato e uma mensagem</string>
+    <string name="cmd_imp_invalid" translatable="false">Arquivo de comandos inválido</string>
+    <string name="cmd_imp_title" translatable="false">Importar comandos</string>
+    <string name="cmd_imp_warning" translatable="false">Só importe arquivos de quem você conhece: as ações abrem outros apps. O que você já tem não é substituído.</string>
+    <string name="cmd_imp_blocked" translatable="false">%1$d ação(ões) bloqueada(s): usam um link que pode acessar arquivos ou componentes do aparelho.</string>
+    <string name="cmd_imp_rename" translatable="false">Marque para importar como %1$s</string>
+    <string name="cmd_imp_confirm" translatable="false">Importar</string>
+    <string name="cmd_imp_confirm_count" translatable="false">Importar %1$d</string>
+    <string name="cmd_imp_done" translatable="false">%1$d ações e %2$d apelidos importados</string>
+    <string name="cmd_imp_skipped" translatable="false">, %1$d ignorados (nome em uso)</string>
     <string name="glance_group_targets" translatable="false">Alvos</string>
     <string name="glance_agenda" translatable="false">Agenda</string>
     <string name="glance_agenda_desc" translatable="false">Próximo evento, local e rota</string>
