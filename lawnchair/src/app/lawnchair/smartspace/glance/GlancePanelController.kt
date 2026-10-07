@@ -19,6 +19,7 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
+import app.lawnchair.font.UiFont
 import app.lawnchair.preferences2.PreferenceManager2
 import app.lawnchair.preferences2.firstCached
 import app.lawnchair.smartspace.GlanceAnimationView
@@ -275,6 +276,7 @@ class GlancePanelController(
                     text = if (shortcut == GlanceShortcut.TORCH) GlanceShortcut.torchLabel(torchOn) else shortcut.label
                     setTextSize(TypedValue.COMPLEX_UNIT_SP, 9.5f)
                     typeface = Typeface.MONOSPACE
+                    UiFont.apply(this)
                     letterSpacing = 0.05f
                     gravity = Gravity.CENTER
                     maxLines = 1
@@ -529,6 +531,7 @@ class GlancePanelController(
             text = GlanceEngine.tabLabel(index, target.kind)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 9.5f)
             typeface = Typeface.MONOSPACE
+            UiFont.apply(this)
             letterSpacing = 0.05f
             gravity = Gravity.CENTER
             maxLines = 1

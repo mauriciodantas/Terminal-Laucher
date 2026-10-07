@@ -33,6 +33,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -137,11 +138,15 @@ class CommandActivity : ComponentActivity() {
     }
 }
 
-private val Mono = FontFamily(
+private val PlexMono = FontFamily(
     Font(R.font.ibm_plex_mono_regular, FontWeight.Normal),
     Font(R.font.ibm_plex_mono_medium, FontWeight.Medium),
     Font(R.font.ibm_plex_mono_semibold, FontWeight.SemiBold),
 )
+
+/** The font of the command bar: the one the user picked under Appearance, carried by the theme. */
+@Composable
+private fun mono(): FontFamily = MaterialTheme.typography.bodyMedium.fontFamily ?: PlexMono
 
 private val Danger = Color(0xFFFF5A45)
 private val Amber = Color(0xFFF2B84B)
@@ -363,7 +368,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                 Text(
                     stringResource(R.string.command_title),
                     color = phosphor,
-                    fontFamily = Mono,
+                    fontFamily = mono(),
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 13.sp,
                     letterSpacing = 0.2.sp,
@@ -375,7 +380,7 @@ private fun CommandScreen(onClose: () -> Unit) {
 
             // The command line.
             val style = TextStyle(
-                fontFamily = Mono,
+                fontFamily = mono(),
                 fontWeight = FontWeight.Medium,
                 fontSize = 15.sp,
                 letterSpacing = 0.9.sp,
@@ -459,7 +464,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                             .semantics { contentDescription = voiceLabel },
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text("[MIC]", color = phosphor, fontFamily = Mono, fontSize = 10.sp, letterSpacing = 0.5.sp)
+                        Text("[MIC]", color = phosphor, fontFamily = mono(), fontSize = 10.sp, letterSpacing = 0.5.sp)
                     }
                 }
             }
@@ -493,11 +498,11 @@ private fun CommandScreen(onClose: () -> Unit) {
                                 Text(
                                     if (chip.kind == "RECENTE") "↺" else "★",
                                     color = dim,
-                                    fontFamily = Mono,
+                                    fontFamily = mono(),
                                     fontSize = 10.sp,
                                     modifier = Modifier.padding(end = 6.dp),
                                 )
-                                Text(chip.label, color = phosphor, fontFamily = Mono, fontWeight = FontWeight.Medium, fontSize = 11.5.sp)
+                                Text(chip.label, color = phosphor, fontFamily = mono(), fontWeight = FontWeight.Medium, fontSize = 11.5.sp)
                             }
                         }
                     }
@@ -533,7 +538,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                             Text(
                                 stringResource(R.string.command_contacts_needed),
                                 color = Danger,
-                                fontFamily = Mono,
+                                fontFamily = mono(),
                                 fontSize = 11.5.sp,
                                 modifier = Modifier.weight(1f),
                             )
@@ -548,7 +553,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                                 Text(
                                     stringResource(R.string.command_grant),
                                     color = Color(0xFF1A0502),
-                                    fontFamily = Mono,
+                                    fontFamily = mono(),
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = 11.sp,
                                 )
@@ -567,18 +572,18 @@ private fun CommandScreen(onClose: () -> Unit) {
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             val color = if (active) onPhosphor() else phosphor
-                            Text(if (active) ">" else "", color = color, fontFamily = Mono, fontSize = 12.5.sp, modifier = Modifier.width(14.dp))
+                            Text(if (active) ">" else "", color = color, fontFamily = mono(), fontSize = 12.5.sp, modifier = Modifier.width(14.dp))
                             Text(
                                 suggestion.label,
                                 color = color,
-                                fontFamily = Mono,
+                                fontFamily = mono(),
                                 fontWeight = FontWeight.Medium,
                                 fontSize = 12.5.sp,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier.weight(1f),
                             )
-                            Text(suggestion.kind, color = color.copy(alpha = 0.75f), fontFamily = Mono, fontSize = 9.5.sp)
+                            Text(suggestion.kind, color = color.copy(alpha = 0.75f), fontFamily = mono(), fontSize = 9.5.sp)
                         }
                     }
                 }
@@ -614,7 +619,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                 Text(
                     previewText,
                     color = previewColor,
-                    fontFamily = Mono,
+                    fontFamily = mono(),
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp,
                     letterSpacing = 0.9.sp,
@@ -624,7 +629,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                     Text(
                         "⇢ " + analysis.intent,
                         color = Amber,
-                        fontFamily = Mono,
+                        fontFamily = mono(),
                         fontSize = 10.5.sp,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
@@ -656,7 +661,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                 Text(
                     stringResource(R.string.command_running, CommandEngine.describe(run.first)),
                     color = onPhosphor(),
-                    fontFamily = Mono,
+                    fontFamily = mono(),
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 11.5.sp,
                     maxLines = 2,
@@ -673,7 +678,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                     Text(
                         stringResource(R.string.command_undo),
                         color = onPhosphor(),
-                        fontFamily = Mono,
+                        fontFamily = mono(),
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 11.sp,
                     )
@@ -688,7 +693,7 @@ private fun Label(text: String, color: Color, size: androidx.compose.ui.unit.Tex
     Text(
         text,
         color = color,
-        fontFamily = Mono,
+        fontFamily = mono(),
         fontSize = size,
         letterSpacing = 1.6.sp,
         modifier = modifier,
@@ -703,6 +708,6 @@ private fun FKey(text: String, color: Color, modifier: Modifier = Modifier, onCl
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text, color = color, fontFamily = Mono, fontSize = 10.sp, letterSpacing = 0.8.sp)
+        Text(text, color = color, fontFamily = mono(), fontSize = 10.sp, letterSpacing = 0.8.sp)
     }
 }

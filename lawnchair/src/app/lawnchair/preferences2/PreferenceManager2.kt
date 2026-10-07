@@ -880,6 +880,12 @@ class PreferenceManager2 @Inject constructor(
         defaultValue = true,
     )
 
+    /** The clock and the big values stay in the pixel font; off, they use the interface font. */
+    val terminalPixelClock = preference(
+        key = booleanPreferencesKey("terminal_pixel_clock"),
+        defaultValue = true,
+    )
+
     /** Turns through the At a Glance targets on its own while the panel is being looked at. */
     val glanceAutoRotate = preference(
         key = booleanPreferencesKey("glance_auto_rotate"),

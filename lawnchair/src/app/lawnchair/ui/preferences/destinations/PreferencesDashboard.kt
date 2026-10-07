@@ -62,6 +62,7 @@ import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
 import app.lawnchair.ui.preferences.data.liveinfo.SyncLiveInformation
 import app.lawnchair.ui.preferences.navigation.About
 import app.lawnchair.ui.preferences.navigation.AppDrawer
+import app.lawnchair.ui.preferences.navigation.Appearance
 import app.lawnchair.ui.preferences.navigation.BackupAndRestore
 import app.lawnchair.ui.preferences.navigation.CommandActions
 import app.lawnchair.ui.preferences.navigation.General
@@ -109,6 +110,14 @@ fun PreferencesDashboard(
         }
 
         PreferenceGroup {
+            PreferenceCategory(
+                label = stringResource(R.string.appearance_label),
+                description = stringResource(R.string.appearance_description),
+                iconResource = R.drawable.ic_wallpaper,
+                onNavigate = { onNavigate(Appearance) },
+                isSelected = currentRoute is Appearance,
+            )
+
             PreferenceCategory(
                 label = stringResource(R.string.general_label),
                 description = stringResource(R.string.general_description),

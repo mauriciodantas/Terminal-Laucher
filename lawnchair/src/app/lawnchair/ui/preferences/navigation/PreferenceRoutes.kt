@@ -40,6 +40,11 @@ data object Dummy : PreferenceRootRoute
 
 // Top-level destinations
 @Serializable
+data object Appearance : PreferenceRootRoute, PreferenceDeepLink {
+    override val deepLink = "$URI/appearance"
+}
+
+@Serializable
 data object General : PreferenceRootRoute, PreferenceDeepLink {
     override val deepLink = "$URI/general"
 }

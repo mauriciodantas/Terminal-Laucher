@@ -147,9 +147,6 @@ fun DockSearchPreference(
                                 valueRange = 0f..10f,
                                 showUnit = "vw",
                             )
-                            if (qsbHotseatStrokeWidth.state.value > 0f) {
-                                ColorPreference(preference = prefs2.strokeColorStyle)
-                            }
                         }
                     }
                 }

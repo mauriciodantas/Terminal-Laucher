@@ -35,6 +35,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
+import app.lawnchair.font.UiFont
+import app.lawnchair.preferences.getAdapter
+import app.lawnchair.preferences.preferenceManager
 import app.lawnchair.preferences2.asState
 import app.lawnchair.preferences2.preferenceManager2
 import app.lawnchair.theme.LauncherGround
@@ -48,9 +51,17 @@ fun LawnchairTheme(
     content: @Composable () -> Unit,
 ) {
     val colorScheme = getColorScheme(darkTheme = darkTheme)
+    val uiFont by preferenceManager().fontWorkspace.getAdapter().state
+    val pixelClock by preferenceManager2().terminalPixelClock.asState()
+    val typography = remember(uiFont, pixelClock) {
+        terminalTypography(
+            font = uiFont.takeUnless { UiFont.isDefault(it) }?.composeFontFamily,
+            pixelDisplay = pixelClock,
+        )
+    }
     MaterialExpressiveTheme(
         colorScheme = colorScheme,
-        typography = Typography,
+        typography = typography,
         content = content,
         shapes = Shapes,
         motionScheme = MotionScheme.expressive(),

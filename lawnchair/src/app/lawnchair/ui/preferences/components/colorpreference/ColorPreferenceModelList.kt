@@ -29,7 +29,7 @@ class ColorPreferenceModelList @Inject constructor(
         registerModel(
             ColorPreferenceModel(
                 prefObject = prefs.strokeColorStyle,
-                labelRes = R.string.qsb_hotseat_stroke_color,
+                labelRes = R.string.appearance_color_search_outline,
                 dynamicEntries = listOf(
                     ColorPreferenceEntry<ColorOption>(
                         ColorOption.Default,
@@ -56,7 +56,7 @@ class ColorPreferenceModelList @Inject constructor(
         registerModel(
             ColorPreferenceModel(
                 prefObject = prefs.hotseatBackgroundColor,
-                labelRes = R.string.hotseat_bg_color_label,
+                labelRes = R.string.appearance_color_dock,
                 dynamicEntries = dynamicColorsWithDefault,
             ),
         )
@@ -91,7 +91,7 @@ class ColorPreferenceModelList @Inject constructor(
         registerModel(
             ColorPreferenceModel(
                 prefObject = prefs.folderColor,
-                labelRes = R.string.folder_preview_bg_color_label,
+                labelRes = R.string.appearance_color_folders,
                 dynamicEntries = dynamicColorsWithDefault,
             ),
         )

@@ -34,35 +34,45 @@ private val PlexMono = FontFamily(
 
 private val Vt323 = FontFamily(Font(R.font.vt323_regular, FontWeight.Normal))
 
-val Typography = Typography(
-    displayLarge = base.displayLarge.copy(fontFamily = Vt323),
-    displayMedium = base.displayMedium.copy(fontFamily = Vt323),
-    displaySmall = base.displaySmall.copy(fontFamily = Vt323),
-    headlineLarge = base.headlineLarge.copy(fontFamily = PlexMono),
-    headlineMedium = base.headlineMedium.copy(fontFamily = PlexMono),
-    headlineSmall = base.headlineSmall.copy(fontFamily = PlexMono),
-    titleLarge = base.titleLarge.copy(fontFamily = PlexMono),
-    titleMedium = base.titleMedium.copy(fontFamily = PlexMono),
-    titleSmall = base.titleSmall.copy(fontFamily = PlexMono),
-    bodyLarge = base.bodyLarge.copy(fontFamily = PlexMono, letterSpacing = 0.sp),
-    bodyMedium = base.bodyMedium.copy(fontFamily = PlexMono, letterSpacing = 0.1.sp),
-    bodySmall = base.bodySmall.copy(fontFamily = PlexMono),
-    labelLarge = base.labelLarge.copy(fontFamily = PlexMono),
-    labelMedium = base.labelMedium.copy(fontFamily = PlexMono),
-    labelSmall = base.labelSmall.copy(fontFamily = PlexMono),
-    displayLargeEmphasized = base.displayLargeEmphasized.copy(fontFamily = Vt323),
-    displayMediumEmphasized = base.displayMediumEmphasized.copy(fontFamily = Vt323),
-    displaySmallEmphasized = base.displaySmallEmphasized.copy(fontFamily = Vt323),
-    headlineLargeEmphasized = base.headlineLargeEmphasized.copy(fontFamily = PlexMono),
-    headlineMediumEmphasized = base.headlineMediumEmphasized.copy(fontFamily = PlexMono),
-    headlineSmallEmphasized = base.headlineSmallEmphasized.copy(fontFamily = PlexMono),
-    titleLargeEmphasized = base.titleLargeEmphasized.copy(fontFamily = PlexMono),
-    titleMediumEmphasized = base.titleMediumEmphasized.copy(fontFamily = PlexMono),
-    titleSmallEmphasized = base.titleSmallEmphasized.copy(fontFamily = PlexMono),
-    bodyLargeEmphasized = base.bodyLargeEmphasized.copy(fontFamily = PlexMono),
-    bodyMediumEmphasized = base.bodyMediumEmphasized.copy(fontFamily = PlexMono),
-    bodySmallEmphasized = base.bodySmallEmphasized.copy(fontFamily = PlexMono),
-    labelLargeEmphasized = base.labelLargeEmphasized.copy(fontFamily = PlexMono),
-    labelMediumEmphasized = base.labelMediumEmphasized.copy(fontFamily = PlexMono),
-    labelSmallEmphasized = base.labelSmallEmphasized.copy(fontFamily = PlexMono),
-)
+/**
+ * The terminal typography. [font] replaces IBM Plex Mono for text when the user picked another one;
+ * the display sizes keep the pixel font unless [pixelDisplay] is off.
+ */
+fun terminalTypography(font: FontFamily? = null, pixelDisplay: Boolean = true): Typography {
+    val text = font ?: PlexMono
+    val display = if (pixelDisplay) Vt323 else text
+    return Typography(
+        displayLarge = base.displayLarge.copy(fontFamily = display),
+        displayMedium = base.displayMedium.copy(fontFamily = display),
+        displaySmall = base.displaySmall.copy(fontFamily = display),
+        headlineLarge = base.headlineLarge.copy(fontFamily = text),
+        headlineMedium = base.headlineMedium.copy(fontFamily = text),
+        headlineSmall = base.headlineSmall.copy(fontFamily = text),
+        titleLarge = base.titleLarge.copy(fontFamily = text),
+        titleMedium = base.titleMedium.copy(fontFamily = text),
+        titleSmall = base.titleSmall.copy(fontFamily = text),
+        bodyLarge = base.bodyLarge.copy(fontFamily = text, letterSpacing = 0.sp),
+        bodyMedium = base.bodyMedium.copy(fontFamily = text, letterSpacing = 0.1.sp),
+        bodySmall = base.bodySmall.copy(fontFamily = text),
+        labelLarge = base.labelLarge.copy(fontFamily = text),
+        labelMedium = base.labelMedium.copy(fontFamily = text),
+        labelSmall = base.labelSmall.copy(fontFamily = text),
+        displayLargeEmphasized = base.displayLargeEmphasized.copy(fontFamily = display),
+        displayMediumEmphasized = base.displayMediumEmphasized.copy(fontFamily = display),
+        displaySmallEmphasized = base.displaySmallEmphasized.copy(fontFamily = display),
+        headlineLargeEmphasized = base.headlineLargeEmphasized.copy(fontFamily = text),
+        headlineMediumEmphasized = base.headlineMediumEmphasized.copy(fontFamily = text),
+        headlineSmallEmphasized = base.headlineSmallEmphasized.copy(fontFamily = text),
+        titleLargeEmphasized = base.titleLargeEmphasized.copy(fontFamily = text),
+        titleMediumEmphasized = base.titleMediumEmphasized.copy(fontFamily = text),
+        titleSmallEmphasized = base.titleSmallEmphasized.copy(fontFamily = text),
+        bodyLargeEmphasized = base.bodyLargeEmphasized.copy(fontFamily = text),
+        bodyMediumEmphasized = base.bodyMediumEmphasized.copy(fontFamily = text),
+        bodySmallEmphasized = base.bodySmallEmphasized.copy(fontFamily = text),
+        labelLargeEmphasized = base.labelLargeEmphasized.copy(fontFamily = text),
+        labelMediumEmphasized = base.labelMediumEmphasized.copy(fontFamily = text),
+        labelSmallEmphasized = base.labelSmallEmphasized.copy(fontFamily = text),
+    )
+}
+
+val Typography = terminalTypography()

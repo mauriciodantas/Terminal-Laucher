@@ -68,29 +68,6 @@ fun GeneralPreferences(modifier: Modifier = Modifier) {
             )
         }
 
-        PreferenceGroup(heading = stringResource(id = R.string.colors)) {
-            val accentAdapter = prefs2.accentColor.getAdapter()
-            val guardedAccent = remember(accentAdapter) {
-                object : PreferenceAdapter<ColorOption> {
-                    override val state = accentAdapter.state
-                    override fun onChange(newValue: ColorOption) {
-                        if (ColorGuard.conflicts(context, ColorGuard.Role.ACCENT, newValue)) {
-                            Toast.makeText(context, R.string.color_conflict_accent, Toast.LENGTH_LONG).show()
-                        } else {
-                            accentAdapter.onChange(newValue)
-                        }
-                    }
-                }
-            }
-            ListPreference(
-                adapter = guardedAccent,
-                entries = phosphorEntries,
-                label = stringResource(id = R.string.phosphor_color_label),
-            )
-            ColorPreference(preference = prefs2.accentColor)
-            ColorPreference(preference = prefs2.launcherBackgroundColor)
-        }
-
         val notificationEnabled by remember { notificationDotsEnabled(context) }.collectAsStateWithLifecycle(initialValue = false)
         val serviceEnabled = notificationServiceEnabled()
 

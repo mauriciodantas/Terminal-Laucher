@@ -18,6 +18,7 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.core.graphics.ColorUtils
 import app.lawnchair.LawnchairLauncher
+import app.lawnchair.font.UiFont
 import app.lawnchair.launcher
 import app.lawnchair.smartspace.glance.GlancePanelController
 import app.lawnchair.theme.LauncherGround
@@ -82,7 +83,25 @@ class SmartspaceViewContainer @JvmOverloads constructor(
         }
         root.findViewById<View>(R.id.nostromo_panel_title)?.setBackgroundColor(phosphor)
         root.findViewById<TextView>(R.id.nostromo_target_secondary)?.setTextColor(dim)
+        applyFont(root)
         root.findViewById<TextView>(R.id.nostromo_target_primary)?.setTextColor(LauncherGround.ink(context))
+    }
+
+    /** Puts the font the user picked under Appearance on the readout; the clock follows the pixel switch. */
+    private fun applyFont(root: View) {
+        listOf(
+            R.id.nostromo_header,
+            R.id.nostromo_date,
+            R.id.nostromo_status,
+            R.id.nostromo_quick_label,
+            R.id.nostromo_panel_name,
+            R.id.nostromo_panel_state,
+            R.id.nostromo_target_primary,
+            R.id.nostromo_target_secondary,
+        ).forEach { id -> root.findViewById<TextView>(id)?.let { UiFont.apply(it) } }
+        listOf(R.id.nostromo_clock, R.id.nostromo_target_lead).forEach { id ->
+            root.findViewById<TextView>(id)?.let { UiFont.applyToClock(it) }
+        }
     }
 
     /** Battery percentage and a five-segment bar, e.g. "87% ▮▮▮▮▯". */

@@ -1330,6 +1330,16 @@
     <string name="follow_accent" translatable="false">Seguir o destaque</string>
     <string name="color_conflict_accent" translatable="false">Essa cor é parecida demais com a cor de fundo: o texto ficaria ilegível e você perderia o acesso às configurações. Escolha outra.</string>
     <string name="color_conflict_background" translatable="false">Essa cor é parecida demais com a cor do destaque: o texto ficaria ilegível e você perderia o acesso às configurações. Escolha outra.</string>
+    <string name="appearance_color_search_outline" translatable="false">Contorno da barra de busca</string>
+    <string name="appearance_color_dock" translatable="false">Fundo do dock</string>
+    <string name="appearance_color_folders" translatable="false">Fundo das pastas</string>
+    <string name="appearance_label" translatable="false">Aparência</string>
+    <string name="appearance_description" translatable="false">Cores, fonte e relógio</string>
+    <string name="appearance_group_colors" translatable="false">Cores</string>
+    <string name="appearance_group_font" translatable="false">Fonte</string>
+    <string name="appearance_font_ui" translatable="false">Fonte da interface</string>
+    <string name="appearance_pixel_clock" translatable="false">Relógio pixelado</string>
+    <string name="appearance_pixel_clock_desc" translatable="false">O relógio e os valores grandes do painel ficam na fonte pixelada. Desligado, usam a fonte da interface</string>
     <string name="launcher_bg_default" translatable="false">Padrão (preto do terminal)</string>
     <string name="launcher_bg_color_label" translatable="false">Cor de fundo</string>
     <string name="glance_auto_rotate" translatable="false">Alternar os alvos sozinho</string>

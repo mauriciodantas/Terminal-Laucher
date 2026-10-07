@@ -27,6 +27,7 @@ import app.lawnchair.ui.preferences.components.search.SearchProviderId
 import app.lawnchair.ui.preferences.components.search.SearchProviderPreferenceScreen
 import app.lawnchair.ui.preferences.destinations.AppDrawerFoldersPreference
 import app.lawnchair.ui.preferences.destinations.AppDrawerPreferences
+import app.lawnchair.ui.preferences.destinations.AppearancePreferences
 import app.lawnchair.ui.preferences.destinations.BackupAndRestorePreference
 import app.lawnchair.ui.preferences.destinations.CommandActionsPreferences
 import app.lawnchair.ui.preferences.destinations.CustomIconShapePreference
@@ -110,6 +111,9 @@ fun PreferenceNavigation(
             DummyPreference()
         }
 
+        composable<Appearance>(
+            deepLinks = getDeepLink(Appearance),
+        ) { AppearancePreferences() }
         composable<General>(
             deepLinks = getDeepLink(General),
         ) { GeneralPreferences() }
