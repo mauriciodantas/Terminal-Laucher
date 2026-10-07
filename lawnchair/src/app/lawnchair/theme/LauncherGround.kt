@@ -33,26 +33,6 @@ object LauncherGround {
 
     fun get(context: Context): Int = custom(context) ?: DEFAULT
 
-    /**
-     * The user's [accent] as it is drawn over [ground]. When it does not contrast enough (a dark
-     * accent on a dark ground, a pale one on a light ground) it is pulled towards white on a dark
-     * ground and towards black on a light one, keeping its hue for as long as it can, so text and
-     * lines in the accent always read without the user having to pick a different color.
-     */
-    fun readable(accent: Int, ground: Int): Int {
-        val base = ground or OPAQUE
-        val color = accent or OPAQUE
-        if (ColorUtils.calculateContrast(color, base) >= READABLE) return accent
-        val towards = if (ColorUtils.calculateLuminance(base) < 0.5) Color.WHITE else Color.BLACK
-        for (step in 1..STEPS) {
-            val mixed = ColorUtils.blendARGB(color, towards, step / STEPS.toFloat())
-            if (ColorUtils.calculateContrast(mixed, base) >= READABLE) return mixed
-        }
-        return towards
-    }
-
-    private const val STEPS = 20
-
     /** The least contrast that still reads as text over a fill. */
     private const val READABLE = 4.5
 
