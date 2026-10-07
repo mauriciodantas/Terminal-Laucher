@@ -6,9 +6,11 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -38,6 +40,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
@@ -533,18 +539,30 @@ private fun <T> PickerDialog(
     )
 }
 
-/** The line a preview shows: the technical intent when the command can run, otherwise why it cannot. */
+/**
+ * The dashed box under the editors: what was typed, the technical intent it produces (or why it
+ * cannot run) and an optional [note].
+ */
 @Composable
-private fun PreviewBox(analysis: Analysis?, intro: String? = null) {
+private fun PreviewBox(analysis: Analysis?, intro: String? = null, note: String? = null) {
     if (analysis == null) return
     val problem = analysis.action == null && analysis.tone == Tone.ERROR
-    Column(Modifier.fillMaxWidth().padding(top = 12.dp)) {
-        Text(
-            stringResource(R.string.cmd_pref_preview),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        if (intro != null) Text(intro, style = MaterialTheme.typography.bodyMedium)
+    val stroke = MaterialTheme.colorScheme.primary
+    Column(
+        Modifier
+            .padding(top = 12.dp)
+            .fillMaxWidth()
+            .drawBehind {
+                drawRoundRect(
+                    color = stroke,
+                    cornerRadius = CornerRadius(8.dp.toPx()),
+                    style = Stroke(width = 1.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f))),
+                )
+            }
+            .padding(10.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        if (intro != null) Text(intro, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace)
         when {
             analysis.needsContacts -> Text(
                 stringResource(R.string.cmd_pref_needs_contacts),
@@ -552,7 +570,7 @@ private fun PreviewBox(analysis: Analysis?, intro: String? = null) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             analysis.intent.isNotEmpty() -> Text(
-                analysis.intent,
+                "⇢ " + analysis.intent,
                 style = MaterialTheme.typography.bodySmall,
                 fontFamily = FontFamily.Monospace,
                 color = MaterialTheme.colorScheme.tertiary,
@@ -562,6 +580,9 @@ private fun PreviewBox(analysis: Analysis?, intro: String? = null) {
                 style = MaterialTheme.typography.bodySmall,
                 color = if (problem) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
             )
+        }
+        if (note != null) {
+            Text(note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -577,8 +598,9 @@ private fun LetterDialog(
     onDismiss: () -> Unit,
 ) {
     var letter by remember { mutableStateOf(step.draft.letter.ifEmpty { suggestLetter(step.draft.label, existing) }) }
+    var name by remember { mutableStateOf(step.draft.label) }
     val error = CustomActions.validateLetter(letter, existing, step.editing)
-    val draft = step.draft.copy(letter = letter.trim().lowercase())
+    val draft = step.draft.copy(letter = letter.trim().lowercase(), label = name.trim())
     val sampleText = stringResource(R.string.cmd_pref_sample_text)
     val sampleContact = stringResource(R.string.cmd_pref_sample_contact)
     val sampleBoth = stringResource(R.string.cmd_pref_sample_both)
@@ -594,20 +616,19 @@ private fun LetterDialog(
     }
     // Without contacts access the preview uses a sample contact, and that one is never run.
     val pool = contacts.ifEmpty { listOf(DemoContact) }
+    val typed = draft.letter + if (sample.isBlank()) "" else " $sample"
     val analysis = if (error != null) {
         null
     } else {
-        val typed = draft.letter + if (sample.isBlank()) "" else " $sample"
         CommandEngine.analyze(typed, emptyList(), pool, true, listOf(draft), emptyList())
     }
     val runnable = (analysis?.action as? CommandAction.Custom)
         ?.takeIf { it.contact !== DemoContact }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(step.draft.label) },
+        title = { Text(stringResource(R.string.cmd_pref_letter_title)) },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                Text(step.draft.usage.replaceBefore(" ·", letter.trim().lowercase()))
                 OutlinedTextField(
                     value = letter,
                     onValueChange = { letter = it.take(MAX_LETTER) },
@@ -615,7 +636,19 @@ private fun LetterDialog(
                     label = { Text(stringResource(R.string.cmd_pref_letter_label)) },
                     isError = error != null,
                     supportingText = { error?.let { Text(it) } },
-                    modifier = Modifier.padding(top = 12.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    singleLine = true,
+                    label = { Text(stringResource(R.string.cmd_pref_name_label)) },
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                )
+                PreviewBox(
+                    analysis,
+                    intro = typed,
+                    note = if (draft.smsFallback) stringResource(R.string.cmd_pref_sms_fallback, draft.label) else null,
                 )
                 if (step.draft.arg != ArgKind.NONE) {
                     OutlinedTextField(
@@ -623,25 +656,28 @@ private fun LetterDialog(
                         onValueChange = { sample = it },
                         singleLine = true,
                         label = { Text(stringResource(R.string.cmd_pref_try_label)) },
-                        modifier = Modifier.padding(top = 8.dp),
+                        modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                     )
                 }
-                PreviewBox(analysis)
             }
         },
+        // One row of buttons, as in the prototype: Remover on the left, the rest on the right.
         confirmButton = {
-            TextButton(
-                enabled = error == null,
-                onClick = { onSave(draft) },
-            ) { Text(stringResource(R.string.cmd_pref_save)) }
-        },
-        dismissButton = {
-            Column {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                if (step.editing != null) {
+                    TextButton(onClick = onRemove) {
+                        Text(stringResource(R.string.cmd_pref_remove), color = MaterialTheme.colorScheme.error)
+                    }
+                }
+                Spacer(Modifier.weight(1f))
                 TextButton(enabled = runnable != null, onClick = { runnable?.let(onTest) }) {
                     Text(stringResource(R.string.cmd_pref_test))
                 }
-                if (step.editing != null) TextButton(onClick = onRemove) { Text(stringResource(R.string.cmd_pref_remove)) }
                 TextButton(onClick = onDismiss) { Text(stringResource(R.string.cmd_pref_cancel)) }
+                TextButton(
+                    enabled = error == null && draft.label.isNotEmpty(),
+                    onClick = { onSave(draft) },
+                ) { Text(stringResource(R.string.cmd_pref_save)) }
             }
         },
     )
@@ -707,18 +743,21 @@ private fun AliasDialog(
             }
         },
         confirmButton = {
-            TextButton(
-                enabled = error == null,
-                onClick = { onSave(CommandAlias(name.trim().lowercase(), expansion.trim())) },
-            ) { Text(stringResource(R.string.cmd_pref_save)) }
-        },
-        dismissButton = {
-            Column {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                if (editing != null) {
+                    TextButton(onClick = onRemove) {
+                        Text(stringResource(R.string.cmd_pref_remove), color = MaterialTheme.colorScheme.error)
+                    }
+                }
+                Spacer(Modifier.weight(1f))
                 TextButton(enabled = analysis?.action != null, onClick = { analysis?.action?.let(onTest) }) {
                     Text(stringResource(R.string.cmd_pref_test))
                 }
-                if (editing != null) TextButton(onClick = onRemove) { Text(stringResource(R.string.cmd_pref_remove)) }
                 TextButton(onClick = onDismiss) { Text(stringResource(R.string.cmd_pref_cancel)) }
+                TextButton(
+                    enabled = error == null,
+                    onClick = { onSave(CommandAlias(name.trim().lowercase(), expansion.trim())) },
+                ) { Text(stringResource(R.string.cmd_pref_save)) }
             }
         },
     )
