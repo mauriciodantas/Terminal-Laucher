@@ -24,8 +24,59 @@ class CommandEngineTest {
 
     @Test fun emptyTextListsTheCommands() {
         val a = run("")
-        assertEquals(listOf("abrir ", "alarme ", "calc ", "ligar "), a.suggestions.map { it.completion })
+        assertEquals(
+            listOf("abrir ", "alarme ", "calc ", "ligar ", "rota ", "t "),
+            a.suggestions.map { it.completion },
+        )
         assertNull(a.action)
+        // 7 commands plus the "w" action: two do not fit.
+        assertEquals(8, a.total)
+    }
+
+    @Test fun emptyTextShowsAliasesAndLettersWhenThereIsRoom() {
+        val a = CommandEngine.analyze("", apps, contacts, true, emptyList(), listOf(CommandAlias("mae", "ligar maria")))
+        assertEquals(CommandEngine.EMPTY_SUGGESTIONS, a.suggestions.size)
+        assertEquals(8, a.total)
+        // Nothing was cut when everything fits.
+        assertEquals(0, CommandEngine.analyze("ca", apps, contacts, true).total)
+    }
+
+    @Test fun questionMarkListsEverythingWithoutTheCut() {
+        val aliases = listOf(CommandAlias("mae", "ligar maria"), CommandAlias("zap", "w ana"))
+        val a = CommandEngine.analyze("?", apps, contacts, true, CustomActions.DEFAULTS, aliases)
+        assertEquals(CommandEngine.COMMANDS.size + 1 + 2, a.suggestions.size)
+        assertEquals("TODOS OS COMANDOS", a.listTitle)
+        assertTrue(a.suggestions.any { it.kind == "APELIDO" && it.label == "mae → ligar maria" })
+        assertTrue(a.suggestions.any { it.kind == "AÇÃO" })
+        assertNull(a.action)
+    }
+
+    @Test fun chipsPutRecentCommandsBeforeAliasesAndLetters() {
+        val chips = CommandEngine.quickChips(
+            listOf("calc 12*8", "w ana oi", "abrir gmail", "ligar maria"),
+            listOf(CommandAlias("mae", "ligar maria")),
+            CustomActions.DEFAULTS,
+        )
+        assertEquals(listOf("calc 12*8", "w ana oi", "abrir gmail", "mae", "w "), chips.map { it.fill })
+        assertEquals(listOf("RECENTE", "RECENTE", "RECENTE", "APELIDO", "AÇÃO"), chips.map { it.kind })
+        assertTrue(CommandEngine.quickChips(emptyList(), emptyList(), emptyList()).isEmpty())
+    }
+
+    // ---- the technical line under the preview ----
+
+    @Test fun intentLineShowsWhatWillBeStarted() {
+        assertEquals("tel:111", run("ligar ana").intent)
+        assertEquals("ACTION_SET_ALARM · 06:30", run("alarme 0630").intent)
+        assertEquals("geo:0,0?q=Av%20Paulista", run("rota Av Paulista").intent)
+        assertEquals("launcher · pkg", run("abrir gmail").intent.take("launcher · pkg".length))
+        assertEquals("", run("ligar").intent)
+    }
+
+    @Test fun intentLineFillsTheTemplateOfACustomAction() {
+        val a = run("w ana chego logo")
+        assertEquals("https://wa.me/111?text=chego%20logo", a.intent)
+        // No message: the empty "?text=" parameter is dropped.
+        assertEquals("https://wa.me/111", run("w ana").intent)
     }
 
     @Test fun partialNameCompletesTheCommand() {

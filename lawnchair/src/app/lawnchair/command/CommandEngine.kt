@@ -37,12 +37,23 @@ data class Analysis(
     val preview: String,
     val tone: Tone,
     val action: CommandAction?,
+    /** The technical line of what [action] asks the system to do ("tel:+55…"); empty when it cannot run. */
+    val intent: String = "",
+    /** How many suggestions exist when the list is cut short; 0 when nothing was cut. */
+    val total: Int = 0,
 )
+
+/** A one-tap start for the empty command line: a recent command, an alias or a custom letter. */
+data class QuickChip(val fill: String, val label: String, val kind: String)
 
 /** Pure rules of the command bar, free of Android types so they can be unit tested. */
 object CommandEngine {
 
     const val MAX_SUGGESTIONS = 4
+
+    /** With nothing typed there is room to show more of what exists. */
+    const val EMPTY_SUGGESTIONS = 6
+    const val MAX_CHIPS = 3
     const val MAX_HISTORY = 8
 
     /** Name, usage line. "c" is a shortcut of "calc". */
@@ -66,6 +77,18 @@ object CommandEngine {
         custom: List<CustomAction> = CustomActions.DEFAULTS,
         aliases: List<CommandAlias> = emptyList(),
     ): Analysis {
+        val analysis = analyzeText(typed, apps, contacts, contactsGranted, custom, aliases)
+        return analysis.action?.let { analysis.copy(intent = describe(it)) } ?: analysis
+    }
+
+    private fun analyzeText(
+        typed: String,
+        apps: List<AppEntry>,
+        contacts: List<ContactEntry>,
+        contactsGranted: Boolean,
+        custom: List<CustomAction>,
+        aliases: List<CommandAlias>,
+    ): Analysis {
         // An alias typed in full stands for its command; a partial one is only suggested.
         val text = Aliases.resolve(typed, aliases).trimStart()
         val m = splitter.find(text)
@@ -74,6 +97,7 @@ object CommandEngine {
         val arg = if (hasArg) m?.groups?.get(3)?.value.orEmpty() else ""
 
         if (!hasArg) {
+            if (token == "?") return analyzeHelp(custom, aliases)
             val bare = custom.firstOrNull { it.letter == token && it.arg == ArgKind.NONE }
             if (bare != null) return analyzeCustom(bare, "", contacts, contactsGranted)
             return analyzeCommandName(text, token, apps, custom, aliases)
@@ -123,8 +147,9 @@ object CommandEngine {
             }
         }
         // A partial word puts the user's own aliases first; with nothing typed the commands lead.
-        val items = (if (token.isEmpty()) commands + aliasItems + matchingApps else aliasItems + commands + matchingApps)
-            .take(MAX_SUGGESTIONS)
+        val ordered = if (token.isEmpty()) commands + aliasItems + matchingApps else aliasItems + commands + matchingApps
+        val limit = if (token.isEmpty()) EMPTY_SUGGESTIONS else MAX_SUGGESTIONS
+        val items = ordered.take(limit)
         // Nothing is a command or alias: a bare word is taken as "abrir <word>".
         if (commands.isEmpty() && aliasItems.isEmpty() && token.isNotEmpty()) {
             val open = analyzeOpen(text.trim(), apps)
@@ -139,8 +164,67 @@ object CommandEngine {
             preview = if (none) "SEM CORRESPONDÊNCIA · ENTER PESQUISA NA REDE" else "COMPLETE PARA VER O RESULTADO",
             tone = Tone.IDLE,
             action = if (none) CommandAction.WebSearch(text.trim()) else null,
+            total = if (ordered.size > items.size) ordered.size else 0,
         )
     }
+
+    /** "?" lists everything the bar understands, without the usual cut. */
+    private fun analyzeHelp(custom: List<CustomAction>, aliases: List<CommandAlias>): Analysis {
+        val items = COMMANDS.map {
+            Suggestion(it.first + " ", it.second, if (it.first.length == 1) "ATALHO" else "COMANDO")
+        } + custom.map { Suggestion(it.letter + " ", it.usage, "AÇÃO") } +
+            aliases.map { Suggestion(it.name, it.name + " → " + it.expansion, "APELIDO") }
+        return Analysis(
+            suggestions = items,
+            listTitle = "TODOS OS COMANDOS",
+            needsContacts = false,
+            previewTitle = "AJUDA",
+            preview = "TOQUE EM UM COMANDO PARA USAR",
+            tone = Tone.IDLE,
+            action = null,
+        )
+    }
+
+    /** Recent commands first, then the user's own aliases and letters, so a tap replaces typing. */
+    fun quickChips(history: List<String>, aliases: List<CommandAlias>, custom: List<CustomAction>): List<QuickChip> {
+        val recent = history.take(MAX_CHIPS).map { QuickChip(it, it, "RECENTE") }
+        val pinned = aliases.take(MAX_CHIPS).map { QuickChip(it.name, it.name, "APELIDO") } +
+            custom.take(MAX_CHIPS).map { QuickChip(it.letter + " ", it.letter, "AÇÃO") }
+        return (recent + pinned).distinctBy { it.fill.trim() }
+    }
+
+    /** What [action] asks the system to do, as a short technical line shown under the preview. */
+    fun describe(action: CommandAction): String = when (action) {
+        is CommandAction.OpenApp -> "launcher · " + action.app.id.substringBefore('/')
+        is CommandAction.SetAlarm -> "ACTION_SET_ALARM · %02d:%02d".format(action.hour, action.minute)
+        is CommandAction.Calc -> "copia \"${action.result}\" para a área de transferência"
+        is CommandAction.Call -> "tel:" + action.contact.number.filter { it.isDigit() || it == '+' }
+        is CommandAction.Route -> "geo:0,0?q=" + encode(action.query)
+        is CommandAction.NewTask -> "ACTION_SEND text/plain · app de tarefas"
+        is CommandAction.WebSearch -> "ACTION_WEB_SEARCH · \"${action.query}\""
+        is CommandAction.Custom -> describeCustom(action)
+    }
+
+    private fun describeCustom(action: CommandAction.Custom): String {
+        val spec = action.action
+        if (spec.kind == ActionKind.SHORTCUT) return "atalho do launcher · " + spec.packages.firstOrNull().orEmpty()
+        if (spec.template.isEmpty()) {
+            return (spec.intentAction.substringAfterLast('.') + " " + spec.mimeType.orEmpty() + " · " + action.text).trim()
+        }
+        val values = mapOf(
+            "{number}" to action.contact?.number?.filter { it.isDigit() }.orEmpty(),
+            "{phone}" to encode(action.contact?.number.orEmpty()),
+            "{name}" to encode(action.contact?.name.orEmpty()),
+            "{text}" to encode(action.text),
+        )
+        var uri = spec.template
+        values.forEach { (key, value) -> uri = uri.replace(key, value) }
+        // Same as the real run: an empty "?text=" parameter is dropped.
+        return uri.replace(Regex("[?&][^?&=]+=$"), "")
+    }
+
+    private fun encode(value: String): String =
+        java.net.URLEncoder.encode(value, "UTF-8").replace("+", "%20")
 
     private fun analyzeOpen(arg: String, apps: List<AppEntry>): Analysis {
         val q = arg.trim().foldAccents()
