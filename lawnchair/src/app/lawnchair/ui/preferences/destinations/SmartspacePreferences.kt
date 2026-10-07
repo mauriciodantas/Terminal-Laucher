@@ -178,6 +178,20 @@ private fun GlanceTargetsPreferences(modifier: Modifier = Modifier) {
             description = stringResource(id = R.string.glance_status_line_desc),
         )
         SwitchPreference(
+            adapter = prefs2.glanceAutoRotate.getAdapter(),
+            label = stringResource(id = R.string.glance_auto_rotate),
+            description = stringResource(id = R.string.glance_auto_rotate_desc),
+        )
+        ListPreference(
+            adapter = prefs2.glanceRotateSeconds.getAdapter(),
+            entries = remember {
+                listOf(5, 8, 15, 30).map { seconds ->
+                    ListPreferenceEntry(value = seconds, label = { stringResource(R.string.glance_rotate_value, seconds) })
+                }
+            },
+            label = stringResource(id = R.string.glance_rotate_every),
+        )
+        SwitchPreference(
             adapter = prefs2.glanceAutoPriority.getAdapter(),
             label = stringResource(id = R.string.glance_auto_priority),
             description = stringResource(id = R.string.glance_auto_priority_desc),

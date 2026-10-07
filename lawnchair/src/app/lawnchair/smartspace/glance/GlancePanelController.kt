@@ -71,6 +71,16 @@ class GlancePanelController(
         }
     }
 
+    /** Moves to the next target every few seconds while somebody is looking at the panel. */
+    private val rotate = object : Runnable {
+        override fun run() {
+            rotateIfWatched()
+            handler.postDelayed(this, rotateIntervalMs())
+        }
+    }
+
+    private fun rotateIntervalMs() = prefs2.glanceRotateSeconds.firstCached().coerceAtLeast(MIN_ROTATE_SECONDS) * 1000L
+
     private var fitScheduled = false
 
     /**
@@ -141,6 +151,7 @@ class GlancePanelController(
                 .collect { (style, file, tint) -> renderAnimation(style, file, tint) }
         }
         handler.postDelayed(tick, REFRESH_MS)
+        handler.postDelayed(rotate, rotateIntervalMs())
         if (!previewMode) {
             runCatching {
                 context.getSystemService(CameraManager::class.java)
@@ -364,11 +375,42 @@ class GlancePanelController(
      * was there first.
      */
     private fun chooseSelected(): String? {
-        val holding = userPickedAt != 0L && clock() - userPickedAt < USER_HOLD_MS
+        val ids = panel.tabs.map { it.id }
+        // A target that was not there before (a track that starts playing) comes to the front.
+        val arrived = ids.firstOrNull { it !in seenIds }
+        seenIds = ids.toSet()
         return when {
-            holding && panel.tabs.any { it.id == selectedId } -> selectedId
-            else -> (panel.urgentId ?: panel.tabs.firstOrNull()?.id)
+            holdingUserPick() && selectedId in ids -> selectedId
+
+            panel.urgentId != null -> panel.urgentId
+
+            arrived != null -> arrived
+
+            // Turning through the targets on its own, the panel stays where it stopped.
+            selectedId in ids && prefs2.glanceAutoRotate.firstCached() -> selectedId
+
+            else -> ids.firstOrNull()
         }
+    }
+
+    private var seenIds: Set<String> = emptySet()
+
+    private fun holdingUserPick() = userPickedAt != 0L && clock() - userPickedAt < USER_HOLD_MS
+
+    /** True while the panel is on screen, in front and the screen is on: nobody to show it to otherwise. */
+    private fun isBeingWatched(): Boolean {
+        val power = context.getSystemService(android.os.PowerManager::class.java)
+        return root.isAttachedToWindow && root.isShown && root.hasWindowFocus() && power?.isInteractive != false
+    }
+
+    private fun rotateIfWatched() {
+        if (!prefs2.glanceAutoRotate.firstCached()) return
+        if (panel.tabs.size < 2 || !isBeingWatched() || holdingUserPick()) return
+        // An event that is about to begin stays in front.
+        if (panel.urgentId != null) return
+        val next = panel.tabs.indexOfFirst { it.id == selectedId } + 1
+        selectedId = panel.tabs[next % panel.tabs.size].id
+        render()
     }
 
     /** The title bar is a solid fill, so its text takes the color that reads over it. */
@@ -520,6 +562,9 @@ class GlancePanelController(
 
         /** How long a tab the user picked stays in front before the panel follows the priority again. */
         private const val USER_HOLD_MS = 45_000L
+
+        /** The shortest time a target stays up while the panel turns through them. */
+        private const val MIN_ROTATE_SECONDS = 3
 
         /** The clock size of the layout, and the smaller one used when the panel is short on height. */
         private const val CLOCK_SP = 44f

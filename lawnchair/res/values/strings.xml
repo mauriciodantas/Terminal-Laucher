@@ -1330,6 +1330,10 @@
     <string name="follow_accent" translatable="false">Seguir o destaque</string>
     <string name="launcher_bg_default" translatable="false">Padrão (preto do terminal)</string>
     <string name="launcher_bg_color_label" translatable="false">Cor de fundo</string>
+    <string name="glance_auto_rotate" translatable="false">Alternar os alvos sozinho</string>
+    <string name="glance_auto_rotate_desc" translatable="false">Passa para o próximo alvo de tempos em tempos enquanto você olha o painel</string>
+    <string name="glance_rotate_every" translatable="false">Tempo de cada alvo</string>
+    <string name="glance_rotate_value" translatable="false">%1$d s</string>
     <string name="glance_group_animation" translatable="false">Animação</string>
     <string name="glance_animation" translatable="false">Animação ao lado do valor</string>
     <string name="glance_animation_off" translatable="false">Nenhuma</string>

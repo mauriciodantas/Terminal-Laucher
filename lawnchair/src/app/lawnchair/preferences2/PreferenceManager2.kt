@@ -880,6 +880,18 @@ class PreferenceManager2 @Inject constructor(
         defaultValue = true,
     )
 
+    /** Turns through the At a Glance targets on its own while the panel is being looked at. */
+    val glanceAutoRotate = preference(
+        key = booleanPreferencesKey("glance_auto_rotate"),
+        defaultValue = true,
+    )
+
+    /** Seconds each target stays up when [glanceAutoRotate] is on. */
+    val glanceRotateSeconds = preference(
+        key = intPreferencesKey("glance_rotate_seconds"),
+        defaultValue = 8,
+    )
+
     /** The animation beside the big value of the At a Glance panel. */
     val glanceAnimation = preference(
         key = stringPreferencesKey("glance_animation"),
