@@ -21,6 +21,7 @@ import android.app.ActivityOptions
 import android.content.Context
 import android.content.Intent
 import android.graphics.RectF
+import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Pair
@@ -50,6 +51,7 @@ import app.lawnchair.preferences2.PreferenceManager2
 import app.lawnchair.preferences2.firstCached
 import app.lawnchair.root.RootHelperManager
 import app.lawnchair.root.RootNotAvailableException
+import app.lawnchair.theme.LauncherGround
 import app.lawnchair.theme.ThemeProvider
 import app.lawnchair.ui.onboarding.OnboardingActivity
 import app.lawnchair.ui.popup.LauncherOptionsPopup
@@ -291,6 +293,10 @@ class LawnchairLauncher : QuickstepLauncher() {
         }
         prefs.windowCornerRadius.subscribeValues(this) {
             QuickStepContract.sCustomCornerRadius = it.toFloat()
+        }
+        preferenceManager2.launcherBackgroundColor.onEach(launchIn = lifecycleScope) { option ->
+            // Default (0) keeps the terminal black from the theme; anything else is the user's pick.
+            window?.setBackgroundDrawable(ColorDrawable(LauncherGround.resolve(option, this) ?: getColor(R.color.terminal_background)))
         }
         preferenceManager2.roundedWidgets.onEach(launchIn = lifecycleScope) {
             RoundedCornerEnforcement.sRoundedCornerEnabled = it

@@ -3,6 +3,7 @@ package app.lawnchair.theme.color.tokens
 import android.content.Context
 import android.util.Log
 import androidx.core.graphics.ColorUtils
+import app.lawnchair.theme.LauncherGround
 import app.lawnchair.theme.ResourceToken
 import app.lawnchair.theme.ThemeProvider
 import app.lawnchair.theme.UiColorMode
@@ -121,7 +122,7 @@ data class PhosphorColorToken(
 
     override fun resolve(context: Context, scheme: ColorScheme, uiColorMode: UiColorMode): Color {
         val phosphor = ThemeProvider.INSTANCE.get(context).phosphorColor
-        return AndroidColor(ColorUtils.blendARGB(GROUND, phosphor, mix))
+        return AndroidColor(ColorUtils.blendARGB(LauncherGround.get(context), phosphor, mix))
     }
 
     companion object {

@@ -1,7 +1,9 @@
 package app.lawnchair.ui.preferences.components.colorpreference
 
 import android.content.Context
+import androidx.compose.ui.res.stringResource
 import app.lawnchair.preferences2.PreferenceManager2
+import app.lawnchair.theme.color.ColorOption
 import com.android.launcher3.R
 import com.android.launcher3.dagger.ApplicationContext
 import com.android.launcher3.dagger.LauncherAppComponent
@@ -29,6 +31,20 @@ class ColorPreferenceModelList @Inject constructor(
                 prefObject = prefs.strokeColorStyle,
                 labelRes = R.string.qsb_hotseat_stroke_color,
                 dynamicEntries = dynamicColors,
+            ),
+        )
+        registerModel(
+            ColorPreferenceModel(
+                prefObject = prefs.launcherBackgroundColor,
+                labelRes = R.string.launcher_bg_color_label,
+                // The system accent and the wallpaper color make no sense as a background: only the default and custom colors.
+                dynamicEntries = listOf(
+                    ColorPreferenceEntry<ColorOption>(
+                        ColorOption.Default,
+                        { stringResource(R.string.launcher_bg_default) },
+                        { 0 },
+                    ),
+                ),
             ),
         )
         registerModel(

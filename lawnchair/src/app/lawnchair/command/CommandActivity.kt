@@ -75,6 +75,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import app.lawnchair.theme.LauncherGround
 import app.lawnchair.theme.color.tokens.PhosphorColorToken
 import app.lawnchair.ui.theme.LawnchairTheme
 import com.android.launcher3.R
@@ -142,7 +143,6 @@ private val Mono = FontFamily(
     Font(R.font.ibm_plex_mono_semibold, FontWeight.SemiBold),
 )
 
-private val Ground = Color(0xFF07090A)
 private val Danger = Color(0xFFFF5A45)
 private val Amber = Color(0xFFF2B84B)
 
@@ -328,10 +328,11 @@ private fun CommandScreen(onClose: () -> Unit) {
         if (startWithVoice) runCatching { voice.launch(voiceIntent) } else focus.requestFocus()
     }
 
+    val ground = remember { Color(LauncherGround.get(context)) }
     Box(
         Modifier
             .fillMaxSize()
-            .background(Ground)
+            .background(ground)
             .systemBarsPadding()
             .imePadding(),
     ) {

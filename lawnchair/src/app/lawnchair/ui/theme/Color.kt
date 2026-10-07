@@ -8,6 +8,7 @@ import androidx.annotation.ColorInt
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.core.graphics.ColorUtils
+import app.lawnchair.theme.LauncherGround
 import app.lawnchair.theme.UiColorMode
 import app.lawnchair.theme.color.tokens.ColorTokens
 import com.android.launcher3.R
@@ -71,8 +72,8 @@ object Nostromo {
 }
 
 /** Builds the terminal color scheme for the given phosphor [accent] color. */
-fun nostromoColorScheme(accent: Int): androidx.compose.material3.ColorScheme {
-    fun shade(mix: Float) = androidx.compose.ui.graphics.Color(ColorUtils.blendARGB(0xFF07090A.toInt(), accent, mix))
+fun nostromoColorScheme(accent: Int, groundColor: Int = LauncherGround.DEFAULT): androidx.compose.material3.ColorScheme {
+    fun shade(mix: Float) = androidx.compose.ui.graphics.Color(ColorUtils.blendARGB(groundColor, accent, mix))
     val phosphor = shade(1f)
     val ground = shade(0f)
     val dim = shade(0.62f)

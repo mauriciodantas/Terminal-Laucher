@@ -226,9 +226,9 @@ private fun getAllAppsBaseColor(context: Context, defaultColor: Int): Int {
     val prefs2 = PreferenceManager2.getInstance(context)
     val colorOptions: ColorOption = prefs2.appDrawerBackgroundColor.firstCached()
     val color = colorOptions.colorPreferenceEntry.lightColor.invoke(context)
-    // Terminal: the drawer is black unless the user picked a color. The theme default (a tinted
+    // Terminal: the drawer follows the launcher background color, and is black when neither was picked. The theme default (a tinted
     // surface) is ignored on purpose.
-    val baseColor = if (color != 0) color else android.graphics.Color.BLACK
+    val baseColor = if (color != 0) color else app.lawnchair.theme.LauncherGround.custom(context) ?: android.graphics.Color.BLACK
     return ColorUtils.setAlphaComponent(baseColor, 255)
 }
 

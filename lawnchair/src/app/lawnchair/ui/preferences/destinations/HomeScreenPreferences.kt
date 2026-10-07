@@ -28,6 +28,7 @@ import app.lawnchair.preferences2.preferenceManager2
 import app.lawnchair.theme.color.ColorMode
 import app.lawnchair.ui.preferences.LocalIsExpandedScreen
 import app.lawnchair.ui.preferences.components.NavigationActionPreference
+import app.lawnchair.ui.preferences.components.colorpreference.ColorPreference
 import app.lawnchair.ui.preferences.components.controls.ListPreference
 import app.lawnchair.ui.preferences.components.controls.SliderPreference
 import app.lawnchair.ui.preferences.components.controls.SwitchPreference
@@ -83,6 +84,12 @@ fun HomeScreenPreferences(
                 label = stringResource(id = R.string.terminal_icon_effect),
                 description = stringResource(id = R.string.terminal_icon_effect_desc),
             )
+        }
+        PreferenceGroup(
+            heading = stringResource(id = R.string.launcher_background_group),
+            modifier = Modifier.padding(top = 8.dp),
+        ) {
+            ColorPreference(preference = prefs2.launcherBackgroundColor)
         }
         PreferenceGroup(
             heading = stringResource(id = R.string.effects_group),

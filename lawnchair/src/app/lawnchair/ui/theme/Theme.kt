@@ -37,6 +37,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import app.lawnchair.preferences2.asState
 import app.lawnchair.preferences2.preferenceManager2
+import app.lawnchair.theme.LauncherGround
 import app.lawnchair.theme.ThemeProvider
 import app.lawnchair.wallpaper.WallpaperManagerCompat
 import com.android.launcher3.Utilities
@@ -86,7 +87,13 @@ fun ComponentActivity.EdgeToEdge() {
 fun getColorScheme(@Suppress("UNUSED_PARAMETER") darkTheme: Boolean): ColorScheme {
     val context = LocalContext.current
     val accentColor by preferenceManager2().accentColor.asState()
-    return remember(accentColor) { nostromoColorScheme(ThemeProvider.INSTANCE.get(context).phosphorColor) }
+    val background by preferenceManager2().launcherBackgroundColor.asState()
+    return remember(accentColor, background) {
+        nostromoColorScheme(
+            ThemeProvider.INSTANCE.get(context).phosphorColor,
+            LauncherGround.resolve(background, context) ?: LauncherGround.DEFAULT,
+        )
+    }
 }
 
 // The Nostromo interface is always a dark phosphor terminal.

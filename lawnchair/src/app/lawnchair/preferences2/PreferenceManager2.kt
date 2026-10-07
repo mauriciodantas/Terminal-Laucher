@@ -212,6 +212,16 @@ class PreferenceManager2 @Inject constructor(
         defaultValue = ColorOption.fromString(context.getString(R.string.config_default_accent_color)),
     )
 
+    /** The home screen background. [ColorOption.Default] keeps the terminal black of the theme. */
+    val launcherBackgroundColor = preference(
+        key = stringPreferencesKey(name = "launcher_bg_color"),
+        parse = ColorOption::fromString,
+        save = ColorOption::toString,
+        // The app drawer and the theme read it when they are built.
+        onSet = { reloadHelper.recreate() },
+        defaultValue = ColorOption.Default,
+    )
+
     val hotseatBackgroundColor = preference(
         key = stringPreferencesKey(name = "hotseat_bg_color"),
         parse = ColorOption::fromString,
