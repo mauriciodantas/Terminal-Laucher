@@ -23,6 +23,7 @@ import android.view.ContextThemeWrapper
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -51,10 +52,13 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.lawnchair.preferences.PreferenceAdapter
 import app.lawnchair.preferences.getAdapter
+import app.lawnchair.preferences2.asState
 import app.lawnchair.preferences2.preferenceManager2
 import app.lawnchair.smartspace.SmartspaceViewContainer
 import app.lawnchair.smartspace.glance.ChatCandidate
 import app.lawnchair.smartspace.glance.ChatShortcuts
+import app.lawnchair.smartspace.glance.GlanceAnimationFile
+import app.lawnchair.smartspace.glance.GlanceAnimationStyle
 import app.lawnchair.smartspace.glance.GlanceEngine
 import app.lawnchair.smartspace.glance.GlanceSetup
 import app.lawnchair.smartspace.glance.GlanceSetupIntents
@@ -82,7 +86,9 @@ import app.lawnchair.ui.theme.isSelectedThemeDark
 import app.lawnchair.ui.theme.preferenceGroupColor
 import com.android.launcher3.R
 import com.kieronquinn.app.smartspacer.sdk.SmartspacerConstants
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun SmartspacePreferences(
@@ -186,6 +192,7 @@ private fun GlanceTargetsPreferences(modifier: Modifier = Modifier) {
             label = stringResource(id = R.string.glance_lead_time),
         )
     }
+    GlanceAnimationPreferences(modifier = Modifier.padding(top = 8.dp))
     PreferenceGroup(
         heading = stringResource(id = R.string.glance_group_shortcuts),
         modifier = Modifier.padding(top = 8.dp),
@@ -196,6 +203,73 @@ private fun GlanceTargetsPreferences(modifier: Modifier = Modifier) {
             description = stringResource(id = R.string.glance_shortcuts_desc),
         )
     }
+}
+
+/** The animation beside the big value: one of the drawn readouts or the user's own Lottie file. */
+@Composable
+private fun GlanceAnimationPreferences(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val prefs2 = preferenceManager2()
+    val scope = rememberCoroutineScope()
+    val style by prefs2.glanceAnimation.asState()
+    val stored by prefs2.glanceAnimationFile.asState()
+    var busy by remember { mutableStateOf(false) }
+
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        busy = true
+        scope.launch {
+            val result = withContext(Dispatchers.IO) { GlanceAnimationFile.import(context, uri) }
+            busy = false
+            when (result) {
+                is GlanceAnimationFile.Result.Imported -> prefs2.glanceAnimationFile.set(result.stored)
+
+                GlanceAnimationFile.Result.TooBig ->
+                    Toast.makeText(context, R.string.glance_animation_too_big, Toast.LENGTH_LONG).show()
+
+                GlanceAnimationFile.Result.Invalid ->
+                    Toast.makeText(context, R.string.glance_animation_invalid, Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    PreferenceGroup(heading = stringResource(id = R.string.glance_group_animation), modifier = modifier) {
+        ListPreference(
+            adapter = prefs2.glanceAnimation.getAdapter(),
+            entries = remember {
+                GlanceAnimationStyle.entries.map { entry ->
+                    ListPreferenceEntry(value = entry, label = { stringResource(animationLabel(entry)) })
+                }
+            },
+            label = stringResource(id = R.string.glance_animation),
+        )
+        if (style == GlanceAnimationStyle.CUSTOM) {
+            val hasFile = stored.isNotBlank() && GlanceAnimationFile.exists(context)
+            ClickablePreference(
+                label = stringResource(R.string.glance_animation_pick),
+                subtitle = when {
+                    busy -> stringResource(R.string.glance_animation_loading)
+                    hasFile -> GlanceAnimationFile.displayName(stored)
+                    else -> stringResource(R.string.glance_animation_none)
+                },
+                onClick = { picker.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
+            )
+            SwitchPreference(
+                adapter = prefs2.glanceAnimationTint.getAdapter(),
+                label = stringResource(R.string.glance_animation_tint),
+                description = stringResource(R.string.glance_animation_tint_desc),
+            )
+        }
+    }
+}
+
+private fun animationLabel(style: GlanceAnimationStyle) = when (style) {
+    GlanceAnimationStyle.OFF -> R.string.glance_animation_off
+    GlanceAnimationStyle.RADAR -> R.string.glance_animation_radar
+    GlanceAnimationStyle.SONAR -> R.string.glance_animation_sonar
+    GlanceAnimationStyle.WAVE -> R.string.glance_animation_wave
+    GlanceAnimationStyle.BARS -> R.string.glance_animation_bars
+    GlanceAnimationStyle.CUSTOM -> R.string.glance_animation_custom
 }
 
 /** "Conversas rápidas": which WhatsApp chat shortcuts appear above the dock icons. */

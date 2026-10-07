@@ -16,20 +16,28 @@ import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 import app.lawnchair.preferences2.PreferenceManager2
 import app.lawnchair.preferences2.firstCached
+import app.lawnchair.smartspace.GlanceAnimationView
 import app.lawnchair.smartspace.model.SmartspaceAction
 import app.lawnchair.smartspace.model.SmartspaceTarget
 import app.lawnchair.smartspace.provider.SmartspaceProvider
 import app.lawnchair.theme.color.tokens.PhosphorColorToken
+import com.airbnb.lottie.LottieAnimationView
+import com.airbnb.lottie.LottieDrawable
+import com.airbnb.lottie.LottieProperty
+import com.airbnb.lottie.SimpleColorFilter
+import com.airbnb.lottie.model.KeyPath
 import com.android.launcher3.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 /**
@@ -122,6 +130,15 @@ class GlancePanelController(
                     refresh()
                 }
         }
+        newScope.launch {
+            // The picture in the settings preview follows the choices as they are made.
+            combine(
+                prefs2.glanceAnimation.get(),
+                prefs2.glanceAnimationFile.get(),
+                prefs2.glanceAnimationTint.get(),
+            ) { style, file, tint -> Triple(style, file, tint) }
+                .collect { (style, file, tint) -> renderAnimation(style, file, tint) }
+        }
         handler.postDelayed(tick, REFRESH_MS)
         if (!previewMode) {
             runCatching {
@@ -153,6 +170,39 @@ class GlancePanelController(
         autoPriority = prefs2.glanceAutoPriority.firstCached(),
         urgentWindowMinutes = GlanceEngine.normalizeLeadMinutes(prefs2.glanceLeadMinutes.firstCached()),
     )
+
+    /**
+     * Fills the slot beside the big value: a drawn readout, the user's Lottie file, or nothing. A
+     * custom choice with no usable file falls back to the radar, so the slot is never left blank.
+     */
+    private fun renderAnimation(style: GlanceAnimationStyle, file: String, tint: Boolean) {
+        val slot = root.findViewById<FrameLayout>(R.id.nostromo_anim_slot) ?: return
+        slot.removeAllViews()
+        if (style == GlanceAnimationStyle.OFF) {
+            slot.visibility = View.GONE
+            return
+        }
+        slot.visibility = View.VISIBLE
+        fun drawn(s: GlanceAnimationStyle) {
+            slot.removeAllViews()
+            slot.addView(GlanceAnimationView(context).apply { this.style = s })
+        }
+        if (style != GlanceAnimationStyle.CUSTOM || file.isBlank() || !GlanceAnimationFile.exists(context)) {
+            drawn(if (style == GlanceAnimationStyle.CUSTOM) GlanceAnimationStyle.RADAR else style)
+            return
+        }
+        val view = LottieAnimationView(context).apply {
+            repeatCount = LottieDrawable.INFINITE
+            // The file is a private copy; the revision in the key makes a new import reload it.
+            setAnimation(GlanceAnimationFile.file(context).inputStream(), file)
+            setFailureListener { drawn(GlanceAnimationStyle.RADAR) }
+            if (tint) {
+                addValueCallback(KeyPath("**"), LottieProperty.COLOR_FILTER) { SimpleColorFilter(phosphor) }
+            }
+            playAnimation()
+        }
+        slot.addView(view, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+    }
 
     /** Updates the line under the date: sound profile, storage and memory, or the fixed text. */
     private fun renderStatusLine() {

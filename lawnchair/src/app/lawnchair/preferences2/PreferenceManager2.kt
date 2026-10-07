@@ -42,6 +42,7 @@ import app.lawnchair.preferences.PreferenceManager as LawnchairPreferenceManager
 import app.lawnchair.qsb.providers.QsbSearchProvider
 import app.lawnchair.search.algorithms.LawnchairSearchAlgorithm
 import app.lawnchair.search.algorithms.engine.provider.web.WebSearchProvider
+import app.lawnchair.smartspace.glance.GlanceAnimationStyle
 import app.lawnchair.smartspace.model.SmartspaceCalendar
 import app.lawnchair.smartspace.model.SmartspaceMode
 import app.lawnchair.smartspace.model.SmartspaceTimeFormat
@@ -865,6 +866,26 @@ class PreferenceManager2 @Inject constructor(
 
     val glanceChatBadge = preference(
         key = booleanPreferencesKey("glance_chat_badge"),
+        defaultValue = true,
+    )
+
+    /** The animation beside the big value of the At a Glance panel. */
+    val glanceAnimation = preference(
+        key = stringPreferencesKey("glance_animation"),
+        defaultValue = GlanceAnimationStyle.OFF,
+        parse = { GlanceAnimationStyle.fromId(it) },
+        save = { it.id },
+    )
+
+    /** The user's own Lottie file: `"<revision>|<name>"`, empty when there is none. See [GlanceAnimationFile]. */
+    val glanceAnimationFile = preference(
+        key = stringPreferencesKey("glance_animation_file"),
+        defaultValue = "",
+    )
+
+    /** Paints the custom animation in the theme color instead of the colors it was drawn with. */
+    val glanceAnimationTint = preference(
+        key = booleanPreferencesKey("glance_animation_tint"),
         defaultValue = true,
     )
 
