@@ -346,17 +346,30 @@ class GlancePanelController(
         val glanceTargets = latest.map { it.toGlanceTarget() }
         actions = latest.associate { it.id to (it.headerAction ?: it.baseAction) }
         panel = GlanceEngine.build(glanceTargets, settings(), clock())
-        if (selectedId == null || panel.tabs.none { it.id == selectedId }) {
-            selectedId = panel.tabs.firstOrNull()?.id
-        }
-        // An event that just became urgent takes the front, unless the user is reading another tab.
-        if (panel.urgentId != null && selectedId != panel.urgentId && !userPicked) {
-            selectedId = panel.urgentId
-        }
+        selectedId = chooseSelected()
         render()
     }
 
-    private var userPicked = false
+    /** When the user last picked a tab by hand, in the [clock]'s millis; 0 when they never did. */
+    private var userPickedAt = 0L
+
+    private fun pickedByUser() {
+        userPickedAt = clock()
+    }
+
+    /**
+     * The tab to show. What the user picked stays for [USER_HOLD_MS] so it is not pulled away while
+     * they read it; after that the panel follows the priority again, so a track that starts playing
+     * or an event that is about to begin comes to the front instead of the panel staying on whatever
+     * was there first.
+     */
+    private fun chooseSelected(): String? {
+        val holding = userPickedAt != 0L && clock() - userPickedAt < USER_HOLD_MS
+        return when {
+            holding && panel.tabs.any { it.id == selectedId } -> selectedId
+            else -> (panel.urgentId ?: panel.tabs.firstOrNull()?.id)
+        }
+    }
 
     /** The title bar is a solid fill, so its text takes the color that reads over it. */
     private fun colorTitleBar(title: TextView?, tag: TextView?, fill: Int) {
@@ -409,7 +422,8 @@ class GlancePanelController(
         tag?.text = if (urgent) {
             context.getString(R.string.glance_tag_priority)
         } else {
-            "[%02d/%02d]".format(panel.tabs.indexOf(selected) + 1, panel.tabs.size)
+            // A trailing arrow shows the title bar changes the target when there is more than one.
+            "[%02d/%02d]".format(panel.tabs.indexOf(selected) + 1, panel.tabs.size) + if (panel.tabs.size > 1) " ▸" else ""
         }
         bar?.setBackgroundColor(if (urgent) urgentColor else phosphor)
         colorTitleBar(title, tag, if (urgent) urgentColor else phosphor)
@@ -452,7 +466,7 @@ class GlancePanelController(
             tabs.visibility = View.GONE
             bar?.setOnClickListener {
                 val next = panel.tabs.indexOfFirst { it.id == selectedId } + 1
-                userPicked = true
+                pickedByUser()
                 selectedId = panel.tabs[next % panel.tabs.size].id
                 render()
             }
@@ -482,7 +496,7 @@ class GlancePanelController(
             minHeight = (36 * density).toInt()
             contentDescription = target.kind.label
             setOnClickListener {
-                userPicked = true
+                pickedByUser()
                 selectedId = target.id
                 render()
             }
@@ -503,6 +517,9 @@ class GlancePanelController(
         /** Optional extra a provider may set on an action: the event start, in epoch millis. */
         const val EXTRA_STARTS_AT = "glance_starts_at_millis"
         private const val REFRESH_MS = 60_000L
+
+        /** How long a tab the user picked stays in front before the panel follows the priority again. */
+        private const val USER_HOLD_MS = 45_000L
 
         /** The clock size of the layout, and the smaller one used when the panel is short on height. */
         private const val CLOCK_SP = 44f
