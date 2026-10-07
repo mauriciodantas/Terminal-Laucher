@@ -101,8 +101,14 @@ private fun ImportDialog(
         text = {
             Column(modifier = Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) {
                 Text(
-                    stringResource(R.string.cmd_imp_warning),
+                    stringResource(R.string.cmd_imp_summary, pack.actions.size, pack.aliases.size),
                     style = MaterialTheme.typography.bodyMedium,
+                )
+                Text(
+                    stringResource(R.string.cmd_imp_warning),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 6.dp),
                 )
                 if (pack.blocked > 0) {
                     Text(

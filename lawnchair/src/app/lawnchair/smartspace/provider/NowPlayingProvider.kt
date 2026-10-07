@@ -83,7 +83,9 @@ class NowPlayingProvider(context: Context) :
             intent,
             activity.getString(R.string.glance_media_setup_title),
             message,
-            activity.getString(R.string.glance_open_settings),
+            activity.getString(
+                if (step == MediaSetupStep.GRANT_ACCESS) R.string.glance_media_access_action else R.string.glance_media_dots_action,
+            ),
         )
     }
 }

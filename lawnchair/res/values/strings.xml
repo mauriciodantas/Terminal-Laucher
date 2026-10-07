@@ -1214,7 +1214,9 @@
     <string name="cmd_pref_kind_shortcut" translatable="false">Atalho · </string>
     <string name="cmd_pref_kind_recipe" translatable="false">Receita · </string>
     <string name="cmd_pref_kind_intent" translatable="false">Intent · </string>
-    <string name="cmd_pref_letter_label" translatable="false">Letra do atalho</string>
+    <string name="cmd_pref_letter_label" translatable="false">Letra</string>
+    <string name="cmd_pref_letter_title" translatable="false">Letra da ação</string>
+    <string name="cmd_pref_sms_fallback" translatable="false">Sem o app instalado: abre SMS</string>
     <string name="cmd_pref_try_label" translatable="false">Experimente</string>
     <string name="cmd_pref_sample_text" translatable="false">exemplo</string>
     <string name="cmd_pref_sample_contact" translatable="false">ana</string>
@@ -1227,6 +1229,8 @@
     <string name="cmd_pref_alias_hint" translatable="false">Digitado ou falado. Acentos não importam</string>
     <string name="cmd_pref_alias_command" translatable="false">Comando</string>
     <string name="cmd_pref_alias_command_hint" translatable="false">Ex.: ligar maria · abrir chrome · w ana · rota casa</string>
+    <string name="cmd_pref_alias_spoken" translatable="false">Falando “%1$s”: o mesmo (acentos são ignorados)</string>
+    <string name="cmd_pref_alias_with_text" translatable="false">Com texto: %1$s oi → %2$s oi</string>
     <string name="cmd_pref_alias_typing" translatable="false">Digitando %1$s:</string>
     <string name="cmd_pref_nothing_to_send" translatable="false">Não há ações nem apelidos cadastrados.</string>
     <string name="cmd_pref_continue" translatable="false">Continuar</string>
@@ -1236,7 +1240,8 @@
     <string name="cmd_pref_manual_title" translatable="false">Ação manual</string>
     <string name="cmd_pref_manual_name" translatable="false">Nome</string>
     <string name="cmd_pref_manual_action" translatable="false">Ação da intent</string>
-    <string name="cmd_pref_manual_action_hint" translatable="false">VIEW, SEND, SENDTO, DIAL ou um nome completo</string>
+    <string name="cmd_pref_action_other" translatable="false">Outra…</string>
+    <string name="cmd_pref_action_other_hint" translatable="false">Nome completo, como android.intent.action.EDIT</string>
     <string name="cmd_pref_manual_uri" translatable="false">URI</string>
     <string name="cmd_pref_manual_uri_hint" translatable="false">Ex.: tg://resolve?phone={number} · use {text}, {name}, {phone}</string>
     <string name="cmd_pref_manual_package" translatable="false">Pacote (opcional)</string>
@@ -1249,6 +1254,7 @@
     <string name="cmd_imp_invalid" translatable="false">Arquivo de comandos inválido</string>
     <string name="cmd_imp_title" translatable="false">Importar comandos</string>
     <string name="cmd_imp_warning" translatable="false">Só importe arquivos de quem você conhece: as ações abrem outros apps. O que você já tem não é substituído.</string>
+    <string name="cmd_imp_summary" translatable="false">Arquivo com %1$d ação(ões) e %2$d apelido(s).</string>
     <string name="cmd_imp_blocked" translatable="false">%1$d ação(ões) bloqueada(s): usam um link que pode acessar arquivos ou componentes do aparelho.</string>
     <string name="cmd_imp_rename" translatable="false">Marque para importar como %1$s</string>
     <string name="cmd_imp_confirm" translatable="false">Importar</string>
@@ -1314,11 +1320,12 @@
     <string name="glance_tag_priority" translatable="false">[PRIORIDADE]</string>
     <string name="glance_status_line" translatable="false">Linha de status dinâmica</string>
     <string name="glance_status_line_desc" translatable="false">Perfil de som, armazenamento e memória no lugar do texto fixo sob a data</string>
-    <string name="glance_open_settings" translatable="false">Abrir configurações</string>
     <string name="glance_allow" translatable="false">Permitir</string>
     <string name="glance_media_setup_title" translatable="false">Mídia tocando precisa de acesso</string>
-    <string name="glance_media_access_message" translatable="false">Para mostrar a música que está tocando, o Terminal precisa de acesso às notificações. Na próxima tela, ative o Terminal na lista.</string>
-    <string name="glance_media_dots_message" translatable="false">Para mostrar a música que está tocando, ative os pontos de notificação do Terminal. Na próxima tela, ative a opção de pontos de notificação.</string>
+    <string name="glance_media_access_message" translatable="false">Para mostrar a música que está tocando, o Terminal precisa ler as notificações.\n\n1. Toque em “Abrir acesso a notificações”.\n2. Na lista, toque em Terminal.\n3. Ative “Permitir acesso a notificações” e confirme.\n4. Volte para cá.</string>
+    <string name="glance_media_access_action" translatable="false">Abrir acesso a notificações</string>
+    <string name="glance_media_dots_message" translatable="false">Para mostrar a música que está tocando, o Terminal precisa que o ponto de notificação no ícone dos apps esteja ligado.\n\n1. Toque em “Abrir notificações”.\n2. Role até o fim da lista de Notificações.\n3. Ligue a opção destacada, a do ponto de notificação no ícone do app.\n4. Volte para cá.\n\nSe nenhuma opção estiver destacada, procure por “ponto de notificação” nas configurações de Notificações.</string>
+    <string name="glance_media_dots_action" translatable="false">Abrir notificações</string>
     <string name="glance_widget_setup_title" translatable="false">Clima e agenda precisam do widget do Google</string>
     <string name="glance_widget_setup_message" translatable="false">Permita que o Terminal leia o widget At a Glance do Google. O Android vai pedir uma confirmação; toque em Criar.</string>
 

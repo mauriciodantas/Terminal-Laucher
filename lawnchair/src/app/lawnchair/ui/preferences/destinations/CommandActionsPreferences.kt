@@ -8,7 +8,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -18,8 +20,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
@@ -38,9 +45,17 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import app.lawnchair.command.ACTION_VIEW
 import app.lawnchair.command.ActionKind
@@ -439,6 +454,12 @@ fun CommandActionsPreferences() {
         }
 
         Step.Advanced -> AdvancedDialog(
+            contacts = contacts,
+            onTest = { action ->
+                if (!CommandExecutor.execute(context, action)) {
+                    Toast.makeText(context, runFailed, Toast.LENGTH_SHORT).show()
+                }
+            },
             onDone = { step = Step.Letter(it, editing = null) },
             onDismiss = { step = null },
         )
@@ -579,8 +600,9 @@ private fun LetterDialog(
     onDismiss: () -> Unit,
 ) {
     var letter by remember { mutableStateOf(step.draft.letter.ifEmpty { suggestLetter(step.draft.label, existing) }) }
+    var name by remember { mutableStateOf(step.draft.label) }
     val error = CustomActions.validateLetter(letter, existing, step.editing)
-    val draft = step.draft.copy(letter = letter.trim().lowercase())
+    val draft = step.draft.copy(letter = letter.trim().lowercase(), label = name.trim())
     val sampleText = stringResource(R.string.cmd_pref_sample_text)
     val sampleContact = stringResource(R.string.cmd_pref_sample_contact)
     val sampleBoth = stringResource(R.string.cmd_pref_sample_both)
@@ -606,47 +628,133 @@ private fun LetterDialog(
         ?.takeIf { it.contact !== DemoContact }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(step.draft.label) },
+        title = { Text(stringResource(R.string.cmd_pref_letter_title)) },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                Text(step.draft.usage.replaceBefore(" ·", letter.trim().lowercase()))
                 OutlinedTextField(
                     value = letter,
                     onValueChange = { letter = it.take(MAX_LETTER) },
                     singleLine = true,
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
                     label = { Text(stringResource(R.string.cmd_pref_letter_label)) },
                     isError = error != null,
                     supportingText = { error?.let { Text(it) } },
-                    modifier = Modifier.padding(top = 12.dp),
+                    modifier = Modifier.fillMaxWidth(),
                 )
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    singleLine = true,
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
+                    label = { Text(stringResource(R.string.cmd_pref_manual_name)) },
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                )
+                LetterPreview(draft.letter, sample, analysis, draft.smsFallback)
                 if (step.draft.arg != ArgKind.NONE) {
                     OutlinedTextField(
                         value = sample,
                         onValueChange = { sample = it },
                         singleLine = true,
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
+                        prefix = { Text(draft.letter + " ", fontFamily = FontFamily.Monospace) },
                         label = { Text(stringResource(R.string.cmd_pref_try_label)) },
-                        modifier = Modifier.padding(top = 8.dp),
+                        modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                     )
                 }
-                PreviewBox(analysis)
             }
         },
         confirmButton = {
-            TextButton(
-                enabled = error == null,
-                onClick = { onSave(draft) },
-            ) { Text(stringResource(R.string.cmd_pref_save)) }
-        },
-        dismissButton = {
-            Column {
-                TextButton(enabled = runnable != null, onClick = { runnable?.let(onTest) }) {
-                    Text(stringResource(R.string.cmd_pref_test))
-                }
-                if (step.editing != null) TextButton(onClick = onRemove) { Text(stringResource(R.string.cmd_pref_remove)) }
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.cmd_pref_cancel)) }
-            }
+            DialogButtons(
+                saveEnabled = error == null && name.isNotBlank(),
+                testEnabled = runnable != null,
+                canRemove = step.editing != null,
+                onSave = { onSave(draft) },
+                onTest = { runnable?.let(onTest) },
+                onRemove = onRemove,
+                onCancel = onDismiss,
+            )
         },
     )
+}
+
+/** Remove (when editing) on the left, then Test, Cancel and Save on one row. */
+@Composable
+private fun DialogButtons(
+    saveEnabled: Boolean,
+    testEnabled: Boolean,
+    canRemove: Boolean,
+    onSave: () -> Unit,
+    onTest: () -> Unit,
+    onRemove: () -> Unit,
+    onCancel: () -> Unit,
+    saveLabel: Int = R.string.cmd_pref_save,
+) {
+    val pad = PaddingValues(horizontal = 4.dp)
+
+    @Composable
+    fun Button(text: Int, enabled: Boolean = true, color: Color = Color.Unspecified, onClick: () -> Unit) {
+        TextButton(enabled = enabled, onClick = onClick, contentPadding = pad) {
+            Text(stringResource(text), color = color, style = MaterialTheme.typography.labelMedium, maxLines = 1, softWrap = false)
+        }
+    }
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        if (canRemove) Button(R.string.cmd_pref_remove, color = MaterialTheme.colorScheme.error, onClick = onRemove)
+        Spacer(Modifier.weight(1f))
+        Button(R.string.cmd_pref_test, enabled = testEnabled, onClick = onTest)
+        Button(R.string.cmd_pref_cancel, onClick = onCancel)
+        Button(saveLabel, enabled = saveEnabled, onClick = onSave)
+    }
+}
+
+/** What typing the letter with the sample does: the command with its argument highlighted, then the intent. */
+@Composable
+private fun LetterPreview(letter: String, sample: String, analysis: Analysis?, smsFallback: Boolean) {
+    if (analysis == null) return
+    val line = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+    val mono = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace)
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(top = 12.dp)
+            .drawBehind {
+                drawRoundRect(
+                    color = line,
+                    cornerRadius = CornerRadius(8.dp.toPx()),
+                    style = Stroke(1.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f))),
+                )
+            }
+            .padding(12.dp),
+    ) {
+        Text(
+            buildAnnotatedString {
+                append(letter)
+                if (sample.isNotBlank()) {
+                    withStyle(SpanStyle(color = MaterialTheme.colorScheme.tertiary)) { append(" $sample") }
+                }
+            },
+            style = mono,
+        )
+        when {
+            analysis.needsContacts -> Text(
+                stringResource(R.string.cmd_pref_needs_contacts),
+                style = mono,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            analysis.intent.isNotEmpty() -> {
+                Text("→ ${analysis.intent}", style = mono)
+                if (smsFallback) {
+                    Text(stringResource(R.string.cmd_pref_sms_fallback), style = mono)
+                }
+            }
+
+            else -> Text(
+                analysis.preview.lowercase().replaceFirstChar { it.uppercase() },
+                style = mono,
+                color = if (analysis.action == null && analysis.tone == Tone.ERROR) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
 }
 
 private class AliasDraft(val editing: CommandAlias?)
@@ -706,22 +814,32 @@ private fun AliasDialog(
                         stringResource(R.string.cmd_pref_alias_typing, it.lowercase())
                     },
                 )
+                if (error == null && analysis != null) {
+                    val word = name.trim().lowercase()
+                    Text(
+                        stringResource(R.string.cmd_pref_alias_spoken, word),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 8.dp),
+                    )
+                    Text(
+                        stringResource(R.string.cmd_pref_alias_with_text, word, expansion.trim()),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         },
         confirmButton = {
-            TextButton(
-                enabled = error == null,
-                onClick = { onSave(CommandAlias(name.trim().lowercase(), expansion.trim())) },
-            ) { Text(stringResource(R.string.cmd_pref_save)) }
-        },
-        dismissButton = {
-            Column {
-                TextButton(enabled = analysis?.action != null, onClick = { analysis?.action?.let(onTest) }) {
-                    Text(stringResource(R.string.cmd_pref_test))
-                }
-                if (editing != null) TextButton(onClick = onRemove) { Text(stringResource(R.string.cmd_pref_remove)) }
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.cmd_pref_cancel)) }
-            }
+            DialogButtons(
+                saveEnabled = error == null,
+                testEnabled = analysis?.action != null,
+                canRemove = editing != null,
+                onSave = { onSave(CommandAlias(name.trim().lowercase(), expansion.trim())) },
+                onTest = { analysis?.action?.let(onTest) },
+                onRemove = onRemove,
+                onCancel = onDismiss,
+            )
         },
     )
 }
@@ -806,7 +924,12 @@ private fun SelectCommandsDialog(
 
 /** Manual recipe: the intent action, an optional URI template, the package and what to type. */
 @Composable
-private fun AdvancedDialog(onDone: (CustomAction) -> Unit, onDismiss: () -> Unit) {
+private fun AdvancedDialog(
+    contacts: List<ContactEntry>,
+    onTest: (CommandAction) -> Unit,
+    onDone: (CustomAction) -> Unit,
+    onDismiss: () -> Unit,
+) {
     var label by remember { mutableStateOf("") }
     var action by remember { mutableStateOf(ACTION_VIEW) }
     var template by remember { mutableStateOf("") }
@@ -814,19 +937,45 @@ private fun AdvancedDialog(onDone: (CustomAction) -> Unit, onDismiss: () -> Unit
     var arg by remember { mutableStateOf(ArgKind.TEXT) }
     var shareText by remember { mutableStateOf(false) }
     val valid = label.isNotBlank() && (template.isNotBlank() || shareText)
+    val draft = CustomAction(
+        letter = PREVIEW_LETTER,
+        label = label.trim(),
+        kind = ActionKind.INTENT,
+        template = template,
+        packages = listOfNotNull(pkg.takeIf { it.isNotEmpty() }),
+        arg = arg,
+        intentAction = expandAction(action),
+        mimeType = if (shareText) "text/plain" else null,
+        textExtra = if (shareText) "android.intent.extra.TEXT" else null,
+    )
+    val sampleText = stringResource(R.string.cmd_pref_sample_text)
+    val sampleContact = stringResource(R.string.cmd_pref_sample_contact)
+    val sampleBoth = stringResource(R.string.cmd_pref_sample_both)
+    var sample by remember(arg) {
+        mutableStateOf(
+            when (arg) {
+                ArgKind.NONE -> ""
+                ArgKind.TEXT -> sampleText
+                ArgKind.CONTACT -> sampleContact
+                ArgKind.CONTACT_AND_TEXT -> sampleBoth
+            },
+        )
+    }
+    // Same engine as the bar and the letter dialog; a sample contact stands in when there is no access, and is never run.
+    val pool = contacts.ifEmpty { listOf(DemoContact) }
+    val analysis = if (!valid) {
+        null
+    } else {
+        CommandEngine.analyze(PREVIEW_LETTER + if (sample.isBlank()) "" else " $sample", emptyList(), pool, true, listOf(draft), emptyList())
+    }
+    val runnable = (analysis?.action as? CommandAction.Custom)?.takeIf { it.contact !== DemoContact }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.cmd_pref_manual_title)) },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 OutlinedTextField(label, { label = it }, singleLine = true, label = { Text(stringResource(R.string.cmd_pref_manual_name)) })
-                OutlinedTextField(
-                    action,
-                    { action = it.trim() },
-                    singleLine = true,
-                    label = { Text(stringResource(R.string.cmd_pref_manual_action)) },
-                    supportingText = { Text(stringResource(R.string.cmd_pref_manual_action_hint)) },
-                )
+                ActionPicker(action = action, onChange = { action = it })
                 OutlinedTextField(
                     template,
                     { template = it.trim() },
@@ -857,29 +1006,30 @@ private fun AdvancedDialog(onDone: (CustomAction) -> Unit, onDismiss: () -> Unit
                     Checkbox(checked = shareText, onCheckedChange = { shareText = it })
                     Text(stringResource(R.string.cmd_pref_manual_share))
                 }
+                if (arg != ArgKind.NONE) {
+                    OutlinedTextField(
+                        value = sample,
+                        onValueChange = { sample = it },
+                        singleLine = true,
+                        label = { Text(stringResource(R.string.cmd_pref_try_label)) },
+                        modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                    )
+                }
+                LetterPreview(PREVIEW_LETTER, sample, analysis, draft.smsFallback)
             }
         },
         confirmButton = {
-            TextButton(
-                enabled = valid,
-                onClick = {
-                    onDone(
-                        CustomAction(
-                            letter = "",
-                            label = label.trim(),
-                            kind = ActionKind.INTENT,
-                            template = template,
-                            packages = listOfNotNull(pkg.takeIf { it.isNotEmpty() }),
-                            arg = arg,
-                            intentAction = expandAction(action),
-                            mimeType = if (shareText) "text/plain" else null,
-                            textExtra = if (shareText) "android.intent.extra.TEXT" else null,
-                        ),
-                    )
-                },
-            ) { Text(stringResource(R.string.cmd_pref_continue)) }
+            DialogButtons(
+                saveEnabled = valid,
+                testEnabled = runnable != null,
+                canRemove = false,
+                onSave = { onDone(draft.copy(letter = "")) },
+                onTest = { runnable?.let(onTest) },
+                onRemove = {},
+                onCancel = onDismiss,
+                saveLabel = R.string.cmd_pref_continue,
+            )
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cmd_pref_cancel)) } },
     )
 }
 
@@ -890,10 +1040,64 @@ private fun argLabel(arg: ArgKind) = when (arg) {
     ArgKind.CONTACT_AND_TEXT -> R.string.cmd_pref_arg_contact_text
 }
 
+/** The intent actions the recipes and the engine use, as a menu; anything else is typed under "Outra…". */
+private val IntentActions = listOf("VIEW", "SEND", "SENDTO", "DIAL", "WEB_SEARCH")
+
+@Composable
+private fun ActionPicker(action: String, onChange: (String) -> Unit) {
+    val known = IntentActions.firstOrNull { expandAction(action) == expandAction(it) }
+    var other by remember { mutableStateOf(known == null) }
+    var open by remember { mutableStateOf(false) }
+    Box {
+        OutlinedTextField(
+            value = if (other) stringResource(R.string.cmd_pref_action_other) else known ?: IntentActions.first(),
+            onValueChange = {},
+            readOnly = true,
+            singleLine = true,
+            label = { Text(stringResource(R.string.cmd_pref_manual_action)) },
+            trailingIcon = { Icon(Icons.Default.ArrowDropDown, contentDescription = null) },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        // A read-only field swallows taps, so a transparent layer on top opens the menu.
+        Box(Modifier.matchParentSize().clickable { open = true })
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            IntentActions.forEach { id ->
+                DropdownMenuItem(
+                    text = { Text(id) },
+                    onClick = {
+                        other = false
+                        onChange(id)
+                        open = false
+                    },
+                )
+            }
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.cmd_pref_action_other)) },
+                onClick = {
+                    other = true
+                    open = false
+                },
+            )
+        }
+    }
+    if (other) {
+        OutlinedTextField(
+            value = action,
+            onValueChange = { onChange(it.trim()) },
+            singleLine = true,
+            label = { Text(stringResource(R.string.cmd_pref_action_other_hint)) },
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+        )
+    }
+}
+
 /** "VIEW" becomes "android.intent.action.VIEW"; a full name is kept. */
 private fun expandAction(raw: String) = if ('.' in raw) raw else "android.intent.action." + raw.uppercase().ifEmpty { "VIEW" }
 
 private const val MAX_LETTER = 4
+
+/** Stands for the letter in the manual form's preview, before the user picks one. */
+private const val PREVIEW_LETTER = "x"
 
 /** A free letter taken from the label: "Lanterna" gives "l", then "la" and so on. */
 private fun suggestLetter(label: String, existing: List<CustomAction>): String {

@@ -479,7 +479,9 @@ private fun GlanceSetupCards(modifier: Modifier = Modifier) {
                         R.string.glance_media_dots_message
                     },
                 ),
-                action = stringResource(R.string.glance_open_settings),
+                action = stringResource(
+                    if (mediaStep == MediaSetupStep.GRANT_ACCESS) R.string.glance_media_access_action else R.string.glance_media_dots_action,
+                ),
                 onClick = {
                     GlanceSetupIntents.forStep(mediaStep)?.let { context.startActivity(it) }
                 },
