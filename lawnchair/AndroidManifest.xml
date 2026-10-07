@@ -146,7 +146,19 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="application/x-terminal-commands" />
             </intent-filter>
-            <!-- Chats and file managers often hand the file over as octet-stream, so match the extension too. -->
+            <!--
+                Chats and file managers often hand the file over as octet-stream, and a
+                content:// path rarely carries the file name, so match that type too. The
+                activity checks the content and rejects anything that is not a pack.
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:mimeType="application/octet-stream" />
+            </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />

@@ -40,15 +40,9 @@ object CommandPacks {
         .put("aliases", AliasStore.toJson(aliases))
         .toString(2)
 
-    /**
-     * Reads a pack. Also accepts the older export, a bare array of actions. Throws when [raw] is
-     * neither, so a stray JSON file is never taken for a pack.
-     */
+    /** Reads a pack. Throws when [raw] is not one, so a stray JSON file is never taken for a pack. */
     fun decode(raw: String): CommandPack {
         val text = raw.trim().removePrefix("﻿")
-        if (text.startsWith("[")) {
-            return CommandPack(CustomActionStore.fromJson(JSONArray(text)).take(MAX_ITEMS), emptyList())
-        }
         val o = JSONObject(text)
         require(o.optString("format") == FORMAT) { "not a command pack" }
         require(o.optInt("version", VERSION) <= VERSION) { "newer pack version" }
@@ -61,11 +55,18 @@ object CommandPacks {
     /** The pack in [uri], or null when it cannot be read, is too big or is not a pack. */
     fun read(context: Context, uri: Uri): CommandPack? = runCatching {
         context.contentResolver.openInputStream(uri)?.use { input ->
-            val bytes = input.readNBytes(MAX_BYTES + 1)
-            if (bytes.size > MAX_BYTES) return null
-            decode(bytes.decodeToString()).takeUnless { it.isEmpty }
+            // readNBytes needs API 33; minSdk is 26.
+            val out = java.io.ByteArrayOutputStream()
+            val buffer = ByteArray(8 * 1024)
+            while (out.size() <= MAX_BYTES) {
+                val n = input.read(buffer)
+                if (n < 0) break
+                out.write(buffer, 0, n)
+            }
+            if (out.size() > MAX_BYTES) return null
+            decode(out.toByteArray().decodeToString()).takeUnless { it.isEmpty }
         }
-    }.getOrNull()
+    }.onFailure { android.util.Log.w("CommandPacks", "could not read $uri", it) }.getOrNull()
 
     /**
      * Adds [pack] to what the user has. Nothing existing is replaced: an action whose letter is
