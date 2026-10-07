@@ -23,6 +23,7 @@ import app.lawnchair.preferences2.firstCached
 import app.lawnchair.smartspace.glance.ChatCandidate
 import app.lawnchair.smartspace.glance.ChatShortcuts
 import app.lawnchair.smartspace.glance.WhatsAppChatSource
+import app.lawnchair.theme.LauncherGround
 import app.lawnchair.theme.color.tokens.PhosphorColorToken
 import app.lawnchair.util.repeatOnAttached
 import com.android.launcher3.BaseActivity
@@ -225,7 +226,7 @@ class ChatsStripView(context: Context) :
                         typeface = ResourcesCompat.getFont(context, R.font.ibm_plex_mono_semibold)
                         includeFontPadding = false
                         gravity = Gravity.CENTER
-                        setTextColor(Color.parseColor("#FF05140C"))
+                        setTextColor(LauncherGround.onAccent(context, phosphor))
                         setBackgroundColor(phosphor)
                         minWidth = h
                         minHeight = h

@@ -148,7 +148,7 @@ public class LargeFolderView extends ViewGroup {
         int custom = LawnchairUtilsKt.getCustomFolderColor(context);
         int base = custom != 0
                 ? custom
-                : ColorUtils.blendARGB(0xFF07090A, mTextColor, 0.10f);
+                : ColorUtils.blendARGB(app.lawnchair.theme.LauncherGround.INSTANCE.get(context), mTextColor, 0.10f);
         mFillPaint.setColor(ColorUtils.setAlphaComponent(base,
                 LawnchairUtilsKt.getFolderBackgroundAlpha(context)));
         invalidate();

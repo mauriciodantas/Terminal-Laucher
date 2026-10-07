@@ -20,6 +20,7 @@ import androidx.core.graphics.ColorUtils
 import app.lawnchair.LawnchairLauncher
 import app.lawnchair.launcher
 import app.lawnchair.smartspace.glance.GlancePanelController
+import app.lawnchair.theme.LauncherGround
 import app.lawnchair.theme.color.tokens.PhosphorColorToken
 import app.lawnchair.ui.preferences.PreferenceActivity
 import app.lawnchair.ui.preferences.navigation.Smartspace
@@ -81,6 +82,7 @@ class SmartspaceViewContainer @JvmOverloads constructor(
         }
         root.findViewById<View>(R.id.nostromo_panel_title)?.setBackgroundColor(phosphor)
         root.findViewById<TextView>(R.id.nostromo_target_secondary)?.setTextColor(dim)
+        root.findViewById<TextView>(R.id.nostromo_target_primary)?.setTextColor(LauncherGround.ink(context))
     }
 
     /** Battery percentage and a five-segment bar, e.g. "87% ▮▮▮▮▯". */

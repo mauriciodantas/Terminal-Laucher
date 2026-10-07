@@ -55,7 +55,7 @@ class SearchResultText(context: Context, attrs: AttributeSet?) :
         val solid = rawTitle == context.getString(R.string.nostromo_section_programs)
         title.setPadding((8 * density).toInt(), (3 * density).toInt(), (8 * density).toInt(), (3 * density).toInt())
         title.background = ColorDrawable(if (solid) phosphor else PhosphorColorToken(0.32f).resolveColor(context))
-        title.setTextColor(if (solid) LauncherGround.get(context) else phosphor)
+        title.setTextColor(if (solid) LauncherGround.onAccent(context, phosphor) else phosphor)
         (title.layoutParams as? MarginLayoutParams)?.marginStart = (12 * density).toInt()
     }
 

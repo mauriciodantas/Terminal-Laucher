@@ -112,7 +112,7 @@ public class DirectoryIndexView extends View {
             if (i == mActiveIndex) {
                 mTmpRect.set(0, top, getWidth(), top + cell);
                 canvas.drawRect(mTmpRect, mActivePaint);
-                mTextPaint.setColor(0xFF07090A);
+                mTextPaint.setColor(app.lawnchair.theme.LauncherGround.INSTANCE.onAccent(getContext(), mPhosphor));
                 canvas.drawText(mLetters.get(i), cx, baseline, mTextPaint);
                 mTextPaint.setColor(ColorUtils.setAlphaComponent(mPhosphor, 0xB0));
             } else {

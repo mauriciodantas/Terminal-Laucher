@@ -168,7 +168,13 @@ private class CommandHighlight(private val command: Color, private val argument:
         return -1
     }
 }
-private val OnPhosphor = Color(0xFF04140B)
+
+/** Text over a solid phosphor fill: the ground, unless the accent is dark enough to need a light one. */
+@Composable
+private fun onPhosphor(): Color {
+    val context = LocalContext.current
+    return remember { Color(LauncherGround.onAccent(context, PhosphorColorToken(1f).resolveColor(context))) }
+}
 
 @Composable
 private fun CommandScreen(onClose: () -> Unit) {
@@ -560,7 +566,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                                 .padding(horizontal = 8.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            val color = if (active) OnPhosphor else phosphor
+                            val color = if (active) onPhosphor() else phosphor
                             Text(if (active) ">" else "", color = color, fontFamily = Mono, fontSize = 12.5.sp, modifier = Modifier.width(14.dp))
                             Text(
                                 suggestion.label,
@@ -649,7 +655,7 @@ private fun CommandScreen(onClose: () -> Unit) {
             ) {
                 Text(
                     stringResource(R.string.command_running, CommandEngine.describe(run.first)),
-                    color = OnPhosphor,
+                    color = onPhosphor(),
                     fontFamily = Mono,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 11.5.sp,
@@ -666,7 +672,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                 ) {
                     Text(
                         stringResource(R.string.command_undo),
-                        color = OnPhosphor,
+                        color = onPhosphor(),
                         fontFamily = Mono,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 11.sp,

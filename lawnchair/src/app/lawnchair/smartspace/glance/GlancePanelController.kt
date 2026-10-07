@@ -25,6 +25,7 @@ import app.lawnchair.smartspace.GlanceAnimationView
 import app.lawnchair.smartspace.model.SmartspaceAction
 import app.lawnchair.smartspace.model.SmartspaceTarget
 import app.lawnchair.smartspace.provider.SmartspaceProvider
+import app.lawnchair.theme.LauncherGround
 import app.lawnchair.theme.color.tokens.PhosphorColorToken
 import com.airbnb.lottie.LottieAnimationView
 import com.airbnb.lottie.LottieDrawable
@@ -357,6 +358,13 @@ class GlancePanelController(
 
     private var userPicked = false
 
+    /** The title bar is a solid fill, so its text takes the color that reads over it. */
+    private fun colorTitleBar(title: TextView?, tag: TextView?, fill: Int) {
+        val on = LauncherGround.onAccent(context, fill)
+        title?.setTextColor(on)
+        tag?.setTextColor(on)
+    }
+
     private fun SmartspaceTarget.toGlanceTarget(): GlanceTarget {
         val action = headerAction ?: baseAction
         return GlanceTarget(
@@ -387,6 +395,7 @@ class GlancePanelController(
             title?.text = context.getString(R.string.nostromo_panel_title)
             tag?.text = context.getString(R.string.nostromo_panel_state)
             bar?.setBackgroundColor(phosphor)
+            colorTitleBar(title, tag, phosphor)
             primary?.text = context.getString(R.string.glance_empty_primary)
             secondary?.text = context.getString(R.string.glance_empty_secondary)
             content?.setOnClickListener(null)
@@ -403,6 +412,7 @@ class GlancePanelController(
             "[%02d/%02d]".format(panel.tabs.indexOf(selected) + 1, panel.tabs.size)
         }
         bar?.setBackgroundColor(if (urgent) urgentColor else phosphor)
+        colorTitleBar(title, tag, if (urgent) urgentColor else phosphor)
 
         // The time or temperature goes big on the left, like the prototype; the rest is the text.
         val leadView = root.findViewById<TextView>(R.id.nostromo_target_lead)
