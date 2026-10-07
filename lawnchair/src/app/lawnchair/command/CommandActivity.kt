@@ -8,11 +8,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,13 +27,12 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -114,23 +114,20 @@ class CommandActivity : ComponentActivity() {
             context.startActivity(Intent(context, CommandActivity::class.java).putExtra(EXTRA_VOICE, voice))
         }
 
-        fun voiceIntent(context: Context): Intent =
-            Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-                .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                .putExtra(RecognizerIntent.EXTRA_LANGUAGE, java.util.Locale.getDefault().toLanguageTag())
-                .putExtra(RecognizerIntent.EXTRA_PROMPT, context.getString(R.string.command_voice_prompt))
+        fun voiceIntent(context: Context): Intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+            .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            .putExtra(RecognizerIntent.EXTRA_LANGUAGE, java.util.Locale.getDefault().toLanguageTag())
+            .putExtra(RecognizerIntent.EXTRA_PROMPT, context.getString(R.string.command_voice_prompt))
 
-        fun voiceAvailable(context: Context): Boolean =
-            context.packageManager.resolveActivity(voiceIntent(context), 0) != null
+        fun voiceAvailable(context: Context): Boolean = context.packageManager.resolveActivity(voiceIntent(context), 0) != null
 
         internal fun wantsVoice(intent: Intent?): Boolean = intent?.getBooleanExtra(EXTRA_VOICE, false) == true
 
-        fun loadHistory(context: Context): List<String> =
-            context.getSharedPreferences(STORE, Context.MODE_PRIVATE)
-                .getString(KEY_HISTORY, "")
-                .orEmpty()
-                .split('\n')
-                .filter { it.isNotBlank() }
+        fun loadHistory(context: Context): List<String> = context.getSharedPreferences(STORE, Context.MODE_PRIVATE)
+            .getString(KEY_HISTORY, "")
+            .orEmpty()
+            .split('\n')
+            .filter { it.isNotBlank() }
 
         fun saveHistory(context: Context, history: List<String>) {
             context.getSharedPreferences(STORE, Context.MODE_PRIVATE).edit()
@@ -425,9 +422,21 @@ private fun CommandScreen(onClose: () -> Unit) {
                             .onPreviewKeyEvent { event ->
                                 if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
                                 when (event.key) {
-                                    Key.Tab -> { complete(); true }
-                                    Key.DirectionUp -> { older(); true }
-                                    Key.DirectionDown -> { next(); true }
+                                    Key.Tab -> {
+                                        complete()
+                                        true
+                                    }
+
+                                    Key.DirectionUp -> {
+                                        older()
+                                        true
+                                    }
+
+                                    Key.DirectionDown -> {
+                                        next()
+                                        true
+                                    }
+
                                     else -> false
                                 }
                             },
@@ -680,7 +689,7 @@ private fun Label(text: String, color: Color, size: androidx.compose.ui.unit.Tex
 }
 
 @Composable
-private fun FKey(text: String, color: Color, modifier: Modifier, onClick: () -> Unit) {
+private fun FKey(text: String, color: Color, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Box(
         modifier
             .heightIn(min = 44.dp)

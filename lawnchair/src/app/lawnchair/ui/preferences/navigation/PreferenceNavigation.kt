@@ -28,6 +28,7 @@ import app.lawnchair.ui.preferences.components.search.SearchProviderPreferenceSc
 import app.lawnchair.ui.preferences.destinations.AppDrawerFoldersPreference
 import app.lawnchair.ui.preferences.destinations.AppDrawerPreferences
 import app.lawnchair.ui.preferences.destinations.BackupAndRestorePreference
+import app.lawnchair.ui.preferences.destinations.CommandActionsPreferences
 import app.lawnchair.ui.preferences.destinations.CustomIconShapePreference
 import app.lawnchair.ui.preferences.destinations.DebugMenuPreferences
 import app.lawnchair.ui.preferences.destinations.DismissedPredictionAppsPreferences
@@ -39,7 +40,6 @@ import app.lawnchair.ui.preferences.destinations.FolderPreferences
 import app.lawnchair.ui.preferences.destinations.FontSelection
 import app.lawnchair.ui.preferences.destinations.GeneralPreferences
 import app.lawnchair.ui.preferences.destinations.GesturePreferences
-import app.lawnchair.ui.preferences.destinations.CommandActionsPreferences
 import app.lawnchair.ui.preferences.destinations.HiddenAppsPreferences
 import app.lawnchair.ui.preferences.destinations.HomeScreenGridPreferences
 import app.lawnchair.ui.preferences.destinations.HomeScreenPreferences

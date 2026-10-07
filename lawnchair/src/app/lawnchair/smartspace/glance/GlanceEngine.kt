@@ -102,12 +102,10 @@ object GlanceEngine {
     const val DEFAULT_LEAD_MINUTES = 30
 
     /** The closest allowed lead time, so a stale or odd stored value never breaks the panel. */
-    fun normalizeLeadMinutes(minutes: Int): Int =
-        if (minutes in LEAD_TIME_OPTIONS) minutes else DEFAULT_LEAD_MINUTES
+    fun normalizeLeadMinutes(minutes: Int): Int = if (minutes in LEAD_TIME_OPTIONS) minutes else DEFAULT_LEAD_MINUTES
 
     /** Whole minutes from [nowMillis] to the start, or null when the start is unknown. */
-    fun minutesUntil(startsAtMillis: Long?, nowMillis: Long): Long? =
-        startsAtMillis?.let { Math.floorDiv(it - nowMillis, MINUTE_MS) }
+    fun minutesUntil(startsAtMillis: Long?, nowMillis: Long): Long? = startsAtMillis?.let { Math.floorDiv(it - nowMillis, MINUTE_MS) }
 
     /** True for an event that starts within the window, and has not started more than a minute ago. */
     fun isUrgent(target: GlanceTarget, settings: GlanceSettings, nowMillis: Long): Boolean {
@@ -119,12 +117,15 @@ object GlanceEngine {
     /** "EM 18 MIN", "EM 3H 12M", "EM 2 D" or "AGORA". */
     fun countdownLabel(minutes: Long): String = when {
         minutes <= 0 -> "AGORA"
+
         minutes < 60 -> "EM $minutes MIN"
+
         minutes < 24 * 60 -> {
             val hours = minutes / 60
             val rest = minutes % 60
             if (rest == 0L) "EM ${hours}H" else "EM ${hours}H ${rest}M"
         }
+
         else -> "EM ${minutes / (24 * 60)} D"
     }
 
@@ -174,9 +175,12 @@ object GlanceEngine {
         val full = listOf(target.title, target.subtitle).filter { it.isNotBlank() }.joinToString(" · ")
         val match = when (target.kind) {
             GlanceKind.CLIMA -> temperatureRegex.find(full)?.let { it to (it.groupValues[1] + "°") }
+
             GlanceKind.BATERIA -> percentRegex.find(full)?.let { it to (it.groupValues[1] + "%") }
+
             GlanceKind.AGENDA, GlanceKind.ALARME, GlanceKind.LEMBRETE ->
                 timeRegex.find(full)?.let { it to (it.groupValues[1].padStart(2, '0') + ":" + it.groupValues[2]) }
+
             else -> null
         } ?: return Lead(null, full)
         val (found, value) = match

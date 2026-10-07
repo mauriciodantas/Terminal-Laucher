@@ -35,7 +35,9 @@ object GlanceSetup {
 object GlanceSetupIntents {
     fun forStep(step: MediaSetupStep): Intent? = when (step) {
         MediaSetupStep.NONE -> null
+
         MediaSetupStep.GRANT_ACCESS -> Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
+
         MediaSetupStep.ENABLE_DOTS -> Intent("android.settings.NOTIFICATION_SETTINGS")
             .putExtra(SettingsActivity.EXTRA_FRAGMENT_HIGHLIGHT_KEY, "notification_badging")
             .putExtra(

@@ -17,6 +17,7 @@ sealed interface CommandAction {
     data class SetAlarm(val hour: Int, val minute: Int) : CommandAction
     data class Calc(val expression: String, val result: String) : CommandAction
     data class Call(val contact: ContactEntry) : CommandAction
+
     /** A user-defined command: [action] filled with the contact and/or text that was typed. */
     data class Custom(
         val action: CustomAction,
@@ -105,13 +106,19 @@ object CommandEngine {
 
         return when (if (token == "c") "calc" else token) {
             "abrir" -> analyzeOpen(arg, apps)
+
             "ligar" -> analyzeContact(arg, contacts, contactsGranted, "ligar", "LIGAR PARA") {
                 CommandAction.Call(it)
             }
+
             "alarme" -> analyzeAlarm(arg)
+
             "calc" -> analyzeCalc(arg)
+
             "t" -> analyzeTask(arg)
+
             "rota" -> analyzeRoute(arg)
+
             else -> custom.firstOrNull { it.letter == token }
                 ?.let { analyzeCustom(it, arg, contacts, contactsGranted) }
                 ?: analyzeOpen(text.trim(), apps).takeIf { it.action != null }
@@ -223,8 +230,7 @@ object CommandEngine {
         return uri.replace(Regex("[?&][^?&=]+=$"), "")
     }
 
-    private fun encode(value: String): String =
-        java.net.URLEncoder.encode(value, "UTF-8").replace("+", "%20")
+    private fun encode(value: String): String = java.net.URLEncoder.encode(value, "UTF-8").replace("+", "%20")
 
     private fun analyzeOpen(arg: String, apps: List<AppEntry>): Analysis {
         val q = arg.trim().foldAccents()
@@ -347,9 +353,15 @@ object CommandEngine {
         granted: Boolean,
     ): Analysis = when (action.arg) {
         ArgKind.CONTACT_AND_TEXT -> analyzeContactAndText(action, arg, contacts, granted)
+
         ArgKind.CONTACT -> analyzeContact(
-            arg, contacts, granted, action.letter, action.label.uppercase() + " PARA",
+            arg,
+            contacts,
+            granted,
+            action.letter,
+            action.label.uppercase() + " PARA",
         ) { CommandAction.Custom(action, it) }
+
         ArgKind.TEXT -> {
             val text = arg.trim()
             Analysis(
@@ -362,6 +374,7 @@ object CommandEngine {
                 action = text.takeIf { it.isNotEmpty() }?.let { CommandAction.Custom(action, text = it) },
             )
         }
+
         ArgKind.NONE -> Analysis(
             suggestions = emptyList(),
             listTitle = action.label.uppercase(),

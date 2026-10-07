@@ -74,7 +74,11 @@ class ImportCommandsActivity : ComponentActivity() {
 
     private fun incomingUri(intent: Intent): Uri? = when (intent.action) {
         Intent.ACTION_VIEW -> intent.data
-        Intent.ACTION_SEND -> @Suppress("DEPRECATION") intent.getParcelableExtra(Intent.EXTRA_STREAM)
+
+        Intent.ACTION_SEND ->
+            @Suppress("DEPRECATION")
+            intent.getParcelableExtra(Intent.EXTRA_STREAM)
+
         else -> null
     }
 }

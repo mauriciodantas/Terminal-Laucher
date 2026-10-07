@@ -49,10 +49,12 @@ import com.android.launcher3.views.ActivityContext;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -67,6 +69,9 @@ public class AlphabeticalAppsList<T extends Context & ActivityContext> implement
         AllAppsStore.OnUpdateListener {
 
     public static final String TAG = "AlphabeticalAppsList";
+
+    // Folders of the directory list that are currently open.
+    private final Set<String> mExpandedFolders = new HashSet<>();
     public static final String PRIVATE_SPACE_PACKAGE = "com.android.privatespace";
 
     private final WorkProfileManager mWorkProviderManager;
@@ -230,6 +235,19 @@ public class AlphabeticalAppsList<T extends Context & ActivityContext> implement
         }
         updateAdapterItems();
         return true;
+    }
+
+    /** Whether the directory list shows this folder open, with its apps below it. */
+    public boolean isFolderExpanded(String key) {
+        return mExpandedFolders.contains(key);
+    }
+
+    /** Opens or closes a folder of the directory list, rebuilding the list around it. */
+    public void toggleFolderExpanded(String key) {
+        if (!mExpandedFolders.remove(key)) {
+            mExpandedFolders.add(key);
+        }
+        onAppsUpdated();
     }
 
     /**

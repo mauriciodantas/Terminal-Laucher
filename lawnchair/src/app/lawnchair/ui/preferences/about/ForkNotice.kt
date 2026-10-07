@@ -56,6 +56,7 @@ fun LazyListScope.forkNoticeItems() {
 }
 
 /** Copyright lines of the original project, kept as they appear in its license file. */
+@Suppress("ktlint:compose:modifier-missing-check")
 @Composable
 fun OriginalProjectNotice() {
     val context = LocalContext.current

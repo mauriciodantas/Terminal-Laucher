@@ -17,9 +17,9 @@
 package app.lawnchair.preferences
 
 import android.content.Context
-import androidx.core.content.edit
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.edit
 import app.lawnchair.LawnchairLauncher
 import app.lawnchair.font.FontCache
 import app.lawnchair.util.getApkVersionComparison

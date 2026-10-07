@@ -58,9 +58,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
+import app.lawnchair.LawnchairLauncher
 import app.lawnchair.preferences2.asState
 import app.lawnchair.preferences2.preferenceManager2
-import app.lawnchair.LawnchairLauncher
 import app.lawnchair.theme.color.ColorOption
 import app.lawnchair.ui.preferences.components.isNotificationServiceEnabled
 import app.lawnchair.ui.preferences.destinations.phosphorEntries
@@ -200,7 +200,7 @@ private fun OnboardingScreen(onFinish: () -> Unit) {
             when (step) {
                 STEP_BOOT -> BootStep(isDefault, notificationsGranted)
                 STEP_DEFAULT -> DefaultLauncherStep(isDefault)
-                STEP_COLOR -> ColorStep(onChosen = { colorChosen = true })
+                STEP_COLOR -> ColorStep(onChoose = { colorChosen = true })
                 STEP_NOTIFICATIONS -> NotificationsStep(notificationsGranted)
                 else -> ReadyStep(isDefault, defaultSkipped, notificationsGranted, notificationsSkipped, colorChosen)
             }
@@ -297,7 +297,7 @@ private fun DefaultLauncherStep(isDefault: Boolean) {
 }
 
 @Composable
-private fun ColorStep(onChosen: () -> Unit) {
+private fun ColorStep(onChoose: () -> Unit) {
     val prefs2 = preferenceManager2()
     val accent by prefs2.accentColor.asState()
     StepIntro(R.string.onboarding_color_heading, 2, R.string.onboarding_color_title)
@@ -318,7 +318,7 @@ private fun ColorStep(onChosen: () -> Unit) {
                     }
                     .clickable {
                         prefs2.accentColor.setBlocking(option)
-                        onChosen()
+                        onChoose()
                     },
             )
         }

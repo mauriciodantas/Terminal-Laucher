@@ -212,7 +212,6 @@ class LawnchairApp : LauncherApplication() {
         return true
     }
 
-
     companion object {
         private const val TAG = "LawnchairApp"
 

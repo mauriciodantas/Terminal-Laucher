@@ -141,12 +141,18 @@ class TerminalIconThemeController(
             var acc = 0
             for (b in 0..255) {
                 acc += histogram[b]
-                if (acc >= counted * 0.05f) { lo = b / 255f; break }
+                if (acc >= counted * 0.05f) {
+                    lo = b / 255f
+                    break
+                }
             }
             acc = 0
             for (b in 255 downTo 0) {
                 acc += histogram[b]
-                if (acc >= counted * 0.05f) { hi = b / 255f; break }
+                if (acc >= counted * 0.05f) {
+                    hi = b / 255f
+                    break
+                }
             }
         }
         val range = max(hi - lo, 0.2f)

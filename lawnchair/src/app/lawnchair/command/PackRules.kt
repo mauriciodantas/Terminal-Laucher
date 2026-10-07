@@ -34,8 +34,7 @@ object PackRules {
         return scheme.takeIf { s -> s.all { it.isLetterOrDigit() || it in "+-." } }
     }
 
-    fun isBlocked(action: CustomAction): Boolean =
-        action.kind == ActionKind.INTENT && schemeOf(action.template.trim()) in BLOCKED_SCHEMES
+    fun isBlocked(action: CustomAction): Boolean = action.kind == ActionKind.INTENT && schemeOf(action.template.trim()) in BLOCKED_SCHEMES
 
     /** A short warning for an action that is allowed but unusual, or null. */
     fun caution(action: CustomAction): String? {
@@ -51,8 +50,7 @@ object PackRules {
     } + if (action.packages.isNotEmpty() && action.kind == ActionKind.INTENT) " · " + action.packages.joinToString() else ""
 
     /** The first of "name2".."name9" that [free] accepts, or null. */
-    private fun renamed(name: String, free: (String) -> Boolean): String? =
-        (2..9).map { name + it }.firstOrNull(free)
+    private fun renamed(name: String, free: (String) -> Boolean): String? = (2..9).map { name + it }.firstOrNull(free)
 
     /**
      * What importing [pack] would do, entry by entry and in order, with the same rules as [merge].

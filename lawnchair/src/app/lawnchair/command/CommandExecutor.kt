@@ -1,5 +1,6 @@
 package app.lawnchair.command
 
+import android.app.SearchManager
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.ComponentName
@@ -10,7 +11,6 @@ import android.net.Uri
 import android.os.Process
 import android.provider.AlarmClock
 import android.provider.ContactsContract
-import android.app.SearchManager
 
 /** Runs a [CommandAction] and loads the data the command bar completes from. */
 object CommandExecutor {
@@ -60,9 +60,8 @@ object CommandExecutor {
         }.getOrDefault(emptyList())
     }
 
-    fun hasContactsPermission(context: Context): Boolean =
-        context.checkSelfPermission(android.Manifest.permission.READ_CONTACTS) ==
-            android.content.pm.PackageManager.PERMISSION_GRANTED
+    fun hasContactsPermission(context: Context): Boolean = context.checkSelfPermission(android.Manifest.permission.READ_CONTACTS) ==
+        android.content.pm.PackageManager.PERMISSION_GRANTED
 
     /** True when the action was handed to the system, false when nothing could handle it. */
     fun execute(context: Context, action: CommandAction): Boolean = runCatching {
@@ -72,26 +71,32 @@ object CommandExecutor {
                 context.getSystemService(LauncherApps::class.java)
                     .startMainActivity(component, Process.myUserHandle(), null, null)
             }
+
             is CommandAction.SetAlarm -> start(
                 context,
                 Intent(AlarmClock.ACTION_SET_ALARM)
                     .putExtra(AlarmClock.EXTRA_HOUR, action.hour)
                     .putExtra(AlarmClock.EXTRA_MINUTES, action.minute),
             )
+
             is CommandAction.Calc -> {
                 val clipboard = context.getSystemService(ClipboardManager::class.java)
                 clipboard.setPrimaryClip(ClipData.newPlainText("calc", action.result))
             }
+
             is CommandAction.Call -> {
                 val uri = Uri.fromParts("tel", action.contact.number, null)
                 // Calls straight away when allowed; otherwise the dialer opens with the number.
                 start(context, Intent(if (hasCallPermission(context)) Intent.ACTION_CALL else Intent.ACTION_DIAL, uri))
             }
+
             is CommandAction.Custom -> return runCustom(context, action)
+
             is CommandAction.Route -> start(
                 context,
                 Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=" + Uri.encode(action.query))),
             )
+
             is CommandAction.NewTask -> start(
                 context,
                 Intent.createChooser(
@@ -99,6 +104,7 @@ object CommandExecutor {
                     null,
                 ),
             )
+
             is CommandAction.WebSearch -> start(
                 context,
                 Intent(Intent.ACTION_WEB_SEARCH).putExtra(SearchManager.QUERY, action.query),
@@ -107,9 +113,8 @@ object CommandExecutor {
         true
     }.getOrDefault(false)
 
-    fun hasCallPermission(context: Context): Boolean =
-        context.checkSelfPermission(android.Manifest.permission.CALL_PHONE) ==
-            android.content.pm.PackageManager.PERMISSION_GRANTED
+    fun hasCallPermission(context: Context): Boolean = context.checkSelfPermission(android.Manifest.permission.CALL_PHONE) ==
+        android.content.pm.PackageManager.PERMISSION_GRANTED
 
     /** The number with country code and digits only, as most deep links want it. */
     private fun normalizedNumber(raw: String): String {
@@ -170,12 +175,11 @@ object CommandExecutor {
     }
 
     /** Recipes from [CustomActions.PROBES] that [packageName] answers to, ready to bind to a letter. */
-    fun probeIntents(context: Context, packageName: String): List<CustomAction> =
-        CustomActions.PROBES.filter {
-            val sample = ContactEntry("", "1")
-            val intent = buildIntent(it, sample, "x", packageName)
-            context.packageManager.resolveActivity(intent, 0) != null
-        }.map { it.copy(packages = listOf(packageName)) }
+    fun probeIntents(context: Context, packageName: String): List<CustomAction> = CustomActions.PROBES.filter {
+        val sample = ContactEntry("", "1")
+        val intent = buildIntent(it, sample, "x", packageName)
+        context.packageManager.resolveActivity(intent, 0) != null
+    }.map { it.copy(packages = listOf(packageName)) }
 
     private fun startShortcut(context: Context, spec: CustomAction): Boolean {
         val pkg = spec.packages.firstOrNull() ?: return false
@@ -187,21 +191,19 @@ object CommandExecutor {
     private fun packageOf(app: AppEntry): String? = ComponentName.unflattenFromString(app.id)?.packageName
 
     /** What [packageName] offers to bind to a letter: catalog recipes, intents it answers to and launcher shortcuts. */
-    fun loadIntegrations(context: Context, packageName: String): List<CustomAction> =
-        CustomActions.CATALOG.filter { packageName in it.packages } +
-            loadShortcuts(context, packageName) +
-            probeIntents(context, packageName)
+    fun loadIntegrations(context: Context, packageName: String): List<CustomAction> = CustomActions.CATALOG.filter { packageName in it.packages } +
+        loadShortcuts(context, packageName) +
+        probeIntents(context, packageName)
 
     /** Only the apps with something to bind, one entry per package; apps that just open are left out. */
-    fun loadIntegrationApps(context: Context): List<AppEntry> =
-        loadApps(context)
-            .distinctBy { packageOf(it) }
-            .filter { app ->
-                val pkg = packageOf(app) ?: return@filter false
-                CustomActions.CATALOG.any { pkg in it.packages } ||
-                    loadShortcuts(context, pkg).isNotEmpty() ||
-                    probeIntents(context, pkg).isNotEmpty()
-            }
+    fun loadIntegrationApps(context: Context): List<AppEntry> = loadApps(context)
+        .distinctBy { packageOf(it) }
+        .filter { app ->
+            val pkg = packageOf(app) ?: return@filter false
+            CustomActions.CATALOG.any { pkg in it.packages } ||
+                loadShortcuts(context, pkg).isNotEmpty() ||
+                probeIntents(context, pkg).isNotEmpty()
+        }
 
     /** Launcher shortcuts an app publishes (manifest, dynamic and pinned), usable as actions. */
     fun loadShortcuts(context: Context, packageName: String): List<CustomAction> {

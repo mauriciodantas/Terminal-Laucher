@@ -7,9 +7,9 @@ import android.graphics.Paint
 import android.graphics.SweepGradient
 import android.util.AttributeSet
 import android.view.View
+import android.view.animation.LinearInterpolator
 import androidx.core.graphics.ColorUtils
 import app.lawnchair.theme.color.tokens.PhosphorColorToken
-import android.view.animation.LinearInterpolator
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin

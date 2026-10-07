@@ -15,8 +15,8 @@ import app.lawnchair.preferences2.PreferenceManager2
 import app.lawnchair.theme.color.tokens.PhosphorColorToken
 import app.lawnchair.util.repeatOnAttached
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
 /**
  * Phosphor look for the widgets the user adds: the widget is drawn in one tone, the phosphor color

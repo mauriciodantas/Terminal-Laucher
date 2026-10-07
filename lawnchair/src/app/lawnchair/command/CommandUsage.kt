@@ -39,6 +39,5 @@ object CommandUsage {
     }
 
     /** "usado 14×", or an empty string when it never ran. */
-    fun label(counts: Map<String, Int>, key: String): String =
-        counts[key]?.takeIf { it > 0 }?.let { "usado $it×" }.orEmpty()
+    fun label(counts: Map<String, Int>, key: String): String = counts[key]?.takeIf { it > 0 }?.let { "usado $it×" }.orEmpty()
 }

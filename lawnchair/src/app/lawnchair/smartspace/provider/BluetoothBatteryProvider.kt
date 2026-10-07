@@ -99,23 +99,22 @@ class BluetoothBatteryProvider(context: Context) :
 
     /** Connected devices of one profile, or nothing when the profile does not answer in time. */
     @SuppressLint("MissingPermission")
-    private suspend fun proxyDevices(adapter: BluetoothAdapter, profile: Int): List<BluetoothDevice> =
-        withTimeoutOrNull(PROXY_TIMEOUT_MS) {
-            suspendCancellableCoroutine { continuation ->
-                val listener = object : BluetoothProfile.ServiceListener {
-                    override fun onServiceConnected(profile: Int, proxy: BluetoothProfile) {
-                        val list = runCatching { proxy.connectedDevices }.getOrDefault(emptyList())
-                        adapter.closeProfileProxy(profile, proxy)
-                        if (continuation.isActive) continuation.resume(list)
-                    }
-
-                    override fun onServiceDisconnected(profile: Int) = Unit
+    private suspend fun proxyDevices(adapter: BluetoothAdapter, profile: Int): List<BluetoothDevice> = withTimeoutOrNull(PROXY_TIMEOUT_MS) {
+        suspendCancellableCoroutine { continuation ->
+            val listener = object : BluetoothProfile.ServiceListener {
+                override fun onServiceConnected(profile: Int, proxy: BluetoothProfile) {
+                    val list = runCatching { proxy.connectedDevices }.getOrDefault(emptyList())
+                    adapter.closeProfileProxy(profile, proxy)
+                    if (continuation.isActive) continuation.resume(list)
                 }
-                val started = runCatching { adapter.getProfileProxy(context, listener, profile) }
-                    .getOrDefault(false)
-                if (!started && continuation.isActive) continuation.resume(emptyList())
+
+                override fun onServiceDisconnected(profile: Int) = Unit
             }
-        } ?: emptyList()
+            val started = runCatching { adapter.getProfileProxy(context, listener, profile) }
+                .getOrDefault(false)
+            if (!started && continuation.isActive) continuation.resume(emptyList())
+        }
+    } ?: emptyList()
 
     /**
      * The battery the device reports, 0 to 100, or null when it does not report one. Tries the
@@ -135,10 +134,9 @@ class BluetoothBatteryProvider(context: Context) :
             .minOrNull()
     }
 
-    private fun hiddenInt(device: BluetoothDevice, method: String): Int? =
-        runCatching { BluetoothDevice::class.java.getMethod(method).invoke(device) as Int }
-            .onFailure { Log.w(TAG, "BluetoothDevice.$method unavailable", it) }
-            .getOrNull()
+    private fun hiddenInt(device: BluetoothDevice, method: String): Int? = runCatching { BluetoothDevice::class.java.getMethod(method).invoke(device) as Int }
+        .onFailure { Log.w(TAG, "BluetoothDevice.$method unavailable", it) }
+        .getOrNull()
 
     private fun metadataLevel(device: BluetoothDevice, key: Int): Int? = runCatching {
         val bytes = BluetoothDevice::class.java.getMethod("getMetadata", Int::class.javaPrimitiveType)
@@ -168,8 +166,7 @@ class BluetoothBatteryProvider(context: Context) :
         private const val METADATA_MAIN_BATTERY = 18
 
         /** True when the app may read the connected devices (needs the runtime permission from Android 12). */
-        fun hasPermission(context: Context): Boolean =
-            Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
-                context.checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
+        fun hasPermission(context: Context): Boolean = Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+            context.checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
     }
 }

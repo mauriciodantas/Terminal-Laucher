@@ -10,11 +10,10 @@ object BluetoothBattery {
     data class Summary(val title: String, val subtitle: String)
 
     /** Valid readings only, lowest battery first, so the device that needs charging leads. */
-    fun usable(devices: List<BluetoothDeviceBattery>): List<BluetoothDeviceBattery> =
-        devices
-            .filter { it.percent in 0..100 && it.name.isNotBlank() }
-            .distinctBy { it.name }
-            .sortedWith(compareBy({ it.percent }, { it.name }))
+    fun usable(devices: List<BluetoothDeviceBattery>): List<BluetoothDeviceBattery> = devices
+        .filter { it.percent in 0..100 && it.name.isNotBlank() }
+        .distinctBy { it.name }
+        .sortedWith(compareBy({ it.percent }, { it.name }))
 
     /** The summary, or null when no connected device reports a battery. */
     fun summarize(devices: List<BluetoothDeviceBattery>): Summary? {
@@ -37,7 +36,6 @@ enum class GlanceShortcut(val label: String) {
     ;
 
     companion object {
-        /** Label of the flashlight shortcut, which shows whether the torch is on. */
         /** Calculator apps to try when the system has no default calculator category (Samsung, Xiaomi...). */
         val CALCULATOR_PACKAGES = listOf(
             "com.sec.android.app.popupcalculator",
@@ -55,6 +53,7 @@ enum class GlanceShortcut(val label: String) {
             return l.contains("calculator") || l.contains("calculadora") || l == "calc"
         }
 
+        /** Label of the flashlight shortcut, which shows whether the torch is on. */
         fun torchLabel(on: Boolean): String = if (on) "[LANTERNA]" else TORCH.label
     }
 }

@@ -87,6 +87,7 @@ private val DemoContact = ContactEntry("Ana Souza", "+55 11 98765-4321")
  * Binds letters of the command bar to actions of other apps: recipes from the catalog and the
  * shortcuts an app publishes to the launcher. "w" (WhatsApp) is just the first preset.
  */
+@Suppress("ktlint:compose:modifier-missing-check")
 @Composable
 fun CommandActionsPreferences() {
     val context = LocalContext.current
@@ -186,8 +187,7 @@ fun CommandActionsPreferences() {
         q.isEmpty() || it.name.foldAccents().contains(q) || it.expansion.foldAccents().contains(q)
     }
 
-    fun usedLabel(key: String): String =
-        CommandUsage.label(usage, key).let { if (it.isEmpty()) "" else " · $it" }
+    fun usedLabel(key: String): String = CommandUsage.label(usage, key).let { if (it.isEmpty()) "" else " · $it" }
 
     Box(Modifier.fillMaxSize()) {
         PreferenceLayout(label = stringResource(R.string.command_actions_title)) {
@@ -551,12 +551,14 @@ private fun PreviewBox(analysis: Analysis?, intro: String? = null) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+
             analysis.intent.isNotEmpty() -> Text(
                 analysis.intent,
                 style = MaterialTheme.typography.bodySmall,
                 fontFamily = FontFamily.Monospace,
                 color = MaterialTheme.colorScheme.tertiary,
             )
+
             else -> Text(
                 analysis.preview.lowercase().replaceFirstChar { it.uppercase() },
                 style = MaterialTheme.typography.bodySmall,

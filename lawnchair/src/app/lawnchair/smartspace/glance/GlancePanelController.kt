@@ -8,10 +8,10 @@ import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
-import android.provider.AlarmClock
-import android.provider.MediaStore
 import android.os.Handler
 import android.os.Looper
+import android.provider.AlarmClock
+import android.provider.MediaStore
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
@@ -237,8 +237,10 @@ class GlancePanelController(
         val pm = context.packageManager
         return when (this) {
             GlanceShortcut.TORCH -> pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH)
+
             GlanceShortcut.CAMERA -> pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY) ||
                 pm.resolveActivity(Intent(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA), 0) != null
+
             else -> true
         }
     }
