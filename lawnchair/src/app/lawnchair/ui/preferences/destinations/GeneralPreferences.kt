@@ -16,6 +16,7 @@
 
 package app.lawnchair.ui.preferences.destinations
 
+import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -23,12 +24,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.lawnchair.preferences.PreferenceAdapter
 import app.lawnchair.preferences.getAdapter
 import app.lawnchair.preferences.preferenceManager
 import app.lawnchair.preferences2.preferenceManager2
 import app.lawnchair.theme.color.ColorOption
 import app.lawnchair.ui.preferences.LocalIsExpandedScreen
 import app.lawnchair.ui.preferences.components.NotificationDotsPreference
+import app.lawnchair.ui.preferences.components.colorpreference.ColorGuard
 import app.lawnchair.ui.preferences.components.colorpreference.ColorPreference
 import app.lawnchair.ui.preferences.components.controls.ListPreference
 import app.lawnchair.ui.preferences.components.controls.ListPreferenceEntry
@@ -66,8 +69,21 @@ fun GeneralPreferences(modifier: Modifier = Modifier) {
         }
 
         PreferenceGroup(heading = stringResource(id = R.string.colors)) {
+            val accentAdapter = prefs2.accentColor.getAdapter()
+            val guardedAccent = remember(accentAdapter) {
+                object : PreferenceAdapter<ColorOption> {
+                    override val state = accentAdapter.state
+                    override fun onChange(newValue: ColorOption) {
+                        if (ColorGuard.conflicts(context, ColorGuard.Role.ACCENT, newValue)) {
+                            Toast.makeText(context, R.string.color_conflict_accent, Toast.LENGTH_LONG).show()
+                        } else {
+                            accentAdapter.onChange(newValue)
+                        }
+                    }
+                }
+            }
             ListPreference(
-                adapter = prefs2.accentColor.getAdapter(),
+                adapter = guardedAccent,
                 entries = phosphorEntries,
                 label = stringResource(id = R.string.phosphor_color_label),
             )

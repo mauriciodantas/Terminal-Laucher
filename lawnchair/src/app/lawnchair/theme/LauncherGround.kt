@@ -25,10 +25,27 @@ object LauncherGround {
     /** [option]'s color, or the user's phosphor accent when it is the default, so a choice left alone follows the accent. */
     fun orAccent(option: ColorOption, context: Context): Int = resolve(option, context) ?: PhosphorColorToken(1f).resolveColor(context)
 
-    /** The user's color, or null when they kept the default. */
+    /**
+     * The least contrast between the accent (the text, the lines) and the background. Below it the
+     * interface cannot be read, so such a pair is refused when the user picks it and, should one
+     * exist anyway (a restored backup), the background falls back to the default.
+     */
+    const val MIN_VISIBILITY = 3.0
+
+    /** True when text in [accent] reads over [ground] with at least [MIN_VISIBILITY]. */
+    fun isVisible(accent: Int, ground: Int): Boolean = ColorUtils.calculateContrast(accent or OPAQUE, ground or OPAQUE) >= MIN_VISIBILITY
+
+    /** The background [option] stands for, or null for the default; also null when it would hide the accent. */
+    fun resolveBackground(option: ColorOption, context: Context): Int? {
+        val color = resolve(option, context) ?: return null
+        val accent = ThemeProvider.INSTANCE.get(context).phosphorColor
+        return color.takeIf { isVisible(accent, it) }
+    }
+
+    /** The user's color, or null when they kept the default or it would hide the accent. */
     fun custom(context: Context): Int? {
         val prefs2 = PreferenceManager2.getInstance(context)
-        return resolve(prefs2.launcherBackgroundColor.firstCached(prefs2), context)
+        return resolveBackground(prefs2.launcherBackgroundColor.firstCached(prefs2), context)
     }
 
     fun get(context: Context): Int = custom(context) ?: DEFAULT

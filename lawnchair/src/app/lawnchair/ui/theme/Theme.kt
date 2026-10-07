@@ -95,7 +95,7 @@ fun getColorScheme(@Suppress("UNUSED_PARAMETER") darkTheme: Boolean): ColorSchem
     return remember(accentColor, background) {
         nostromoColorScheme(
             ThemeProvider.INSTANCE.get(context).phosphorOf(accentColor),
-            LauncherGround.resolve(background, context) ?: LauncherGround.DEFAULT,
+            LauncherGround.resolveBackground(background, context) ?: LauncherGround.DEFAULT,
         )
     }
 }

@@ -296,7 +296,7 @@ class LawnchairLauncher : QuickstepLauncher() {
         }
         preferenceManager2.launcherBackgroundColor.onEach(launchIn = lifecycleScope) { option ->
             // Default (0) keeps the terminal black from the theme; anything else is the user's pick.
-            window?.setBackgroundDrawable(ColorDrawable(LauncherGround.resolve(option, this) ?: getColor(R.color.terminal_background)))
+            window?.setBackgroundDrawable(ColorDrawable(LauncherGround.resolveBackground(option, this) ?: getColor(R.color.terminal_background)))
         }
         preferenceManager2.roundedWidgets.onEach(launchIn = lifecycleScope) {
             RoundedCornerEnforcement.sRoundedCornerEnabled = it

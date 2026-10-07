@@ -12,14 +12,18 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -67,10 +71,20 @@ fun ColorSelection(
         else -> 1
     }
 
+    val role = remember(preference) { ColorGuard.roleOf(preference.key.name, context) }
+    val conflicts = { option: ColorOption -> role != null && ColorGuard.conflicts(context, role, option) }
+    var presetRefused by remember { mutableStateOf(false) }
+
     val onPresetClick = { option: ColorOption ->
-        selectedColor.intValue = option.forCustomPicker(context)
-        adapter.onChange(newValue = option)
+        if (conflicts(option)) {
+            presetRefused = true
+        } else {
+            presetRefused = false
+            selectedColor.intValue = option.forCustomPicker(context)
+            adapter.onChange(newValue = option)
+        }
     }
+    val customRefused by remember { derivedStateOf { conflicts(ColorOption.CustomColor(selectedColor.intValue)) } }
 
     val pagerState = rememberPagerState(
         initialPage = defaultTabIndex,
@@ -80,7 +94,8 @@ fun ColorSelection(
     // While the custom picker is open, the color being mixed shows on this screen before it is applied.
     val previewKey = preference.key.name
     LaunchedEffect(pagerState.currentPage, selectedColor.intValue) {
-        if (pagerState.currentPage == 1) {
+        // A color that would hide the interface is never tried on the screen.
+        if (pagerState.currentPage == 1 && !customRefused) {
             ColorPreview.set(previewKey, ColorOption.CustomColor(selectedColor.intValue))
         } else {
             ColorPreview.clear()
@@ -100,7 +115,7 @@ fun ColorSelection(
                 horizontalAlignment = Alignment.End,
             ) {
                 Button(
-                    enabled = !selectedColorApplied.value,
+                    enabled = !selectedColorApplied.value && !customRefused,
                     onClick = {
                         adapter.onChange(newValue = ColorOption.CustomColor(selectedColor.intValue))
                         navController.popBackStack()
@@ -121,6 +136,15 @@ fun ColorSelection(
             { page: Int -> scope.launch { pagerState.animateScrollToPage(page) } }
 
         Column {
+            val refused = if (pagerState.currentPage == 1) customRefused else presetRefused
+            if (refused && role != null) {
+                Text(
+                    text = stringResource(role.explanation),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
+                )
+            }
             Row(
                 horizontalArrangement = Arrangement.spacedBy(space = 8.dp),
                 modifier = Modifier.padding(horizontal = 16.dp),
