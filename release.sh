@@ -8,26 +8,57 @@ set -e
 #
 # Uso:
 #   ./release.sh              compila o bundle assinado e publica na Play Store
+#   ./release.sh --tracks internal,closed-testing
+#                             publica em várias faixas com UM só build
 #   ./release.sh --build-only compila e assina o bundle (.aab), sem publicar
 #   ./release.sh --apk        compila e assina um APK para instalar/testar
 #
 # Variáveis opcionais:
 #   OP_VAULT     cofre do 1Password (padrão: Android)
-#   PLAY_TRACK   faixa da Play Store (padrão: internal)
+#   PLAY_TRACK   faixa(s) da Play Store, separadas por vírgula (padrão: internal).
+#                O build é publicado na primeira e promovido às demais, então
+#                todas recebem o mesmo versionCode. Apelidos aceitos:
+#                closed-testing/closed -> alpha, open-testing/open -> beta,
+#                prod -> production. Faixas personalizadas valem pelo nome.
 #   GRADLE_TASK  tarefa de publicação (padrão: publishLawnWithQuickstepPlayReleaseBundle)
 
 BUILD_ONLY=0
 BUILD_APK=0
-for arg in "$@"; do
+ARGS=("$@")
+for ((i = 0; i < ${#ARGS[@]}; i++)); do
+    arg="${ARGS[$i]}"
     case "$arg" in
+        --tracks) i=$((i + 1)); PLAY_TRACK="${ARGS[$i]:?ERRO: --tracks precisa de um valor}" ;;
         --build-only) BUILD_ONLY=1 ;;
         --apk) BUILD_APK=1 ;;
-        -h|--help) sed -n '4,17p' "$0"; exit 0 ;;
+        --tracks=*) PLAY_TRACK="${arg#--tracks=}" ;;
+        -h|--help) sed -n '4,24p' "$0"; exit 0 ;;
         *) echo "ERRO: argumento desconhecido: $arg" >&2; exit 1 ;;
     esac
 done
 
 cd "$(dirname "$0")"
+
+# ── Faixas de publicação ─────────────────────────────────────────────────────
+# Normaliza a lista (apelidos, espaços, repetidas) e valida antes de gastar
+# minutos compilando ou buscando credenciais.
+TRACKS=()
+IFS=',' read -r -a RAW_TRACKS <<< "${PLAY_TRACK:-internal}"
+for raw in "${RAW_TRACKS[@]}"; do
+    track="$(echo "$raw" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')"
+    case "$track" in
+        "") continue ;;
+        closed|closed-testing|closedtesting|teste-fechado) track="alpha" ;;
+        open|open-testing|opentesting|teste-aberto) track="beta" ;;
+        prod) track="production" ;;
+    esac
+    [[ "$track" =~ ^[a-z0-9_-]+$ ]] || { echo "ERRO: faixa inválida: '$raw'" >&2; exit 1; }
+    already=0
+    for t in ${TRACKS[@]+"${TRACKS[@]}"}; do [ "$t" = "$track" ] && already=1; done
+    [ "$already" -eq 0 ] && TRACKS+=("$track")
+done
+[ "${#TRACKS[@]}" -gt 0 ] || TRACKS=(internal)
+PRIMARY_TRACK="${TRACKS[0]}"
 
 # ── Credenciais via 1Password CLI ────────────────────────────────────────────
 # Keystore, service account e senhas de assinatura vêm do 1Password em tempo
@@ -101,7 +132,7 @@ echo "Generating new release version: Code $VERSION_CODE | Name $VERSION_NAME"
 # código-fonte não é alterado (diferente do sed do watchface).
 export ORG_GRADLE_PROJECT_RELEASE_VERSION_CODE="$VERSION_CODE"
 export ORG_GRADLE_PROJECT_RELEASE_VERSION_NAME="$VERSION_NAME"
-export ORG_GRADLE_PROJECT_PLAY_TRACK="${PLAY_TRACK:-internal}"
+export ORG_GRADLE_PROJECT_PLAY_TRACK="$PRIMARY_TRACK"
 
 # Builds anteriores deixam artefatos do KSP e do dex que quebram o build
 # seguinte; um clean evita o problema (`classes2.dex` / erros de KSP).
@@ -131,7 +162,28 @@ if [ "$BUILD_ONLY" -eq 1 ]; then
 fi
 
 # Execute build and publish using Gradle Play Publisher
-echo "Building and Publishing to Play Store (faixa: $ORG_GRADLE_PROJECT_PLAY_TRACK)..."
+echo "Building and Publishing to Play Store (faixa: $PRIMARY_TRACK)..."
 ./gradlew "${GRADLE_TASK:-publishLawnWithQuickstepPlayReleaseBundle}" --no-daemon
 
-echo "Release $VERSION_NAME published successfully."
+# As demais faixas recebem o MESMO build, promovido a partir da primeira. Uma
+# faixa que falhe (nome inexistente, por exemplo) não impede as outras; o
+# resumo no fim diz o que foi publicado e o script sai com erro.
+FAILED=()
+for track in ${TRACKS[@]+"${TRACKS[@]:1}"}; do
+    echo "Promovendo $PRIMARY_TRACK -> $track..."
+    if ! ./gradlew promoteArtifact --from-track "$PRIMARY_TRACK" --promote-track "$track" --no-daemon; then
+        FAILED+=("$track")
+    fi
+done
+
+echo "Release $VERSION_NAME (code $VERSION_CODE) publicado em: $PRIMARY_TRACK"
+for track in ${TRACKS[@]+"${TRACKS[@]:1}"}; do
+    case " ${FAILED[*]-} " in
+        *" $track "*) echo "  FALHOU: $track" ;;
+        *) echo "  promovido: $track" ;;
+    esac
+done
+if [ "${#FAILED[@]}" -gt 0 ]; then
+    echo "ERRO: não foi possível promover para: ${FAILED[*]}" >&2
+    exit 1
+fi

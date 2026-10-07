@@ -58,7 +58,7 @@ Tests:
 
 ## Release
 
-When the user asks for a "release", they always mean: build a new version and publish it to the Play Store **internal** track. Run `./release.sh` (default track is `internal`). Do only a build without publishing (`--build-only` for the `.aab`, `--apk` for an installable APK) or use another track (`PLAY_TRACK=...`) when the user explicitly asks for it.
+When the user asks for a "release", they always mean: build a new version and publish it to the Play Store **internal** track. Run `./release.sh` (default track is `internal`). Do only a build without publishing (`--build-only` for the `.aab`, `--apk` for an installable APK) or use another track (`PLAY_TRACK=...`) when the user explicitly asks for it. To publish to several tracks, pass them together (`./release.sh --tracks internal,closed-testing`): the script builds once, publishes to the first and promotes the same build to the others (`closed-testing` is the `alpha` track).
 
 `release.sh` fetches the signing credentials from 1Password (`op`), generates `versionCode`/`versionName` from the date and, without flags, publishes through Gradle Play Publisher. Artifacts from `--build-only` and `--apk` go to `releases/`, which is gitignored. The branch is `16-dev`; commit and push it before releasing.
 
