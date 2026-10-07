@@ -54,6 +54,7 @@ import app.lawnchair.qsb.rememberAllAppsQsbState
 import app.lawnchair.search.LawnchairRecentSuggestionProvider
 import app.lawnchair.search.algorithms.LawnchairSearchAlgorithm
 import app.lawnchair.theme.color.tokens.ColorTokens
+import app.lawnchair.theme.color.tokens.PhosphorColorToken
 import app.lawnchair.ui.theme.LawnchairTheme
 import app.lawnchair.util.ProvideLifecycleState
 import com.android.launcher3.Insettable
@@ -131,6 +132,8 @@ class AllAppsSearchInput(context: Context, attrs: AttributeSet?) :
         input = ViewCompat.requireViewById(this, R.id.input)
         input.setHint(R.string.nostromo_filter_hint)
         input.setTextColor(ColorTokens.ColorAccent.resolveColor(context))
+        // The theme's hint color is a fixed teal; the dim phosphor reads on any background.
+        input.setHintTextColor(PhosphorColorToken(0.62f).resolveColor(context))
 
         qsbShell = ViewCompat.requireViewById(this, R.id.qsb_shell)
 
@@ -406,7 +409,7 @@ class AllAppsSearchInput(context: Context, attrs: AttributeSet?) :
             focusedLowerCase.matches(Regex("^[\\x00-\\x7F]*$")) &&
             focusedLowerCase.startsWith(inputLowerCase)
         ) {
-            val hintColor = Themes.getAttrColor(context, android.R.attr.textColorTertiary)
+            val hintColor = PhosphorColorToken(0.62f).resolveColor(context)
             val hintText = SpannableStringBuilder(inputString)
                 .append(focusedLowerCase.substring(inputLowerCase.length))
             hintText.setSpan(ForegroundColorSpan(Color.TRANSPARENT), 0, inputLowerCase.length, SPAN_POINT_MARK)

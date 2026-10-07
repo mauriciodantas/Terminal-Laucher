@@ -978,6 +978,10 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
     /** Makes this view a directory row with an explicit dim [code] before the [title]. */
     public void setDirectoryLabel(String code, CharSequence title) {
         mDirectoryIndex = 0;
+        if (mDisplay == DISPLAY_ALL_APPS || mDisplay == DISPLAY_DRAWER_FOLDER) {
+            // The theme text color is set after construction, so the drawer check runs again here.
+            LawnchairUtilsKt.overrideAllAppsTextColor(this);
+        }
         SpannableString label = new SpannableString(code + "  " + title);
         int dim = ColorUtils.setAlphaComponent(getCurrentTextColor(), 0x99);
         label.setSpan(new ForegroundColorSpan(dim), 0, code.length(),

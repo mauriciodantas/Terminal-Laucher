@@ -53,6 +53,7 @@ import app.lawnchair.preferences2.PreferenceManager2
 import app.lawnchair.preferences2.firstCached
 import app.lawnchair.theme.color.ColorOption
 import app.lawnchair.theme.color.tokens.ColorTokens
+import app.lawnchair.theme.color.tokens.PhosphorColorToken
 import com.android.launcher3.BaseActivity
 import com.android.launcher3.BuildConfig
 import com.android.launcher3.R
@@ -150,11 +151,24 @@ fun supportsRoundedCornersOnWindows(context: Context): Boolean {
 
 fun overrideAllAppsTextColor(textView: TextView) {
     val context = textView.context
-    val luminance = getAllAppsBaseColor(context, ColorTokens.AllAppsScrimColor.resolveColor(context)).luminance
     val opacity = PreferenceManager.getInstance(context).drawerOpacity.get()
-    if (luminance > 0.5f || opacity <= 0.3f) {
-        textView.setTextColor(Themes.getAttrColor(context, R.attr.allAppsAlternateTextColor))
+    // A see-through drawer shows the launcher ground; otherwise it is painted with its own base color.
+    val base = if (opacity <= 0.3f) {
+        app.lawnchair.theme.LauncherGround.get(context)
+    } else {
+        getAllAppsBaseColor(context, ColorTokens.AllAppsScrimColor.resolveColor(context))
     }
+    // The text keeps its color while it reads over the drawer. When it does not (a light text on a
+    // light drawer, a dark accent on a dark one) the phosphor takes over if it reads, else a plain ink.
+    val current = textView.currentTextColor or 0xFF000000.toInt()
+    if (ColorUtils.calculateContrast(current, base) >= MIN_TEXT_CONTRAST) return
+    val phosphor = PhosphorColorToken(1f).resolveColor(context)
+    val readable = if (ColorUtils.calculateContrast(phosphor, base) >= MIN_TEXT_CONTRAST) {
+        phosphor
+    } else {
+        app.lawnchair.theme.LauncherGround.ink(base)
+    }
+    textView.setTextColor(readable)
 }
 
 @Suppress("UNCHECKED_CAST")
@@ -219,6 +233,8 @@ fun resolveFolderBackgroundColor(context: Context): Int {
         ColorTokens.FolderBackgroundColor.resolveColor(context)
     }
 }
+
+private const val MIN_TEXT_CONTRAST = 4.5
 
 /** Apply Lawnchair custom allapps colour to the provided colour */
 @Suppress("UNUSED_PARAMETER")
