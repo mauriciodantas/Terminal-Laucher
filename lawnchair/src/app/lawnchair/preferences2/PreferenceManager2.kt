@@ -209,7 +209,8 @@ class PreferenceManager2 @Inject constructor(
         parse = ColorOption::fromString,
         save = ColorOption::toString,
         onSet = { reloadHelper.restart() },
-        defaultValue = ColorOption.fromString(context.getString(R.string.config_default_accent_color)),
+        // Default follows the accent (phosphor) color; picking a color overrides it.
+        defaultValue = ColorOption.Default,
     )
 
     /** The home screen background. [ColorOption.Default] keeps the terminal black of the theme. */

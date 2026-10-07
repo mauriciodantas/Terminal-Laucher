@@ -30,7 +30,13 @@ class ColorPreferenceModelList @Inject constructor(
             ColorPreferenceModel(
                 prefObject = prefs.strokeColorStyle,
                 labelRes = R.string.qsb_hotseat_stroke_color,
-                dynamicEntries = dynamicColors,
+                dynamicEntries = listOf(
+                    ColorPreferenceEntry<ColorOption>(
+                        ColorOption.Default,
+                        { stringResource(R.string.follow_accent) },
+                        { 0 },
+                    ),
+                ) + dynamicColors,
             ),
         )
         registerModel(

@@ -6,6 +6,7 @@ import androidx.core.graphics.ColorUtils
 import app.lawnchair.preferences2.PreferenceManager2
 import app.lawnchair.preferences2.firstCached
 import app.lawnchair.theme.color.ColorOption
+import app.lawnchair.theme.color.tokens.PhosphorColorToken
 
 /**
  * The terminal "ground": the color everything else is drawn over. It is the near-black of the theme
@@ -20,6 +21,9 @@ object LauncherGround {
     fun resolve(option: ColorOption, context: Context): Int? = option.colorPreferenceEntry.lightColor(context)
         .takeIf { it != 0 }
         ?.let { it or OPAQUE }
+
+    /** [option]'s color, or the user's phosphor accent when it is the default, so a choice left alone follows the accent. */
+    fun orAccent(option: ColorOption, context: Context): Int = resolve(option, context) ?: PhosphorColorToken(1f).resolveColor(context)
 
     /** The user's color, or null when they kept the default. */
     fun custom(context: Context): Int? {
