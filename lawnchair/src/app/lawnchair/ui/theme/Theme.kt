@@ -86,11 +86,15 @@ fun ComponentActivity.EdgeToEdge() {
 @Composable
 fun getColorScheme(@Suppress("UNUSED_PARAMETER") darkTheme: Boolean): ColorScheme {
     val context = LocalContext.current
-    val accentColor by preferenceManager2().accentColor.asState()
-    val background by preferenceManager2().launcherBackgroundColor.asState()
+    val prefs = preferenceManager2()
+    val savedAccent by prefs.accentColor.asState()
+    val savedBackground by prefs.launcherBackgroundColor.asState()
+    // A color being tried in a picker shows on this very screen before it is applied.
+    val accentColor = ColorPreview.optionFor(prefs.accentColor.key.name) ?: savedAccent
+    val background = ColorPreview.optionFor(prefs.launcherBackgroundColor.key.name) ?: savedBackground
     return remember(accentColor, background) {
         nostromoColorScheme(
-            ThemeProvider.INSTANCE.get(context).phosphorColor,
+            ThemeProvider.INSTANCE.get(context).phosphorOf(accentColor),
             LauncherGround.resolve(background, context) ?: LauncherGround.DEFAULT,
         )
     }

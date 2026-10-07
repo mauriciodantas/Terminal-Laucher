@@ -14,6 +14,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -23,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.datastore.preferences.core.Preferences
 import app.lawnchair.preferences.getAdapter
 import app.lawnchair.theme.color.ColorOption
 import app.lawnchair.ui.preferences.LocalNavController
@@ -32,6 +35,7 @@ import app.lawnchair.ui.preferences.components.colorpreference.pickers.SwatchGri
 import app.lawnchair.ui.preferences.components.layout.BottomSpacer
 import app.lawnchair.ui.preferences.components.layout.Chip
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
+import app.lawnchair.ui.theme.ColorPreview
 import com.android.launcher3.R
 import com.android.launcher3.util.MSDLPlayerWrapper
 import com.google.android.msdl.data.model.MSDLToken
@@ -41,7 +45,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun ColorSelection(
     label: String,
-    preference: Preference<ColorOption, String, *>,
+    preference: Preference<ColorOption, String, Preferences.Key<String>>,
     modifier: Modifier = Modifier,
     dynamicEntries: List<ColorPreferenceEntry<ColorOption>> = dynamicColors,
     staticEntries: List<ColorPreferenceEntry<ColorOption>> = staticColors,
@@ -72,6 +76,17 @@ fun ColorSelection(
         initialPage = defaultTabIndex,
         pageCount = { 2 },
     )
+
+    // While the custom picker is open, the color being mixed shows on this screen before it is applied.
+    val previewKey = preference.key.name
+    LaunchedEffect(pagerState.currentPage, selectedColor.intValue) {
+        if (pagerState.currentPage == 1) {
+            ColorPreview.set(previewKey, ColorOption.CustomColor(selectedColor.intValue))
+        } else {
+            ColorPreview.clear()
+        }
+    }
+    DisposableEffect(Unit) { onDispose { ColorPreview.clear() } }
     PreferenceLayout(
         label = label,
         modifier = modifier,

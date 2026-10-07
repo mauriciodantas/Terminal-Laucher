@@ -89,7 +89,10 @@ class ThemeProvider @Inject constructor(
     }
 
     /** The terminal phosphor color: the user's custom accent, or Nostromo green. */
-    val phosphorColor: Int get() = (accentColor as? ColorOption.CustomColor)?.color ?: NOSTROMO_PHOSPHOR
+    val phosphorColor: Int get() = phosphorOf(accentColor)
+
+    /** The phosphor color an accent [option] stands for. */
+    fun phosphorOf(option: ColorOption): Int = (option as? ColorOption.CustomColor)?.color ?: NOSTROMO_PHOSPHOR
 
     val colorScheme get() = when (val accentColor = this.accentColor) {
         is ColorOption.SystemAccent -> systemColorScheme
