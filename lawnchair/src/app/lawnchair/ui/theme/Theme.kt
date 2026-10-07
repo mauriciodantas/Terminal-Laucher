@@ -89,10 +89,8 @@ fun getColorScheme(@Suppress("UNUSED_PARAMETER") darkTheme: Boolean): ColorSchem
     val accentColor by preferenceManager2().accentColor.asState()
     val background by preferenceManager2().launcherBackgroundColor.asState()
     return remember(accentColor, background) {
-        nostromoColorScheme(
-            ThemeProvider.INSTANCE.get(context).phosphorColor,
-            LauncherGround.resolve(background, context) ?: LauncherGround.DEFAULT,
-        )
+        val ground = LauncherGround.resolve(background, context) ?: LauncherGround.DEFAULT
+        nostromoColorScheme(LauncherGround.readable(ThemeProvider.INSTANCE.get(context).rawPhosphorColor, ground), ground)
     }
 }
 
