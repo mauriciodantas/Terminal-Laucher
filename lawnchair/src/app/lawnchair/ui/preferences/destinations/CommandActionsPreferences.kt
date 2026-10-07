@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -554,18 +555,30 @@ private fun <T> PickerDialog(
     )
 }
 
-/** The line a preview shows: the technical intent when the command can run, otherwise why it cannot. */
+/**
+ * The dashed box under the editors: what was typed, the technical intent it produces (or why it
+ * cannot run) and an optional [note].
+ */
 @Composable
-private fun PreviewBox(analysis: Analysis?, intro: String? = null) {
+private fun PreviewBox(analysis: Analysis?, intro: String? = null, note: String? = null) {
     if (analysis == null) return
     val problem = analysis.action == null && analysis.tone == Tone.ERROR
-    Column(Modifier.fillMaxWidth().padding(top = 12.dp)) {
-        Text(
-            stringResource(R.string.cmd_pref_preview),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        if (intro != null) Text(intro, style = MaterialTheme.typography.bodyMedium)
+    val stroke = MaterialTheme.colorScheme.primary
+    Column(
+        Modifier
+            .padding(top = 12.dp)
+            .fillMaxWidth()
+            .drawBehind {
+                drawRoundRect(
+                    color = stroke,
+                    cornerRadius = CornerRadius(8.dp.toPx()),
+                    style = Stroke(width = 1.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f))),
+                )
+            }
+            .padding(10.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        if (intro != null) Text(intro, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace)
         when {
             analysis.needsContacts -> Text(
                 stringResource(R.string.cmd_pref_needs_contacts),
@@ -574,7 +587,7 @@ private fun PreviewBox(analysis: Analysis?, intro: String? = null) {
             )
 
             analysis.intent.isNotEmpty() -> Text(
-                analysis.intent,
+                "⇢ " + analysis.intent,
                 style = MaterialTheme.typography.bodySmall,
                 fontFamily = FontFamily.Monospace,
                 color = MaterialTheme.colorScheme.tertiary,
@@ -585,6 +598,9 @@ private fun PreviewBox(analysis: Analysis?, intro: String? = null) {
                 style = MaterialTheme.typography.bodySmall,
                 color = if (problem) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
             )
+        }
+        if (note != null) {
+            Text(note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -618,10 +634,10 @@ private fun LetterDialog(
     }
     // Without contacts access the preview uses a sample contact, and that one is never run.
     val pool = contacts.ifEmpty { listOf(DemoContact) }
+    val typed = draft.letter + if (sample.isBlank()) "" else " $sample"
     val analysis = if (error != null) {
         null
     } else {
-        val typed = draft.letter + if (sample.isBlank()) "" else " $sample"
         CommandEngine.analyze(typed, emptyList(), pool, true, listOf(draft), emptyList())
     }
     val runnable = (analysis?.action as? CommandAction.Custom)
@@ -646,10 +662,10 @@ private fun LetterDialog(
                     onValueChange = { name = it },
                     singleLine = true,
                     textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
-                    label = { Text(stringResource(R.string.cmd_pref_manual_name)) },
+                    label = { Text(stringResource(R.string.cmd_pref_name_label)) },
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                 )
-                LetterPreview(draft.letter, sample, analysis, draft.smsFallback)
+                LetterPreview(draft.letter, sample, analysis, draft.smsFallback, draft.label)
                 if (step.draft.arg != ArgKind.NONE) {
                     OutlinedTextField(
                         value = sample,
@@ -663,6 +679,7 @@ private fun LetterDialog(
                 }
             }
         },
+        // One row of buttons, as in the prototype: Remover on the left, the rest on the right.
         confirmButton = {
             DialogButtons(
                 saveEnabled = error == null && name.isNotBlank(),
@@ -708,7 +725,7 @@ private fun DialogButtons(
 
 /** What typing the letter with the sample does: the command with its argument highlighted, then the intent. */
 @Composable
-private fun LetterPreview(letter: String, sample: String, analysis: Analysis?, smsFallback: Boolean) {
+private fun LetterPreview(letter: String, sample: String, analysis: Analysis?, smsFallback: Boolean, appLabel: String) {
     if (analysis == null) return
     val line = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
     val mono = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace)
@@ -744,7 +761,7 @@ private fun LetterPreview(letter: String, sample: String, analysis: Analysis?, s
             analysis.intent.isNotEmpty() -> {
                 Text("→ ${analysis.intent}", style = mono)
                 if (smsFallback) {
-                    Text(stringResource(R.string.cmd_pref_sms_fallback), style = mono)
+                    Text(stringResource(R.string.cmd_pref_sms_fallback, appLabel), style = mono)
                 }
             }
 
@@ -1015,7 +1032,7 @@ private fun AdvancedDialog(
                         modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                     )
                 }
-                LetterPreview(PREVIEW_LETTER, sample, analysis, draft.smsFallback)
+                LetterPreview(PREVIEW_LETTER, sample, analysis, draft.smsFallback, draft.label)
             }
         },
         confirmButton = {

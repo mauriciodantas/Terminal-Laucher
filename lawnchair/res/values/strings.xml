@@ -1216,7 +1216,8 @@
     <string name="cmd_pref_kind_intent" translatable="false">Intent · </string>
     <string name="cmd_pref_letter_label" translatable="false">Letra</string>
     <string name="cmd_pref_letter_title" translatable="false">Letra da ação</string>
-    <string name="cmd_pref_sms_fallback" translatable="false">Sem o app instalado: abre SMS</string>
+    <string name="cmd_pref_name_label" translatable="false">Nome</string>
+    <string name="cmd_pref_sms_fallback" translatable="false">Sem %1$s instalado: abre SMS</string>
     <string name="cmd_pref_try_label" translatable="false">Experimente</string>
     <string name="cmd_pref_sample_text" translatable="false">exemplo</string>
     <string name="cmd_pref_sample_contact" translatable="false">ana</string>
