@@ -8,19 +8,18 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.RadioButton
-import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -29,24 +28,26 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.lawnchair.command.ACTION_VIEW
+import app.lawnchair.command.ActionKind
 import app.lawnchair.command.AliasStore
 import app.lawnchair.command.Aliases
-import app.lawnchair.command.CommandAlias
-import app.lawnchair.command.ActionKind
 import app.lawnchair.command.AppEntry
 import app.lawnchair.command.ArgKind
 import app.lawnchair.command.CommandAction
+import app.lawnchair.command.CommandAlias
 import app.lawnchair.command.CommandExecutor
+import app.lawnchair.command.CommandPack
 import app.lawnchair.command.CommandPacks
-import app.lawnchair.command.ImportCommandsActivity
 import app.lawnchair.command.CustomAction
 import app.lawnchair.command.CustomActionStore
 import app.lawnchair.command.CustomActions
+import app.lawnchair.command.ImportCommandsActivity
 import app.lawnchair.ui.preferences.components.controls.ClickablePreference
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
@@ -86,13 +87,18 @@ fun CommandActionsPreferences() {
         CustomActionStore.save(context, list)
     }
 
+    // What the user chose to send; set once the selection dialog is confirmed.
+    var sharing by remember { mutableStateOf<ShareMode?>(null) }
+    var selection by remember { mutableStateOf<CommandPack?>(null) }
+
     val exporter = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument(CommandPacks.MIME),
     ) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
         val ok = runCatching {
             context.contentResolver.openOutputStream(uri)?.use {
-                it.write(CommandPacks.encode(actions, aliases).toByteArray())
+                val pack = selection ?: CommandPack(actions, aliases)
+                it.write(CommandPacks.encode(pack.actions, pack.aliases).toByteArray())
             } != null
         }.getOrDefault(false)
         Toast.makeText(context, if (ok) "Comandos exportados" else "Falha ao exportar", Toast.LENGTH_SHORT).show()
@@ -153,17 +159,13 @@ fun CommandActionsPreferences() {
             )
             ClickablePreference(
                 label = "Compartilhar comandos",
-                subtitle = "Envia ações e apelidos como arquivo por conversa, e-mail ou nuvem",
-                onClick = {
-                    val send = CommandPacks.shareIntent(context, actions, aliases)
-                    if (send != null) context.startActivity(send)
-                    else Toast.makeText(context, "Falha ao compartilhar", Toast.LENGTH_SHORT).show()
-                },
+                subtitle = "Escolha uma ou várias ações e apelidos e envie como arquivo",
+                onClick = { sharing = ShareMode.Share },
             )
             ClickablePreference(
                 label = "Exportar comandos",
-                subtitle = "Salva ações e apelidos em um arquivo",
-                onClick = { exporter.launch(CommandPacks.FILE_NAME) },
+                subtitle = "Escolha o que salvar em um arquivo",
+                onClick = { sharing = ShareMode.Export },
             )
             ClickablePreference(
                 label = "Importar comandos",
@@ -176,6 +178,29 @@ fun CommandActionsPreferences() {
                 onClick = { update(CustomActions.DEFAULTS) },
             )
         }
+    }
+
+    sharing?.let { mode ->
+        SelectCommandsDialog(
+            title = if (mode == ShareMode.Share) "Compartilhar comandos" else "Exportar comandos",
+            actions = actions,
+            aliases = aliases,
+            onConfirm = { pack ->
+                sharing = null
+                selection = pack
+                if (mode == ShareMode.Export) {
+                    exporter.launch(CommandPacks.FILE_NAME)
+                } else {
+                    val send = CommandPacks.shareIntent(context, pack.actions, pack.aliases)
+                    if (send != null) {
+                        context.startActivity(send)
+                    } else {
+                        Toast.makeText(context, "Falha ao compartilhar", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            },
+            onDismiss = { sharing = null },
+        )
     }
 
     aliasDraft?.let { draft ->
@@ -199,6 +224,7 @@ fun CommandActionsPreferences() {
 
     when (val s = step) {
         null -> Unit
+
         Step.Catalog -> PickerDialog(
             title = "Receitas prontas",
             items = CustomActions.CATALOG,
@@ -206,6 +232,7 @@ fun CommandActionsPreferences() {
             onPick = { step = Step.Letter(it, editing = null) },
             onDismiss = { step = null },
         )
+
         Step.Apps -> {
             // Scanning every installed app takes a moment, so it runs off the main thread.
             val apps by produceState<List<AppEntry>?>(initialValue = null) {
@@ -233,6 +260,7 @@ fun CommandActionsPreferences() {
                 )
             }
         }
+
         is Step.Shortcuts -> {
             val pkg = ComponentName.unflattenFromString(s.app.id)?.packageName.orEmpty()
             val found = remember(pkg) { CommandExecutor.loadIntegrations(context, pkg) }
@@ -263,10 +291,12 @@ fun CommandActionsPreferences() {
                 )
             }
         }
+
         Step.Advanced -> AdvancedDialog(
             onDone = { step = Step.Letter(it, editing = null) },
             onDismiss = { step = null },
         )
+
         is Step.Letter -> LetterDialog(
             step = s,
             existing = actions,
@@ -423,6 +453,72 @@ private fun AliasDialog(
 
 private const val MAX_ALIAS = 20
 
+private enum class ShareMode { Share, Export }
+
+/** Lists every action and alias with a checkbox, all ticked, so the user sends one, some or all. */
+@Composable
+private fun SelectCommandsDialog(
+    title: String,
+    actions: List<CustomAction>,
+    aliases: List<CommandAlias>,
+    onConfirm: (CommandPack) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var chosenActions by remember { mutableStateOf(actions.toSet()) }
+    var chosenAliases by remember { mutableStateOf(aliases.toSet()) }
+    val count = chosenActions.size + chosenAliases.size
+    val total = actions.size + aliases.size
+
+    @Composable
+    fun <T> Item(item: T, text: String, chosen: Set<T>, onChange: (Set<T>) -> Unit) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onChange(if (item in chosen) chosen - item else chosen + item) },
+        ) {
+            Checkbox(checked = item in chosen, onCheckedChange = null, modifier = Modifier.padding(end = 12.dp))
+            Text(text)
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            Column(modifier = Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) {
+                if (total == 0) Text("Não há ações nem apelidos cadastrados.")
+                if (actions.isNotEmpty()) Text("Ações", style = MaterialTheme.typography.titleSmall)
+                actions.forEach { Item(it, "${it.letter} · ${it.label}", chosenActions) { s -> chosenActions = s } }
+                if (aliases.isNotEmpty()) {
+                    Text("Apelidos", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 12.dp))
+                }
+                aliases.forEach { Item(it, "${it.name} → ${it.expansion}", chosenAliases) { s -> chosenAliases = s } }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = count > 0,
+                onClick = {
+                    onConfirm(CommandPack(actions.filter { it in chosenActions }, aliases.filter { it in chosenAliases }))
+                },
+            ) { Text(if (count > 0) "Continuar ($count)" else "Continuar") }
+        },
+        dismissButton = {
+            Row {
+                TextButton(
+                    onClick = {
+                        val all = count == total
+                        chosenActions = if (all) emptySet() else actions.toSet()
+                        chosenAliases = if (all) emptySet() else aliases.toSet()
+                    },
+                ) { Text(if (count == total) "Nenhum" else "Todos") }
+                TextButton(onClick = onDismiss) { Text("Cancelar") }
+            }
+        },
+    )
+}
+
 /** Manual recipe: the intent action, an optional URI template, the package and what to type. */
 @Composable
 private fun AdvancedDialog(onDone: (CustomAction) -> Unit, onDismiss: () -> Unit) {
@@ -440,17 +536,23 @@ private fun AdvancedDialog(onDone: (CustomAction) -> Unit, onDismiss: () -> Unit
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 OutlinedTextField(label, { label = it }, singleLine = true, label = { Text("Nome") })
                 OutlinedTextField(
-                    action, { action = it.trim() }, singleLine = true,
+                    action,
+                    { action = it.trim() },
+                    singleLine = true,
                     label = { Text("Ação da intent") },
                     supportingText = { Text("VIEW, SEND, SENDTO, DIAL ou um nome completo") },
                 )
                 OutlinedTextField(
-                    template, { template = it.trim() }, singleLine = true,
+                    template,
+                    { template = it.trim() },
+                    singleLine = true,
                     label = { Text("URI") },
                     supportingText = { Text("Ex.: tg://resolve?phone={number} · use {text}, {name}, {phone}") },
                 )
                 OutlinedTextField(
-                    pkg, { pkg = it.trim() }, singleLine = true,
+                    pkg,
+                    { pkg = it.trim() },
+                    singleLine = true,
                     label = { Text("Pacote (opcional)") },
                 )
                 Text("O que digitar depois da letra", modifier = Modifier.padding(top = 12.dp))
@@ -504,8 +606,7 @@ private fun argLabel(arg: ArgKind) = when (arg) {
 }
 
 /** "VIEW" becomes "android.intent.action.VIEW"; a full name is kept. */
-private fun expandAction(raw: String) =
-    if ('.' in raw) raw else "android.intent.action." + raw.uppercase().ifEmpty { "VIEW" }
+private fun expandAction(raw: String) = if ('.' in raw) raw else "android.intent.action." + raw.uppercase().ifEmpty { "VIEW" }
 
 private const val MAX_LETTER = 4
 
