@@ -1160,8 +1160,6 @@
     <string name="command_input_label" translatable="false">Comando</string>
     <string name="command_chips_title" translatable="false">RECENTES · FIXADOS</string>
     <string name="command_more" translatable="false">MOSTRANDO %1$d DE %2$d · DIGITE ? PARA VER TODOS</string>
-    <string name="command_running" translatable="false">EXECUTANDO · %1$s</string>
-    <string name="command_undo" translatable="false">DESFAZER</string>
     <string name="cmd_pref_undo" translatable="false">Desfazer</string>
     <string name="cmd_pref_cancel" translatable="false">Cancelar</string>
     <string name="cmd_pref_save" translatable="false">Salvar</string>

@@ -81,7 +81,6 @@ import app.lawnchair.theme.color.tokens.PhosphorColorToken
 import app.lawnchair.ui.theme.LawnchairTheme
 import com.android.launcher3.R
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -151,9 +150,6 @@ private fun mono(): FontFamily = MaterialTheme.typography.bodyMedium.fontFamily 
 private val Danger = Color(0xFFFF5A45)
 private val Amber = Color(0xFFF2B84B)
 
-/** How long a command waits before it runs, so a stray tap or a misheard word can be undone. */
-private const val UNDO_MS = 3000L
-
 /** Colors the command word fully and the argument softer, so where one ends and the other starts is clear. */
 private class CommandHighlight(private val command: Color, private val argument: Color) : VisualTransformation {
     override fun filter(text: AnnotatedString): TransformedText {
@@ -217,8 +213,6 @@ private fun CommandScreen(onClose: () -> Unit) {
     var selected by remember { mutableIntStateOf(0) }
     var historyIndex by remember { mutableIntStateOf(-1) }
     var done by remember { mutableStateOf<String?>(null) }
-    // A command that is about to run; the toast lets the user cancel it during [UNDO_MS].
-    var pending by remember { mutableStateOf<Pair<CommandAction, String>?>(null) }
     val focus = remember { FocusRequester() }
 
     val text = field.text
@@ -256,22 +250,9 @@ private fun CommandScreen(onClose: () -> Unit) {
         }
     }
 
-    fun finishRun(action: CommandAction, command: String) {
-        if (pending != null) return
-        // A calculation only copies a result, so it needs no undo; everything else starts another app.
-        if (action is CommandAction.Calc) commit(action, command) else pending = action to command
-    }
-
-    LaunchedEffect(pending) {
-        val run = pending ?: return@LaunchedEffect
-        delay(UNDO_MS)
-        pending = null
-        commit(run.first, run.second)
-    }
-
     val callPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
         // Allowed: the call starts. Denied: the dialer opens with the number instead.
-        pendingAction?.let { finishRun(it, pendingCommand) }
+        pendingAction?.let { commit(it, pendingCommand) }
         pendingAction = null
     }
 
@@ -282,7 +263,7 @@ private fun CommandScreen(onClose: () -> Unit) {
             callPermission.launch(android.Manifest.permission.CALL_PHONE)
             return
         }
-        finishRun(action, command)
+        commit(action, command)
     }
 
     fun run() {
@@ -645,44 +626,6 @@ private fun CommandScreen(onClose: () -> Unit) {
                 FKey(stringResource(R.string.command_key_history), phosphor, Modifier.weight(1f)) { older() }
                 FKey(stringResource(R.string.command_key_complete), phosphor, Modifier.weight(1f)) { complete() }
                 FKey(stringResource(R.string.command_key_next), phosphor, Modifier.weight(1f)) { next() }
-            }
-        }
-
-        pending?.let { run ->
-            Row(
-                Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(start = 20.dp, end = 20.dp, bottom = 72.dp)
-                    .fillMaxWidth()
-                    .background(phosphor)
-                    .padding(start = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    stringResource(R.string.command_running, CommandEngine.describe(run.first)),
-                    color = onPhosphor(),
-                    fontFamily = mono(),
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 11.5.sp,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f),
-                )
-                Box(
-                    Modifier
-                        .heightIn(min = 44.dp)
-                        .clickable { pending = null }
-                        .padding(horizontal = 12.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        stringResource(R.string.command_undo),
-                        color = onPhosphor(),
-                        fontFamily = mono(),
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 11.sp,
-                    )
-                }
             }
         }
     }
