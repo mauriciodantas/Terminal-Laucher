@@ -1326,9 +1326,8 @@
     <string name="glance_media_access_action" translatable="false">Abrir acesso a notificações</string>
     <string name="glance_media_dots_message" translatable="false">Para mostrar a música que está tocando, o Terminal precisa que o ponto de notificação no ícone dos apps esteja ligado.\n\n1. Toque em “Abrir notificações”.\n2. Role até o fim da lista de Notificações.\n3. Ligue a opção destacada, a do ponto de notificação no ícone do app.\n4. Volte para cá.\n\nSe nenhuma opção estiver destacada, procure por “ponto de notificação” nas configurações de Notificações.</string>
     <string name="glance_media_dots_action" translatable="false">Abrir notificações</string>
-    <string name="launcher_background_group" translatable="false">Fundo</string>
     <string name="launcher_bg_default" translatable="false">Padrão (preto do terminal)</string>
-    <string name="launcher_bg_color_label" translatable="false">Cor de fundo da tela inicial</string>
+    <string name="launcher_bg_color_label" translatable="false">Cor de fundo</string>
     <string name="glance_group_animation" translatable="false">Animação</string>
     <string name="glance_animation" translatable="false">Animação ao lado do valor</string>
     <string name="glance_animation_off" translatable="false">Nenhuma</string>

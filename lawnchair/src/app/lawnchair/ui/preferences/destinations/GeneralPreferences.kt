@@ -72,6 +72,7 @@ fun GeneralPreferences(modifier: Modifier = Modifier) {
                 label = stringResource(id = R.string.phosphor_color_label),
             )
             ColorPreference(preference = prefs2.accentColor)
+            ColorPreference(preference = prefs2.launcherBackgroundColor)
         }
 
         val notificationEnabled by remember { notificationDotsEnabled(context) }.collectAsStateWithLifecycle(initialValue = false)
