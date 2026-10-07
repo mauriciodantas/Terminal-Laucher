@@ -646,6 +646,11 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         invalidate();
     }
 
+    /** For a directory row: shows whether the folder is open in the list. */
+    public void setDirectoryExpanded(boolean expanded) {
+        mFolderName.setDirectoryExpanded(expanded);
+    }
+
     /** Whether this folder spans several workspace cells and shows its apps in place. */
     public boolean isLargeMode() {
         return mLargeMode;

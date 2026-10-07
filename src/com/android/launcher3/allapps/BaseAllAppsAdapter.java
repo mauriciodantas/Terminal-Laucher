@@ -124,6 +124,14 @@ public abstract class BaseAllAppsAdapter<T extends Context & ActivityContext> ex
         // LC-Feature: Folder support in All Apps
         public FolderInfo folderInfo = new FolderInfo();
 
+        // Directory list: the folder opens in place, with its apps as indented rows below it.
+        /** Identifies a folder across rebuilds of the list; null for everything else. */
+        public String folderKey = null;
+        /** Whether this folder row is open (its apps follow it). */
+        public boolean expanded = false;
+        /** 0 for regular rows; 1 for an app listed under an open folder. */
+        public int indent = 0;
+
         /**
          * Factory method for AppIcon AdapterItem
          */
@@ -146,6 +154,21 @@ public abstract class BaseAllAppsAdapter<T extends Context & ActivityContext> ex
             return item;
         }
 
+        /** A folder row of the directory list, which can be opened in place. */
+        public static AdapterItem asFolder(FolderInfo folderInfo, String key, boolean expanded) {
+            AdapterItem item = asFolder(folderInfo);
+            item.folderKey = key;
+            item.expanded = expanded;
+            return item;
+        }
+
+        /** An app shown under its open folder in the directory list. */
+        public static AdapterItem asFolderChild(AppInfo appInfo) {
+            AdapterItem item = asApp(appInfo);
+            item.indent = 1;
+            return item;
+        }
+
         protected boolean isCountedForAccessibility() {
             return viewType == VIEW_TYPE_ICON || viewType == VIEW_TYPE_FOLDER;
         }
@@ -154,7 +177,8 @@ public abstract class BaseAllAppsAdapter<T extends Context & ActivityContext> ex
          * Returns true if the items represent the same object
          */
         public boolean isSameAs(AdapterItem other) {
-            return (other.viewType == viewType) && (other.getClass() == getClass());
+            return (other.viewType == viewType) && (other.getClass() == getClass())
+                    && java.util.Objects.equals(folderKey, other.folderKey);
         }
 
         /**
@@ -162,7 +186,7 @@ public abstract class BaseAllAppsAdapter<T extends Context & ActivityContext> ex
          * as well. Returning true will prevent redrawing of thee item.
          */
         public boolean isContentSame(AdapterItem other) {
-            return itemInfo == null && other.itemInfo == null;
+            return itemInfo == null && other.itemInfo == null && expanded == other.expanded;
         }
 
         @Nullable
@@ -282,11 +306,31 @@ public abstract class BaseAllAppsAdapter<T extends Context & ActivityContext> ex
     private int directoryIndexOf(int position) {
         int count = 0;
         for (int i = 0; i <= position && i < mApps.getAdapterItems().size(); i++) {
-            if (mApps.getAdapterItems().get(i).viewType == VIEW_TYPE_ICON) {
+            AdapterItem counted = mApps.getAdapterItems().get(i);
+            if (counted.viewType == VIEW_TYPE_ICON && counted.indent == 0) {
                 count++;
             }
         }
         return count;
+    }
+
+    /** 1-based position of the app among the apps listed under the same open folder. */
+    private int childRankOf(int position) {
+        int rank = 0;
+        for (int i = position; i >= 0 && mApps.getAdapterItems().get(i).indent > 0; i--) {
+            rank++;
+        }
+        return rank;
+    }
+
+    /** Indents the row of an app listed under an open folder; other rows are reset. */
+    private void applyDirectoryIndent(View row, boolean child) {
+        if (!(row.getLayoutParams() instanceof ViewGroup.MarginLayoutParams lp)) return;
+        int start = child ? (int) (20 * row.getResources().getDisplayMetrics().density) : 0;
+        if (lp.getMarginStart() != start) {
+            lp.setMarginStart(start);
+            row.setLayoutParams(lp);
+        }
     }
 
     @Override
@@ -310,7 +354,12 @@ public abstract class BaseAllAppsAdapter<T extends Context & ActivityContext> ex
                         mActivityContext.getDeviceProfile().numShownAllAppsColumns == 1;
                 icon.setDirectoryRowStyle(directoryList);
                 icon.applyFromApplicationInfo(adapterItem.itemInfo);
-                icon.setDirectoryIndex(directoryList ? directoryIndexOf(position) : -1);
+                applyDirectoryIndent(icon, directoryList && adapterItem.indent > 0);
+                if (directoryList && adapterItem.indent > 0) {
+                    icon.setDirectoryChildIndex(childRankOf(position));
+                } else {
+                    icon.setDirectoryIndex(directoryList ? directoryIndexOf(position) : -1);
+                }
                 icon.setOnFocusChangeListener(mIconFocusListener);
                 if (privateProfileManager != null) {
                     // Set the alpha of the private space icon to 0 upon expanding the header so the
@@ -395,6 +444,13 @@ public abstract class BaseAllAppsAdapter<T extends Context & ActivityContext> ex
                             ViewGroup.LayoutParams.MATCH_PARENT));
                     folderIcon.setDirectoryRow(folderIcon.getPaddingStart()
                             + profile.getIconSizePx() + profile.getIconDrawablePaddingPx());
+                    AdapterItem folderItem = mApps.getAdapterItems().get(position);
+                    if (folderItem.folderKey != null) {
+                        // A tap opens the folder in place, with its apps right below it.
+                        folderIcon.setDirectoryExpanded(folderItem.expanded);
+                        folderIcon.setOnClickListener(
+                                v -> mApps.toggleFolderExpanded(folderItem.folderKey));
+                    }
                 }
                 container.addView(folderIcon);
                 break;

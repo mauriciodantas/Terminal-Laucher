@@ -198,6 +198,7 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
     private boolean mLayoutHorizontal;
     /** 1-based position in the app directory list, or -1 when not shown as a directory entry. */
     private int mDirectoryIndex = -1;
+    private boolean mDirectoryExpanded = false;
     private final Paint mChevronPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final boolean mIsRtl;
     private final int mIconSize;
@@ -960,6 +961,20 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
                 getPaddingBottom());
     }
 
+    /** Marks an app listed under an open folder: a tree glyph and its rank in the folder. */
+    public void setDirectoryChildIndex(int rank) {
+        if (getTag() instanceof ItemInfo info && info.title != null) {
+            setDirectoryLabel(String.format(Locale.ROOT, "\u2514\u2500%02d", rank), info.title);
+        }
+        invalidate();
+    }
+
+    /** For a folder row: whether it is open, which turns the chevron down. */
+    public void setDirectoryExpanded(boolean expanded) {
+        mDirectoryExpanded = expanded;
+        invalidate();
+    }
+
     /** Makes this view a directory row with an explicit dim [code] before the [title]. */
     public void setDirectoryLabel(String code, CharSequence title) {
         mDirectoryIndex = 0;
@@ -987,7 +1002,7 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
         mChevronPaint.setTypeface(getTypeface());
         mChevronPaint.setTextSize(getTextSize());
         mChevronPaint.setColor(ColorUtils.setAlphaComponent(getCurrentTextColor(), 0x99));
-        String chevron = "\u25B8";
+        String chevron = mDirectoryExpanded ? "\u25BE" : "\u25B8";
         float x = getWidth() - getPaddingRight() - mChevronPaint.measureText(chevron);
         Paint.FontMetrics fm = mChevronPaint.getFontMetrics();
         float y = (getHeight() - (fm.ascent + fm.descent)) / 2f;

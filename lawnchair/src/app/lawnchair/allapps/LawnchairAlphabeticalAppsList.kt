@@ -106,7 +106,11 @@ class LawnchairAlphabeticalAppsList<T>(
                         title = category
                         apps.forEach { add(it) }
                     }
-                    mAdapterItems.add(AdapterItem.asFolder(folderInfo))
+                    val key = "c:$category"
+                    mAdapterItems.add(AdapterItem.asFolder(folderInfo, key, isFolderExpanded(key)))
+                    position++
+                    position = addFolderChildren(key, apps, position)
+                    return@forEach
                 }
                 position++
             }
@@ -123,8 +127,10 @@ class LawnchairAlphabeticalAppsList<T>(
                         title = folderEntry.title
                         resolvedApps.forEach { add(it) }
                     }
-                    mAdapterItems.add(AdapterItem.asFolder(folderInfo))
+                    val key = "f:${folderEntry.id}"
+                    mAdapterItems.add(AdapterItem.asFolder(folderInfo, key, isFolderExpanded(key)))
                     position++
+                    position = addFolderChildren(key, resolvedApps, position)
 
                     if (prefs.folderApps.get()) {
                         filteredList.addAll(resolvedApps)
@@ -135,6 +141,21 @@ class LawnchairAlphabeticalAppsList<T>(
             position = super.addAppsWithSections(remainingApps, position)
         }
 
+        return position
+    }
+
+    /**
+     * In the directory list (one column) an open folder shows its apps right below it, indented.
+     * Returns the position after them.
+     */
+    private fun addFolderChildren(key: String, apps: List<AppInfo>, startPosition: Int): Int {
+        val directoryList = context.launcher.deviceProfile.numShownAllAppsColumns == 1
+        if (!directoryList || !isFolderExpanded(key)) return startPosition
+        var position = startPosition
+        apps.forEach {
+            mAdapterItems.add(AdapterItem.asFolderChild(it))
+            position++
+        }
         return position
     }
 
