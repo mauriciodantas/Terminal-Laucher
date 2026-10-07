@@ -553,6 +553,7 @@ const val WEB_SUGGESTION = "suggestion"
 const val HEADER = "header"
 const val CONTACT = "contact"
 const val FILES = "files"
+
 /** Marks a header target as the match-count line instead of a section title. */
 const val META_PREFIX = "::meta::"
 const val SPACE = "space"

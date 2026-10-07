@@ -63,10 +63,10 @@ import app.lawnchair.ui.preferences.data.liveinfo.SyncLiveInformation
 import app.lawnchair.ui.preferences.navigation.About
 import app.lawnchair.ui.preferences.navigation.AppDrawer
 import app.lawnchair.ui.preferences.navigation.BackupAndRestore
+import app.lawnchair.ui.preferences.navigation.CommandActions
 import app.lawnchair.ui.preferences.navigation.General
 import app.lawnchair.ui.preferences.navigation.HomeScreen
 import app.lawnchair.ui.preferences.navigation.PreferenceRootRoute
-import app.lawnchair.ui.preferences.navigation.CommandActions
 import app.lawnchair.ui.preferences.navigation.Smartspace
 import app.lawnchair.util.isDefaultLauncher
 import app.lawnchair.util.restartLauncher

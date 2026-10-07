@@ -141,6 +141,7 @@ class ThemeProvider @Inject constructor(
 
     companion object {
         const val NOSTROMO_PHOSPHOR = 0xFF7DFFB2.toInt()
+
         @JvmField
         val INSTANCE = DaggerSingletonObject(LauncherAppComponent::getThemeProvider)
     }

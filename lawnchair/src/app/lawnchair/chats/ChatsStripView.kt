@@ -61,11 +61,9 @@ class ChatsStripView(context: Context) :
     private var unread: Map<String, Int> = emptyMap()
 
     private val notificationsListener = object : NotificationListener.NotificationsChangedListener {
-        override fun onNotificationPosted(postedPackageUserKey: PackageUserKey?, notificationKey: NotificationKeyData?) =
-            reloadSoon()
+        override fun onNotificationPosted(postedPackageUserKey: PackageUserKey?, notificationKey: NotificationKeyData?) = reloadSoon()
 
-        override fun onNotificationRemoved(removedPackageUserKey: PackageUserKey?, notificationKey: NotificationKeyData?) =
-            reloadSoon()
+        override fun onNotificationRemoved(removedPackageUserKey: PackageUserKey?, notificationKey: NotificationKeyData?) = reloadSoon()
 
         override fun onNotificationFullRefresh(activeNotifications: MutableList<StatusBarNotification>?) = reloadSoon()
     }
@@ -234,7 +232,10 @@ class ChatsStripView(context: Context) :
                         setPadding((3 * density).toInt(), 0, (3 * density).toInt(), 0)
                     },
                     FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.TOP or Gravity.END)
-                        .apply { topMargin = out; marginEnd = out },
+                        .apply {
+                            topMargin = out
+                            marginEnd = out
+                        },
                 )
             }
         }

@@ -22,13 +22,11 @@ object ChatShortcuts {
 
     private const val SEPARATOR = '\n'
 
-    fun packages(includeBusiness: Boolean): List<String> =
-        if (includeBusiness) listOf(WHATSAPP, WHATSAPP_BUSINESS) else listOf(WHATSAPP)
+    fun packages(includeBusiness: Boolean): List<String> = if (includeBusiness) listOf(WHATSAPP, WHATSAPP_BUSINESS) else listOf(WHATSAPP)
 
     fun key(packageName: String, id: String) = "$packageName/$id"
 
-    fun parseKeys(stored: String): List<String> =
-        stored.split(SEPARATOR).filter { it.isNotBlank() }.distinct()
+    fun parseKeys(stored: String): List<String> = stored.split(SEPARATOR).filter { it.isNotBlank() }.distinct()
 
     fun serializeKeys(keys: List<String>): String = keys.distinct().joinToString(SEPARATOR.toString())
 
@@ -59,8 +57,7 @@ object ChatShortcuts {
     }
 
     /** The big letter inside the square: the first letter or digit of the name. */
-    fun initial(label: String): String =
-        label.firstOrNull { it.isLetterOrDigit() }?.uppercaseChar()?.toString() ?: "?"
+    fun initial(label: String): String = label.firstOrNull { it.isLetterOrDigit() }?.uppercaseChar()?.toString() ?: "?"
 
     /** Text of the unread counter, or null when there is nothing to show. */
     fun badge(unread: Int): String? = when {

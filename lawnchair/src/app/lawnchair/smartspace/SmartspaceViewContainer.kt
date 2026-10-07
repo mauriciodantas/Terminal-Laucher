@@ -17,11 +17,10 @@ import android.view.View
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.core.graphics.ColorUtils
-import kotlin.random.Random
-import app.lawnchair.theme.color.tokens.PhosphorColorToken
 import app.lawnchair.LawnchairLauncher
 import app.lawnchair.launcher
 import app.lawnchair.smartspace.glance.GlancePanelController
+import app.lawnchair.theme.color.tokens.PhosphorColorToken
 import app.lawnchair.ui.preferences.PreferenceActivity
 import app.lawnchair.ui.preferences.navigation.Smartspace
 import com.android.launcher3.CheckLongPressHelper
@@ -29,6 +28,7 @@ import com.android.launcher3.InvariantDeviceProfile
 import com.android.launcher3.R
 import com.android.launcher3.logging.StatsLogManager
 import com.android.launcher3.views.OptionsPopupView
+import kotlin.random.Random
 
 class SmartspaceViewContainer @JvmOverloads constructor(
     context: Context,

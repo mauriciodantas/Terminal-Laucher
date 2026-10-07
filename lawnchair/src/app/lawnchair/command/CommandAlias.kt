@@ -16,8 +16,7 @@ data class CommandAlias(val name: String, val expansion: String)
 object Aliases {
 
     /** The form two spellings are compared in: no accents, lower case. "Mãe" and "mae" are the same word. */
-    fun key(word: String): String =
-        word.trim().foldAccents()
+    fun key(word: String): String = word.trim().foldAccents()
 
     /** The alias that [word] spells, if any. */
     fun find(word: String, aliases: List<CommandAlias>): CommandAlias? {
