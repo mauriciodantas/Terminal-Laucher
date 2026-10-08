@@ -39,6 +39,20 @@ object ComplementaryColors {
     /** Every hue of the wheel as the accent, with its complement as the background. */
     val pairs: List<Pair> = wheel.indices.map { pairOf(it) }
 
+    private const val ACCENT_SATURATION = 0.85f
+    private const val ACCENT_LIGHTNESS = 0.55f
+
+    /** The pair for any [hue] (degrees) picked on the wheel: that hue as the accent, the opposite one as the background. */
+    fun pairForHue(hue: Float): Pair {
+        val h = ((hue % 360f) + 360f) % 360f
+        val background = darkened(ColorUtils.HSLToColor(floatArrayOf((h + 180f) % 360f, ACCENT_SATURATION, ACCENT_LIGHTNESS)))
+        val accent = readable(ColorUtils.HSLToColor(floatArrayOf(h, ACCENT_SATURATION, ACCENT_LIGHTNESS)), background)
+        return Pair(R.string.complementary_custom, accent, background)
+    }
+
+    /** The hue (degrees) of [color]. */
+    fun hueOf(color: Int): Float = hsl(color)[0]
+
     private fun pairOf(index: Int): Pair {
         val hue = wheel[index]
         val opposite = wheel[(index + wheel.size / 2) % wheel.size]
