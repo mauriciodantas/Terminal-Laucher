@@ -19,6 +19,7 @@ import com.android.launcher3.BuildConfig
 import com.android.launcher3.LauncherAppState
 import com.android.launcher3.LauncherFiles
 import com.android.launcher3.R
+import com.android.launcher3.model.DatabaseHelper
 import com.android.launcher3.model.DeviceGridState
 import com.android.launcher3.model.ModelDbController
 import com.android.launcher3.provider.RestoreDbTask
@@ -85,8 +86,25 @@ class LawnchairBackup(
         }
         readZip(handlers, fonts)
 
-        var dbController = ModelDbController(context)
-        RestoreDbTask.performRestore(context, dbController)
+        if (contents.hasFlag(INCLUDE_LAYOUT_AND_SETTINGS)) {
+            RestoredDbController(context).use { RestoreDbTask.performRestore(context, it) }
+        }
+    }
+
+    /**
+     * Sanitizes restored.db where it lies. The stock controller would rename it after the grid this
+     * process still holds in memory, but the launcher restarts with the backup's grid and looks for
+     * another file, so it would find no database and load the default layout. Left as restored.db,
+     * the restarted launcher renames it after the restored grid.
+     */
+    private class RestoredDbController(context: Context) :
+        ModelDbController(context),
+        AutoCloseable {
+        override fun createDatabaseHelper(forMigration: Boolean, dbFile: String): DatabaseHelper = super.createDatabaseHelper(true, RESTORED_DB_FILE_NAME)
+
+        override fun close() {
+            mOpenHelper?.close()
+        }
     }
 
     private suspend fun readZip(
