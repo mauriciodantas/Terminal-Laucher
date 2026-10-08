@@ -1345,7 +1345,7 @@
     <string name="appearance_complementary_desc" translatable="false">Escolha o destaque e o fundo vem junto, na cor oposta do círculo cromático</string>
     <string name="complementary_custom" translatable="false">Personalizada</string>
     <string name="complementary_wheel_title" translatable="false">Círculo cromático</string>
-    <string name="complementary_wheel_hint" translatable="false">Arraste no círculo para escolher o destaque. O fundo é a cor oposta.</string>
+    <string name="complementary_wheel_hint" translatable="false">Arraste um dos dois pontos: um é o destaque e o outro, na cor oposta, é o fundo.</string>
     <string name="complementary_apply" translatable="false">Aplicar</string>
     <string name="complementary_cancel" translatable="false">Cancelar</string>
     <string name="complementary_red" translatable="false">Vermelho</string>

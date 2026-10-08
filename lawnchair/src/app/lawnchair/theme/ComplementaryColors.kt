@@ -33,8 +33,8 @@ object ComplementaryColors {
     )
 
     /** The background is the opposite hue at this lightness and at most this saturation, so it stays near-black. */
-    private const val BACKGROUND_LIGHTNESS = 0.07f
-    private const val BACKGROUND_MAX_SATURATION = 0.45f
+    private const val BACKGROUND_LIGHTNESS = 0.10f
+    private const val BACKGROUND_MAX_SATURATION = 0.55f
 
     /** Every hue of the wheel as the accent, with its complement as the background. */
     val pairs: List<Pair> = wheel.indices.map { pairOf(it) }

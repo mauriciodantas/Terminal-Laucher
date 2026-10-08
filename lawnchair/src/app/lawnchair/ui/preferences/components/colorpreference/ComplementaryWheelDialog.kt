@@ -19,7 +19,9 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,6 +41,7 @@ import app.lawnchair.theme.ComplementaryColors
 import app.lawnchair.theme.color.ColorOption
 import app.lawnchair.ui.theme.ColorPreview
 import com.android.launcher3.R
+import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.min
@@ -76,7 +79,7 @@ fun ComplementaryWheelDialog(
                     modifier = Modifier.padding(bottom = 16.dp),
                 )
                 Box(contentAlignment = Alignment.Center) {
-                    Wheel(hue = hue, onHue = { hue = it })
+                    Wheel(hue = hue, pair = pair, onHue = { hue = it })
                     Box(
                         modifier = Modifier
                             .size(96.dp)
@@ -99,25 +102,50 @@ fun ComplementaryWheelDialog(
 }
 
 @Composable
-private fun Wheel(hue: Float, onHue: (Float) -> Unit) {
+private fun Wheel(hue: Float, pair: ComplementaryColors.Pair, onHue: (Float) -> Unit) {
     val ring = remember {
         Brush.sweepGradient(
             (0..360 step 30).map { Color(ColorUtils.HSLToColor(floatArrayOf(it.toFloat(), 0.85f, 0.55f))) },
         )
     }
-    fun hueAt(offset: Offset, size: Float): Float {
+    val currentHue by rememberUpdatedState(hue)
+    // Which marker the finger took hold of: the accent, or the background opposite it.
+    var grabbedBackground by remember { mutableStateOf(false) }
+
+    fun angleAt(offset: Offset, size: Float): Float {
         val c = size / 2f
         val degrees = Math.toDegrees(atan2(offset.y - c, offset.x - c).toDouble()).toFloat()
         return (degrees + 360f) % 360f
     }
+
+    fun gap(a: Float, b: Float): Float {
+        val d = abs(a - b) % 360f
+        return min(d, 360f - d)
+    }
+
+    fun grab(offset: Offset, size: Float) {
+        val angle = angleAt(offset, size)
+        grabbedBackground = gap(angle, (currentHue + 180f) % 360f) < gap(angle, currentHue)
+    }
+
+    fun move(offset: Offset, size: Float) {
+        val angle = angleAt(offset, size)
+        onHue(if (grabbedBackground) (angle + 180f) % 360f else angle)
+    }
+
     Canvas(
         modifier = Modifier
             .size(240.dp)
-            .pointerInput(Unit) { detectTapGestures { onHue(hueAt(it, size.width.toFloat())) } }
             .pointerInput(Unit) {
-                detectDragGestures { change, _ ->
+                detectTapGestures {
+                    grab(it, size.width.toFloat())
+                    move(it, size.width.toFloat())
+                }
+            }
+            .pointerInput(Unit) {
+                detectDragGestures(onDragStart = { grab(it, size.width.toFloat()) }) { change, _ ->
                     change.consume()
-                    onHue(hueAt(change.position, size.width.toFloat()))
+                    move(change.position, size.width.toFloat())
                 }
             },
     ) {
@@ -133,13 +161,16 @@ private fun Wheel(hue: Float, onHue: (Float) -> Unit) {
             size = Size(radius * 2, radius * 2),
             style = Stroke(width = stroke),
         )
-        // The accent's marker and, opposite it, the complement that becomes the background.
-        listOf(hue to true, (hue + 180f) % 360f to false).forEach { (h, isAccent) ->
+        // The accent's marker and, opposite it, the background's, each filled with the color it applies.
+        listOf(
+            Triple(hue, pair.accent, true),
+            Triple((hue + 180f) % 360f, pair.background, false),
+        ).forEach { (h, color, isAccent) ->
             val a = Math.toRadians(h.toDouble())
             val at = Offset(center.x + radius * cos(a).toFloat(), center.y + radius * sin(a).toFloat())
-            val fill = Color(ColorUtils.HSLToColor(floatArrayOf(h, 0.85f, 0.55f)))
-            drawCircle(fill, radius = if (isAccent) 15.dp.toPx() else 11.dp.toPx(), center = at)
-            drawCircle(Color.White, radius = if (isAccent) 15.dp.toPx() else 11.dp.toPx(), center = at, style = Stroke(3.dp.toPx()))
+            val size = if (isAccent) 15.dp.toPx() else 13.dp.toPx()
+            drawCircle(Color(color), radius = size, center = at)
+            drawCircle(Color.White, radius = size, center = at, style = Stroke(3.dp.toPx()))
         }
     }
 }
