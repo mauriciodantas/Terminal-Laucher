@@ -17,6 +17,8 @@ import app.lawnchair.ui.preferences.components.colorpreference.ComplementaryColo
 import app.lawnchair.ui.preferences.components.controls.ClickablePreference
 import app.lawnchair.ui.preferences.components.controls.SliderPreference
 import app.lawnchair.ui.preferences.components.controls.SwitchPreference
+import app.lawnchair.ui.preferences.components.layout.DividerColumn
+import app.lawnchair.ui.preferences.components.layout.ExpandAndShrink
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
 import com.android.launcher3.R
@@ -58,30 +60,35 @@ fun AppearancePreferences(modifier: Modifier = Modifier) {
             heading = stringResource(id = R.string.appearance_group_wallpaper),
             modifier = Modifier.padding(top = 8.dp),
         ) {
+            val wallpaperShown = prefs2.showSystemWallpaper.getAdapter().state.value
             SwitchPreference(
                 adapter = prefs2.showSystemWallpaper.getAdapter(),
                 label = stringResource(id = R.string.appearance_wallpaper_show),
                 description = stringResource(id = R.string.appearance_wallpaper_show_desc),
             )
-            SliderPreference(
-                label = stringResource(id = R.string.appearance_wallpaper_dim),
-                adapter = prefs2.wallpaperDim.getAdapter(),
-                step = 0.05f,
-                valueRange = 0f..1f,
-                showAsPercentage = true,
-                enabled = prefs2.showSystemWallpaper.getAdapter().state.value,
-            )
-            ClickablePreference(
-                label = stringResource(id = R.string.appearance_wallpaper_choose),
-                subtitle = stringResource(id = R.string.appearance_wallpaper_choose_desc),
-                onClick = {
-                    runCatching {
-                        context.startActivity(
-                            Intent(Intent.ACTION_SET_WALLPAPER).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-                        )
-                    }
-                },
-            )
+            // Dimming and picking only matter while the wallpaper is on screen.
+            ExpandAndShrink(visible = wallpaperShown) {
+                DividerColumn {
+                    SliderPreference(
+                        label = stringResource(id = R.string.appearance_wallpaper_dim),
+                        adapter = prefs2.wallpaperDim.getAdapter(),
+                        step = 0.05f,
+                        valueRange = 0f..1f,
+                        showAsPercentage = true,
+                    )
+                    ClickablePreference(
+                        label = stringResource(id = R.string.appearance_wallpaper_choose),
+                        subtitle = stringResource(id = R.string.appearance_wallpaper_choose_desc),
+                        onClick = {
+                            runCatching {
+                                context.startActivity(
+                                    Intent(Intent.ACTION_SET_WALLPAPER).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                                )
+                            }
+                        },
+                    )
+                }
+            }
         }
 
         PreferenceGroup(
@@ -96,6 +103,27 @@ fun AppearancePreferences(modifier: Modifier = Modifier) {
                 adapter = prefs2.terminalPixelClock.getAdapter(),
                 label = stringResource(id = R.string.appearance_pixel_clock),
                 description = stringResource(id = R.string.appearance_pixel_clock_desc),
+            )
+        }
+
+        PreferenceGroup(
+            heading = stringResource(id = R.string.effects_group),
+            modifier = Modifier.padding(top = 8.dp),
+        ) {
+            SwitchPreference(
+                adapter = prefs2.terminalIconEffect.getAdapter(),
+                label = stringResource(id = R.string.terminal_icon_effect),
+                description = stringResource(id = R.string.terminal_icon_effect_desc),
+            )
+            SwitchPreference(
+                adapter = prefs2.widgetEffect.getAdapter(),
+                label = stringResource(id = R.string.widget_effect),
+                description = stringResource(id = R.string.widget_effect_desc),
+            )
+            SwitchPreference(
+                adapter = prefs2.crtEffect.getAdapter(),
+                label = stringResource(id = R.string.crt_effect),
+                description = stringResource(id = R.string.crt_effect_desc),
             )
         }
     }

@@ -163,7 +163,7 @@ fun HomeScreenGridPreferences(
                                         valueRange = 3..maxGridSize,
                                     )
                                     SliderPreference(
-                                        label = stringResource(id = R.string.dock_icons),
+                                        label = stringResource(id = R.string.home_favorites_count),
                                         adapter = hotseatColumns.asPreferenceAdapter(),
                                         step = 1,
                                         valueRange = 3..maxGridSize,
@@ -174,7 +174,7 @@ fun HomeScreenGridPreferences(
                                     heading = stringResource(id = R.string.when_unfolded_label),
                                 ) {
                                     SliderPreference(
-                                        label = stringResource(id = R.string.dock_icons),
+                                        label = stringResource(id = R.string.home_favorites_count),
                                         adapter = hotseatColumnsUnfolded.asPreferenceAdapter(),
                                         step = 1,
                                         valueRange = hotseatColumns.intValue..maxGridSize,
@@ -201,7 +201,7 @@ fun HomeScreenGridPreferences(
                                     valueRange = 3..maxGridSize,
                                 )
                                 SliderPreference(
-                                    label = stringResource(id = R.string.dock_icons),
+                                    label = stringResource(id = R.string.home_favorites_count),
                                     adapter = hotseatColumns.asPreferenceAdapter(),
                                     step = 1,
                                     valueRange = 3..maxGridSize,

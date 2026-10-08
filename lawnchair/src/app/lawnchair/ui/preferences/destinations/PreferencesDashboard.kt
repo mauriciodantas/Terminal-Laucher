@@ -65,7 +65,6 @@ import app.lawnchair.ui.preferences.navigation.AppDrawer
 import app.lawnchair.ui.preferences.navigation.Appearance
 import app.lawnchair.ui.preferences.navigation.BackupAndRestore
 import app.lawnchair.ui.preferences.navigation.CommandActions
-import app.lawnchair.ui.preferences.navigation.General
 import app.lawnchair.ui.preferences.navigation.HomeScreen
 import app.lawnchair.ui.preferences.navigation.PreferenceRootRoute
 import app.lawnchair.ui.preferences.navigation.Smartspace
@@ -112,23 +111,15 @@ fun PreferencesDashboard(
         PreferenceGroup {
             PreferenceCategory(
                 label = stringResource(R.string.appearance_label),
-                description = stringResource(R.string.appearance_description),
+                description = stringResource(R.string.settings_appearance_description),
                 iconResource = R.drawable.ic_wallpaper,
                 onNavigate = { onNavigate(Appearance) },
                 isSelected = currentRoute is Appearance,
             )
 
             PreferenceCategory(
-                label = stringResource(R.string.general_label),
-                description = stringResource(R.string.general_description),
-                iconResource = R.drawable.ic_general,
-                onNavigate = { onNavigate(General) },
-                isSelected = currentRoute is General,
-            )
-
-            PreferenceCategory(
                 label = stringResource(R.string.home_screen_label),
-                description = stringResource(R.string.home_screen_description),
+                description = stringResource(R.string.settings_home_description),
                 iconResource = R.drawable.ic_home_screen,
                 onNavigate = { onNavigate(HomeScreen) },
                 isSelected = currentRoute is HomeScreen,
@@ -144,19 +135,19 @@ fun PreferencesDashboard(
             )
 
             PreferenceCategory(
+                label = stringResource(R.string.app_drawer_label),
+                description = stringResource(R.string.settings_drawer_description),
+                iconResource = R.drawable.ic_apps,
+                onNavigate = { onNavigate(AppDrawer) },
+                isSelected = currentRoute is AppDrawer,
+            )
+
+            PreferenceCategory(
                 label = stringResource(R.string.command_actions_title),
                 description = stringResource(R.string.command_actions_desc),
                 iconResource = R.drawable.ic_search,
                 onNavigate = { onNavigate(CommandActions) },
                 isSelected = currentRoute is CommandActions,
-            )
-
-            PreferenceCategory(
-                label = stringResource(R.string.app_drawer_label),
-                description = stringResource(R.string.app_drawer_description),
-                iconResource = R.drawable.ic_apps,
-                onNavigate = { onNavigate(AppDrawer) },
-                isSelected = currentRoute is AppDrawer,
             )
 
             PreferenceCategory(

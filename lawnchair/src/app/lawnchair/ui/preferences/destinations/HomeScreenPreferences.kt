@@ -19,20 +19,26 @@ package app.lawnchair.ui.preferences.destinations
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.lawnchair.preferences.getAdapter
 import app.lawnchair.preferences.preferenceManager
 import app.lawnchair.preferences2.preferenceManager2
 import app.lawnchair.theme.color.ColorMode
 import app.lawnchair.ui.preferences.LocalIsExpandedScreen
 import app.lawnchair.ui.preferences.components.NavigationActionPreference
+import app.lawnchair.ui.preferences.components.NotificationDotsPreference
 import app.lawnchair.ui.preferences.components.controls.ListPreference
 import app.lawnchair.ui.preferences.components.controls.SliderPreference
 import app.lawnchair.ui.preferences.components.controls.SwitchPreference
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
+import app.lawnchair.ui.preferences.components.notificationDotsEnabled
+import app.lawnchair.ui.preferences.components.notificationServiceEnabled
 import app.lawnchair.ui.preferences.navigation.HomeScreenGrid
 import com.android.launcher3.R
 
@@ -47,6 +53,9 @@ fun HomeScreenPreferences(
 ) {
     val prefs = preferenceManager()
     val prefs2 = preferenceManager2()
+    val context = LocalContext.current
+    val notificationEnabled by remember { notificationDotsEnabled(context) }.collectAsStateWithLifecycle(initialValue = false)
+    val serviceEnabled = notificationServiceEnabled()
     PreferenceLayout(
         label = stringResource(id = R.string.home_screen_label),
         backArrowVisible = !LocalIsExpandedScreen.current,
@@ -54,19 +63,34 @@ fun HomeScreenPreferences(
     ) {
         val columns by prefs.workspaceColumns.getAdapter()
         val rows by prefs.workspaceRows.getAdapter()
-        PreferenceGroup(heading = stringResource(id = R.string.layout)) {
+        PreferenceGroup(heading = stringResource(id = R.string.home_group_layout)) {
             NavigationActionPreference(
                 label = stringResource(id = R.string.home_screen_grid),
                 destination = HomeScreenGrid,
                 subtitle = stringResource(id = R.string.x_by_y, columns, rows),
+            )
+            // The favorites row is the hotseat: the same pref the grid screen edits, applied on release.
+            SliderPreference(
+                label = stringResource(id = R.string.home_favorites_count),
+                adapter = prefs.hotseatColumns.getAdapter(),
+                step = 1,
+                valueRange = 3..10,
             )
             SwitchPreference(
                 adapter = prefs2.lockHomeScreen.getAdapter(),
                 label = stringResource(id = R.string.home_screen_lock),
                 description = stringResource(id = R.string.home_screen_lock_description),
             )
+            SwitchPreference(
+                adapter = prefs.allowRotation.getAdapter(),
+                label = stringResource(id = R.string.home_screen_rotation_label),
+                description = stringResource(id = R.string.home_screen_rotation_description),
+            )
         }
-        PreferenceGroup(heading = stringResource(id = R.string.icons)) {
+        PreferenceGroup(
+            heading = stringResource(id = R.string.icons),
+            modifier = Modifier.padding(top = 8.dp),
+        ) {
             SliderPreference(
                 label = stringResource(id = R.string.home_icon_size),
                 adapter = prefs2.homeIconSizeFactor.getAdapter(),
@@ -78,26 +102,7 @@ fun HomeScreenPreferences(
                 adapter = prefs2.showIconLabelsOnHomeScreen.getAdapter(),
                 label = stringResource(id = R.string.show_labels),
             )
-            SwitchPreference(
-                adapter = prefs2.terminalIconEffect.getAdapter(),
-                label = stringResource(id = R.string.terminal_icon_effect),
-                description = stringResource(id = R.string.terminal_icon_effect_desc),
-            )
-        }
-        PreferenceGroup(
-            heading = stringResource(id = R.string.effects_group),
-            modifier = Modifier.padding(top = 8.dp),
-        ) {
-            SwitchPreference(
-                adapter = prefs2.widgetEffect.getAdapter(),
-                label = stringResource(id = R.string.widget_effect),
-                description = stringResource(id = R.string.widget_effect_desc),
-            )
-            SwitchPreference(
-                adapter = prefs2.crtEffect.getAdapter(),
-                label = stringResource(id = R.string.crt_effect),
-                description = stringResource(id = R.string.crt_effect_desc),
-            )
+            NotificationDotsPreference(enabled = notificationEnabled, serviceEnabled = serviceEnabled)
         }
         ChatShortcutsPreferences(modifier = Modifier.padding(top = 8.dp))
     }

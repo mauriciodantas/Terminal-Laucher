@@ -62,6 +62,7 @@ object LauncherOptionsPopup {
     ): ArrayList<OptionItem> {
         val prefs2 = getInstance(launcher!!)
         val lockHomeScreen = prefs2.lockHomeScreen.firstCached()
+        val showWallpaper = prefs2.showSystemWallpaper.firstCached()
         val optionOrder = prefs2
             .launcherPopupOrder.firstCached().toLauncherOptions()
 
@@ -149,6 +150,8 @@ object LauncherOptionsPopup {
                 }
             }
             .filter { it.identifier != "default_page" || !launcher.workspace.isCurrentPageDefault }
+            // With the wallpaper off the home screen shows only its own background color, so picking one is pointless.
+            .filter { it.identifier != "wallpaper" || showWallpaper }
             .mapNotNull { optionsList[it.identifier] }
             .forEach { options.add(it) }
 

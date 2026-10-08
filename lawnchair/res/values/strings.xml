@@ -1333,7 +1333,6 @@
     <string name="appearance_color_dock" translatable="false">Fundo do dock</string>
     <string name="appearance_color_folders" translatable="false">Fundo das pastas</string>
     <string name="appearance_label" translatable="false">Aparência</string>
-    <string name="appearance_description" translatable="false">Cores, fonte e relógio</string>
     <string name="appearance_group_presets" translatable="false">Combinações prontas</string>
     <string name="appearance_group_colors" translatable="false">Cores principais</string>
     <string name="appearance_group_wallpaper" translatable="false">Papel de parede</string>
@@ -1388,6 +1387,11 @@
     <string name="glance_animation_too_big" translatable="false">Arquivo grande demais (máximo 512 KB)</string>
     <string name="glance_animation_tint" translatable="false">Usar a cor do tema</string>
     <string name="glance_animation_tint_desc" translatable="false">Pinta a animação com o verde do terminal em vez das cores originais</string>
+    <string name="settings_home_description" translatable="false">Grade, ícones favoritos, rótulos e conversas</string>
+    <string name="settings_drawer_description" translatable="false">Apps escondidos, pastas e grade</string>
+    <string name="settings_appearance_description" translatable="false">Cores, papel de parede, fonte e efeitos</string>
+    <string name="home_group_layout" translatable="false">Organização</string>
+    <string name="home_favorites_count" translatable="false">Ícones favoritos</string>
     <string name="glance_widget_setup_title" translatable="false">Clima e agenda precisam do widget do Google</string>
     <string name="glance_widget_setup_message" translatable="false">Permita que o Terminal leia o widget At a Glance do Google. O Android vai pedir uma confirmação; toque em Criar.</string>
 
