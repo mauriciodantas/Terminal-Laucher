@@ -65,7 +65,7 @@
             android:autoRemoveFromRecents="true"
             android:exported="true"
             android:label="@string/settings_button_text"
-            android:icon="@mipmap/ic_settings"
+            android:icon="@mipmap/ic_launcher_home"
             android:theme="@style/Theme.Lawnchair"
             android:windowSoftInputMode="adjustResize"
             android:enableOnBackInvokedCallback="true">
