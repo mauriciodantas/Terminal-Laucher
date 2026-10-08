@@ -1333,7 +1333,10 @@
     <string name="appearance_color_folders" translatable="false">Fundo das pastas</string>
     <string name="appearance_label" translatable="false">Aparência</string>
     <string name="appearance_description" translatable="false">Cores, fonte e relógio</string>
-    <string name="appearance_group_colors" translatable="false">Cores</string>
+    <string name="appearance_group_presets" translatable="false">Combinações prontas</string>
+    <string name="appearance_group_colors" translatable="false">Cores principais</string>
+    <string name="appearance_group_details" translatable="false">Outros elementos</string>
+    <string name="appearance_color_accent" translatable="false">Cor de destaque</string>
     <string name="appearance_group_font" translatable="false">Fonte</string>
     <string name="appearance_font_ui" translatable="false">Fonte da interface</string>
     <string name="appearance_pixel_clock" translatable="false">Relógio pixelado</string>

@@ -22,7 +22,7 @@ class ColorPreferenceModelList @Inject constructor(
         registerModel(
             ColorPreferenceModel(
                 prefObject = prefs.accentColor,
-                labelRes = R.string.accent_color,
+                labelRes = R.string.appearance_color_accent,
                 dynamicEntries = dynamicColors,
             ),
         )

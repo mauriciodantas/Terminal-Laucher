@@ -15,6 +15,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
@@ -32,7 +34,10 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.ColorUtils
+import app.lawnchair.preferences2.preferenceManager2
 import app.lawnchair.theme.ComplementaryColors
+import app.lawnchair.theme.color.ColorOption
+import app.lawnchair.ui.theme.ColorPreview
 import com.android.launcher3.R
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -51,6 +56,14 @@ fun ComplementaryWheelDialog(
 ) {
     var hue by remember { mutableFloatStateOf(initialHue) }
     val pair = ComplementaryColors.pairForHue(hue)
+    val prefs2 = preferenceManager2()
+
+    // The settings behind the dialog take the pair's colors as the wheel turns, so the user sees the result.
+    LaunchedEffect(pair) {
+        ColorPreview.set(prefs2.accentColor.key.name, ColorOption.CustomColor(pair.accent))
+        ColorPreview.set(prefs2.launcherBackgroundColor.key.name, ColorOption.CustomColor(pair.background))
+    }
+    DisposableEffect(Unit) { onDispose { ColorPreview.clear() } }
 
     AlertDialog(
         onDismissRequest = onDismiss,

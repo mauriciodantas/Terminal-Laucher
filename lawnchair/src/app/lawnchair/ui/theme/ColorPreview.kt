@@ -12,19 +12,17 @@ import app.lawnchair.theme.color.ColorOption
  */
 object ColorPreview {
 
-    private var key by mutableStateOf<String?>(null)
-    private var option by mutableStateOf<ColorOption?>(null)
+    private var options by mutableStateOf<Map<String, ColorOption>>(emptyMap())
 
+    /** Tries [option] for the preference named [key]; several preferences can be tried at once. */
     fun set(key: String, option: ColorOption) {
-        this.key = key
-        this.option = option
+        options = options + (key to option)
     }
 
     fun clear() {
-        key = null
-        option = null
+        options = emptyMap()
     }
 
     /** The color being tried for the preference named [key], or null when there is none. */
-    fun optionFor(key: String): ColorOption? = option.takeIf { this.key == key }
+    fun optionFor(key: String): ColorOption? = options[key]
 }
