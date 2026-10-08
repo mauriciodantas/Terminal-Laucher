@@ -27,10 +27,14 @@ object LauncherGround {
 
     /**
      * The least contrast between the accent (the text, the lines) and the background. Below it the
-     * interface cannot be read, so such a pair is refused when the user picks it and, should one
-     * exist anyway (a restored backup), the background falls back to the default.
+     * interface cannot be read and the user could not come back to undo it, so such a pair is refused
+     * when the user picks it and, should one exist anyway (a restored backup), the background falls
+     * back to the default. Pairs between this and [COMFORTABLE_VISIBILITY] are allowed, with a warning.
      */
-    const val MIN_VISIBILITY = 3.0
+    const val MIN_VISIBILITY = 1.5
+
+    /** The contrast from which text reads comfortably; under it (and over [MIN_VISIBILITY]) the picker only warns. */
+    const val COMFORTABLE_VISIBILITY = 3.0
 
     /** True when text in [accent] reads over [ground] with at least [MIN_VISIBILITY]. */
     fun isVisible(accent: Int, ground: Int, minContrast: Double = MIN_VISIBILITY): Boolean = ColorUtils.calculateContrast(accent or OPAQUE, ground or OPAQUE) >= minContrast

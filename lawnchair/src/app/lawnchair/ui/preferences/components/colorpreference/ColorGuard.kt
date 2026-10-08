@@ -11,7 +11,8 @@ import com.android.launcher3.R
 /**
  * Keeps the accent (text and lines) and the background apart. A pair with less than
  * [LauncherGround.MIN_VISIBILITY] of contrast would leave the settings unreadable and the user
- * locked out of changing it back, so picking one is refused.
+ * locked out of changing it back, so picking one is refused. A pair that is allowed but under
+ * [LauncherGround.COMFORTABLE_VISIBILITY] only draws a warning.
  */
 object ColorGuard {
 
@@ -28,6 +29,20 @@ object ColorGuard {
             prefs2.launcherBackgroundColor.key.name -> Role.BACKGROUND
             else -> null
         }
+    }
+
+    /** True when [candidate] for the [role] is allowed but close enough to the other color to be hard on the eyes. */
+    fun weak(context: Context, role: Role, candidate: ColorOption): Boolean {
+        if (conflicts(context, role, candidate)) return false
+        val prefs2 = PreferenceManager2.getInstance(context)
+        val themes = ThemeProvider.INSTANCE.get(context)
+        val (accent, ground) = when (role) {
+            Role.ACCENT -> themes.phosphorOf(candidate) to
+                (LauncherGround.resolve(prefs2.launcherBackgroundColor.firstCached(prefs2), context) ?: LauncherGround.DEFAULT)
+
+            Role.BACKGROUND -> themes.phosphorColor to (LauncherGround.resolve(candidate, context) ?: LauncherGround.DEFAULT)
+        }
+        return !LauncherGround.isVisible(accent, ground, LauncherGround.COMFORTABLE_VISIBILITY)
     }
 
     /** True when [candidate] for the [role] would be too close to the other color to read. */

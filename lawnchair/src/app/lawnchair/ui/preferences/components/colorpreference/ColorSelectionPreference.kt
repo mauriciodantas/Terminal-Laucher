@@ -85,6 +85,9 @@ fun ColorSelection(
         }
     }
     val customRefused by remember { derivedStateOf { conflicts(ColorOption.CustomColor(selectedColor.intValue)) } }
+    val customWeak by remember {
+        derivedStateOf { role != null && ColorGuard.weak(context, role, ColorOption.CustomColor(selectedColor.intValue)) }
+    }
 
     val pagerState = rememberPagerState(
         initialPage = defaultTabIndex,
@@ -141,6 +144,14 @@ fun ColorSelection(
                 Text(
                     text = stringResource(role.explanation),
                     color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
+                )
+            }
+            if (!refused && pagerState.currentPage == 1 && customWeak) {
+                Text(
+                    text = stringResource(R.string.color_weak_contrast),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
                 )
