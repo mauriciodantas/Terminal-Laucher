@@ -57,6 +57,7 @@ fun ComplementaryColorsPreference(modifier: Modifier = Modifier) {
     if (wheelOpen) {
         ComplementaryWheelDialog(
             initialHue = currentAccent?.let(ComplementaryColors::hueOf) ?: 0f,
+            initialIntensity = currentBackground?.let(ComplementaryColors::intensityOf) ?: ComplementaryColors.DEFAULT_INTENSITY,
             onApply = {
                 wheelOpen = false
                 applyPair(it)

@@ -1326,8 +1326,9 @@
     <string name="glance_media_dots_message" translatable="false">Para mostrar a música que está tocando, o Terminal precisa que o ponto de notificação no ícone dos apps esteja ligado.\n\n1. Toque em “Abrir notificações”.\n2. Role até o fim da lista de Notificações.\n3. Ligue a opção destacada, a do ponto de notificação no ícone do app.\n4. Volte para cá.\n\nSe nenhuma opção estiver destacada, procure por “ponto de notificação” nas configurações de Notificações.</string>
     <string name="glance_media_dots_action" translatable="false">Abrir notificações</string>
     <string name="follow_accent" translatable="false">Seguir o destaque</string>
-    <string name="color_conflict_accent" translatable="false">Essa cor é parecida demais com a cor de fundo: o texto ficaria ilegível e você perderia o acesso às configurações. Escolha outra.</string>
-    <string name="color_conflict_background" translatable="false">Essa cor é parecida demais com a cor do destaque: o texto ficaria ilegível e você perderia o acesso às configurações. Escolha outra.</string>
+    <string name="color_conflict_accent" translatable="false">Essa cor é quase igual à cor de fundo: o texto ficaria ilegível e você perderia o acesso às configurações. Escolha outra.</string>
+    <string name="color_conflict_background" translatable="false">Essa cor é quase igual à cor do destaque: o texto ficaria ilegível e você perderia o acesso às configurações. Escolha outra.</string>
+    <string name="color_weak_contrast" translatable="false">Contraste baixo: o texto pode ficar difícil de ler com essa combinação. Dá para aplicar, mas confira o resultado.</string>
     <string name="appearance_color_search_outline" translatable="false">Contorno da barra de busca</string>
     <string name="appearance_color_dock" translatable="false">Fundo do dock</string>
     <string name="appearance_color_folders" translatable="false">Fundo das pastas</string>
@@ -1351,7 +1352,7 @@
     <string name="appearance_complementary_desc" translatable="false">Escolha o destaque e o fundo vem junto, na cor oposta do círculo cromático</string>
     <string name="complementary_custom" translatable="false">Personalizada</string>
     <string name="complementary_wheel_title" translatable="false">Círculo cromático</string>
-    <string name="complementary_wheel_hint" translatable="false">Arraste um dos dois pontos: um é o destaque e o outro, na cor oposta, é o fundo.</string>
+    <string name="complementary_wheel_hint" translatable="false">Arraste um dos dois pontos: um é o destaque e o outro, na cor oposta, é o fundo. A barra ao lado ajusta a intensidade do fundo.</string>
     <string name="complementary_apply" translatable="false">Aplicar</string>
     <string name="complementary_cancel" translatable="false">Cancelar</string>
     <string name="complementary_red" translatable="false">Vermelho</string>

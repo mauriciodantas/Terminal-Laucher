@@ -4,8 +4,10 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -26,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -54,11 +57,13 @@ import kotlin.math.sin
 @Composable
 fun ComplementaryWheelDialog(
     initialHue: Float,
+    initialIntensity: Float,
     onApply: (ComplementaryColors.Pair) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var hue by remember { mutableFloatStateOf(initialHue) }
-    val pair = ComplementaryColors.pairForHue(hue)
+    var intensity by remember { mutableFloatStateOf(initialIntensity) }
+    val pair = ComplementaryColors.pairForHue(hue, intensity)
     val prefs2 = preferenceManager2()
 
     // The settings behind the dialog take the pair's colors as the wheel turns, so the user sees the result.
@@ -78,17 +83,20 @@ fun ComplementaryWheelDialog(
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(bottom = 16.dp),
                 )
-                Box(contentAlignment = Alignment.Center) {
-                    Wheel(hue = hue, pair = pair, onHue = { hue = it })
-                    Box(
-                        modifier = Modifier
-                            .size(96.dp)
-                            .clip(CircleShape)
-                            .background(Color(pair.background)),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(text = ">_", color = Color(pair.accent), style = MaterialTheme.typography.headlineMedium)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Wheel(hue = hue, pair = pair, onHue = { hue = it })
+                        Box(
+                            modifier = Modifier
+                                .size(80.dp)
+                                .clip(CircleShape)
+                                .background(Color(pair.background)),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(text = ">_", color = Color(pair.accent), style = MaterialTheme.typography.titleLarge)
+                        }
                     }
+                    IntensityBar(hue = hue, intensity = intensity, onIntensity = { intensity = it })
                 }
             }
         },
@@ -135,7 +143,7 @@ private fun Wheel(hue: Float, pair: ComplementaryColors.Pair, onHue: (Float) -> 
 
     Canvas(
         modifier = Modifier
-            .size(240.dp)
+            .size(216.dp)
             .pointerInput(Unit) {
                 detectTapGestures {
                     grab(it, size.width.toFloat())
@@ -172,5 +180,39 @@ private fun Wheel(hue: Float, pair: ComplementaryColors.Pair, onHue: (Float) -> 
             drawCircle(Color(color), radius = size, center = at)
             drawCircle(Color.White, radius = size, center = at, style = Stroke(3.dp.toPx()))
         }
+    }
+}
+
+/**
+ * A vertical bar for the intensity of the background: the track paints the background of the chosen
+ * hue from its darkest (bottom) to its brightest (top), and the thumb sits where the pair is now.
+ */
+@Composable
+private fun IntensityBar(hue: Float, intensity: Float, onIntensity: (Float) -> Unit) {
+    val darkest = Color(ComplementaryColors.backgroundFor(hue, 0f))
+    val brightest = Color(ComplementaryColors.backgroundFor(hue, 1f))
+    val outline = MaterialTheme.colorScheme.outlineVariant
+    fun at(y: Float, height: Float) = (1f - y / height).coerceIn(0f, 1f)
+    Canvas(
+        modifier = Modifier
+            .size(width = 32.dp, height = 216.dp)
+            .pointerInput(Unit) { detectTapGestures { onIntensity(at(it.y, size.height.toFloat())) } }
+            .pointerInput(Unit) {
+                detectDragGestures { change, _ ->
+                    change.consume()
+                    onIntensity(at(change.position.y, size.height.toFloat()))
+                }
+            },
+    ) {
+        val radius = CornerRadius(16.dp.toPx())
+        drawRoundRect(
+            brush = Brush.verticalGradient(listOf(brightest, darkest)),
+            cornerRadius = radius,
+        )
+        drawRoundRect(color = outline, cornerRadius = radius, style = Stroke(1.dp.toPx()))
+        val thumbY = (1f - intensity) * size.height
+        val thumb = Offset(size.width / 2f, thumbY.coerceIn(14.dp.toPx(), size.height - 14.dp.toPx()))
+        drawCircle(Color(ComplementaryColors.backgroundFor(hue, intensity)), radius = 13.dp.toPx(), center = thumb)
+        drawCircle(Color.White, radius = 13.dp.toPx(), center = thumb, style = Stroke(3.dp.toPx()))
     }
 }

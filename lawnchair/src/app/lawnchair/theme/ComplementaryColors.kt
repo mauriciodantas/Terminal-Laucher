@@ -32,9 +32,29 @@ object ComplementaryColors {
         Hue(R.string.complementary_magenta, 0xFF8E0A3A.toInt()),
     )
 
-    /** The background is the opposite hue at this lightness and at most this saturation, so it stays near-black. */
-    private const val BACKGROUND_LIGHTNESS = 0.10f
+    /**
+     * The background is the opposite hue, at most this saturated and between these lightnesses, so it
+     * stays dark enough for the accent to read over it. The user's intensity (0 to 1) slides between them.
+     */
+    private const val BACKGROUND_MIN_LIGHTNESS = 0.04f
+    private const val BACKGROUND_MAX_LIGHTNESS = 0.30f
     private const val BACKGROUND_MAX_SATURATION = 0.55f
+
+    /** The intensity of the ready-made pairs: a lightness of 10%. */
+    const val DEFAULT_INTENSITY = (0.10f - BACKGROUND_MIN_LIGHTNESS) / (BACKGROUND_MAX_LIGHTNESS - BACKGROUND_MIN_LIGHTNESS)
+
+    private fun lightnessOf(intensity: Float) = BACKGROUND_MIN_LIGHTNESS + intensity.coerceIn(0f, 1f) * (BACKGROUND_MAX_LIGHTNESS - BACKGROUND_MIN_LIGHTNESS)
+
+    /** The intensity (0 to 1) of a background [color], for a slider to start from. */
+    fun intensityOf(color: Int): Float = ((hsl(color)[2] - BACKGROUND_MIN_LIGHTNESS) / (BACKGROUND_MAX_LIGHTNESS - BACKGROUND_MIN_LIGHTNESS)).coerceIn(0f, 1f)
+
+    /** The background of the pair for [hue] at [intensity], for the slider to paint its track. */
+    fun backgroundFor(hue: Float, intensity: Float): Int = tinted(opposite(hue), lightnessOf(intensity))
+
+    private fun opposite(hue: Float): Int {
+        val h = ((hue % 360f) + 360f) % 360f
+        return ColorUtils.HSLToColor(floatArrayOf((h + 180f) % 360f, ACCENT_SATURATION, ACCENT_LIGHTNESS))
+    }
 
     /** Every hue of the wheel as the accent, with its complement as the background. */
     val pairs: List<Pair> = wheel.indices.map { pairOf(it) }
@@ -42,10 +62,10 @@ object ComplementaryColors {
     private const val ACCENT_SATURATION = 0.85f
     private const val ACCENT_LIGHTNESS = 0.55f
 
-    /** The pair for any [hue] (degrees) picked on the wheel: that hue as the accent, the opposite one as the background. */
-    fun pairForHue(hue: Float): Pair {
+    /** The pair for any [hue] (degrees) picked on the wheel: that hue as the accent, the opposite one, at [intensity], as the background. */
+    fun pairForHue(hue: Float, intensity: Float = DEFAULT_INTENSITY): Pair {
         val h = ((hue % 360f) + 360f) % 360f
-        val background = darkened(ColorUtils.HSLToColor(floatArrayOf((h + 180f) % 360f, ACCENT_SATURATION, ACCENT_LIGHTNESS)))
+        val background = backgroundFor(h, intensity)
         val accent = readable(ColorUtils.HSLToColor(floatArrayOf(h, ACCENT_SATURATION, ACCENT_LIGHTNESS)), background)
         return Pair(R.string.complementary_custom, accent, background)
     }
@@ -56,16 +76,16 @@ object ComplementaryColors {
     private fun pairOf(index: Int): Pair {
         val hue = wheel[index]
         val opposite = wheel[(index + wheel.size / 2) % wheel.size]
-        val background = darkened(opposite.color)
+        val background = tinted(opposite.color, lightnessOf(DEFAULT_INTENSITY))
         return Pair(hue.name, readable(hue.color, background), background)
     }
 
     private fun hsl(color: Int) = FloatArray(3).also { ColorUtils.colorToHSL(color, it) }
 
-    private fun darkened(color: Int): Int {
+    private fun tinted(color: Int, lightness: Float): Int {
         val hsl = hsl(color)
         hsl[1] = hsl[1].coerceAtMost(BACKGROUND_MAX_SATURATION)
-        hsl[2] = BACKGROUND_LIGHTNESS
+        hsl[2] = lightness
         return ColorUtils.HSLToColor(hsl)
     }
 
