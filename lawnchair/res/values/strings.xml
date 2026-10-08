@@ -1335,6 +1335,12 @@
     <string name="appearance_description" translatable="false">Cores, fonte e relógio</string>
     <string name="appearance_group_presets" translatable="false">Combinações prontas</string>
     <string name="appearance_group_colors" translatable="false">Cores principais</string>
+    <string name="appearance_group_wallpaper" translatable="false">Papel de parede</string>
+    <string name="appearance_wallpaper_show" translatable="false">Mostrar papel de parede</string>
+    <string name="appearance_wallpaper_show_desc" translatable="false">A tela inicial deixa de ser só a cor de fundo e mostra o papel de parede do sistema</string>
+    <string name="appearance_wallpaper_dim" translatable="false">Escurecer o papel de parede</string>
+    <string name="appearance_wallpaper_choose" translatable="false">Escolher papel de parede</string>
+    <string name="appearance_wallpaper_choose_desc" translatable="false">Abre o seletor de papéis de parede do sistema</string>
     <string name="appearance_group_details" translatable="false">Outros elementos</string>
     <string name="appearance_color_accent" translatable="false">Cor de destaque</string>
     <string name="appearance_group_font" translatable="false">Fonte</string>

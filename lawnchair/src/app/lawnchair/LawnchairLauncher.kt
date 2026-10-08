@@ -20,6 +20,7 @@ import android.animation.AnimatorSet
 import android.app.ActivityOptions
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.graphics.RectF
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
@@ -31,6 +32,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
+import android.view.WindowManager
 import android.widget.FrameLayout
 import android.window.SplashScreen
 import androidx.core.view.WindowInsetsCompat
@@ -53,6 +55,7 @@ import app.lawnchair.root.RootHelperManager
 import app.lawnchair.root.RootNotAvailableException
 import app.lawnchair.theme.LauncherGround
 import app.lawnchair.theme.ThemeProvider
+import app.lawnchair.theme.color.ColorOption
 import app.lawnchair.ui.onboarding.OnboardingActivity
 import app.lawnchair.ui.popup.LauncherOptionsPopup
 import app.lawnchair.ui.popup.LawnchairShortcut
@@ -99,6 +102,7 @@ import com.kieronquinn.app.smartspacer.sdk.client.SmartspacerClient
 import com.patrykmichalik.opto.core.onEach
 import dev.kdrag0n.monet.theme.ColorScheme
 import java.util.stream.Stream
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -168,6 +172,22 @@ class LawnchairLauncher : QuickstepLauncher() {
 
     /** Adds the CRT screen layer on top of everything and flashes it on screen changes. */
     private var burnInGuard: BurnInGuard? = null
+
+    /**
+     * What the window shows behind the home screen: the system wallpaper when the user turned it on,
+     * else the color they picked; the default (0) keeps the terminal black from the theme.
+     */
+    private fun applyWindowGround(showWallpaper: Boolean, dim: Float, option: ColorOption) {
+        val window = window ?: return
+        if (showWallpaper) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
+            // Black over the wallpaper, under the home screen: the dimmer behind the text.
+            window.setBackgroundDrawable(ColorDrawable(Color.argb((dim.coerceIn(0f, 1f) * 255).toInt(), 0, 0, 0)))
+        } else {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
+            window.setBackgroundDrawable(ColorDrawable(LauncherGround.resolveBackground(option, this) ?: getColor(R.color.terminal_background)))
+        }
+    }
 
     /** Slides the home screen a few dp now and then and dims it while untouched, to spare OLED panels. */
     private fun installBurnInGuard() {
@@ -294,10 +314,12 @@ class LawnchairLauncher : QuickstepLauncher() {
         prefs.windowCornerRadius.subscribeValues(this) {
             QuickStepContract.sCustomCornerRadius = it.toFloat()
         }
-        preferenceManager2.launcherBackgroundColor.onEach(launchIn = lifecycleScope) { option ->
-            // Default (0) keeps the terminal black from the theme; anything else is the user's pick.
-            window?.setBackgroundDrawable(ColorDrawable(LauncherGround.resolveBackground(option, this) ?: getColor(R.color.terminal_background)))
-        }
+        combine(
+            preferenceManager2.showSystemWallpaper.get(),
+            preferenceManager2.wallpaperDim.get(),
+            preferenceManager2.launcherBackgroundColor.get(),
+            ::applyWindowGround,
+        ).launchIn(lifecycleScope)
         preferenceManager2.roundedWidgets.onEach(launchIn = lifecycleScope) {
             RoundedCornerEnforcement.sRoundedCornerEnabled = it
         }

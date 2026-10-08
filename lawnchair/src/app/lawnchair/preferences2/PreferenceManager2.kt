@@ -880,6 +880,18 @@ class PreferenceManager2 @Inject constructor(
         defaultValue = true,
     )
 
+    /** Lets the system wallpaper show behind the home screen; off keeps the terminal ground. */
+    val showSystemWallpaper = preference(
+        key = booleanPreferencesKey("show_system_wallpaper"),
+        defaultValue = false,
+    )
+
+    /** How much black goes over the wallpaper behind the home screen, 0 (none) to 1 (solid), so the text keeps reading. */
+    val wallpaperDim = preference(
+        key = floatPreferencesKey(name = "wallpaper_dim"),
+        defaultValue = 0.5f,
+    )
+
     /** The clock and the big values stay in the pixel font; off, they use the interface font. */
     val terminalPixelClock = preference(
         key = booleanPreferencesKey("terminal_pixel_clock"),
