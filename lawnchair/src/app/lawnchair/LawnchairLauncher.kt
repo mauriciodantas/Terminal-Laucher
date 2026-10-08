@@ -21,6 +21,7 @@ import android.app.ActivityOptions
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.PixelFormat
 import android.graphics.RectF
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
@@ -246,6 +247,9 @@ class LawnchairLauncher : QuickstepLauncher() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         layoutInflater.factory2 = LawnchairLayoutFactory(this)
+        // The wallpaper and its dimmer can be turned on while the launcher runs. A window made opaque
+        // is not cleared between frames, so a translucent background over it piles up until it is black.
+        window?.setFormat(PixelFormat.TRANSLUCENT)
         super.onCreate(savedInstanceState)
 
         installCrtOverlay()
