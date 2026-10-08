@@ -1338,6 +1338,20 @@
     <string name="appearance_font_ui" translatable="false">Fonte da interface</string>
     <string name="appearance_pixel_clock" translatable="false">Relógio pixelado</string>
     <string name="appearance_pixel_clock_desc" translatable="false">O relógio e os valores grandes do painel ficam na fonte pixelada. Desligado, usam a fonte da interface</string>
+    <string name="appearance_complementary" translatable="false">Cores complementares</string>
+    <string name="appearance_complementary_desc" translatable="false">Escolha o destaque e o fundo vem junto, na cor oposta do círculo cromático</string>
+    <string name="complementary_red" translatable="false">Vermelho</string>
+    <string name="complementary_vermilion" translatable="false">Vermelhão</string>
+    <string name="complementary_orange" translatable="false">Laranja</string>
+    <string name="complementary_amber" translatable="false">Âmbar</string>
+    <string name="complementary_yellow" translatable="false">Amarelo</string>
+    <string name="complementary_chartreuse" translatable="false">Verde-limão</string>
+    <string name="complementary_green" translatable="false">Verde</string>
+    <string name="complementary_teal" translatable="false">Turquesa</string>
+    <string name="complementary_blue" translatable="false">Azul</string>
+    <string name="complementary_violet" translatable="false">Violeta</string>
+    <string name="complementary_purple" translatable="false">Roxo</string>
+    <string name="complementary_magenta" translatable="false">Magenta</string>
     <string name="launcher_bg_default" translatable="false">Padrão (preto do terminal)</string>
     <string name="launcher_bg_color_label" translatable="false">Cor de fundo</string>
     <string name="glance_auto_rotate" translatable="false">Alternar os alvos sozinho</string>

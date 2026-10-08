@@ -17,6 +17,7 @@ import app.lawnchair.ui.preferences.LocalIsExpandedScreen
 import app.lawnchair.ui.preferences.components.FontPreference
 import app.lawnchair.ui.preferences.components.colorpreference.ColorGuard
 import app.lawnchair.ui.preferences.components.colorpreference.ColorPreference
+import app.lawnchair.ui.preferences.components.colorpreference.ComplementaryColorsPreference
 import app.lawnchair.ui.preferences.components.controls.ListPreference
 import app.lawnchair.ui.preferences.components.controls.SwitchPreference
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
@@ -55,6 +56,7 @@ fun AppearancePreferences(modifier: Modifier = Modifier) {
                 entries = phosphorEntries,
                 label = stringResource(id = R.string.phosphor_color_label),
             )
+            ComplementaryColorsPreference()
             ColorPreference(preference = prefs2.accentColor)
             ColorPreference(preference = prefs2.launcherBackgroundColor)
             ColorPreference(preference = prefs2.strokeColorStyle)

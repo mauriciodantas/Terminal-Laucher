@@ -33,7 +33,7 @@ object LauncherGround {
     const val MIN_VISIBILITY = 3.0
 
     /** True when text in [accent] reads over [ground] with at least [MIN_VISIBILITY]. */
-    fun isVisible(accent: Int, ground: Int): Boolean = ColorUtils.calculateContrast(accent or OPAQUE, ground or OPAQUE) >= MIN_VISIBILITY
+    fun isVisible(accent: Int, ground: Int, minContrast: Double = MIN_VISIBILITY): Boolean = ColorUtils.calculateContrast(accent or OPAQUE, ground or OPAQUE) >= minContrast
 
     /** The background [option] stands for, or null for the default; also null when it would hide the accent. */
     fun resolveBackground(option: ColorOption, context: Context): Int? {
