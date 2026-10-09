@@ -2,7 +2,14 @@ package app.lawnchair.ui.preferences.destinations
 
 import android.content.Intent
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -61,6 +68,43 @@ fun AppearancePreferences(modifier: Modifier = Modifier) {
             modifier = Modifier.padding(top = 8.dp),
         ) {
             val wallpaperShown = prefs2.showSystemWallpaper.getAdapter().state.value
+            val colorAsWallpaper = prefs2.backgroundColorAsWallpaper.getAdapter()
+            val colorOnLockScreen = prefs2.backgroundColorOnLockScreen.getAdapter()
+            var confirmLockScreen by remember { mutableStateOf(false) }
+            SwitchPreference(
+                adapter = colorAsWallpaper,
+                label = stringResource(id = R.string.appearance_bg_as_wallpaper),
+                description = stringResource(id = R.string.appearance_bg_as_wallpaper_desc),
+            )
+            SwitchPreference(
+                checked = colorOnLockScreen.state.value,
+                // Turning it on replaces the user's lock screen image for good, so it asks first.
+                onCheckedChange = { on -> if (on) confirmLockScreen = true else colorOnLockScreen.onChange(false) },
+                label = stringResource(id = R.string.appearance_bg_on_lock_screen),
+                description = stringResource(id = R.string.appearance_bg_on_lock_screen_desc),
+            )
+            if (confirmLockScreen) {
+                AlertDialog(
+                    onDismissRequest = { confirmLockScreen = false },
+                    title = { Text(text = stringResource(id = R.string.appearance_bg_on_lock_screen_confirm_title)) },
+                    text = { Text(text = stringResource(id = R.string.appearance_bg_on_lock_screen_confirm_text)) },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                confirmLockScreen = false
+                                colorOnLockScreen.onChange(true)
+                            },
+                        ) {
+                            Text(text = stringResource(id = R.string.appearance_bg_on_lock_screen_confirm))
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { confirmLockScreen = false }) {
+                            Text(text = stringResource(id = android.R.string.cancel))
+                        }
+                    },
+                )
+            }
             SwitchPreference(
                 adapter = prefs2.showSystemWallpaper.getAdapter(),
                 label = stringResource(id = R.string.appearance_wallpaper_show),

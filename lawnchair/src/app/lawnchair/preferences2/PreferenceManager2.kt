@@ -886,6 +886,18 @@ class PreferenceManager2 @Inject constructor(
         defaultValue = false,
     )
 
+    /** Writes the background color as the system wallpaper whenever it changes. */
+    val backgroundColorAsWallpaper = preference(
+        key = booleanPreferencesKey("bg_color_as_wallpaper"),
+        defaultValue = false,
+    )
+
+    /** Also writes the background color on the lock screen, replacing the image the user had there. */
+    val backgroundColorOnLockScreen = preference(
+        key = booleanPreferencesKey("bg_color_on_lock_screen"),
+        defaultValue = false,
+    )
+
     /** How much black goes over the wallpaper behind the home screen, 0 (none) to 1 (solid), so the text keeps reading. */
     val wallpaperDim = preference(
         key = floatPreferencesKey(name = "wallpaper_dim"),

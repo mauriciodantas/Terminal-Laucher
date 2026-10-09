@@ -1341,6 +1341,13 @@
     <string name="appearance_wallpaper_dim" translatable="false">Escurecer o papel de parede</string>
     <string name="appearance_wallpaper_choose" translatable="false">Escolher papel de parede</string>
     <string name="appearance_wallpaper_choose_desc" translatable="false">Abre o seletor de papéis de parede do sistema</string>
+    <string name="appearance_bg_as_wallpaper" translatable="false">Cor de fundo como papel de parede</string>
+    <string name="appearance_bg_as_wallpaper_desc" translatable="false">O papel de parede do sistema vira a cor de fundo e acompanha cada mudança dela</string>
+    <string name="appearance_bg_on_lock_screen" translatable="false">Também na tela de bloqueio</string>
+    <string name="appearance_bg_on_lock_screen_desc" translatable="false">Substitui o papel de parede da tela de bloqueio pela cor de fundo. A imagem atual não pode ser recuperada</string>
+    <string name="appearance_bg_on_lock_screen_confirm_title" translatable="false">Sobrescrever a tela de bloqueio?</string>
+    <string name="appearance_bg_on_lock_screen_confirm_text" translatable="false">O papel de parede atual da tela de bloqueio será substituído pela cor de fundo e não poderá ser recuperado. Para voltar a ter uma imagem, será preciso escolhê-la de novo no seletor do sistema.</string>
+    <string name="appearance_bg_on_lock_screen_confirm" translatable="false">Sobrescrever</string>
     <string name="appearance_group_details" translatable="false">Outros elementos</string>
     <string name="appearance_color_accent" translatable="false">Cor de destaque</string>
     <string name="appearance_group_font" translatable="false">Fonte</string>
