@@ -22,3 +22,6 @@ __pycache__
 lawnWithQuickstep/release
 /releases/
 *.aab
+
+# Claude Code (skills e configurações locais)
+/.claude/
