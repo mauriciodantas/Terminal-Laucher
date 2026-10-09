@@ -134,6 +134,10 @@ class CommandActivity : ComponentActivity() {
             context.getSharedPreferences(STORE, Context.MODE_PRIVATE).edit()
                 .putString(KEY_HISTORY, history.joinToString("\n")).apply()
         }
+
+        fun clearHistory(context: Context) {
+            context.getSharedPreferences(STORE, Context.MODE_PRIVATE).edit().remove(KEY_HISTORY).apply()
+        }
     }
 }
 
@@ -300,6 +304,12 @@ private fun CommandScreen(onClose: () -> Unit) {
         top?.let { setText(it.completion) }
     }
 
+    fun clearHistory() {
+        history = emptyList()
+        historyIndex = -1
+        CommandActivity.clearHistory(context)
+    }
+
     fun older() {
         val index = CommandEngine.olderIndex(historyIndex, history.size)
         if (index >= 0) {
@@ -454,12 +464,20 @@ private fun CommandScreen(onClose: () -> Unit) {
             if (text.isEmpty() && done == null) {
                 val chips = remember(history, aliases, custom) { CommandEngine.quickChips(history, aliases, custom) }
                 if (chips.isNotEmpty()) {
-                    Label(
-                        stringResource(R.string.command_chips_title),
-                        dim,
-                        10.sp,
-                        Modifier.padding(top = 10.dp),
-                    )
+                    Row(Modifier.padding(top = 10.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Label(stringResource(R.string.command_chips_title), dim, 10.sp, Modifier.weight(1f))
+                        if (history.isNotEmpty()) {
+                            Box(
+                                Modifier
+                                    .heightIn(min = 32.dp)
+                                    .clickable { clearHistory() }
+                                    .padding(horizontal = 6.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Label(stringResource(R.string.command_history_clear), dim, 10.sp)
+                            }
+                        }
+                    }
                     Row(
                         Modifier
                             .padding(top = 6.dp)

@@ -1159,6 +1159,7 @@
     <string name="command_voice_prompt" translatable="false">Diga o comando</string>
     <string name="command_input_label" translatable="false">Comando</string>
     <string name="command_chips_title" translatable="false">RECENTES · FIXADOS</string>
+    <string name="command_history_clear" translatable="false">[×] LIMPAR RECENTES</string>
     <string name="command_more" translatable="false">MOSTRANDO %1$d DE %2$d · DIGITE ? PARA VER TODOS</string>
     <string name="cmd_pref_undo" translatable="false">Desfazer</string>
     <string name="cmd_pref_cancel" translatable="false">Cancelar</string>
@@ -1198,6 +1199,11 @@
     <string name="cmd_pref_restore_text" translatable="false">As ações cadastradas serão trocadas apenas pelo w (WhatsApp). Os apelidos não mudam. Dá para desfazer logo depois.</string>
     <string name="cmd_pref_restore_ok" translatable="false">Restaurar</string>
     <string name="cmd_pref_restored" translatable="false">Padrão restaurado</string>
+    <string name="cmd_pref_group_history" translatable="false">Histórico</string>
+    <string name="cmd_pref_clear_history" translatable="false">Limpar histórico de comandos</string>
+    <string name="cmd_pref_clear_history_count" translatable="false">%1$d comandos recentes salvos</string>
+    <string name="cmd_pref_clear_history_empty" translatable="false">Nenhum comando no histórico</string>
+    <string name="cmd_pref_history_cleared" translatable="false">Histórico limpo</string>
     <string name="cmd_pref_action_removed" translatable="false">Ação %1$s removida</string>
     <string name="cmd_pref_alias_removed" translatable="false">Apelido %1$s removido</string>
     <string name="cmd_pref_exported" translatable="false">Comandos exportados</string>

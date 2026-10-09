@@ -66,6 +66,7 @@ import app.lawnchair.command.Analysis
 import app.lawnchair.command.AppEntry
 import app.lawnchair.command.ArgKind
 import app.lawnchair.command.CommandAction
+import app.lawnchair.command.CommandActivity
 import app.lawnchair.command.CommandAlias
 import app.lawnchair.command.CommandEngine
 import app.lawnchair.command.CommandExecutor
@@ -118,6 +119,7 @@ fun CommandActionsPreferences() {
     var backupOpen by remember { mutableStateOf(false) }
     var confirmRestore by remember { mutableStateOf(false) }
     val usage = remember { CommandUsage.load(context) }
+    var history by remember { mutableStateOf(CommandActivity.loadHistory(context)) }
 
     // Contacts and apps feed the live previews of the editors; they load off the main thread.
     val contacts by produceState(emptyList<ContactEntry>()) {
@@ -165,6 +167,16 @@ fun CommandActionsPreferences() {
         val before = actions
         update(CustomActions.DEFAULTS)
         undoable(context.getString(R.string.cmd_pref_restored)) { update(before) }
+    }
+
+    fun clearHistory() {
+        val before = history
+        history = emptyList()
+        CommandActivity.clearHistory(context)
+        undoable(context.getString(R.string.cmd_pref_history_cleared)) {
+            history = before
+            CommandActivity.saveHistory(context, before)
+        }
     }
 
     // What the user chose to send; set once the selection dialog is confirmed.
@@ -273,6 +285,17 @@ fun CommandActionsPreferences() {
                     label = stringResource(R.string.cmd_pref_restore),
                     subtitle = stringResource(R.string.cmd_pref_restore_hint),
                     onClick = { confirmRestore = true },
+                )
+            }
+            PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_history)) {
+                ClickablePreference(
+                    label = stringResource(R.string.cmd_pref_clear_history),
+                    subtitle = if (history.isEmpty()) {
+                        stringResource(R.string.cmd_pref_clear_history_empty)
+                    } else {
+                        stringResource(R.string.cmd_pref_clear_history_count, history.size)
+                    },
+                    onClick = { if (history.isNotEmpty()) clearHistory() },
                 )
             }
         }
