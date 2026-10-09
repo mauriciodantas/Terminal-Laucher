@@ -92,6 +92,13 @@ public class LauncherAppWidgetHostView extends BaseLauncherAppWidgetHostView
     /** Lawnchair (Terminal): phosphor tone and scanlines over the widget, when enabled. */
     private final app.lawnchair.widgets.WidgetPhosphorEffect mPhosphorEffect;
 
+    /**
+     * Lawnchair (Terminal): content of the launcher's own Lottie widget, drawn here because
+     * RemoteViews cannot run Lottie. Null for every other widget.
+     */
+    @Nullable
+    private View mLocalContent;
+
     public LauncherAppWidgetHostView(Context context) {
         super(context);
         mPhosphorEffect = new app.lawnchair.widgets.WidgetPhosphorEffect(this);
@@ -147,6 +154,14 @@ public class LauncherAppWidgetHostView extends BaseLauncherAppWidgetHostView
     @Override
     public void setAppWidget(int appWidgetId, AppWidgetProviderInfo info) {
         super.setAppWidget(appWidgetId, info);
+        if (!app.lawnchair.widgets.lottie.LottieWidgetView.isFor(mLocalContent, appWidgetId)) {
+            mLocalContent = app.lawnchair.widgets.lottie.LottieWidgetView.create(
+                    getContext(), appWidgetId, info);
+            if (mLocalContent != null) {
+                // Shown as the default view, so it stays when AppWidgetHostView reapplies views.
+                super.updateAppWidget(null);
+            }
+        }
         if (!mTrackingWidgetUpdate && appWidgetId != -1) {
             mTrackingWidgetUpdate = true;
             Log.i(TAG, "App widget created with id: " + appWidgetId);
@@ -166,6 +181,9 @@ public class LauncherAppWidgetHostView extends BaseLauncherAppWidgetHostView
             }
             mTrackingWidgetUpdate = false;
         }
+        if (mLocalContent != null) {
+            return;
+        }
         mLastRemoteViews = remoteViews;
         mReapplyOnResumeUpdates = isDeferringUpdates();
         if (mReapplyOnResumeUpdates) {
@@ -176,6 +194,27 @@ public class LauncherAppWidgetHostView extends BaseLauncherAppWidgetHostView
 
         // The provider info or the views might have changed.
         checkIfAutoAdvance();
+    }
+
+    @Override
+    protected View getDefaultView() {
+        return mLocalContent != null ? detachedLocalContent() : super.getDefaultView();
+    }
+
+    @Override
+    protected View getErrorView() {
+        return mLocalContent != null ? detachedLocalContent() : super.getErrorView();
+    }
+
+    /**
+     * AppWidgetHostView adds the default view again whenever it reapplies its views (color
+     * changes, for one), so the local content must leave its current parent first.
+     */
+    private View detachedLocalContent() {
+        if (mLocalContent.getParent() instanceof ViewGroup parent) {
+            parent.removeView(mLocalContent);
+        }
+        return mLocalContent;
     }
 
     @Override

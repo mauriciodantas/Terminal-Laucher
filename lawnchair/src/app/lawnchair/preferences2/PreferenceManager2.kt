@@ -510,10 +510,22 @@ class PreferenceManager2 @Inject constructor(
         defaultValue = true,
     )
 
+    /** How strong the widget effect is, from 0 (widget's own colors) to 1 (full phosphor tone). */
+    val widgetEffectIntensity = preference(
+        key = floatPreferencesKey("widget_effect_intensity"),
+        defaultValue = 1f,
+    )
+
     /** The CRT layer over the whole launcher: scanlines, rolling band, flicker and vignette. */
     val crtEffect = preference(
         key = booleanPreferencesKey("crt_effect"),
         defaultValue = true,
+    )
+
+    /** How strong the CRT layer is, from 0 (invisible) to 1 (the original look). */
+    val crtEffectIntensity = preference(
+        key = floatPreferencesKey("crt_effect_intensity"),
+        defaultValue = 1f,
     )
 
     val folderPreviewBackgroundOpacity = preference(

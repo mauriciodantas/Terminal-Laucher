@@ -159,16 +159,36 @@ fun AppearancePreferences(modifier: Modifier = Modifier) {
                 label = stringResource(id = R.string.terminal_icon_effect),
                 description = stringResource(id = R.string.terminal_icon_effect_desc),
             )
+            val widgetEffect = prefs2.widgetEffect.getAdapter()
             SwitchPreference(
-                adapter = prefs2.widgetEffect.getAdapter(),
+                adapter = widgetEffect,
                 label = stringResource(id = R.string.widget_effect),
                 description = stringResource(id = R.string.widget_effect_desc),
             )
+            ExpandAndShrink(visible = widgetEffect.state.value) {
+                SliderPreference(
+                    label = stringResource(id = R.string.effect_intensity),
+                    adapter = prefs2.widgetEffectIntensity.getAdapter(),
+                    step = 0.05f,
+                    valueRange = 0.05f..1f,
+                    showAsPercentage = true,
+                )
+            }
+            val crtEffect = prefs2.crtEffect.getAdapter()
             SwitchPreference(
-                adapter = prefs2.crtEffect.getAdapter(),
+                adapter = crtEffect,
                 label = stringResource(id = R.string.crt_effect),
                 description = stringResource(id = R.string.crt_effect_desc),
             )
+            ExpandAndShrink(visible = crtEffect.state.value) {
+                SliderPreference(
+                    label = stringResource(id = R.string.effect_intensity),
+                    adapter = prefs2.crtEffectIntensity.getAdapter(),
+                    step = 0.05f,
+                    valueRange = 0.05f..1f,
+                    showAsPercentage = true,
+                )
+            }
         }
     }
 }

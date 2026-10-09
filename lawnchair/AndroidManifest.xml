@@ -181,6 +181,24 @@
             android:name="app.lawnchair.smartspace.SmartspacePreferencesShortcut"
             android:theme="@style/Theme.Transparent" />
 
+        <activity
+            android:name="app.lawnchair.widgets.lottie.LottieWidgetConfigActivity"
+            android:excludeFromRecents="true"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.Transparent" />
+
+        <receiver
+            android:name="app.lawnchair.widgets.lottie.LottieAppWidgetProvider"
+            android:exported="false"
+            android:label="@string/lottie_widget">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/lottie_appwidget_info" />
+        </receiver>
+
         <receiver
             android:name="app.lawnchair.gestures.handlers.SleepMethodDeviceAdmin$SleepDeviceAdmin"
             android:description="@string/dt2s_admin_hint"

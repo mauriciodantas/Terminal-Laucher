@@ -224,8 +224,11 @@ class LawnchairLauncher : QuickstepLauncher() {
                 }
             },
         )
-        preferenceManager2.crtEffect.get().distinctUntilChanged().onEach { enabled ->
-            crt.visibility = if (enabled) View.VISIBLE else View.GONE
+        combine(preferenceManager2.crtEffect.get(), preferenceManager2.crtEffectIntensity.get()) { enabled, intensity ->
+            if (enabled) intensity else 0f
+        }.distinctUntilChanged().onEach { intensity ->
+            crt.intensity = intensity
+            crt.visibility = if (intensity > 0f) View.VISIBLE else View.GONE
         }.launchIn(scope = lifecycleScope)
     }
 

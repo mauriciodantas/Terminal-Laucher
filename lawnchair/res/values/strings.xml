@@ -1290,6 +1290,21 @@
     <string name="widget_effect_desc" translatable="false">Tom e linhas de varredura na cor do fósforo sobre os widgets adicionados. Desligado, cada widget mostra suas cores</string>
     <string name="crt_effect" translatable="false">Efeito de monitor</string>
     <string name="crt_effect_desc" translatable="false">Linhas de varredura, faixa de brilho, cintilação e vinheta sobre a tela</string>
+    <string name="effect_intensity" translatable="false">Intensidade</string>
+    <string name="lottie_widget" translatable="false">Animação Lottie</string>
+    <string name="lottie_widget_desc" translatable="false">Toca uma animação Lottie importada (.json ou .lottie). O toque roda um comando, se houver, ou pausa a animação</string>
+    <string name="lottie_widget_animation" translatable="false">Animação</string>
+    <string name="lottie_widget_no_animation" translatable="false">Nenhuma escolhida</string>
+    <string name="lottie_widget_current" translatable="false">Animação atual</string>
+    <string name="lottie_widget_pick" translatable="false">Escolher</string>
+    <string name="lottie_widget_change" translatable="false">Trocar</string>
+    <string name="lottie_widget_command" translatable="false">Comando ao tocar (opcional)</string>
+    <string name="lottie_widget_command_hint" translatable="false">abrir spotify</string>
+    <string name="lottie_widget_command_none" translatable="false">Sem comando, o toque pausa e retoma a animação</string>
+    <string name="lottie_widget_save" translatable="false">Salvar</string>
+    <string name="lottie_widget_command_failed" translatable="false">Comando \"%1$s\" não executado: %2$s</string>
+    <string name="lottie_widget_empty" translatable="false">Segure e toque em Configurar para escolher uma animação</string>
+    <string name="lottie_widget_invalid" translatable="false">O arquivo não é uma animação Lottie válida</string>
     <string name="home_icon_size" translatable="false">Tamanho dos ícones da tela inicial</string>
     <string name="drawer_icon_size" translatable="false">Tamanho dos ícones da gaveta</string>
     <string name="drawer_grid_layout" translatable="false">Exibir em grade</string>

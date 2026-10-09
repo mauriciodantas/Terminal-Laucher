@@ -21,7 +21,8 @@ import app.lawnchair.theme.color.tokens.PhosphorColorToken
  * phosphor flicker and a vignette, like the Nostromo terminals. It never takes touches.
  *
  * [pulse] plays a short power-on flash and is used on screen changes. When the system animator
- * scale is 0 the layer stays static (scanlines and vignette only).
+ * scale is 0 the layer stays static (scanlines and vignette only). [intensity] scales every part of
+ * the layer at once, 1 being the original look.
  */
 class CrtOverlayView(context: Context) : View(context) {
 
@@ -50,6 +51,18 @@ class CrtOverlayView(context: Context) : View(context) {
     private val bandHeight = 140 * density
     private var phase = 0f
     private var flash = 0f
+
+    var intensity = 1f
+        set(value) {
+            val clamped = value.coerceIn(0f, 1f)
+            if (field == clamped) return
+            field = clamped
+            val alpha = (clamped * 255).toInt()
+            scanPaint.alpha = alpha
+            bandPaint.alpha = alpha
+            vignettePaint.alpha = alpha
+            invalidate()
+        }
 
     private val ticker = ValueAnimator.ofFloat(0f, 1f).apply {
         duration = 9000
@@ -149,11 +162,11 @@ class CrtOverlayView(context: Context) : View(context) {
             val noise = hash(bucket)
             var veil = (noise % 100) / 100f * 0.05f
             if (hash(bucket / 3) % 53 == 0) veil = 0.16f
-            flickerPaint.color = Color.argb((veil * 255).toInt(), 0, 0, 0)
+            flickerPaint.color = Color.argb((veil * intensity * 255).toInt(), 0, 0, 0)
             canvas.drawRect(0f, 0f, w, h, flickerPaint)
 
             if (flash > 0f) {
-                flashPaint.color = ColorUtils.setAlphaComponent(phosphor, (flash * 0x38).toInt())
+                flashPaint.color = ColorUtils.setAlphaComponent(phosphor, (flash * intensity * 0x38).toInt())
                 canvas.drawRect(0f, 0f, w, h, flashPaint)
             }
         }
