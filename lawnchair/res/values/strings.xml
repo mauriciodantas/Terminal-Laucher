@@ -1090,7 +1090,8 @@
     <string name="nostromo_matches_many" translatable="false">%1$d CORRESPONDÊNCIAS</string>
     <string name="nostromo_swipe_hint" translatable="false">▲ DESLIZE PARA O DIRETÓRIO DE PROGRAMAS</string>
     <string name="nostromo_quick_access" translatable="false">› ACESSO RÁPIDO</string>
-    <string name="smartspace_widget_summary" translatable="false">Relógio e painel da tela inicial</string>
+    <string name="smartspace_widget_summary" translatable="false">Relógio, data e alvos no topo da tela inicial</string>
+    <string name="smartspace_widget_off" translatable="false">Desligado</string>
     <string name="smartspace_widget_terminal_description" translatable="false">Mostra o relógio, a data e o rastreador de movimento no topo da tela inicial.</string>
     <string name="about_fork_heading" translatable="false">Sobre este projeto</string>
     <!-- Onboarding (primeira execução) -->
@@ -1418,7 +1419,7 @@
     <string name="glance_animation_too_big" translatable="false">Arquivo grande demais (máximo 512 KB)</string>
     <string name="glance_animation_tint" translatable="false">Usar a cor do tema</string>
     <string name="glance_animation_tint_desc" translatable="false">Pinta a animação com o verde do terminal em vez das cores originais</string>
-    <string name="settings_home_description" translatable="false">Grade, ícones favoritos, rótulos e conversas</string>
+    <string name="settings_home_description" translatable="false">Painel de status, grade, ícones favoritos, rótulos e conversas</string>
     <string name="settings_drawer_description" translatable="false">Apps escondidos, pastas e grade</string>
     <string name="settings_appearance_description" translatable="false">Cores, papel de parede, fonte e efeitos</string>
     <string name="home_group_layout" translatable="false">Organização</string>

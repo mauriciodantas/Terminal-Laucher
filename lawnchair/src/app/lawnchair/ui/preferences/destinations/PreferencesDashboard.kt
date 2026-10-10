@@ -51,8 +51,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.getSystemService
 import app.lawnchair.LawnchairLauncher
 import app.lawnchair.preferences.preferenceManager
-import app.lawnchair.preferences2.firstCached
-import app.lawnchair.preferences2.preferenceManager2
 import app.lawnchair.ui.OverflowMenuGrouped
 import app.lawnchair.ui.onboarding.OnboardingActivity
 import app.lawnchair.ui.preferences.components.controls.PreferenceCategory
@@ -67,7 +65,6 @@ import app.lawnchair.ui.preferences.navigation.BackupAndRestore
 import app.lawnchair.ui.preferences.navigation.CommandActions
 import app.lawnchair.ui.preferences.navigation.HomeScreen
 import app.lawnchair.ui.preferences.navigation.PreferenceRootRoute
-import app.lawnchair.ui.preferences.navigation.Smartspace
 import app.lawnchair.util.isDefaultLauncher
 import app.lawnchair.util.restartLauncher
 import com.android.launcher3.BuildConfig
@@ -123,15 +120,6 @@ fun PreferencesDashboard(
                 iconResource = R.drawable.ic_home_screen,
                 onNavigate = { onNavigate(HomeScreen) },
                 isSelected = currentRoute is HomeScreen,
-            )
-
-            val isSmartspaceEnabled = preferenceManager2().enableSmartspace.firstCached()
-            PreferenceCategory(
-                label = stringResource(id = R.string.smartspace_widget),
-                description = stringResource(R.string.smartspace_widget_summary),
-                iconResource = if (isSmartspaceEnabled) R.drawable.ic_smartspace else R.drawable.ic_smartspace_off,
-                onNavigate = { onNavigate(Smartspace) },
-                isSelected = currentRoute is Smartspace,
             )
 
             PreferenceCategory(

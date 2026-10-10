@@ -40,6 +40,7 @@ import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
 import app.lawnchair.ui.preferences.components.notificationDotsEnabled
 import app.lawnchair.ui.preferences.components.notificationServiceEnabled
 import app.lawnchair.ui.preferences.navigation.HomeScreenGrid
+import app.lawnchair.ui.preferences.navigation.Smartspace
 import com.android.launcher3.R
 
 object HomeScreenRoutes {
@@ -63,7 +64,15 @@ fun HomeScreenPreferences(
     ) {
         val columns by prefs.workspaceColumns.getAdapter()
         val rows by prefs.workspaceRows.getAdapter()
+        val smartspaceEnabled by prefs2.enableSmartspace.getAdapter()
         PreferenceGroup(heading = stringResource(id = R.string.home_group_layout)) {
+            NavigationActionPreference(
+                label = stringResource(id = R.string.smartspace_widget),
+                destination = Smartspace,
+                subtitle = stringResource(
+                    id = if (smartspaceEnabled) R.string.smartspace_widget_summary else R.string.smartspace_widget_off,
+                ),
+            )
             NavigationActionPreference(
                 label = stringResource(id = R.string.home_screen_grid),
                 destination = HomeScreenGrid,
