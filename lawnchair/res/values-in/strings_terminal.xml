@@ -494,4 +494,10 @@
     <string name="cmd_voice_message_lead_in">bilang</string>
     <string name="cmd_voice_message_that">bahwa</string>
     <string name="lottie_widget_command_hint">buka spotify</string>
+    <string name="cmd_word_split">bagi</string>
+    <string name="cmd_usage_split">[aplikasi] / [aplikasi]</string>
+    <string name="cmd_split_title">LAYAR TERBAGI</string>
+    <string name="cmd_split_empty">MASUKKAN DUA PROGRAM</string>
+    <string name="cmd_split_second">PROGRAM KEDUA?</string>
+    <string name="cmd_voice_split">bagi,berdampingan</string>
 </resources>

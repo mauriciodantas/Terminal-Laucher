@@ -494,4 +494,10 @@
     <string name="cmd_voice_message_lead_in">dicendo,scrivendo,chiedendo</string>
     <string name="cmd_voice_message_that">che</string>
     <string name="lottie_widget_command_hint">apri spotify</string>
+    <string name="cmd_word_split">dividi</string>
+    <string name="cmd_usage_split">[app] / [app]</string>
+    <string name="cmd_split_title">SCHERMO DIVISO</string>
+    <string name="cmd_split_empty">INDICA DUE PROGRAMMI</string>
+    <string name="cmd_split_second">SECONDO PROGRAMMA?</string>
+    <string name="cmd_voice_split">dividi,affianca</string>
 </resources>

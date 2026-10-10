@@ -494,4 +494,10 @@
     <string name="cmd_voice_message_lead_in">zeg</string>
     <string name="cmd_voice_message_that">dat</string>
     <string name="lottie_widget_command_hint">open spotify</string>
+    <string name="cmd_word_split">splits</string>
+    <string name="cmd_usage_split">[app] / [app]</string>
+    <string name="cmd_split_title">GESPLITST SCHERM</string>
+    <string name="cmd_split_empty">GEEF TWEE PROGRAMMA\'S OP</string>
+    <string name="cmd_split_second">TWEEDE PROGRAMMA?</string>
+    <string name="cmd_voice_split">splits,splitsen,naast elkaar</string>
 </resources>

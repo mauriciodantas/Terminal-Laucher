@@ -494,4 +494,10 @@
     <string name="cmd_voice_message_lead_in">что</string>
     <string name="cmd_voice_message_that"></string>
     <string name="lottie_widget_command_hint">открыть spotify</string>
+    <string name="cmd_word_split">разделить</string>
+    <string name="cmd_usage_split">[приложение] / [приложение]</string>
+    <string name="cmd_split_title">РАЗДЕЛЁННЫЙ ЭКРАН</string>
+    <string name="cmd_split_empty">УКАЖИТЕ ДВЕ ПРОГРАММЫ</string>
+    <string name="cmd_split_second">ВТОРАЯ ПРОГРАММА?</string>
+    <string name="cmd_voice_split">разделить,рядом</string>
 </resources>

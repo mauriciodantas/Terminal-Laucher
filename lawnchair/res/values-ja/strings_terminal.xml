@@ -494,4 +494,10 @@
     <string name="cmd_voice_message_lead_in"></string>
     <string name="cmd_voice_message_that"></string>
     <string name="lottie_widget_command_hint">開く spotify</string>
+    <string name="cmd_word_split">分割</string>
+    <string name="cmd_usage_split">[アプリ] / [アプリ]</string>
+    <string name="cmd_split_title">分割画面</string>
+    <string name="cmd_split_empty">2つのプログラムを入力</string>
+    <string name="cmd_split_second">2つ目のプログラム?</string>
+    <string name="cmd_voice_split">分割,並べて</string>
 </resources>

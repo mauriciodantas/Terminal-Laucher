@@ -494,4 +494,10 @@
     <string name="cmd_voice_message_lead_in">قائلا</string>
     <string name="cmd_voice_message_that">أن</string>
     <string name="lottie_widget_command_hint">افتح spotify</string>
+    <string name="cmd_word_split">تقسيم</string>
+    <string name="cmd_usage_split">[تطبيق] / [تطبيق]</string>
+    <string name="cmd_split_title">تقسيم الشاشة</string>
+    <string name="cmd_split_empty">أدخل برنامجين</string>
+    <string name="cmd_split_second">البرنامج الثاني؟</string>
+    <string name="cmd_voice_split">تقسيم,جنبا إلى جنب</string>
 </resources>

@@ -1575,4 +1575,10 @@
     <string name="cmd_voice_math">divided by=/;over=/;multiplied by=*;times=*;plus=+;minus=-;percent=%;point=.;x=*</string>
     <string name="cmd_voice_message_lead_in">saying,telling,asking,writing</string>
     <string name="cmd_voice_message_that">that</string>
+    <string name="cmd_word_split">split</string>
+    <string name="cmd_usage_split">[app] / [app]</string>
+    <string name="cmd_split_title">SPLIT SCREEN</string>
+    <string name="cmd_split_empty">ENTER TWO PROGRAMS</string>
+    <string name="cmd_split_second">SECOND PROGRAM?</string>
+    <string name="cmd_voice_split">split,side by side</string>
 </resources>

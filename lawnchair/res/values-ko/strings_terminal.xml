@@ -494,4 +494,10 @@
     <string name="cmd_voice_message_lead_in"></string>
     <string name="cmd_voice_message_that"></string>
     <string name="lottie_widget_command_hint">열기 spotify</string>
+    <string name="cmd_word_split">분할</string>
+    <string name="cmd_usage_split">[앱] / [앱]</string>
+    <string name="cmd_split_title">화면 분할</string>
+    <string name="cmd_split_empty">프로그램 두 개 입력</string>
+    <string name="cmd_split_second">두 번째 프로그램?</string>
+    <string name="cmd_voice_split">분할,나란히</string>
 </resources>

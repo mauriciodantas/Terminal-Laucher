@@ -92,6 +92,8 @@ object CommandExecutor {
 
             is CommandAction.Custom -> return runCustom(context, action)
 
+            is CommandAction.SplitScreen -> return launchSplit(context, action)
+
             is CommandAction.Route -> start(
                 context,
                 Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=" + Uri.encode(action.query))),
@@ -231,9 +233,42 @@ object CommandExecutor {
         }.getOrDefault(emptyList())
     }
 
+    /**
+     * Puts the two apps of [action] side by side. The system only splits the screen for a launch
+     * with FLAG_ACTIVITY_LAUNCH_ADJACENT made by the activity in front, so from the command bar
+     * ([context] is that activity) the second app opens beside the bar, and then the first one is
+     * opened from inside the split, taking the bar's half, and the bar closes. Without an activity
+     * (an assistant call) both are opened one after the other, which may not split.
+     */
+    private fun launchSplit(context: Context, action: CommandAction.SplitScreen): Boolean {
+        val first = launchIntent(context, action.first) ?: return false
+        val second = launchIntent(context, action.second) ?: return false
+        val adjacent = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK or Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT
+        val activity = context as? android.app.Activity
+        val handler = android.os.Handler(android.os.Looper.getMainLooper())
+        if (activity == null) {
+            val app = context.applicationContext
+            app.startActivity(first.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            handler.postDelayed({ runCatching { app.startActivity(second.addFlags(adjacent)) } }, SPLIT_SECOND_DELAY_MS)
+            return true
+        }
+        activity.startActivity(second.addFlags(adjacent))
+        handler.postDelayed({
+            runCatching { activity.startActivity(first.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+            activity.finish()
+        }, SPLIT_SECOND_DELAY_MS)
+        return true
+    }
+
+    private fun launchIntent(context: Context, app: AppEntry): Intent? {
+        val component = ComponentName.unflattenFromString(app.id) ?: return null
+        return Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER).setComponent(component)
+    }
+
     private fun start(context: Context, intent: Intent) {
         context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 
     private const val MAX_CONTACTS = 2000
+    private const val SPLIT_SECOND_DELAY_MS = 700L
 }

@@ -131,6 +131,7 @@
             android:name="app.lawnchair.command.CommandActivity"
             android:exported="false"
             android:excludeFromRecents="true"
+            android:taskAffinity="${applicationId}.command"
             android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.Lawnchair" />
 

@@ -16,6 +16,7 @@ enum class BuiltInCommand(@StringRes private val wordRes: Int, val portuguese: S
     CALC(R.string.cmd_word_calc, "calc", "calc"),
     CALL(R.string.cmd_word_call, "ligar", "call"),
     ROUTE(R.string.cmd_word_route, "rota", "route"),
+    SPLIT(R.string.cmd_word_split, "dividir", "split"),
     ;
 
     /** The word shown and suggested: "abrir" in Portuguese, "open" in English. */

@@ -27,6 +27,9 @@ sealed interface CommandAction {
         val text: String = "",
     ) : CommandAction
     data class Route(val query: String) : CommandAction
+
+    /** Two apps side by side in split screen. */
+    data class SplitScreen(val first: AppEntry, val second: AppEntry) : CommandAction
     data class NewTask(val title: String) : CommandAction
     data class WebSearch(val query: String) : CommandAction
 }
@@ -71,6 +74,7 @@ object CommandEngine {
             listOf(
                 BuiltInCommand.TASK to BuiltInCommand.TASK + " " + Texts.get(R.string.cmd_usage_task),
                 BuiltInCommand.CALC_SHORT to BuiltInCommand.CALC_SHORT + " " + Texts.get(R.string.cmd_usage_calc_short),
+                BuiltInCommand.SPLIT.word to BuiltInCommand.SPLIT.word + " " + Texts.get(R.string.cmd_usage_split),
             )
 
     private val splitter = Regex("^(\\S*)(\\s+(.*))?$", RegexOption.DOT_MATCHES_ALL)
@@ -122,6 +126,8 @@ object CommandEngine {
             BuiltInCommand.CALC -> analyzeCalc(arg)
 
             BuiltInCommand.ROUTE -> analyzeRoute(arg)
+
+            BuiltInCommand.SPLIT -> analyzeSplit(arg, apps)
 
             null -> custom.firstOrNull { it.letter == token }
                 ?.let { analyzeCustom(it, arg, contacts, contactsGranted) }
@@ -210,12 +216,23 @@ object CommandEngine {
     /** What [action] asks the system to do, as a short technical line shown under the preview. */
     fun describe(action: CommandAction): String = when (action) {
         is CommandAction.OpenApp -> "launcher · " + action.app.id.substringBefore('/')
+
         is CommandAction.SetAlarm -> "ACTION_SET_ALARM · %02d:%02d".format(action.hour, action.minute)
+
         is CommandAction.Calc -> Texts.get(R.string.cmd_desc_calc, action.result)
+
         is CommandAction.Call -> "tel:" + action.contact.number.filter { it.isDigit() || it == '+' }
+
         is CommandAction.Route -> "geo:0,0?q=" + encode(action.query)
+
+        is CommandAction.SplitScreen ->
+            "FLAG_ACTIVITY_LAUNCH_ADJACENT · " +
+                action.first.id.substringBefore('/') + " | " + action.second.id.substringBefore('/')
+
         is CommandAction.NewTask -> Texts.get(R.string.cmd_desc_task)
+
         is CommandAction.WebSearch -> "ACTION_WEB_SEARCH · \"${action.query}\""
+
         is CommandAction.Custom -> describeCustom(action)
     }
 
@@ -241,8 +258,7 @@ object CommandEngine {
 
     private fun analyzeOpen(arg: String, apps: List<AppEntry>): Analysis {
         val q = arg.trim().foldAccents()
-        val matches = apps.filter { it.label.foldAccents().startsWith(q) }
-            .ifEmpty { if (q.isEmpty()) emptyList() else apps.filter { it.label.foldAccents().contains(q) } }
+        val matches = matchApps(q, apps)
         val items = matches.take(MAX_SUGGESTIONS).map {
             Suggestion(BuiltInCommand.OPEN.word + " " + it.label.lowercase(), it.label, Texts.get(R.string.cmd_kind_program))
         }
@@ -263,6 +279,73 @@ object CommandEngine {
                 else -> Tone.ERROR
             },
             action = if (q.isNotEmpty() && first != null) CommandAction.OpenApp(first) else null,
+        )
+    }
+
+    /** Apps whose name starts with [query] (accent-folded), or contains it when none starts with it. */
+    private fun matchApps(query: String, apps: List<AppEntry>): List<AppEntry> = apps.filter { it.label.foldAccents().startsWith(query) }
+        .ifEmpty { if (query.isEmpty()) emptyList() else apps.filter { it.label.foldAccents().contains(query) } }
+
+    /** Separators that end the first app of "dividir chrome / maps". */
+    private val splitSeparator = Regex("\\s*[/|+]\\s*")
+
+    /**
+     * Splits "chrome google maps" into the two app names. A "/", "|" or "+" is an explicit
+     * separator; otherwise the first cut where both halves name an app wins, trying the longest
+     * first name first. Without one, everything is the first name and the second is empty.
+     */
+    fun splitAppNames(arg: String, apps: List<AppEntry>): Pair<String, String> {
+        val trimmed = arg.trimStart()
+        splitSeparator.find(trimmed)?.let { return trimmed.substring(0, it.range.first).trim() to trimmed.substring(it.range.last + 1).trimStart() }
+        // A whole name that is one app ("google maps") is not cut in two.
+        if (apps.any { it.label.foldAccents() == trimmed.trim().foldAccents() }) return trimmed.trim() to ""
+        val words = trimmed.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
+        for (k in words.size - 1 downTo 1) {
+            val first = words.take(k).joinToString(" ")
+            val second = words.drop(k).joinToString(" ")
+            if (matchApps(first.foldAccents(), apps).isNotEmpty() && matchApps(second.foldAccents(), apps).isNotEmpty()) {
+                return first to second
+            }
+        }
+        return trimmed.trim() to ""
+    }
+
+    private fun analyzeSplit(arg: String, apps: List<AppEntry>): Analysis {
+        val (firstName, secondName) = splitAppNames(arg, apps)
+        val first = firstName.takeIf { it.isNotEmpty() }?.let { matchApps(it.foldAccents(), apps).firstOrNull() }
+        val secondMatches = if (secondName.isEmpty()) emptyList() else matchApps(secondName.foldAccents(), apps).filter { it != first }
+        val second = secondMatches.firstOrNull()
+        val word = BuiltInCommand.SPLIT.word
+        // While the first app is typed the list offers it; once it is picked, the list offers the second.
+        val pickingSecond = first != null && (secondName.isNotEmpty() || splitSeparator.containsMatchIn(arg))
+        val items = if (first != null && pickingSecond) {
+            (if (secondName.isEmpty()) apps.filter { it != first } else secondMatches)
+                .take(MAX_SUGGESTIONS)
+                .map { Suggestion("$word ${first.label.lowercase()} / ${it.label.lowercase()}", it.label, Texts.get(R.string.cmd_kind_program)) }
+        } else {
+            matchApps(firstName.foldAccents(), apps).take(MAX_SUGGESTIONS)
+                .map { Suggestion("$word ${it.label.lowercase()} / ", it.label, Texts.get(R.string.cmd_kind_program)) }
+        }
+        return Analysis(
+            suggestions = if (firstName.isEmpty()) emptyList() else items,
+            listTitle = Texts.get(R.string.cmd_list_programs),
+            needsContacts = false,
+            previewTitle = Texts.get(R.string.cmd_split_title),
+            preview = when {
+                firstName.isEmpty() -> Texts.get(R.string.cmd_split_empty)
+                first == null -> Texts.get(R.string.cmd_open_not_found)
+                second != null -> first.label.uppercase() + " ▏ " + second.label.uppercase()
+                secondName.isEmpty() -> first.label.uppercase() + " ▏ " + Texts.get(R.string.cmd_split_second)
+                else -> Texts.get(R.string.cmd_open_not_found)
+            },
+            tone = when {
+                firstName.isEmpty() -> Tone.IDLE
+                first == null -> Tone.ERROR
+                second != null -> Tone.OK
+                secondName.isEmpty() -> Tone.IDLE
+                else -> Tone.ERROR
+            },
+            action = if (first != null && second != null) CommandAction.SplitScreen(first, second) else null,
         )
     }
 

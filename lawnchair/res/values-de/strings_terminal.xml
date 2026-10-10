@@ -494,4 +494,10 @@
     <string name="cmd_voice_message_lead_in">sag,sage,schreib</string>
     <string name="cmd_voice_message_that">dass</string>
     <string name="lottie_widget_command_hint">öffnen spotify</string>
+    <string name="cmd_word_split">teilen</string>
+    <string name="cmd_usage_split">[App] / [App]</string>
+    <string name="cmd_split_title">GETEILTER BILDSCHIRM</string>
+    <string name="cmd_split_empty">ZWEI PROGRAMME EINGEBEN</string>
+    <string name="cmd_split_second">ZWEITES PROGRAMM?</string>
+    <string name="cmd_voice_split">teilen,nebeneinander</string>
 </resources>

@@ -16,6 +16,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -28,6 +29,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -108,11 +110,22 @@ class CommandActivity : ComponentActivity() {
         private const val KEY_HISTORY = "command_history"
 
         private const val EXTRA_VOICE = "start_voice"
+        private const val EXTRA_TEXT = "start_text"
 
-        /** [voice] opens the speech recognizer right away, for the microphone on the home screen. */
-        fun start(context: Context, voice: Boolean = false) {
+        /**
+         * [voice] opens the speech recognizer right away, for the microphone on the home screen.
+         * [text] starts the command line with what was typed on a hardware keyboard at home.
+         */
+        fun start(context: Context, voice: Boolean = false, text: String = "") {
             CommandExecutor.prewarm(context)
-            context.startActivity(Intent(context, CommandActivity::class.java).putExtra(EXTRA_VOICE, voice))
+            // A task of its own, outside the home task: the system cannot split the screen with
+            // the home screen, and "dividir" opens an app beside the bar.
+            context.startActivity(
+                Intent(context, CommandActivity::class.java)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    .putExtra(EXTRA_VOICE, voice)
+                    .putExtra(EXTRA_TEXT, text),
+            )
         }
 
         fun voiceIntent(context: Context): Intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
@@ -123,6 +136,8 @@ class CommandActivity : ComponentActivity() {
         fun voiceAvailable(context: Context): Boolean = context.packageManager.resolveActivity(voiceIntent(context), 0) != null
 
         internal fun wantsVoice(intent: Intent?): Boolean = intent?.getBooleanExtra(EXTRA_VOICE, false) == true
+
+        internal fun initialText(intent: Intent?): String = intent?.getStringExtra(EXTRA_TEXT).orEmpty()
 
         fun loadHistory(context: Context): List<String> = context.getSharedPreferences(STORE, Context.MODE_PRIVATE)
             .getString(KEY_HISTORY, "")
@@ -213,7 +228,10 @@ private fun CommandScreen(onClose: () -> Unit) {
     var pendingAction by remember { mutableStateOf<CommandAction?>(null) }
     var pendingCommand by remember { mutableStateOf("") }
 
-    var field by remember { mutableStateOf(TextFieldValue("")) }
+    var field by remember {
+        val typed = CommandActivity.initialText((context as? android.app.Activity)?.intent)
+        mutableStateOf(TextFieldValue(typed, TextRange(typed.length)))
+    }
     var selected by remember { mutableIntStateOf(0) }
     var historyIndex by remember { mutableIntStateOf(-1) }
     var done by remember { mutableStateOf<String?>(null) }
@@ -248,6 +266,9 @@ private fun CommandScreen(onClose: () -> Unit) {
         historyIndex = -1
         if (action is CommandAction.Calc) {
             done = context.getString(R.string.command_copied, action.result)
+        } else if (action is CommandAction.SplitScreen) {
+            // The bar stays a moment to open the first app from inside the split; it closes itself.
+            done = executedLabel
         } else {
             done = executedLabel
             onClose()
@@ -331,178 +352,203 @@ private fun CommandScreen(onClose: () -> Unit) {
     }
 
     val ground = remember { Color(LauncherGround.get(context)) }
-    Box(
+    BoxWithConstraints(
         Modifier
             .fillMaxSize()
             .background(ground)
             .systemBarsPadding()
             .imePadding(),
+        contentAlignment = Alignment.TopCenter,
     ) {
+        // A tablet in landscape with the keyboard up has little height left: the header gives way
+        // so the suggestions keep the room.
+        val compact = maxHeight < 480.dp
+        // A wide screen puts the preview beside the suggestions instead of under them.
+        val wide = maxWidth >= 900.dp
+        // On a tablet the terminal keeps a readable width instead of stretching across the screen.
         Column(
             Modifier
+                .widthIn(max = if (wide) 1200.dp else 840.dp)
                 .fillMaxSize()
                 .padding(8.dp)
                 .border(1.dp, line)
                 .padding(horizontal = 14.dp, vertical = 10.dp),
         ) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Label("MU/TH/UR 6000", dim, 10.sp)
-                Label(stringResource(R.string.command_header_right), dim, 10.sp)
-            }
-            Spacer(Modifier.height(6.dp))
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .border(1.dp, line)
-                    .padding(vertical = 6.dp),
-            ) {
-                Text(
-                    stringResource(R.string.command_title),
-                    color = phosphor,
-                    fontFamily = mono(),
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 13.sp,
-                    letterSpacing = 0.2.sp,
-                    modifier = Modifier.padding(start = 6.dp),
-                )
-            }
-            Spacer(Modifier.height(4.dp))
-            Label(stringResource(R.string.command_subtitle), dim, 10.5.sp)
-
-            // The command line.
-            val style = TextStyle(
-                fontFamily = mono(),
-                fontWeight = FontWeight.Medium,
-                fontSize = 15.sp,
-                letterSpacing = 0.9.sp,
-            )
-            val inputLabel = stringResource(R.string.command_input_label)
-            val highlight = remember(phosphor, dim) { CommandHighlight(phosphor, phosphor.copy(alpha = 0.72f)) }
-            Row(
-                Modifier
-                    .padding(top = 12.dp)
-                    .fillMaxWidth()
-                    .height(48.dp)
-                    .border(1.dp, phosphor)
-                    .padding(horizontal = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(">", color = phosphor, style = style)
-                Spacer(Modifier.width(10.dp))
-                Box(Modifier.weight(1f)) {
+            if (!compact) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Label("MU/TH/UR 6000", dim, 10.sp)
+                    Label(stringResource(R.string.command_header_right), dim, 10.sp)
+                }
+                Spacer(Modifier.height(6.dp))
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, line)
+                        .padding(vertical = 6.dp),
+                ) {
                     Text(
-                        text = buildAnnotatedString {
-                            withStyle(SpanStyle(color = Color.Transparent)) { append(text) }
-                            withStyle(SpanStyle(color = phosphor.copy(alpha = 0.4f))) { append(ghost) }
-                        },
-                        style = style,
-                        maxLines = 1,
-                        overflow = TextOverflow.Clip,
-                    )
-                    BasicTextField(
-                        value = field,
-                        onValueChange = {
-                            if (it.text != field.text) {
-                                selected = 0
-                                done = null
-                            }
-                            field = it
-                        },
-                        textStyle = style.copy(color = phosphor),
-                        visualTransformation = highlight,
-                        cursorBrush = SolidColor(phosphor),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(
-                            capitalization = KeyboardCapitalization.None,
-                            autoCorrectEnabled = false,
-                            imeAction = ImeAction.Go,
-                        ),
-                        keyboardActions = KeyboardActions(onGo = { run() }),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .focusRequester(focus)
-                            .semantics { contentDescription = inputLabel }
-                            .onPreviewKeyEvent { event ->
-                                if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
-                                when (event.key) {
-                                    Key.Tab -> {
-                                        complete()
-                                        true
-                                    }
-
-                                    Key.DirectionUp -> {
-                                        older()
-                                        true
-                                    }
-
-                                    Key.DirectionDown -> {
-                                        next()
-                                        true
-                                    }
-
-                                    else -> false
-                                }
-                            },
+                        stringResource(R.string.command_title),
+                        color = phosphor,
+                        fontFamily = mono(),
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 13.sp,
+                        letterSpacing = 0.2.sp,
+                        modifier = Modifier.padding(start = 6.dp),
                     )
                 }
-                if (voiceAvailable) {
-                    Spacer(Modifier.width(6.dp))
-                    val voiceLabel = stringResource(R.string.command_voice)
-                    Box(
-                        Modifier
-                            .size(44.dp)
-                            .clickable { runCatching { voice.launch(voiceIntent) } }
-                            .semantics { contentDescription = voiceLabel },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text("[MIC]", color = phosphor, fontFamily = mono(), fontSize = 10.sp, letterSpacing = 0.5.sp)
+                Spacer(Modifier.height(4.dp))
+                Label(stringResource(R.string.command_subtitle), dim, 10.5.sp)
+            }
+
+            // The command line.
+            val commandLine: @Composable () -> Unit = {
+                val style = TextStyle(
+                    fontFamily = mono(),
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 15.sp,
+                    letterSpacing = 0.9.sp,
+                )
+                val inputLabel = stringResource(R.string.command_input_label)
+                val highlight = remember(phosphor, dim) { CommandHighlight(phosphor, phosphor.copy(alpha = 0.72f)) }
+                Row(
+                    Modifier
+                        .padding(top = if (compact) 0.dp else 12.dp)
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .border(1.dp, phosphor)
+                        .padding(horizontal = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(">", color = phosphor, style = style)
+                    Spacer(Modifier.width(10.dp))
+                    Box(Modifier.weight(1f)) {
+                        Text(
+                            text = buildAnnotatedString {
+                                withStyle(SpanStyle(color = Color.Transparent)) { append(text) }
+                                withStyle(SpanStyle(color = phosphor.copy(alpha = 0.4f))) { append(ghost) }
+                            },
+                            style = style,
+                            maxLines = 1,
+                            overflow = TextOverflow.Clip,
+                        )
+                        BasicTextField(
+                            value = field,
+                            onValueChange = {
+                                if (it.text != field.text) {
+                                    selected = 0
+                                    done = null
+                                }
+                                field = it
+                            },
+                            textStyle = style.copy(color = phosphor),
+                            visualTransformation = highlight,
+                            cursorBrush = SolidColor(phosphor),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(
+                                capitalization = KeyboardCapitalization.None,
+                                autoCorrectEnabled = false,
+                                imeAction = ImeAction.Go,
+                            ),
+                            keyboardActions = KeyboardActions(onGo = { run() }),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .focusRequester(focus)
+                                .semantics { contentDescription = inputLabel }
+                                .onPreviewKeyEvent { event ->
+                                    if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                                    when (event.key) {
+                                        Key.Tab -> {
+                                            complete()
+                                            true
+                                        }
+
+                                        Key.DirectionUp -> {
+                                            older()
+                                            true
+                                        }
+
+                                        Key.DirectionDown -> {
+                                            next()
+                                            true
+                                        }
+
+                                        Key.Escape -> {
+                                            onClose()
+                                            true
+                                        }
+
+                                        // A hardware Enter runs the command, like the keyboard's Go key.
+                                        Key.Enter, Key.NumPadEnter -> {
+                                            run()
+                                            true
+                                        }
+
+                                        else -> false
+                                    }
+                                },
+                        )
+                    }
+                    if (voiceAvailable) {
+                        Spacer(Modifier.width(6.dp))
+                        val voiceLabel = stringResource(R.string.command_voice)
+                        Box(
+                            Modifier
+                                .size(44.dp)
+                                .clickable { runCatching { voice.launch(voiceIntent) } }
+                                .semantics { contentDescription = voiceLabel },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text("[MIC]", color = phosphor, fontFamily = mono(), fontSize = 10.sp, letterSpacing = 0.5.sp)
+                        }
                     }
                 }
             }
 
             // One-tap starts while nothing is typed: recent commands, aliases and letters.
-            if (text.isEmpty() && done == null) {
-                val chips = remember(history, aliases, custom) { CommandEngine.quickChips(history, aliases, custom) }
-                if (chips.isNotEmpty()) {
-                    Row(Modifier.padding(top = 10.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Label(stringResource(R.string.command_chips_title), dim, 10.sp, Modifier.weight(1f))
-                        if (history.isNotEmpty()) {
-                            Box(
-                                Modifier
-                                    .heightIn(min = 32.dp)
-                                    .clickable { clearHistory() }
-                                    .padding(horizontal = 6.dp),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Label(stringResource(R.string.command_history_clear), dim, 10.sp)
+            val quickStarts: @Composable () -> Unit = {
+                if (text.isEmpty() && done == null) {
+                    val chips = remember(history, aliases, custom) { CommandEngine.quickChips(history, aliases, custom) }
+                    if (chips.isNotEmpty()) {
+                        Row(Modifier.padding(top = 10.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            Label(stringResource(R.string.command_chips_title), dim, 10.sp, Modifier.weight(1f))
+                            if (history.isNotEmpty()) {
+                                Box(
+                                    Modifier
+                                        .heightIn(min = 32.dp)
+                                        .clickable { clearHistory() }
+                                        .padding(horizontal = 6.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Label(stringResource(R.string.command_history_clear), dim, 10.sp)
+                                }
                             }
                         }
-                    }
-                    Row(
-                        Modifier
-                            .padding(top = 6.dp)
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    ) {
-                        val recentKind = stringResource(R.string.cmd_kind_recent)
-                        chips.forEach { chip ->
-                            Row(
-                                Modifier
-                                    .heightIn(min = 40.dp)
-                                    .border(1.dp, line)
-                                    .clickable { setText(chip.fill) }
-                                    .padding(horizontal = 10.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Text(
-                                    if (chip.kind == recentKind) "↺" else "★",
-                                    color = dim,
-                                    fontFamily = mono(),
-                                    fontSize = 10.sp,
-                                    modifier = Modifier.padding(end = 6.dp),
-                                )
-                                Text(chip.label, color = phosphor, fontFamily = mono(), fontWeight = FontWeight.Medium, fontSize = 11.5.sp)
+                        Row(
+                            Modifier
+                                .padding(top = 6.dp)
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        ) {
+                            val recentKind = stringResource(R.string.cmd_kind_recent)
+                            chips.forEach { chip ->
+                                Row(
+                                    Modifier
+                                        .heightIn(min = 40.dp)
+                                        .border(1.dp, line)
+                                        .clickable { setText(chip.fill) }
+                                        .padding(horizontal = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(
+                                        if (chip.kind == recentKind) "↺" else "★",
+                                        color = dim,
+                                        fontFamily = mono(),
+                                        fontSize = 10.sp,
+                                        modifier = Modifier.padding(end = 6.dp),
+                                    )
+                                    Text(chip.label, color = phosphor, fontFamily = mono(), fontWeight = FontWeight.Medium, fontSize = 11.5.sp)
+                                }
                             }
                         }
                     }
@@ -510,141 +556,169 @@ private fun CommandScreen(onClose: () -> Unit) {
             }
 
             // Suggestions.
-            Column(
-                Modifier
-                    .padding(top = 8.dp)
-                    .fillMaxWidth()
-                    .heightIn(min = 100.dp)
-                    .border(1.dp, line),
-            ) {
-                Label(
-                    analysis.listTitle,
-                    dim,
-                    10.sp,
+            val suggestions: @Composable () -> Unit = {
+                Column(
                     Modifier
+                        .padding(top = 8.dp)
                         .fillMaxWidth()
-                        .padding(horizontal = 8.dp, vertical = 5.dp),
-                )
-                Column(Modifier.heightIn(max = 280.dp).verticalScroll(rememberScrollState())) {
-                    if (analysis.needsContacts) {
-                        Row(
-                            Modifier
-                                .padding(6.dp)
-                                .fillMaxWidth()
-                                .border(1.dp, Danger)
-                                .padding(10.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                stringResource(R.string.command_contacts_needed),
-                                color = Danger,
-                                fontFamily = mono(),
-                                fontSize = 11.5.sp,
-                                modifier = Modifier.weight(1f),
-                            )
-                            Box(
+                        .heightIn(min = 100.dp)
+                        .border(1.dp, line),
+                ) {
+                    Label(
+                        analysis.listTitle,
+                        dim,
+                        10.sp,
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp, vertical = 5.dp),
+                    )
+                    Column(Modifier.heightIn(max = 280.dp).verticalScroll(rememberScrollState())) {
+                        if (analysis.needsContacts) {
+                            Row(
                                 Modifier
-                                    .width(92.dp)
-                                    .height(44.dp)
-                                    .background(Danger)
-                                    .clickable { permission.launch(android.Manifest.permission.READ_CONTACTS) },
-                                contentAlignment = Alignment.Center,
+                                    .padding(6.dp)
+                                    .fillMaxWidth()
+                                    .border(1.dp, Danger)
+                                    .padding(10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Text(
-                                    stringResource(R.string.command_grant),
-                                    color = Color(0xFF1A0502),
+                                    stringResource(R.string.command_contacts_needed),
+                                    color = Danger,
                                     fontFamily = mono(),
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 11.sp,
+                                    fontSize = 11.5.sp,
+                                    modifier = Modifier.weight(1f),
                                 )
+                                Box(
+                                    Modifier
+                                        .width(92.dp)
+                                        .height(44.dp)
+                                        .background(Danger)
+                                        .clickable { permission.launch(android.Manifest.permission.READ_CONTACTS) },
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(
+                                        stringResource(R.string.command_grant),
+                                        color = Color(0xFF1A0502),
+                                        fontFamily = mono(),
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 11.sp,
+                                    )
+                                }
+                            }
+                        }
+                        analysis.suggestions.forEachIndexed { index, suggestion ->
+                            val active = index == sel
+                            Row(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(44.dp)
+                                    .background(if (active) phosphor else Color.Transparent)
+                                    .clickable { pick(suggestion) }
+                                    .padding(horizontal = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                val color = if (active) onPhosphor() else phosphor
+                                Text(if (active) ">" else "", color = color, fontFamily = mono(), fontSize = 12.5.sp, modifier = Modifier.width(14.dp))
+                                Text(
+                                    suggestion.label,
+                                    color = color,
+                                    fontFamily = mono(),
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 12.5.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                Text(suggestion.kind, color = color.copy(alpha = 0.75f), fontFamily = mono(), fontSize = 9.5.sp)
                             }
                         }
                     }
-                    analysis.suggestions.forEachIndexed { index, suggestion ->
-                        val active = index == sel
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .height(44.dp)
-                                .background(if (active) phosphor else Color.Transparent)
-                                .clickable { pick(suggestion) }
-                                .padding(horizontal = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            val color = if (active) onPhosphor() else phosphor
-                            Text(if (active) ">" else "", color = color, fontFamily = mono(), fontSize = 12.5.sp, modifier = Modifier.width(14.dp))
-                            Text(
-                                suggestion.label,
-                                color = color,
-                                fontFamily = mono(),
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 12.5.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.weight(1f),
-                            )
-                            Text(suggestion.kind, color = color.copy(alpha = 0.75f), fontFamily = mono(), fontSize = 9.5.sp)
-                        }
+                    if (analysis.total > analysis.suggestions.size) {
+                        Label(
+                            stringResource(R.string.command_more, analysis.suggestions.size, analysis.total),
+                            dim,
+                            9.5.sp,
+                            Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 5.dp),
+                        )
                     }
-                }
-                if (analysis.total > analysis.suggestions.size) {
-                    Label(
-                        stringResource(R.string.command_more, analysis.suggestions.size, analysis.total),
-                        dim,
-                        9.5.sp,
-                        Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 5.dp),
-                    )
                 }
             }
 
             // Preview.
-            val previewTitle = if (done != null) stringResource(R.string.command_executed) else analysis.previewTitle
-            val previewText = done ?: analysis.preview
-            val previewColor = when {
-                done != null -> phosphor
-                analysis.tone == Tone.OK -> phosphor
-                analysis.tone == Tone.IDLE -> dim
-                else -> Danger
-            }
-            Column(
-                Modifier
-                    .padding(top = 8.dp)
-                    .fillMaxWidth()
-                    .heightIn(min = 52.dp)
-                    .border(1.dp, line)
-                    .clickable(enabled = analysis.action != null) { run() }
-                    .padding(horizontal = 10.dp, vertical = 7.dp),
-            ) {
-                Label(previewTitle, dim, 10.sp)
-                Text(
-                    previewText,
-                    color = previewColor,
-                    fontFamily = mono(),
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.sp,
-                    letterSpacing = 0.9.sp,
-                    modifier = Modifier.padding(top = 3.dp),
-                )
-                if (done == null && analysis.intent.isNotEmpty()) {
+            val preview: @Composable () -> Unit = {
+                val previewTitle = if (done != null) stringResource(R.string.command_executed) else analysis.previewTitle
+                val previewText = done ?: analysis.preview
+                val previewColor = when {
+                    done != null -> phosphor
+                    analysis.tone == Tone.OK -> phosphor
+                    analysis.tone == Tone.IDLE -> dim
+                    else -> Danger
+                }
+                Column(
+                    Modifier
+                        .padding(top = 8.dp)
+                        .fillMaxWidth()
+                        .heightIn(min = 52.dp)
+                        .border(1.dp, line)
+                        .clickable(enabled = analysis.action != null) { run() }
+                        .padding(horizontal = 10.dp, vertical = 7.dp),
+                ) {
+                    Label(previewTitle, dim, 10.sp)
                     Text(
-                        "⇢ " + analysis.intent,
-                        color = Amber,
+                        previewText,
+                        color = previewColor,
                         fontFamily = mono(),
-                        fontSize = 10.5.sp,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(top = 5.dp),
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp,
+                        letterSpacing = 0.9.sp,
+                        modifier = Modifier.padding(top = 3.dp),
                     )
+                    if (done == null && analysis.intent.isNotEmpty()) {
+                        Text(
+                            "⇢ " + analysis.intent,
+                            color = Amber,
+                            fontFamily = mono(),
+                            fontSize = 10.5.sp,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(top = 5.dp),
+                        )
+                    }
                 }
             }
 
-            Spacer(Modifier.weight(1f))
-
             // Keys that a phone keyboard lacks.
-            Row(Modifier.fillMaxWidth().border(1.dp, line)) {
-                FKey(stringResource(R.string.command_key_history), phosphor, Modifier.weight(1f)) { older() }
-                FKey(stringResource(R.string.command_key_complete), phosphor, Modifier.weight(1f)) { complete() }
-                FKey(stringResource(R.string.command_key_next), phosphor, Modifier.weight(1f)) { next() }
+            val keys: @Composable () -> Unit = {
+                Row(Modifier.fillMaxWidth().border(1.dp, line)) {
+                    FKey(stringResource(R.string.command_key_history), phosphor, Modifier.weight(1f)) { older() }
+                    FKey(stringResource(R.string.command_key_complete), phosphor, Modifier.weight(1f)) { complete() }
+                    FKey(stringResource(R.string.command_key_next), phosphor, Modifier.weight(1f)) { next() }
+                }
+            }
+
+            if (wide) {
+                // Wide screens: what is typed on the left, what it will do on the right.
+                Row(Modifier.weight(1f).fillMaxWidth()) {
+                    Column(Modifier.weight(1.4f)) {
+                        commandLine()
+                        quickStarts()
+                        suggestions()
+                    }
+                    Spacer(Modifier.width(12.dp))
+                    Column(Modifier.weight(1f)) {
+                        preview()
+                        Spacer(Modifier.weight(1f))
+                        keys()
+                    }
+                }
+            } else {
+                commandLine()
+                quickStarts()
+                suggestions()
+                preview()
+                Spacer(Modifier.weight(1f))
+                keys()
             }
         }
     }

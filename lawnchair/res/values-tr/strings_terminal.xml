@@ -494,4 +494,10 @@
     <string name="cmd_voice_message_lead_in"></string>
     <string name="cmd_voice_message_that"></string>
     <string name="lottie_widget_command_hint">aç spotify</string>
+    <string name="cmd_word_split">böl</string>
+    <string name="cmd_usage_split">[uygulama] / [uygulama]</string>
+    <string name="cmd_split_title">BÖLÜNMÜŞ EKRAN</string>
+    <string name="cmd_split_empty">İKİ PROGRAM GİRİN</string>
+    <string name="cmd_split_second">İKİNCİ PROGRAM?</string>
+    <string name="cmd_voice_split">böl,yan yana</string>
 </resources>

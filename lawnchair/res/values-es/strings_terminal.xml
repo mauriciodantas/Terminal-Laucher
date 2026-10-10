@@ -494,4 +494,10 @@
     <string name="cmd_voice_message_lead_in">diciendo,avisando,escribiendo,preguntando</string>
     <string name="cmd_voice_message_that">que</string>
     <string name="lottie_widget_command_hint">abrir spotify</string>
+    <string name="cmd_word_split">dividir</string>
+    <string name="cmd_usage_split">[app] / [app]</string>
+    <string name="cmd_split_title">PANTALLA DIVIDIDA</string>
+    <string name="cmd_split_empty">INDICA DOS PROGRAMAS</string>
+    <string name="cmd_split_second">¿SEGUNDO PROGRAMA?</string>
+    <string name="cmd_voice_split">dividir,dividida,lado a lado</string>
 </resources>

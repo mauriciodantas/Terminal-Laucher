@@ -29,6 +29,10 @@ import android.os.Bundle
 import android.util.Pair
 import android.view.Display
 import android.view.Gravity
+import android.view.KeyEvent
+import android.view.KeyboardShortcutGroup
+import android.view.KeyboardShortcutInfo
+import android.view.Menu
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
@@ -41,6 +45,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import app.lawnchair.LawnchairApp.Companion.showQuickstepWarningIfNecessary
 import app.lawnchair.chats.ChatsStripView
+import app.lawnchair.command.CommandActivity
 import app.lawnchair.compat.LawnchairQuickstepCompat
 import app.lawnchair.data.AppDatabase
 import app.lawnchair.data.wallpaper.service.WallpaperService
@@ -210,6 +215,41 @@ class LawnchairLauncher : QuickstepLauncher() {
         burnInGuard?.stop()
         super.onPause()
     }
+
+    /** Typing on a hardware keyboard at home opens the command bar with what was typed. */
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        if (canOpenCommandBar() && !event.isCtrlPressed && !event.isAltPressed && !event.isMetaPressed) {
+            val char = event.unicodeChar
+            if (char != 0 && !Character.isISOControl(char) && !Character.isWhitespace(char)) {
+                CommandActivity.start(this, text = String(Character.toChars(char)))
+                return true
+            }
+        }
+        return super.onKeyDown(keyCode, event)
+    }
+
+    /** Ctrl+K or Ctrl+Space opens an empty command bar. */
+    override fun onKeyShortcut(keyCode: Int, event: KeyEvent): Boolean {
+        if (canOpenCommandBar() && event.hasModifiers(KeyEvent.META_CTRL_ON) &&
+            (keyCode == KeyEvent.KEYCODE_K || keyCode == KeyEvent.KEYCODE_SPACE)
+        ) {
+            CommandActivity.start(this)
+            return true
+        }
+        return super.onKeyShortcut(keyCode, event)
+    }
+
+    override fun onProvideKeyboardShortcuts(data: MutableList<KeyboardShortcutGroup>, menu: Menu?, deviceId: Int) {
+        super.onProvideKeyboardShortcuts(data, menu, deviceId)
+        data.add(
+            KeyboardShortcutGroup(
+                getString(R.string.command_bar_setting),
+                listOf(KeyboardShortcutInfo(getString(R.string.command_bar_setting), KeyEvent.KEYCODE_K, KeyEvent.META_CTRL_ON)),
+            ),
+        )
+    }
+
+    private fun canOpenCommandBar() = isInState(LauncherState.NORMAL) && AbstractFloatingView.getTopOpenView(this) == null
 
     private fun installCrtOverlay() {
         val crt = CrtOverlayView(this)

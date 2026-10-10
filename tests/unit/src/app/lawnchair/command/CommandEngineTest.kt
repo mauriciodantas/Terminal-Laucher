@@ -34,14 +34,14 @@ class CommandEngineTest {
             a.suggestions.map { it.completion },
         )
         assertNull(a.action)
-        // 7 commands plus the "w" action: two do not fit.
-        assertEquals(8, a.total)
+        // 8 commands plus the "w" action: three do not fit.
+        assertEquals(9, a.total)
     }
 
     @Test fun emptyTextShowsAliasesAndLettersWhenThereIsRoom() {
         val a = CommandEngine.analyze("", apps, contacts, true, emptyList(), listOf(CommandAlias("mae", "ligar maria")))
         assertEquals(CommandEngine.EMPTY_SUGGESTIONS, a.suggestions.size)
-        assertEquals(8, a.total)
+        assertEquals(9, a.total)
         // Nothing was cut when everything fits.
         assertEquals(0, CommandEngine.analyze("ca", apps, contacts, true).total)
     }
@@ -420,6 +420,46 @@ class CommandEngineTest {
 
     @Test fun bareNameWithNoMatchStillSearchesTheWeb() {
         assertEquals(CommandAction.WebSearch("zzzz"), run("zzzz").action)
+    }
+
+    // ---- split screen ----
+
+    private val splitApps = (apps.map { it.label } + listOf("Google", "Google Maps")).map { AppEntry(it, "pkg/$it") }
+
+    private fun split(text: String) = CommandEngine.analyze(text, splitApps, contacts, true)
+
+    @Test fun splitWithASeparatorRunsBothApps() {
+        val a = split("dividir chrome / gmail")
+        assertEquals(CommandAction.SplitScreen(AppEntry("Chrome", "pkg/Chrome"), AppEntry("Gmail", "pkg/Gmail")), a.action)
+        assertEquals(Tone.OK, a.tone)
+        assertEquals("CHROME ▏ GMAIL", a.preview)
+    }
+
+    @Test fun splitFindsTheCutBetweenTwoNames() {
+        assertEquals("google maps" to "chrome", CommandEngine.splitAppNames("google maps chrome", splitApps))
+        assertEquals("chrome" to "google maps", CommandEngine.splitAppNames("chrome google maps", splitApps))
+        // A whole name that is one app waits for the second one.
+        assertEquals("google maps" to "", CommandEngine.splitAppNames("google maps", splitApps))
+    }
+
+    @Test fun splitWithOneAppAsksForTheSecond() {
+        val a = split("dividir chrome")
+        assertNull(a.action)
+        assertEquals(Tone.IDLE, a.tone)
+        assertEquals("dividir chrome / ", a.suggestions.first().completion)
+        val next = split("dividir chrome / ")
+        assertTrue(next.suggestions.none { it.label == "Chrome" })
+        assertTrue(next.suggestions.all { it.completion.startsWith("dividir chrome / ") })
+    }
+
+    @Test fun splitNeedsTwoDifferentApps() {
+        assertNull(split("dividir chrome / chrome").action)
+        assertNull(split("dividir xyz / chrome").action)
+        assertEquals(Tone.ERROR, split("dividir xyz").tone)
+    }
+
+    @Test fun splitWorksInEnglishToo() {
+        assertTrue(split("split camera / clock").action is CommandAction.SplitScreen)
     }
 }
 

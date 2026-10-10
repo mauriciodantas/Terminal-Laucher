@@ -29,6 +29,7 @@ object VoiceCommand {
             BuiltInCommand.ALARM to R.string.cmd_voice_alarm,
             BuiltInCommand.CALC to R.string.cmd_voice_calc,
             BuiltInCommand.ROUTE to R.string.cmd_voice_route,
+            BuiltInCommand.SPLIT to R.string.cmd_voice_split,
         ).forEach { (command, id) -> words(id).forEach { verbs[it] = command.word } }
         words(R.string.cmd_voice_task).forEach { verbs[it] = BuiltInCommand.TASK }
         words(R.string.cmd_voice_message).forEach { verbs[it] = MESSAGE }
