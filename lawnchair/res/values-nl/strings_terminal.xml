@@ -60,7 +60,7 @@
     <string name="command_bar_setting">Opdrachtbalk</string>
     <string name="command_actions_title">Acties van de opdrachtbalk</string>
     <string name="command_actions_desc">Wijs een letter toe aan acties van andere apps (w = WhatsApp)</string>
-    <string name="command_bar_setting_desc">Tikken op de balk opent de opdrachtterminal met automatisch aanvullen (abrir, calc, alarme, ligar, voz...)</string>
+    <string name="command_bar_setting_desc">Tikken op de balk opent de opdrachtterminal met automatisch aanvullen (open, calc, wekker, bel, spraak...)</string>
     <string name="command_title">&gt; OPDRACHTINVOER</string>
     <string name="command_subtitle">AUTOMATISCH AANVULLEN · GESCHIEDENIS</string>
     <string name="command_contacts_needed">DEZE OPDRACHT HEEFT TOEGANG TOT CONTACTEN NODIG.</string>
@@ -94,7 +94,7 @@
     <string name="cmd_pref_no_actions_hint">Voeg hieronder toe</string>
     <string name="cmd_pref_no_match">Niets gevonden</string>
     <string name="cmd_pref_new_alias">Nieuwe alias</string>
-    <string name="cmd_pref_new_alias_hint">Een eigen woord voor een hele opdracht (mae = ligar maria). Werkt getypt en ingesproken</string>
+    <string name="cmd_pref_new_alias_hint">Een eigen woord voor een hele opdracht (mam = bel maria). Werkt getypt en ingesproken</string>
     <string name="cmd_pref_recipes">Kant-en-klare recepten</string>
     <string name="cmd_pref_recipes_hint">WhatsApp, Telegram, SMS, YouTube, Spotify</string>
     <string name="cmd_pref_app_functions">Functies van een app</string>
@@ -147,7 +147,7 @@
     <string name="cmd_pref_alias_label">Alias</string>
     <string name="cmd_pref_alias_hint">Getypt of ingesproken. Accenten maken niet uit</string>
     <string name="cmd_pref_alias_command">Opdracht</string>
-    <string name="cmd_pref_alias_command_hint">Bijv.: ligar maria · abrir chrome · w ana · rota casa</string>
+    <string name="cmd_pref_alias_command_hint">Bijv.: bel maria · open chrome · w ana · route thuis</string>
     <string name="cmd_pref_alias_spoken">Als je „%1$s” zegt: hetzelfde (accenten worden genegeerd)</string>
     <string name="cmd_pref_alias_with_text">Met tekst: %1$s hoi → %2$s hoi</string>
     <string name="cmd_pref_alias_typing">Bij het typen van %1$s:</string>
@@ -398,13 +398,13 @@
     <string name="glance_shortcut_camera">CAMERA</string>
     <string name="glance_shortcut_clock">KLOK</string>
     <string name="glance_shortcut_torch_on">[ZAKLAMP]</string>
-    <string name="cmd_usage_open">abrir [app]</string>
-    <string name="cmd_usage_alarm">alarme UU:MM</string>
-    <string name="cmd_usage_calc">calc [expressie]</string>
-    <string name="cmd_usage_call">ligar [contact]</string>
-    <string name="cmd_usage_route">rota [plaats]</string>
-    <string name="cmd_usage_task">t [taak] · nieuwe taak</string>
-    <string name="cmd_usage_calc_short">c [som] · afkorting van calc</string>
+    <string name="cmd_usage_open">[app]</string>
+    <string name="cmd_usage_alarm">UU:MM</string>
+    <string name="cmd_usage_calc">[expressie]</string>
+    <string name="cmd_usage_call">[contact]</string>
+    <string name="cmd_usage_route">[plaats]</string>
+    <string name="cmd_usage_task">[taak] · nieuwe taak</string>
+    <string name="cmd_usage_calc_short">[som] · afkorting van calc</string>
     <string name="cmd_list_suggestions">SUGGESTIES</string>
     <string name="cmd_unknown_title">ONBEKENDE OPDRACHT</string>
     <string name="cmd_unknown_preview">ENTER OM OP HET WEB TE ZOEKEN</string>
@@ -474,4 +474,22 @@
     <string name="cmd_pack_subject">Opdrachten van de opdrachtbalk</string>
     <string name="color_cyan">Cyaan</string>
     <string name="color_white">Wit</string>
+    <string name="cmd_word_open">open</string>
+    <string name="cmd_word_alarm">wekker</string>
+    <string name="cmd_word_calc">calc</string>
+    <string name="cmd_word_call">bel</string>
+    <string name="cmd_word_route">route</string>
+    <string name="cmd_voice_open">open,start</string>
+    <string name="cmd_voice_call">bel,bellen</string>
+    <string name="cmd_voice_alarm">wekker,wek,alarm</string>
+    <string name="cmd_voice_calc">bereken,reken,calc</string>
+    <string name="cmd_voice_route">route,navigeer</string>
+    <string name="cmd_voice_task">taak,herinner,noteer</string>
+    <string name="cmd_voice_message">bericht,whatsapp,stuur</string>
+    <string name="cmd_voice_filler">naar,de,het,een,app</string>
+    <string name="cmd_voice_alarm_lead_in">om,voor</string>
+    <string name="cmd_voice_math">gedeeld door=/;keer=*;maal=*;plus=+;min=-;procent=%;komma=,;x=*</string>
+    <string name="cmd_voice_message_lead_in">zeg</string>
+    <string name="cmd_voice_message_that">dat</string>
+    <string name="lottie_widget_command_hint">open spotify</string>
 </resources>

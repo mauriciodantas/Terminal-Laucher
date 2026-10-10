@@ -60,7 +60,7 @@
     <string name="command_bar_setting">コマンドバー</string>
     <string name="command_actions_title">コマンドバーの操作</string>
     <string name="command_actions_desc">他のアプリの操作に文字を割り当てます (w = WhatsApp)</string>
-    <string name="command_bar_setting_desc">バーをタップすると、入力補完付きのコマンドターミナルが開きます (abrir, calc, alarme, ligar, voz...)</string>
+    <string name="command_bar_setting_desc">バーをタップすると、入力補完付きのコマンドターミナルが開きます (開く, 計算, アラーム, 電話, 音声...)</string>
     <string name="command_title">&gt; コマンド入力</string>
     <string name="command_subtitle">入力補完 · 履歴</string>
     <string name="command_contacts_needed">このコマンドには連絡先へのアクセスが必要です。</string>
@@ -94,7 +94,7 @@
     <string name="cmd_pref_no_actions_hint">下から追加してください</string>
     <string name="cmd_pref_no_match">検索に一致するものはありません</string>
     <string name="cmd_pref_new_alias">新しいエイリアス</string>
-    <string name="cmd_pref_new_alias_hint">コマンド全体を表す自分だけの言葉 (mae = ligar maria)。入力でも音声でも使えます</string>
+    <string name="cmd_pref_new_alias_hint">コマンド全体を表す自分だけの言葉 (ママ = 電話 maria)。入力でも音声でも使えます</string>
     <string name="cmd_pref_recipes">用意されたレシピ</string>
     <string name="cmd_pref_recipes_hint">WhatsApp, Telegram, SMS, YouTube, Spotify</string>
     <string name="cmd_pref_app_functions">アプリの機能</string>
@@ -147,7 +147,7 @@
     <string name="cmd_pref_alias_label">エイリアス</string>
     <string name="cmd_pref_alias_hint">入力または音声。アクセント記号は区別しません</string>
     <string name="cmd_pref_alias_command">コマンド</string>
-    <string name="cmd_pref_alias_command_hint">例: ligar maria · abrir chrome · w ana · rota casa</string>
+    <string name="cmd_pref_alias_command_hint">例: 電話 maria · 開く chrome · w ana · ルート 自宅</string>
     <string name="cmd_pref_alias_spoken">「%1$s」と話した場合: 同じ (アクセント記号は無視)</string>
     <string name="cmd_pref_alias_with_text">テキスト付き: %1$s こんにちは → %2$s こんにちは</string>
     <string name="cmd_pref_alias_typing">%1$s を入力した場合:</string>
@@ -398,13 +398,13 @@
     <string name="glance_shortcut_camera">カメラ</string>
     <string name="glance_shortcut_clock">時計</string>
     <string name="glance_shortcut_torch_on">[ライト]</string>
-    <string name="cmd_usage_open">abrir [アプリ]</string>
-    <string name="cmd_usage_alarm">alarme HH:MM</string>
-    <string name="cmd_usage_calc">calc [式]</string>
-    <string name="cmd_usage_call">ligar [連絡先]</string>
-    <string name="cmd_usage_route">rota [場所]</string>
-    <string name="cmd_usage_task">t [タスク] · 新しいタスク</string>
-    <string name="cmd_usage_calc_short">c [計算] · calc の短縮</string>
+    <string name="cmd_usage_open">[アプリ]</string>
+    <string name="cmd_usage_alarm">HH:MM</string>
+    <string name="cmd_usage_calc">[式]</string>
+    <string name="cmd_usage_call">[連絡先]</string>
+    <string name="cmd_usage_route">[場所]</string>
+    <string name="cmd_usage_task">[タスク] · 新しいタスク</string>
+    <string name="cmd_usage_calc_short">[計算] · calc の短縮</string>
     <string name="cmd_list_suggestions">候補</string>
     <string name="cmd_unknown_title">不明なコマンド</string>
     <string name="cmd_unknown_preview">ENTER でウェブを検索</string>
@@ -474,4 +474,22 @@
     <string name="cmd_pack_subject">コマンドバーのコマンド</string>
     <string name="color_cyan">シアン</string>
     <string name="color_white">白</string>
+    <string name="cmd_word_open">開く</string>
+    <string name="cmd_word_alarm">アラーム</string>
+    <string name="cmd_word_calc">計算</string>
+    <string name="cmd_word_call">電話</string>
+    <string name="cmd_word_route">ルート</string>
+    <string name="cmd_voice_open">開く,開いて,起動</string>
+    <string name="cmd_voice_call">電話,電話して,発信</string>
+    <string name="cmd_voice_alarm">アラーム,目覚まし</string>
+    <string name="cmd_voice_calc">計算,計算して</string>
+    <string name="cmd_voice_route">ルート,ナビ,道案内</string>
+    <string name="cmd_voice_task">タスク,メモ,リマインド</string>
+    <string name="cmd_voice_message">メッセージ,whatsapp,送信</string>
+    <string name="cmd_voice_filler">を,に,へ,アプリ</string>
+    <string name="cmd_voice_alarm_lead_in"></string>
+    <string name="cmd_voice_math">割る=/;掛ける=*;かける=*;足す=+;たす=+;引く=-;ひく=-;パーセント=%;点=.;x=*</string>
+    <string name="cmd_voice_message_lead_in"></string>
+    <string name="cmd_voice_message_that"></string>
+    <string name="lottie_widget_command_hint">開く spotify</string>
 </resources>

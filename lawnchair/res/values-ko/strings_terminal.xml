@@ -60,7 +60,7 @@
     <string name="command_bar_setting">명령줄</string>
     <string name="command_actions_title">명령줄 작업</string>
     <string name="command_actions_desc">다른 앱의 작업에 문자를 지정합니다 (w = WhatsApp)</string>
-    <string name="command_bar_setting_desc">명령줄을 탭하면 자동 완성 기능이 있는 명령 터미널이 열립니다 (abrir, calc, alarme, ligar, voz...)</string>
+    <string name="command_bar_setting_desc">명령줄을 탭하면 자동 완성 기능이 있는 명령 터미널이 열립니다 (열기, 계산, 알람, 전화, 음성...)</string>
     <string name="command_title">&gt; 명령어 입력</string>
     <string name="command_subtitle">자동 완성 · 기록</string>
     <string name="command_contacts_needed">이 명령어에는 연락처 액세스 권한이 필요합니다.</string>
@@ -94,7 +94,7 @@
     <string name="cmd_pref_no_actions_hint">아래에서 추가하세요</string>
     <string name="cmd_pref_no_match">검색 결과 없음</string>
     <string name="cmd_pref_new_alias">새 별칭</string>
-    <string name="cmd_pref_new_alias_hint">전체 명령어를 나타내는 나만의 단어 (mae = ligar maria). 입력과 음성 모두 사용 가능</string>
+    <string name="cmd_pref_new_alias_hint">전체 명령어를 나타내는 나만의 단어 (엄마 = 전화 maria). 입력과 음성 모두 사용 가능</string>
     <string name="cmd_pref_recipes">준비된 레시피</string>
     <string name="cmd_pref_recipes_hint">WhatsApp, Telegram, SMS, YouTube, Spotify</string>
     <string name="cmd_pref_app_functions">앱의 기능</string>
@@ -147,7 +147,7 @@
     <string name="cmd_pref_alias_label">별칭</string>
     <string name="cmd_pref_alias_hint">입력 또는 음성. 악센트는 상관없습니다</string>
     <string name="cmd_pref_alias_command">명령어</string>
-    <string name="cmd_pref_alias_command_hint">예: ligar maria · abrir chrome · w ana · rota casa</string>
+    <string name="cmd_pref_alias_command_hint">예: 전화 maria · 열기 chrome · w ana · 경로 집</string>
     <string name="cmd_pref_alias_spoken">“%1$s”라고 말하면: 동일 (악센트 무시)</string>
     <string name="cmd_pref_alias_with_text">텍스트 포함: %1$s 안녕 → %2$s 안녕</string>
     <string name="cmd_pref_alias_typing">%1$s 입력 시:</string>
@@ -398,13 +398,13 @@
     <string name="glance_shortcut_camera">카메라</string>
     <string name="glance_shortcut_clock">시계</string>
     <string name="glance_shortcut_torch_on">[손전등]</string>
-    <string name="cmd_usage_open">abrir [앱]</string>
-    <string name="cmd_usage_alarm">alarme HH:MM</string>
-    <string name="cmd_usage_calc">calc [수식]</string>
-    <string name="cmd_usage_call">ligar [연락처]</string>
-    <string name="cmd_usage_route">rota [장소]</string>
-    <string name="cmd_usage_task">t [할 일] · 새 할 일</string>
-    <string name="cmd_usage_calc_short">c [계산] · calc 줄임</string>
+    <string name="cmd_usage_open">[앱]</string>
+    <string name="cmd_usage_alarm">HH:MM</string>
+    <string name="cmd_usage_calc">[수식]</string>
+    <string name="cmd_usage_call">[연락처]</string>
+    <string name="cmd_usage_route">[장소]</string>
+    <string name="cmd_usage_task">[할 일] · 새 할 일</string>
+    <string name="cmd_usage_calc_short">[계산] · calc 줄임</string>
     <string name="cmd_list_suggestions">추천</string>
     <string name="cmd_unknown_title">알 수 없는 명령어</string>
     <string name="cmd_unknown_preview">ENTER를 누르면 웹 검색</string>
@@ -474,4 +474,22 @@
     <string name="cmd_pack_subject">명령줄 명령어</string>
     <string name="color_cyan">청록색</string>
     <string name="color_white">흰색</string>
+    <string name="cmd_word_open">열기</string>
+    <string name="cmd_word_alarm">알람</string>
+    <string name="cmd_word_calc">계산</string>
+    <string name="cmd_word_call">전화</string>
+    <string name="cmd_word_route">경로</string>
+    <string name="cmd_voice_open">열기,열어,실행</string>
+    <string name="cmd_voice_call">전화,전화해,통화</string>
+    <string name="cmd_voice_alarm">알람,깨워</string>
+    <string name="cmd_voice_calc">계산,계산해</string>
+    <string name="cmd_voice_route">경로,길안내,내비</string>
+    <string name="cmd_voice_task">할일,메모,기억해</string>
+    <string name="cmd_voice_message">메시지,whatsapp,보내</string>
+    <string name="cmd_voice_filler">앱</string>
+    <string name="cmd_voice_alarm_lead_in"></string>
+    <string name="cmd_voice_math">나누기=/;곱하기=*;더하기=+;빼기=-;퍼센트=%;점=.;x=*</string>
+    <string name="cmd_voice_message_lead_in"></string>
+    <string name="cmd_voice_message_that"></string>
+    <string name="lottie_widget_command_hint">열기 spotify</string>
 </resources>

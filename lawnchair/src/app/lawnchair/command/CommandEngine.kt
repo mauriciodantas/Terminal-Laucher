@@ -59,17 +59,19 @@ object CommandEngine {
     const val MAX_CHIPS = 3
     const val MAX_HISTORY = 8
 
-    /** Name, usage line. "c" is a shortcut of "calc". The names stay Portuguese in every language. */
+    /** Name, usage line, in the app language. "c" is a shortcut of calc. */
     val COMMANDS: List<Pair<String, String>>
         get() = listOf(
-            "abrir" to Texts.get(R.string.cmd_usage_open),
-            "alarme" to Texts.get(R.string.cmd_usage_alarm),
-            "calc" to Texts.get(R.string.cmd_usage_calc),
-            "ligar" to Texts.get(R.string.cmd_usage_call),
-            "rota" to Texts.get(R.string.cmd_usage_route),
-            "t" to Texts.get(R.string.cmd_usage_task),
-            "c" to Texts.get(R.string.cmd_usage_calc_short),
-        )
+            BuiltInCommand.OPEN to R.string.cmd_usage_open,
+            BuiltInCommand.ALARM to R.string.cmd_usage_alarm,
+            BuiltInCommand.CALC to R.string.cmd_usage_calc,
+            BuiltInCommand.CALL to R.string.cmd_usage_call,
+            BuiltInCommand.ROUTE to R.string.cmd_usage_route,
+        ).map { (command, usage) -> command.word to command.word + " " + Texts.get(usage) } +
+            listOf(
+                BuiltInCommand.TASK to BuiltInCommand.TASK + " " + Texts.get(R.string.cmd_usage_task),
+                BuiltInCommand.CALC_SHORT to BuiltInCommand.CALC_SHORT + " " + Texts.get(R.string.cmd_usage_calc_short),
+            )
 
     private val splitter = Regex("^(\\S*)(\\s+(.*))?$", RegexOption.DOT_MATCHES_ALL)
 
@@ -107,22 +109,21 @@ object CommandEngine {
             return analyzeCommandName(text, token, apps, custom, aliases)
         }
 
-        return when (if (token == "c") "calc" else token) {
-            "abrir" -> analyzeOpen(arg, apps)
+        if (token == BuiltInCommand.TASK) return analyzeTask(arg)
+        return when (BuiltInCommand.of(token)) {
+            BuiltInCommand.OPEN -> analyzeOpen(arg, apps)
 
-            "ligar" -> analyzeContact(arg, contacts, contactsGranted, "ligar", Texts.get(R.string.cmd_call_title)) {
+            BuiltInCommand.CALL -> analyzeContact(arg, contacts, contactsGranted, BuiltInCommand.CALL.word, Texts.get(R.string.cmd_call_title)) {
                 CommandAction.Call(it)
             }
 
-            "alarme" -> analyzeAlarm(arg)
+            BuiltInCommand.ALARM -> analyzeAlarm(arg)
 
-            "calc" -> analyzeCalc(arg)
+            BuiltInCommand.CALC -> analyzeCalc(arg)
 
-            "t" -> analyzeTask(arg)
+            BuiltInCommand.ROUTE -> analyzeRoute(arg)
 
-            "rota" -> analyzeRoute(arg)
-
-            else -> custom.firstOrNull { it.letter == token }
+            null -> custom.firstOrNull { it.letter == token }
                 ?.let { analyzeCustom(it, arg, contacts, contactsGranted) }
                 ?: analyzeOpen(text.trim(), apps).takeIf { it.action != null }
                 ?: Analysis(
@@ -146,21 +147,21 @@ object CommandEngine {
     ): Analysis {
         val aliasItems = Aliases.matching(token, aliases).map { Suggestion(it.name, it.expansion, Texts.get(R.string.cmd_kind_alias)) }
         val all = COMMANDS + custom.map { it.letter to it.usage }
-        val commands = all.filter { it.first.startsWith(token) }.map {
+        val commands = all.filter { it.first.foldAccents().startsWith(token) }.map {
             Suggestion(it.first + " ", it.second, commandKind(it.first))
         }
         val matchingApps = if (token.isEmpty()) {
             emptyList()
         } else {
             apps.filter { it.label.foldAccents().startsWith(token) }.map {
-                Suggestion("abrir " + it.label.lowercase(), it.label, Texts.get(R.string.cmd_kind_program))
+                Suggestion(BuiltInCommand.OPEN.word + " " + it.label.lowercase(), it.label, Texts.get(R.string.cmd_kind_program))
             }
         }
         // A partial word puts the user's own aliases first; with nothing typed the commands lead.
         val ordered = if (token.isEmpty()) commands + aliasItems + matchingApps else aliasItems + commands + matchingApps
         val limit = if (token.isEmpty()) EMPTY_SUGGESTIONS else MAX_SUGGESTIONS
         val items = ordered.take(limit)
-        // Nothing is a command or alias: a bare word is taken as "abrir <word>".
+        // Nothing is a command or alias: a bare word is taken as "abrir <word>" (open).
         if (commands.isEmpty() && aliasItems.isEmpty() && token.isNotEmpty()) {
             val open = analyzeOpen(text.trim(), apps)
             if (open.action != null) return open
@@ -243,7 +244,7 @@ object CommandEngine {
         val matches = apps.filter { it.label.foldAccents().startsWith(q) }
             .ifEmpty { if (q.isEmpty()) emptyList() else apps.filter { it.label.foldAccents().contains(q) } }
         val items = matches.take(MAX_SUGGESTIONS).map {
-            Suggestion("abrir " + it.label.lowercase(), it.label, Texts.get(R.string.cmd_kind_program))
+            Suggestion(BuiltInCommand.OPEN.word + " " + it.label.lowercase(), it.label, Texts.get(R.string.cmd_kind_program))
         }
         val first = matches.firstOrNull()
         return Analysis(
@@ -327,10 +328,17 @@ object CommandEngine {
         return trimmed to ""
     }
 
-    private val messageLeadIn = Regex("^(dizendo|falando|avisando|escrevendo|perguntando)(\\s+que)?\\s+", RegexOption.IGNORE_CASE)
+    /** The spoken lead-in of a message in the app language: "dizendo que" in "dizendo que chego logo". */
+    private fun messageLeadIn(): Regex {
+        fun words(id: Int) = Texts.get(id).split(',').map { it.trim() }.filter { it.isNotEmpty() }.map { Regex.escape(it) }
+        val verbs = words(R.string.cmd_voice_message_lead_in).ifEmpty { return Regex("^$") }
+        val that = words(R.string.cmd_voice_message_that)
+        val optional = if (that.isEmpty()) "" else "(\\s+(" + that.joinToString("|") + "))?"
+        return Regex("^(" + verbs.joinToString("|") + ")" + optional + "\\s+", RegexOption.IGNORE_CASE)
+    }
 
     /** Drops the spoken lead-in: "dizendo que chego logo" becomes "chego logo". */
-    fun cleanMessage(message: String): String = message.trim().replace(messageLeadIn, "").trim()
+    fun cleanMessage(message: String): String = message.trim().replace(messageLeadIn(), "").trim()
 
     private fun needsContactsAnalysis() = Analysis(
         suggestions = emptyList(),
@@ -437,7 +445,7 @@ object CommandEngine {
         val time = parseTime(arg)
         val label = time?.let { "%02d:%02d".format(it.first, it.second) }
         return Analysis(
-            suggestions = label?.let { listOf(Suggestion("alarme $it", it, Texts.get(R.string.cmd_kind_time))) }.orEmpty(),
+            suggestions = label?.let { listOf(Suggestion(BuiltInCommand.ALARM.word + " " + it, it, Texts.get(R.string.cmd_kind_time))) }.orEmpty(),
             listTitle = Texts.get(R.string.cmd_list_format),
             needsContacts = false,
             previewTitle = Texts.get(R.string.cmd_alarm_title),

@@ -60,7 +60,7 @@
     <string name="command_bar_setting">कमांड बार</string>
     <string name="command_actions_title">कमांड बार की कार्रवाइयाँ</string>
     <string name="command_actions_desc">दूसरे ऐप की कार्रवाइयों को एक अक्षर दें (w = WhatsApp)</string>
-    <string name="command_bar_setting_desc">बार पर टैप करने से ऑटोकंप्लीट वाला कमांड टर्मिनल खुलता है (abrir, calc, alarme, ligar, voz...)</string>
+    <string name="command_bar_setting_desc">बार पर टैप करने से ऑटोकंप्लीट वाला कमांड टर्मिनल खुलता है (खोलें, गणना, अलार्म, कॉल, आवाज़...)</string>
     <string name="command_title">&gt; कमांड इनपुट</string>
     <string name="command_subtitle">ऑटोकंप्लीट · इतिहास</string>
     <string name="command_contacts_needed">इस कमांड के लिए संपर्कों का ऐक्सेस चाहिए।</string>
@@ -94,7 +94,7 @@
     <string name="cmd_pref_no_actions_hint">नीचे जोड़ें</string>
     <string name="cmd_pref_no_match">खोज से कुछ नहीं मिला</string>
     <string name="cmd_pref_new_alias">नया उपनाम</string>
-    <string name="cmd_pref_new_alias_hint">पूरी कमांड के लिए आपका अपना शब्द (mae = ligar maria)। लिखकर और बोलकर, दोनों तरह काम करता है</string>
+    <string name="cmd_pref_new_alias_hint">पूरी कमांड के लिए आपका अपना शब्द (माँ = कॉल maria)। लिखकर और बोलकर, दोनों तरह काम करता है</string>
     <string name="cmd_pref_recipes">तैयार रेसिपी</string>
     <string name="cmd_pref_recipes_hint">WhatsApp, Telegram, SMS, YouTube, Spotify</string>
     <string name="cmd_pref_app_functions">किसी ऐप के फ़ंक्शन</string>
@@ -147,7 +147,7 @@
     <string name="cmd_pref_alias_label">उपनाम</string>
     <string name="cmd_pref_alias_hint">लिखकर या बोलकर। एक्सेंट से फ़र्क नहीं पड़ता</string>
     <string name="cmd_pref_alias_command">कमांड</string>
-    <string name="cmd_pref_alias_command_hint">जैसे: ligar maria · abrir chrome · w ana · rota casa</string>
+    <string name="cmd_pref_alias_command_hint">जैसे: कॉल maria · खोलें chrome · w ana · रास्ता घर</string>
     <string name="cmd_pref_alias_spoken">“%1$s” बोलने पर: वही (एक्सेंट अनदेखे होते हैं)</string>
     <string name="cmd_pref_alias_with_text">टेक्स्ट के साथ: %1$s नमस्ते → %2$s नमस्ते</string>
     <string name="cmd_pref_alias_typing">%1$s लिखने पर:</string>
@@ -398,13 +398,13 @@
     <string name="glance_shortcut_camera">कैमरा</string>
     <string name="glance_shortcut_clock">घड़ी</string>
     <string name="glance_shortcut_torch_on">[टॉर्च]</string>
-    <string name="cmd_usage_open">abrir [ऐप]</string>
-    <string name="cmd_usage_alarm">alarme HH:MM</string>
-    <string name="cmd_usage_calc">calc [व्यंजक]</string>
-    <string name="cmd_usage_call">ligar [संपर्क]</string>
-    <string name="cmd_usage_route">rota [जगह]</string>
-    <string name="cmd_usage_task">t [टास्क] · नया टास्क</string>
-    <string name="cmd_usage_calc_short">c [हिसाब] · calc का शॉर्टकट</string>
+    <string name="cmd_usage_open">[ऐप]</string>
+    <string name="cmd_usage_alarm">HH:MM</string>
+    <string name="cmd_usage_calc">[व्यंजक]</string>
+    <string name="cmd_usage_call">[संपर्क]</string>
+    <string name="cmd_usage_route">[जगह]</string>
+    <string name="cmd_usage_task">[टास्क] · नया टास्क</string>
+    <string name="cmd_usage_calc_short">[हिसाब] · calc का शॉर्टकट</string>
     <string name="cmd_list_suggestions">सुझाव</string>
     <string name="cmd_unknown_title">अनजान कमांड</string>
     <string name="cmd_unknown_preview">वेब पर खोजने के लिए ENTER</string>
@@ -474,4 +474,22 @@
     <string name="cmd_pack_subject">कमांड बार की कमांड</string>
     <string name="color_cyan">सियान</string>
     <string name="color_white">सफ़ेद</string>
+    <string name="cmd_word_open">खोलें</string>
+    <string name="cmd_word_alarm">अलार्म</string>
+    <string name="cmd_word_calc">गणना</string>
+    <string name="cmd_word_call">कॉल</string>
+    <string name="cmd_word_route">रास्ता</string>
+    <string name="cmd_voice_open">खोलें,खोलो,चलाओ</string>
+    <string name="cmd_voice_call">कॉल,फ़ोन</string>
+    <string name="cmd_voice_alarm">अलार्म,जगाओ</string>
+    <string name="cmd_voice_calc">गणना,हिसाब</string>
+    <string name="cmd_voice_route">रास्ता,नेविगेट</string>
+    <string name="cmd_voice_task">टास्क,याद,नोट</string>
+    <string name="cmd_voice_message">मैसेज,whatsapp,भेजो</string>
+    <string name="cmd_voice_filler">को,पर,ऐप</string>
+    <string name="cmd_voice_alarm_lead_in"></string>
+    <string name="cmd_voice_math">भाग=/;गुणा=*;जमा=+;घटा=-;प्रतिशत=%;दशमलव=.;x=*</string>
+    <string name="cmd_voice_message_lead_in"></string>
+    <string name="cmd_voice_message_that"></string>
+    <string name="lottie_widget_command_hint">खोलें spotify</string>
 </resources>

@@ -1136,7 +1136,7 @@
     <string name="command_bar_setting">Command bar</string>
     <string name="command_actions_title">Command bar actions</string>
     <string name="command_actions_desc">Assign a letter to actions from other apps (w = WhatsApp)</string>
-    <string name="command_bar_setting_desc">Tapping the bar opens the command terminal with autocomplete (abrir, calc, alarme, ligar, voz...)</string>
+    <string name="command_bar_setting_desc">Tapping the bar opens the command terminal with autocomplete (open, calc, alarm, call, voice...)</string>
     <string name="command_title">&gt; COMMAND INPUT</string>
     <string name="command_subtitle">AUTOCOMPLETE · HISTORY</string>
     <string name="command_header_right" translatable="false">TERMINAL 03</string>
@@ -1171,7 +1171,7 @@
     <string name="cmd_pref_no_actions_hint">Add one below</string>
     <string name="cmd_pref_no_match">Nothing matches the search</string>
     <string name="cmd_pref_new_alias">New alias</string>
-    <string name="cmd_pref_new_alias_hint">A word of your own for a whole command (mae = ligar maria). Works typed and spoken</string>
+    <string name="cmd_pref_new_alias_hint">A word of your own for a whole command (mom = call maria). Works typed and spoken</string>
     <string name="cmd_pref_recipes">Ready-made recipes</string>
     <string name="cmd_pref_recipes_hint">WhatsApp, Telegram, SMS, YouTube, Spotify</string>
     <string name="cmd_pref_app_functions">An app\'s functions</string>
@@ -1225,7 +1225,7 @@
     <string name="cmd_pref_alias_label">Alias</string>
     <string name="cmd_pref_alias_hint">Typed or spoken. Accents don\'t matter</string>
     <string name="cmd_pref_alias_command">Command</string>
-    <string name="cmd_pref_alias_command_hint">E.g.: ligar maria · abrir chrome · w ana · rota casa</string>
+    <string name="cmd_pref_alias_command_hint">E.g.: call maria · open chrome · w ana · route home</string>
     <string name="cmd_pref_alias_spoken">Saying “%1$s”: the same (accents are ignored)</string>
     <string name="cmd_pref_alias_with_text">With text: %1$s hi → %2$s hi</string>
     <string name="cmd_pref_alias_typing">Typing %1$s:</string>
@@ -1291,7 +1291,7 @@
     <string name="lottie_widget_pick">Choose</string>
     <string name="lottie_widget_change">Change</string>
     <string name="lottie_widget_command">Command on tap (optional)</string>
-    <string name="lottie_widget_command_hint" translatable="false">abrir spotify</string>
+    <string name="lottie_widget_command_hint">open spotify</string>
     <string name="lottie_widget_command_none">Without a command, a tap pauses and resumes the animation</string>
     <string name="lottie_widget_command_none_once">Without a command, a tap only plays the animation</string>
     <string name="lottie_widget_playback">Playback</string>
@@ -1475,13 +1475,13 @@
     <string name="glance_shortcut_camera">CAMERA</string>
     <string name="glance_shortcut_clock">CLOCK</string>
     <string name="glance_shortcut_torch_on">[FLASHLIGHT]</string>
-    <string name="cmd_usage_open">abrir [app]</string>
-    <string name="cmd_usage_alarm">alarme HH:MM</string>
-    <string name="cmd_usage_calc">calc [expression]</string>
-    <string name="cmd_usage_call">ligar [contact]</string>
-    <string name="cmd_usage_route">rota [place]</string>
-    <string name="cmd_usage_task">t [task] · new task</string>
-    <string name="cmd_usage_calc_short">c [sum] · calc shortcut</string>
+    <string name="cmd_usage_open">[app]</string>
+    <string name="cmd_usage_alarm">HH:MM</string>
+    <string name="cmd_usage_calc">[expression]</string>
+    <string name="cmd_usage_call">[contact]</string>
+    <string name="cmd_usage_route">[place]</string>
+    <string name="cmd_usage_task">[task] · new task</string>
+    <string name="cmd_usage_calc_short">[sum] · calc shortcut</string>
     <string name="cmd_list_suggestions">SUGGESTIONS</string>
     <string name="cmd_unknown_title">UNKNOWN COMMAND</string>
     <string name="cmd_unknown_preview">ENTER TO SEARCH THE WEB</string>
@@ -1551,4 +1551,21 @@
     <string name="cmd_pack_subject">Command bar commands</string>
     <string name="color_cyan">Cyan</string>
     <string name="color_white">White</string>
+    <string name="cmd_word_open">open</string>
+    <string name="cmd_word_alarm">alarm</string>
+    <string name="cmd_word_calc">calc</string>
+    <string name="cmd_word_call">call</string>
+    <string name="cmd_word_route">route</string>
+    <string name="cmd_voice_open">open,launch,start</string>
+    <string name="cmd_voice_call">call,phone,dial,ring</string>
+    <string name="cmd_voice_alarm">alarm,wake</string>
+    <string name="cmd_voice_calc">calculate,compute,calc</string>
+    <string name="cmd_voice_route">route,navigate,directions</string>
+    <string name="cmd_voice_task">task,remember,note,todo</string>
+    <string name="cmd_voice_message">message,whatsapp,send,text</string>
+    <string name="cmd_voice_filler">to,the,a,an,app,application,for,my</string>
+    <string name="cmd_voice_alarm_lead_in">at,for</string>
+    <string name="cmd_voice_math">divided by=/;over=/;multiplied by=*;times=*;plus=+;minus=-;percent=%;point=.;x=*</string>
+    <string name="cmd_voice_message_lead_in">saying,telling,asking,writing</string>
+    <string name="cmd_voice_message_that">that</string>
 </resources>

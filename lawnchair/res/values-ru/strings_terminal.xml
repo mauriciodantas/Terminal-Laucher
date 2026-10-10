@@ -60,7 +60,7 @@
     <string name="command_bar_setting">Командная строка</string>
     <string name="command_actions_title">Действия командной строки</string>
     <string name="command_actions_desc">Назначьте букву действиям других приложений (w = WhatsApp)</string>
-    <string name="command_bar_setting_desc">Нажатие на строку открывает командный терминал с автодополнением (abrir, calc, alarme, ligar, voz...)</string>
+    <string name="command_bar_setting_desc">Нажатие на строку открывает командный терминал с автодополнением (открыть, калк, будильник, позвонить, голос...)</string>
     <string name="command_title">&gt; ВВОД КОМАНДЫ</string>
     <string name="command_subtitle">АВТОДОПОЛНЕНИЕ · ИСТОРИЯ</string>
     <string name="command_contacts_needed">ДЛЯ ЭТОЙ КОМАНДЫ НУЖЕН ДОСТУП К КОНТАКТАМ.</string>
@@ -94,7 +94,7 @@
     <string name="cmd_pref_no_actions_hint">Добавьте ниже</string>
     <string name="cmd_pref_no_match">Ничего не найдено</string>
     <string name="cmd_pref_new_alias">Новый псевдоним</string>
-    <string name="cmd_pref_new_alias_hint">Ваше слово для целой команды (mae = ligar maria). Работает при вводе и голосом</string>
+    <string name="cmd_pref_new_alias_hint">Ваше слово для целой команды (мама = позвонить маша). Работает при вводе и голосом</string>
     <string name="cmd_pref_recipes">Готовые рецепты</string>
     <string name="cmd_pref_recipes_hint">WhatsApp, Telegram, SMS, YouTube, Spotify</string>
     <string name="cmd_pref_app_functions">Функции приложения</string>
@@ -147,7 +147,7 @@
     <string name="cmd_pref_alias_label">Псевдоним</string>
     <string name="cmd_pref_alias_hint">Вводом или голосом. Диакритика не важна</string>
     <string name="cmd_pref_alias_command">Команда</string>
-    <string name="cmd_pref_alias_command_hint">Напр.: ligar maria · abrir chrome · w ana · rota casa</string>
+    <string name="cmd_pref_alias_command_hint">Напр.: позвонить маша · открыть chrome · w ana · маршрут дом</string>
     <string name="cmd_pref_alias_spoken">Если сказать «%1$s»: то же самое (диакритика игнорируется)</string>
     <string name="cmd_pref_alias_with_text">С текстом: %1$s привет → %2$s привет</string>
     <string name="cmd_pref_alias_typing">При вводе %1$s:</string>
@@ -398,13 +398,13 @@
     <string name="glance_shortcut_camera">КАМЕРА</string>
     <string name="glance_shortcut_clock">ЧАСЫ</string>
     <string name="glance_shortcut_torch_on">[ФОНАРИК]</string>
-    <string name="cmd_usage_open">abrir [приложение]</string>
-    <string name="cmd_usage_alarm">alarme ЧЧ:ММ</string>
-    <string name="cmd_usage_calc">calc [выражение]</string>
-    <string name="cmd_usage_call">ligar [контакт]</string>
-    <string name="cmd_usage_route">rota [место]</string>
-    <string name="cmd_usage_task">t [задача] · новая задача</string>
-    <string name="cmd_usage_calc_short">c [пример] · сокращение calc</string>
+    <string name="cmd_usage_open">[приложение]</string>
+    <string name="cmd_usage_alarm">ЧЧ:ММ</string>
+    <string name="cmd_usage_calc">[выражение]</string>
+    <string name="cmd_usage_call">[контакт]</string>
+    <string name="cmd_usage_route">[место]</string>
+    <string name="cmd_usage_task">[задача] · новая задача</string>
+    <string name="cmd_usage_calc_short">[пример] · сокращение calc</string>
     <string name="cmd_list_suggestions">ПОДСКАЗКИ</string>
     <string name="cmd_unknown_title">НЕИЗВЕСТНАЯ КОМАНДА</string>
     <string name="cmd_unknown_preview">ENTER — ПОИСК В ИНТЕРНЕТЕ</string>
@@ -474,4 +474,22 @@
     <string name="cmd_pack_subject">Команды командной строки</string>
     <string name="color_cyan">Голубой</string>
     <string name="color_white">Белый</string>
+    <string name="cmd_word_open">открыть</string>
+    <string name="cmd_word_alarm">будильник</string>
+    <string name="cmd_word_calc">калк</string>
+    <string name="cmd_word_call">позвонить</string>
+    <string name="cmd_word_route">маршрут</string>
+    <string name="cmd_voice_open">открыть,открой,запусти</string>
+    <string name="cmd_voice_call">позвонить,позвони,набери</string>
+    <string name="cmd_voice_alarm">будильник,разбуди</string>
+    <string name="cmd_voice_calc">посчитай,вычисли,калк,calc</string>
+    <string name="cmd_voice_route">маршрут,проложи,навигация</string>
+    <string name="cmd_voice_task">задача,напомни,запиши</string>
+    <string name="cmd_voice_message">сообщение,whatsapp,напиши,отправь</string>
+    <string name="cmd_voice_filler">в,на,к,мне,приложение</string>
+    <string name="cmd_voice_alarm_lead_in">на,в</string>
+    <string name="cmd_voice_math">разделить на=/;делить на=/;умножить на=*;плюс=+;минус=-;процентов=%;процент=%;запятая=,;x=*</string>
+    <string name="cmd_voice_message_lead_in">что</string>
+    <string name="cmd_voice_message_that"></string>
+    <string name="lottie_widget_command_hint">открыть spotify</string>
 </resources>

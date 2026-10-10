@@ -1,30 +1,46 @@
 package app.lawnchair.command
 
+import androidx.annotation.StringRes
+import app.lawnchair.util.Texts
+import com.android.launcher3.R
+
 /**
  * Turns what the speech recognizer heard into what the command bar understands: "chamar ana"
- * becomes "ligar ana", "calcular 12 vezes 8" becomes "calc 12*8". Pure, so it can be unit tested.
+ * becomes "ligar ana", "calcular 12 vezes 8" becomes "calc 12*8". The spoken words come from the
+ * app language; the command words of [BuiltInCommand] are understood in Portuguese and English too.
+ * Pure, so it can be unit tested.
  */
 object VoiceCommand {
 
+    /** The command bar letter of the default WhatsApp action. */
+    private const val MESSAGE = "w"
+
+    private fun words(@StringRes id: Int): List<String> = Texts.get(id).split(',').map { it.trim().lowercase() }.filter { it.isNotEmpty() }
+
     /** Spoken command words, and the command each one stands for. */
-    private val verbs = mapOf(
-        "abrir" to "abrir", "abre" to "abrir", "abra" to "abrir", "iniciar" to "abrir",
-        "ligar" to "ligar", "liga" to "ligar", "chamar" to "ligar", "telefonar" to "ligar",
-        "alarme" to "alarme", "despertador" to "alarme", "acordar" to "alarme",
-        "calcular" to "calc", "calcule" to "calc", "calc" to "calc", "conta" to "calc",
-        "rota" to "rota", "navegar" to "rota", "navegação" to "rota",
-        "tarefa" to "t", "lembrar" to "t", "anotar" to "t",
-        "mensagem" to "w", "whatsapp" to "w", "zap" to "w", "enviar" to "w",
-        "t" to "t", "w" to "w", "c" to "calc",
-    )
+    private fun verbs(): Map<String, String> {
+        val verbs = LinkedHashMap<String, String>()
+        BuiltInCommand.entries.forEach { command ->
+            listOf(command.word, command.portuguese, command.english).forEach { verbs[it.lowercase()] = command.word }
+        }
+        listOf(
+            BuiltInCommand.OPEN to R.string.cmd_voice_open,
+            BuiltInCommand.CALL to R.string.cmd_voice_call,
+            BuiltInCommand.ALARM to R.string.cmd_voice_alarm,
+            BuiltInCommand.CALC to R.string.cmd_voice_calc,
+            BuiltInCommand.ROUTE to R.string.cmd_voice_route,
+        ).forEach { (command, id) -> words(id).forEach { verbs[it] = command.word } }
+        words(R.string.cmd_voice_task).forEach { verbs[it] = BuiltInCommand.TASK }
+        words(R.string.cmd_voice_message).forEach { verbs[it] = MESSAGE }
+        verbs[BuiltInCommand.TASK] = BuiltInCommand.TASK
+        verbs[MESSAGE] = MESSAGE
+        verbs[BuiltInCommand.CALC_SHORT] = BuiltInCommand.CALC.word
+        return verbs
+    }
 
-    /** Words that only glue the sentence together: "ligar PARA a ana", "abrir O chrome". */
-    private val filler = setOf("para", "pra", "pro", "o", "a", "ao", "à", "o app", "app", "aplicativo", "de", "do", "da")
-
-    private val mathWords = listOf(
-        "dividido por" to "/", "dividido" to "/", "vezes" to "*", "multiplicado por" to "*",
-        "mais" to "+", "menos" to "-", "por cento" to "%", "vírgula" to ",", "x" to "*",
-    )
+    /** "dividido por" to "/": spoken math, longest phrases listed first. */
+    private fun mathWords(): List<Pair<String, String>> = Texts.get(R.string.cmd_voice_math).split(';')
+        .mapNotNull { entry -> entry.substringBefore('=', "").trim().lowercase().takeIf { it.isNotEmpty() }?.let { it to entry.substringAfter('=') } }
 
     /**
      * [aliases] are the user's own words: a sentence that starts with one is left as spoken, so the
@@ -34,25 +50,32 @@ object VoiceCommand {
         val words = spoken.trim().lowercase().replace(Regex("\\s+"), " ")
         if (words.isEmpty()) return ""
         if (Aliases.find(words.substringBefore(' '), aliases) != null) return words
+        val verbs = verbs()
         var first = words.substringBefore(' ')
         var rest = if (' ' in words) words.substringAfter(' ') else ""
 
         // "enviar mensagem para ana": the second word is the real command.
-        if (first == "enviar" && rest.substringBefore(' ') in setOf("mensagem", "whatsapp", "zap")) {
-            first = "w"
+        if (verbs[first] == MESSAGE && verbs[rest.substringBefore(' ')] == MESSAGE) {
             rest = rest.substringAfter(' ', "")
         }
         val command = verbs[first] ?: return words
 
         rest = when (command) {
-            "calc" -> normalizeMath(rest)
-            "alarme" -> rest.replace(Regex("^(para as|pras|para|pra|às|as)\\s+"), "")
+            BuiltInCommand.CALC.word -> normalizeMath(rest)
+            BuiltInCommand.ALARM.word -> rest.replace(alarmLeadIn(), "")
             else -> dropFiller(rest)
         }
         return if (rest.isEmpty()) "$command " else "$command $rest"
     }
 
+    /** "às" in "alarme às 6:30". */
+    private fun alarmLeadIn(): Regex {
+        val words = words(R.string.cmd_voice_alarm_lead_in).sortedByDescending { it.length }
+        return if (words.isEmpty()) Regex("^$") else Regex("^(" + words.joinToString("|") { Regex.escape(it) } + ")\\s+")
+    }
+
     private fun dropFiller(text: String): String {
+        val filler = words(R.string.cmd_voice_filler).toSet()
         var result = text
         while (true) {
             val head = result.substringBefore(' ')
@@ -63,9 +86,9 @@ object VoiceCommand {
 
     private fun normalizeMath(text: String): String {
         var result = " $text "
-        mathWords.forEach { (word, symbol) ->
-            result = result.replace(Regex("(?<=\\s)" + Regex.escape(word) + "(?=\\s|\\d)"), symbol)
+        mathWords().forEach { (word, symbol) ->
+            result = result.replace(Regex("(?<=\\s)" + Regex.escape(word) + "(?=\\s|\\d)"), Regex.escapeReplacement(symbol))
         }
-        return result.trim().replace(Regex("\\s*([+\\-*/%,])\\s*"), "$1")
+        return result.trim().replace(Regex("\\s*([+\\-*/%,.])\\s*"), "$1")
     }
 }

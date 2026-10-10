@@ -398,13 +398,13 @@
     <string name="glance_shortcut_camera">CÂMERA</string>
     <string name="glance_shortcut_clock">RELÓGIO</string>
     <string name="glance_shortcut_torch_on">[LANTERNA]</string>
-    <string name="cmd_usage_open">abrir [app]</string>
-    <string name="cmd_usage_alarm">alarme HH:MM</string>
-    <string name="cmd_usage_calc">calc [expressão]</string>
-    <string name="cmd_usage_call">ligar [contato]</string>
-    <string name="cmd_usage_route">rota [lugar]</string>
-    <string name="cmd_usage_task">t [tarefa] · nova tarefa</string>
-    <string name="cmd_usage_calc_short">c [conta] · atalho de calc</string>
+    <string name="cmd_usage_open">[app]</string>
+    <string name="cmd_usage_alarm">HH:MM</string>
+    <string name="cmd_usage_calc">[expressão]</string>
+    <string name="cmd_usage_call">[contato]</string>
+    <string name="cmd_usage_route">[lugar]</string>
+    <string name="cmd_usage_task">[tarefa] · nova tarefa</string>
+    <string name="cmd_usage_calc_short">[conta] · atalho de calc</string>
     <string name="cmd_list_suggestions">SUGESTÕES</string>
     <string name="cmd_unknown_title">COMANDO DESCONHECIDO</string>
     <string name="cmd_unknown_preview">ENTER PARA PESQUISAR NA REDE</string>
@@ -474,4 +474,22 @@
     <string name="cmd_pack_subject">Comandos da barra de comando</string>
     <string name="color_cyan">Ciano</string>
     <string name="color_white">Branco</string>
+    <string name="cmd_word_open">abrir</string>
+    <string name="cmd_word_alarm">alarme</string>
+    <string name="cmd_word_calc">calc</string>
+    <string name="cmd_word_call">ligar</string>
+    <string name="cmd_word_route">rota</string>
+    <string name="cmd_voice_open">abrir,abre,abra,iniciar</string>
+    <string name="cmd_voice_call">ligar,liga,chamar,telefonar</string>
+    <string name="cmd_voice_alarm">alarme,despertador,acordar</string>
+    <string name="cmd_voice_calc">calcular,calcule,calc,conta</string>
+    <string name="cmd_voice_route">rota,navegar,navegação</string>
+    <string name="cmd_voice_task">tarefa,lembrar,anotar</string>
+    <string name="cmd_voice_message">mensagem,whatsapp,zap,enviar</string>
+    <string name="cmd_voice_filler">para,pra,pro,o,a,ao,à,o app,app,aplicativo,de,do,da</string>
+    <string name="cmd_voice_alarm_lead_in">para as,pras,para,pra,às,as</string>
+    <string name="cmd_voice_math">dividido por=/;dividido=/;vezes=*;multiplicado por=*;mais=+;menos=-;por cento=%;vírgula=,;x=*</string>
+    <string name="cmd_voice_message_lead_in">dizendo,falando,avisando,escrevendo,perguntando</string>
+    <string name="cmd_voice_message_that">que</string>
+    <string name="lottie_widget_command_hint">abrir spotify</string>
 </resources>

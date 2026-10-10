@@ -47,7 +47,7 @@ object Aliases {
         val k = key(n)
         return when {
             n.isEmpty() -> Texts.get(R.string.cmd_err_alias_empty)
-            !n.all { it.isLetterOrDigit() } -> Texts.get(R.string.cmd_err_alias_chars)
+            !n.all { it.isCommandWordChar() } -> Texts.get(R.string.cmd_err_alias_chars)
             k in CustomActions.RESERVED -> Texts.get(R.string.cmd_err_reserved, k)
             custom.any { it.letter == k } -> Texts.get(R.string.cmd_err_alias_letter, k)
             existing.any { it !== ignore && key(it.name) == k } -> Texts.get(R.string.cmd_err_in_use, k)

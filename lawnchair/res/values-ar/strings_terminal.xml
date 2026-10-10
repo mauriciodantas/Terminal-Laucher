@@ -60,7 +60,7 @@
     <string name="command_bar_setting">شريط الأوامر</string>
     <string name="command_actions_title">إجراءات شريط الأوامر</string>
     <string name="command_actions_desc">خصّص حرفًا لإجراءات من تطبيقات أخرى (w = WhatsApp)</string>
-    <string name="command_bar_setting_desc">النقر على الشريط يفتح طرفية الأوامر مع الإكمال التلقائي (abrir, calc, alarme, ligar, voz...)</string>
+    <string name="command_bar_setting_desc">النقر على الشريط يفتح طرفية الأوامر مع الإكمال التلقائي (افتح، احسب، منبه، اتصل، صوت...)</string>
     <string name="command_title">&gt; إدخال الأمر</string>
     <string name="command_subtitle">إكمال تلقائي · السجل</string>
     <string name="command_contacts_needed">يحتاج هذا الأمر إلى الوصول إلى جهات الاتصال.</string>
@@ -94,7 +94,7 @@
     <string name="cmd_pref_no_actions_hint">أضِف إجراءً أدناه</string>
     <string name="cmd_pref_no_match">لا توجد نتائج مطابقة</string>
     <string name="cmd_pref_new_alias">اسم مستعار جديد</string>
-    <string name="cmd_pref_new_alias_hint">كلمة خاصة بك لأمر كامل (mae = ligar maria). تعمل بالكتابة والصوت</string>
+    <string name="cmd_pref_new_alias_hint">كلمة خاصة بك لأمر كامل (ماما = اتصل maria). تعمل بالكتابة والصوت</string>
     <string name="cmd_pref_recipes">وصفات جاهزة</string>
     <string name="cmd_pref_recipes_hint">WhatsApp, Telegram, SMS, YouTube, Spotify</string>
     <string name="cmd_pref_app_functions">وظائف تطبيق</string>
@@ -147,7 +147,7 @@
     <string name="cmd_pref_alias_label">الاسم المستعار</string>
     <string name="cmd_pref_alias_hint">بالكتابة أو بالصوت. علامات التشكيل لا تهم</string>
     <string name="cmd_pref_alias_command">الأمر</string>
-    <string name="cmd_pref_alias_command_hint">مثال: ligar maria · abrir chrome · w ana · rota casa</string>
+    <string name="cmd_pref_alias_command_hint">مثال: اتصل maria · افتح chrome · w ana · مسار البيت</string>
     <string name="cmd_pref_alias_spoken">عند قول “%1$s”: النتيجة نفسها (يتم تجاهل علامات التشكيل)</string>
     <string name="cmd_pref_alias_with_text">مع نص: %1$s مرحبًا ← %2$s مرحبًا</string>
     <string name="cmd_pref_alias_typing">عند كتابة %1$s:</string>
@@ -398,13 +398,13 @@
     <string name="glance_shortcut_camera">الكاميرا</string>
     <string name="glance_shortcut_clock">الساعة</string>
     <string name="glance_shortcut_torch_on">[المصباح]</string>
-    <string name="cmd_usage_open">abrir [تطبيق]</string>
-    <string name="cmd_usage_alarm">alarme HH:MM</string>
-    <string name="cmd_usage_calc">calc [تعبير]</string>
-    <string name="cmd_usage_call">ligar [جهة اتصال]</string>
-    <string name="cmd_usage_route">rota [مكان]</string>
-    <string name="cmd_usage_task">t [مهمة] · مهمة جديدة</string>
-    <string name="cmd_usage_calc_short">c [عملية] · اختصار calc</string>
+    <string name="cmd_usage_open">[تطبيق]</string>
+    <string name="cmd_usage_alarm">HH:MM</string>
+    <string name="cmd_usage_calc">[تعبير]</string>
+    <string name="cmd_usage_call">[جهة اتصال]</string>
+    <string name="cmd_usage_route">[مكان]</string>
+    <string name="cmd_usage_task">[مهمة] · مهمة جديدة</string>
+    <string name="cmd_usage_calc_short">[عملية] · اختصار calc</string>
     <string name="cmd_list_suggestions">اقتراحات</string>
     <string name="cmd_unknown_title">أمر غير معروف</string>
     <string name="cmd_unknown_preview">ENTER للبحث على الويب</string>
@@ -474,4 +474,22 @@
     <string name="cmd_pack_subject">أوامر شريط الأوامر</string>
     <string name="color_cyan">سماوي</string>
     <string name="color_white">أبيض</string>
+    <string name="cmd_word_open">افتح</string>
+    <string name="cmd_word_alarm">منبه</string>
+    <string name="cmd_word_calc">احسب</string>
+    <string name="cmd_word_call">اتصل</string>
+    <string name="cmd_word_route">مسار</string>
+    <string name="cmd_voice_open">افتح,شغل</string>
+    <string name="cmd_voice_call">اتصل,كلم</string>
+    <string name="cmd_voice_alarm">منبه,أيقظني</string>
+    <string name="cmd_voice_calc">احسب</string>
+    <string name="cmd_voice_route">مسار,وجهني</string>
+    <string name="cmd_voice_task">مهمة,ذكرني,دون</string>
+    <string name="cmd_voice_message">رسالة,whatsapp,أرسل</string>
+    <string name="cmd_voice_filler">ب,على,إلى,تطبيق</string>
+    <string name="cmd_voice_alarm_lead_in">الساعة,في</string>
+    <string name="cmd_voice_math">تقسيم=/;ضرب=*;زائد=+;ناقص=-;بالمئة=%;فاصلة=,;x=*</string>
+    <string name="cmd_voice_message_lead_in">قائلا</string>
+    <string name="cmd_voice_message_that">أن</string>
+    <string name="lottie_widget_command_hint">افتح spotify</string>
 </resources>

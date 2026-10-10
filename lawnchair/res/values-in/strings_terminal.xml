@@ -60,7 +60,7 @@
     <string name="command_bar_setting">Bilah perintah</string>
     <string name="command_actions_title">Tindakan bilah perintah</string>
     <string name="command_actions_desc">Tetapkan huruf untuk tindakan dari aplikasi lain (w = WhatsApp)</string>
-    <string name="command_bar_setting_desc">Mengetuk bilah akan membuka terminal perintah dengan pelengkapan otomatis (abrir, calc, alarme, ligar, voz...)</string>
+    <string name="command_bar_setting_desc">Mengetuk bilah akan membuka terminal perintah dengan pelengkapan otomatis (buka, hitung, alarm, telepon, suara...)</string>
     <string name="command_title">&gt; INPUT PERINTAH</string>
     <string name="command_subtitle">PELENGKAPAN OTOMATIS · RIWAYAT</string>
     <string name="command_contacts_needed">PERINTAH INI MEMERLUKAN AKSES KONTAK.</string>
@@ -94,7 +94,7 @@
     <string name="cmd_pref_no_actions_hint">Tambahkan di bawah</string>
     <string name="cmd_pref_no_match">Tidak ada yang cocok</string>
     <string name="cmd_pref_new_alias">Alias baru</string>
-    <string name="cmd_pref_new_alias_hint">Kata Anda sendiri untuk satu perintah utuh (mae = ligar maria). Berfungsi saat diketik dan diucapkan</string>
+    <string name="cmd_pref_new_alias_hint">Kata Anda sendiri untuk satu perintah utuh (ibu = telepon maria). Berfungsi saat diketik dan diucapkan</string>
     <string name="cmd_pref_recipes">Resep siap pakai</string>
     <string name="cmd_pref_recipes_hint">WhatsApp, Telegram, SMS, YouTube, Spotify</string>
     <string name="cmd_pref_app_functions">Fungsi aplikasi</string>
@@ -147,7 +147,7 @@
     <string name="cmd_pref_alias_label">Alias</string>
     <string name="cmd_pref_alias_hint">Diketik atau diucapkan. Aksen tidak berpengaruh</string>
     <string name="cmd_pref_alias_command">Perintah</string>
-    <string name="cmd_pref_alias_command_hint">Mis.: ligar maria · abrir chrome · w ana · rota casa</string>
+    <string name="cmd_pref_alias_command_hint">Mis.: telepon maria · buka chrome · w ana · rute rumah</string>
     <string name="cmd_pref_alias_spoken">Saat mengucapkan “%1$s”: sama (aksen diabaikan)</string>
     <string name="cmd_pref_alias_with_text">Dengan teks: %1$s halo → %2$s halo</string>
     <string name="cmd_pref_alias_typing">Saat mengetik %1$s:</string>
@@ -398,13 +398,13 @@
     <string name="glance_shortcut_camera">KAMERA</string>
     <string name="glance_shortcut_clock">JAM</string>
     <string name="glance_shortcut_torch_on">[SENTER]</string>
-    <string name="cmd_usage_open">abrir [aplikasi]</string>
-    <string name="cmd_usage_alarm">alarme JJ:MM</string>
-    <string name="cmd_usage_calc">calc [ekspresi]</string>
-    <string name="cmd_usage_call">ligar [kontak]</string>
-    <string name="cmd_usage_route">rota [tempat]</string>
-    <string name="cmd_usage_task">t [tugas] · tugas baru</string>
-    <string name="cmd_usage_calc_short">c [hitungan] · singkatan calc</string>
+    <string name="cmd_usage_open">[aplikasi]</string>
+    <string name="cmd_usage_alarm">JJ:MM</string>
+    <string name="cmd_usage_calc">[ekspresi]</string>
+    <string name="cmd_usage_call">[kontak]</string>
+    <string name="cmd_usage_route">[tempat]</string>
+    <string name="cmd_usage_task">[tugas] · tugas baru</string>
+    <string name="cmd_usage_calc_short">[hitungan] · singkatan calc</string>
     <string name="cmd_list_suggestions">SARAN</string>
     <string name="cmd_unknown_title">PERINTAH TIDAK DIKENAL</string>
     <string name="cmd_unknown_preview">ENTER UNTUK MENCARI DI WEB</string>
@@ -474,4 +474,22 @@
     <string name="cmd_pack_subject">Perintah bilah perintah</string>
     <string name="color_cyan">Sian</string>
     <string name="color_white">Putih</string>
+    <string name="cmd_word_open">buka</string>
+    <string name="cmd_word_alarm">alarm</string>
+    <string name="cmd_word_calc">hitung</string>
+    <string name="cmd_word_call">telepon</string>
+    <string name="cmd_word_route">rute</string>
+    <string name="cmd_voice_open">buka,jalankan</string>
+    <string name="cmd_voice_call">telepon,hubungi,panggil</string>
+    <string name="cmd_voice_alarm">alarm,bangunkan</string>
+    <string name="cmd_voice_calc">hitung,calc</string>
+    <string name="cmd_voice_route">rute,navigasi,arahkan</string>
+    <string name="cmd_voice_task">tugas,ingatkan,catat</string>
+    <string name="cmd_voice_message">pesan,whatsapp,kirim</string>
+    <string name="cmd_voice_filler">ke,aplikasi,untuk</string>
+    <string name="cmd_voice_alarm_lead_in">jam,pukul</string>
+    <string name="cmd_voice_math">dibagi=/;bagi=/;kali=*;tambah=+;kurang=-;persen=%;koma=,;x=*</string>
+    <string name="cmd_voice_message_lead_in">bilang</string>
+    <string name="cmd_voice_message_that">bahwa</string>
+    <string name="lottie_widget_command_hint">buka spotify</string>
 </resources>

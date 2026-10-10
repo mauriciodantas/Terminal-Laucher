@@ -60,7 +60,7 @@
     <string name="command_bar_setting">命令栏</string>
     <string name="command_actions_title">命令栏操作</string>
     <string name="command_actions_desc">为其他应用的操作分配一个字母（w = WhatsApp）</string>
-    <string name="command_bar_setting_desc">点按命令栏会打开带自动补全的命令终端（abrir, calc, alarme, ligar, voz...）</string>
+    <string name="command_bar_setting_desc">点按命令栏会打开带自动补全的命令终端（打开, 计算, 闹钟, 拨打, 语音...）</string>
     <string name="command_title">&gt; 命令输入</string>
     <string name="command_subtitle">自动补全 · 历史记录</string>
     <string name="command_contacts_needed">此命令需要通讯录访问权限。</string>
@@ -94,7 +94,7 @@
     <string name="cmd_pref_no_actions_hint">在下方添加</string>
     <string name="cmd_pref_no_match">没有匹配的搜索结果</string>
     <string name="cmd_pref_new_alias">新别名</string>
-    <string name="cmd_pref_new_alias_hint">用一个自己的词代表整条命令（mae = ligar maria）。输入和语音均可使用</string>
+    <string name="cmd_pref_new_alias_hint">用一个自己的词代表整条命令（妈妈 = 拨打 maria）。输入和语音均可使用</string>
     <string name="cmd_pref_recipes">现成方案</string>
     <string name="cmd_pref_recipes_hint">WhatsApp, Telegram, SMS, YouTube, Spotify</string>
     <string name="cmd_pref_app_functions">应用的功能</string>
@@ -147,7 +147,7 @@
     <string name="cmd_pref_alias_label">别名</string>
     <string name="cmd_pref_alias_hint">可输入或说出。不区分重音符号</string>
     <string name="cmd_pref_alias_command">命令</string>
-    <string name="cmd_pref_alias_command_hint">例如：ligar maria · abrir chrome · w ana · rota casa</string>
+    <string name="cmd_pref_alias_command_hint">例如：拨打 maria · 打开 chrome · w ana · 路线 家</string>
     <string name="cmd_pref_alias_spoken">说出“%1$s”时：相同（忽略重音符号）</string>
     <string name="cmd_pref_alias_with_text">带文字：%1$s 你好 → %2$s 你好</string>
     <string name="cmd_pref_alias_typing">输入 %1$s 时：</string>
@@ -398,13 +398,13 @@
     <string name="glance_shortcut_camera">相机</string>
     <string name="glance_shortcut_clock">时钟</string>
     <string name="glance_shortcut_torch_on">[手电筒]</string>
-    <string name="cmd_usage_open">abrir [应用]</string>
-    <string name="cmd_usage_alarm">alarme HH:MM</string>
-    <string name="cmd_usage_calc">calc [算式]</string>
-    <string name="cmd_usage_call">ligar [联系人]</string>
-    <string name="cmd_usage_route">rota [地点]</string>
-    <string name="cmd_usage_task">t [任务] · 新任务</string>
-    <string name="cmd_usage_calc_short">c [算式] · calc 的简写</string>
+    <string name="cmd_usage_open">[应用]</string>
+    <string name="cmd_usage_alarm">HH:MM</string>
+    <string name="cmd_usage_calc">[算式]</string>
+    <string name="cmd_usage_call">[联系人]</string>
+    <string name="cmd_usage_route">[地点]</string>
+    <string name="cmd_usage_task">[任务] · 新任务</string>
+    <string name="cmd_usage_calc_short">[算式] · calc 的简写</string>
     <string name="cmd_list_suggestions">建议</string>
     <string name="cmd_unknown_title">未知命令</string>
     <string name="cmd_unknown_preview">按 ENTER 在网上搜索</string>
@@ -474,4 +474,22 @@
     <string name="cmd_pack_subject">命令栏命令</string>
     <string name="color_cyan">青色</string>
     <string name="color_white">白色</string>
+    <string name="cmd_word_open">打开</string>
+    <string name="cmd_word_alarm">闹钟</string>
+    <string name="cmd_word_calc">计算</string>
+    <string name="cmd_word_call">拨打</string>
+    <string name="cmd_word_route">路线</string>
+    <string name="cmd_voice_open">打开,启动</string>
+    <string name="cmd_voice_call">拨打,打电话,呼叫</string>
+    <string name="cmd_voice_alarm">闹钟,叫醒</string>
+    <string name="cmd_voice_calc">计算,算</string>
+    <string name="cmd_voice_route">路线,导航</string>
+    <string name="cmd_voice_task">任务,提醒,记下</string>
+    <string name="cmd_voice_message">消息,whatsapp,发送</string>
+    <string name="cmd_voice_filler">给,到,应用</string>
+    <string name="cmd_voice_alarm_lead_in">在</string>
+    <string name="cmd_voice_math">除以=/;乘以=*;乘=*;加=+;减=-;点=.;x=*</string>
+    <string name="cmd_voice_message_lead_in">说</string>
+    <string name="cmd_voice_message_that"></string>
+    <string name="lottie_widget_command_hint">打开 spotify</string>
 </resources>

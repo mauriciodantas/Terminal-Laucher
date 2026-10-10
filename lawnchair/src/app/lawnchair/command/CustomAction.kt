@@ -100,8 +100,8 @@ object CustomActions {
         ),
     )
 
-    /** Names the built-in commands answer to; a custom letter cannot reuse them. */
-    val RESERVED = setOf("abrir", "alarme", "calc", "ligar", "rota", "t", "c")
+    /** Names the built-in commands answer to, in any language; a custom letter cannot reuse them. */
+    val RESERVED: Set<String> get() = BuiltInCommand.reserved()
 
     val WHATSAPP = CustomAction(
         letter = "w",
@@ -175,7 +175,7 @@ object CustomActions {
         val l = letter.trim().lowercase()
         return when {
             l.isEmpty() -> Texts.get(R.string.cmd_err_letter_empty)
-            !l.all { it.isLetterOrDigit() } -> Texts.get(R.string.cmd_err_letter_chars)
+            !l.all { it.isCommandWordChar() } -> Texts.get(R.string.cmd_err_letter_chars)
             l in RESERVED -> Texts.get(R.string.cmd_err_reserved, l)
             existing.any { it !== ignore && it.letter == l } -> Texts.get(R.string.cmd_err_in_use, l)
             else -> null

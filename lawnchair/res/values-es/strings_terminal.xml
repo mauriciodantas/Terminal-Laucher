@@ -60,7 +60,7 @@
     <string name="command_bar_setting">Barra de comandos</string>
     <string name="command_actions_title">Acciones de la barra de comandos</string>
     <string name="command_actions_desc">Asigna una letra a acciones de otras apps (w = WhatsApp)</string>
-    <string name="command_bar_setting_desc">Al tocar la barra se abre el terminal de comandos con autocompletado (abrir, calc, alarme, ligar, voz...)</string>
+    <string name="command_bar_setting_desc">Al tocar la barra se abre el terminal de comandos con autocompletado (abrir, calc, alarma, llamar, voz...)</string>
     <string name="command_title">&gt; ENTRADA DE COMANDOS</string>
     <string name="command_subtitle">AUTOCOMPLETAR · HISTORIAL</string>
     <string name="command_contacts_needed">ESTE COMANDO NECESITA ACCESO A LOS CONTACTOS.</string>
@@ -94,7 +94,7 @@
     <string name="cmd_pref_no_actions_hint">Añade una abajo</string>
     <string name="cmd_pref_no_match">Nada coincide con la búsqueda</string>
     <string name="cmd_pref_new_alias">Nuevo alias</string>
-    <string name="cmd_pref_new_alias_hint">Una palabra tuya para un comando completo (mae = ligar maria). Funciona escrito y hablado</string>
+    <string name="cmd_pref_new_alias_hint">Una palabra tuya para un comando completo (mama = llamar maria). Funciona escrito y hablado</string>
     <string name="cmd_pref_recipes">Recetas listas</string>
     <string name="cmd_pref_recipes_hint">WhatsApp, Telegram, SMS, YouTube, Spotify</string>
     <string name="cmd_pref_app_functions">Funciones de una app</string>
@@ -147,7 +147,7 @@
     <string name="cmd_pref_alias_label">Alias</string>
     <string name="cmd_pref_alias_hint">Escrito o hablado. Las tildes no importan</string>
     <string name="cmd_pref_alias_command">Comando</string>
-    <string name="cmd_pref_alias_command_hint">Ej.: ligar maria · abrir chrome · w ana · rota casa</string>
+    <string name="cmd_pref_alias_command_hint">Ej.: llamar maria · abrir chrome · w ana · ruta casa</string>
     <string name="cmd_pref_alias_spoken">Al decir “%1$s”: lo mismo (las tildes se ignoran)</string>
     <string name="cmd_pref_alias_with_text">Con texto: %1$s hola → %2$s hola</string>
     <string name="cmd_pref_alias_typing">Al escribir %1$s:</string>
@@ -398,13 +398,13 @@
     <string name="glance_shortcut_camera">CÁMARA</string>
     <string name="glance_shortcut_clock">RELOJ</string>
     <string name="glance_shortcut_torch_on">[LINTERNA]</string>
-    <string name="cmd_usage_open">abrir [app]</string>
-    <string name="cmd_usage_alarm">alarme HH:MM</string>
-    <string name="cmd_usage_calc">calc [expresión]</string>
-    <string name="cmd_usage_call">ligar [contacto]</string>
-    <string name="cmd_usage_route">rota [lugar]</string>
-    <string name="cmd_usage_task">t [tarea] · nueva tarea</string>
-    <string name="cmd_usage_calc_short">c [cuenta] · atajo de calc</string>
+    <string name="cmd_usage_open">[app]</string>
+    <string name="cmd_usage_alarm">HH:MM</string>
+    <string name="cmd_usage_calc">[expresión]</string>
+    <string name="cmd_usage_call">[contacto]</string>
+    <string name="cmd_usage_route">[lugar]</string>
+    <string name="cmd_usage_task">[tarea] · nueva tarea</string>
+    <string name="cmd_usage_calc_short">[cuenta] · atajo de calc</string>
     <string name="cmd_list_suggestions">SUGERENCIAS</string>
     <string name="cmd_unknown_title">COMANDO DESCONOCIDO</string>
     <string name="cmd_unknown_preview">ENTER PARA BUSCAR EN LA WEB</string>
@@ -474,4 +474,22 @@
     <string name="cmd_pack_subject">Comandos de la barra de comandos</string>
     <string name="color_cyan">Cian</string>
     <string name="color_white">Blanco</string>
+    <string name="cmd_word_open">abrir</string>
+    <string name="cmd_word_alarm">alarma</string>
+    <string name="cmd_word_calc">calc</string>
+    <string name="cmd_word_call">llamar</string>
+    <string name="cmd_word_route">ruta</string>
+    <string name="cmd_voice_open">abrir,abre,inicia,iniciar</string>
+    <string name="cmd_voice_call">llamar,llama,telefonear,marca</string>
+    <string name="cmd_voice_alarm">alarma,despertador,despiértame</string>
+    <string name="cmd_voice_calc">calcular,calcula,calc,cuenta</string>
+    <string name="cmd_voice_route">ruta,navegar,llévame</string>
+    <string name="cmd_voice_task">tarea,recordar,recuérdame,anotar</string>
+    <string name="cmd_voice_message">mensaje,whatsapp,enviar,escribir,escribe</string>
+    <string name="cmd_voice_filler">a,al,el,la,los,las,de,del,app,aplicación,para</string>
+    <string name="cmd_voice_alarm_lead_in">a las,para las,a la,las,la</string>
+    <string name="cmd_voice_math">dividido por=/;dividido entre=/;entre=/;multiplicado por=*;por ciento=%;por=*;más=+;menos=-;coma=,;punto=.;x=*</string>
+    <string name="cmd_voice_message_lead_in">diciendo,avisando,escribiendo,preguntando</string>
+    <string name="cmd_voice_message_that">que</string>
+    <string name="lottie_widget_command_hint">abrir spotify</string>
 </resources>

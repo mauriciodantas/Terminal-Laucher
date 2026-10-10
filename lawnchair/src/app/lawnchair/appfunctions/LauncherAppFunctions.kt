@@ -14,6 +14,7 @@ import androidx.appfunctions.AppFunctionStringValueConstraint
 import app.lawnchair.command.AliasStore
 import app.lawnchair.command.Aliases
 import app.lawnchair.command.AppEntry
+import app.lawnchair.command.BuiltInCommand
 import app.lawnchair.command.CalcEvaluator
 import app.lawnchair.command.CommandAction
 import app.lawnchair.command.CommandAlias
@@ -67,7 +68,7 @@ data class FolderSummary(
 data class AliasSummary(
     /** The word. */
     val alias: String,
-    /** The command it stands for, for example "ligar maria". */
+    /** The command it stands for, for example "call maria". */
     val command: String,
 )
 
@@ -109,15 +110,16 @@ abstract class BaseLauncherAppFunctionService : AppFunctionService() {
     @AppFunction(isDescribedByKDoc = true)
     suspend fun openApp(appName: String): CommandResult {
         if (appName.isBlank()) throw AppFunctionInvalidArgumentException("appName cannot be blank")
-        return runCommandText("abrir ${appName.trim()}")
+        return runCommandText(BuiltInCommand.OPEN.english + " " + appName.trim())
     }
 
     /**
-     * Runs a command of the launcher's command bar. Understands the built-in commands (abrir, calc,
-     * alarme, rota, t) and the user's own aliases and custom actions. Commands that call a contact or
-     * send a message are not run: the result is NEEDS_CONFIRMATION and the user must confirm them.
+     * Runs a command of the launcher's command bar. Understands the built-in commands in English
+     * (open, call, alarm, calc, route, t), which also work in the app language and in Portuguese,
+     * and the user's own aliases and custom actions. Commands that call a contact or send a message
+     * are not run: the result is NEEDS_CONFIRMATION and the user must confirm them.
      *
-     * @param command The command text, for example "abrir camera", "alarme 0630", "calc 12*8" or "rota Avenida Paulista".
+     * @param command The command text, for example "open camera", "alarm 0630", "calc 12*8" or "route Avenida Paulista".
      * @return A [CommandResult] with the outcome.
      * @throws AppFunctionInvalidArgumentException If command is blank.
      */
@@ -284,10 +286,10 @@ abstract class BaseLauncherAppFunctionService : AppFunctionService() {
 
     /**
      * Gives a short word of the user's own to a whole command of the command bar, usable typed or
-     * spoken. For example alias "mae" for "ligar maria". An alias cannot reuse a built-in command.
+     * spoken. For example alias "mom" for "call maria". An alias cannot reuse a built-in command.
      *
      * @param alias One word, letters and numbers only. Accents and case do not matter.
-     * @param command The command it stands for, in command bar syntax, for example "ligar maria" or "abrir chrome".
+     * @param command The command it stands for, in command bar syntax, for example "call maria" or "open chrome".
      * @return The saved alias.
      * @throws AppFunctionInvalidArgumentException If the alias is not one valid free word or the command is blank.
      */

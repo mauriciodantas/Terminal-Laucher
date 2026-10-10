@@ -60,7 +60,7 @@
     <string name="command_bar_setting">Komut çubuğu</string>
     <string name="command_actions_title">Komut çubuğu işlemleri</string>
     <string name="command_actions_desc">Diğer uygulamaların işlemlerine bir harf atayın (w = WhatsApp)</string>
-    <string name="command_bar_setting_desc">Çubuğa dokunmak, otomatik tamamlamalı komut terminalini açar (abrir, calc, alarme, ligar, voz...)</string>
+    <string name="command_bar_setting_desc">Çubuğa dokunmak, otomatik tamamlamalı komut terminalini açar (aç, hesap, alarm, ara, ses...)</string>
     <string name="command_title">&gt; KOMUT GİRİŞİ</string>
     <string name="command_subtitle">OTOMATİK TAMAMLAMA · GEÇMİŞ</string>
     <string name="command_contacts_needed">BU KOMUT KİŞİLERE ERİŞİM GEREKTİRİR.</string>
@@ -94,7 +94,7 @@
     <string name="cmd_pref_no_actions_hint">Aşağıdan ekleyin</string>
     <string name="cmd_pref_no_match">Aramayla eşleşen yok</string>
     <string name="cmd_pref_new_alias">Yeni takma ad</string>
-    <string name="cmd_pref_new_alias_hint">Tam bir komut için kendi kelimeniz (mae = ligar maria). Yazarak ve sesle çalışır</string>
+    <string name="cmd_pref_new_alias_hint">Tam bir komut için kendi kelimeniz (anne = ara maria). Yazarak ve sesle çalışır</string>
     <string name="cmd_pref_recipes">Hazır tarifler</string>
     <string name="cmd_pref_recipes_hint">WhatsApp, Telegram, SMS, YouTube, Spotify</string>
     <string name="cmd_pref_app_functions">Bir uygulamanın işlevleri</string>
@@ -147,7 +147,7 @@
     <string name="cmd_pref_alias_label">Takma ad</string>
     <string name="cmd_pref_alias_hint">Yazılı veya sesli. Aksanlar önemli değil</string>
     <string name="cmd_pref_alias_command">Komut</string>
-    <string name="cmd_pref_alias_command_hint">Örn.: ligar maria · abrir chrome · w ana · rota casa</string>
+    <string name="cmd_pref_alias_command_hint">Örn.: ara maria · aç chrome · w ana · rota ev</string>
     <string name="cmd_pref_alias_spoken">“%1$s” denince: aynısı (aksanlar yok sayılır)</string>
     <string name="cmd_pref_alias_with_text">Metinle: %1$s merhaba → %2$s merhaba</string>
     <string name="cmd_pref_alias_typing">%1$s yazınca:</string>
@@ -398,13 +398,13 @@
     <string name="glance_shortcut_camera">KAMERA</string>
     <string name="glance_shortcut_clock">SAAT</string>
     <string name="glance_shortcut_torch_on">[FENER]</string>
-    <string name="cmd_usage_open">abrir [uygulama]</string>
-    <string name="cmd_usage_alarm">alarme SS:DD</string>
-    <string name="cmd_usage_calc">calc [ifade]</string>
-    <string name="cmd_usage_call">ligar [kişi]</string>
-    <string name="cmd_usage_route">rota [yer]</string>
-    <string name="cmd_usage_task">t [görev] · yeni görev</string>
-    <string name="cmd_usage_calc_short">c [işlem] · calc kısayolu</string>
+    <string name="cmd_usage_open">[uygulama]</string>
+    <string name="cmd_usage_alarm">SS:DD</string>
+    <string name="cmd_usage_calc">[ifade]</string>
+    <string name="cmd_usage_call">[kişi]</string>
+    <string name="cmd_usage_route">[yer]</string>
+    <string name="cmd_usage_task">[görev] · yeni görev</string>
+    <string name="cmd_usage_calc_short">[işlem] · calc kısayolu</string>
     <string name="cmd_list_suggestions">ÖNERİLER</string>
     <string name="cmd_unknown_title">BİLİNMEYEN KOMUT</string>
     <string name="cmd_unknown_preview">WEB\'DE ARAMAK İÇİN ENTER</string>
@@ -474,4 +474,22 @@
     <string name="cmd_pack_subject">Komut çubuğu komutları</string>
     <string name="color_cyan">Camgöbeği</string>
     <string name="color_white">Beyaz</string>
+    <string name="cmd_word_open">aç</string>
+    <string name="cmd_word_alarm">alarm</string>
+    <string name="cmd_word_calc">hesap</string>
+    <string name="cmd_word_call">ara</string>
+    <string name="cmd_word_route">rota</string>
+    <string name="cmd_voice_open">aç,başlat</string>
+    <string name="cmd_voice_call">ara,telefon</string>
+    <string name="cmd_voice_alarm">alarm,uyandır</string>
+    <string name="cmd_voice_calc">hesapla,hesap,calc</string>
+    <string name="cmd_voice_route">rota,yol,navigasyon</string>
+    <string name="cmd_voice_task">görev,hatırlat,not</string>
+    <string name="cmd_voice_message">mesaj,whatsapp,gönder,yaz</string>
+    <string name="cmd_voice_filler">uygulama,uygulamasını</string>
+    <string name="cmd_voice_alarm_lead_in">saat</string>
+    <string name="cmd_voice_math">bölü=/;çarpı=*;kere=*;artı=+;eksi=-;virgül=,;x=*</string>
+    <string name="cmd_voice_message_lead_in"></string>
+    <string name="cmd_voice_message_that"></string>
+    <string name="lottie_widget_command_hint">aç spotify</string>
 </resources>
