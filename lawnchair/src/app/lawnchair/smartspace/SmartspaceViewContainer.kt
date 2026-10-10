@@ -51,7 +51,10 @@ class SmartspaceViewContainer @JvmOverloads constructor(
         val dp = InvariantDeviceProfile.INSTANCE.get(context).getDeviceProfile(context)
         val leftPadding = dp.widgetPadding.left
         val rightPadding = dp.widgetPadding.right
-        smartspaceView.setPadding(leftPadding, top, rightPadding, bottom)
+        // Room below the panel, so the first row of icons (a folder's preview reaches its top edge)
+        // does not touch it. The panel's fit counts the padding and makes room for it.
+        val bottomGap = resources.getDimensionPixelSize(R.dimen.smartspace_bottom_gap)
+        smartspaceView.setPadding(leftPadding, top, rightPadding, bottomGap)
         setOnLongClickListener {
             openOptions()
             true

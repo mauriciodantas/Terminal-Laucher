@@ -86,8 +86,9 @@ class GlancePanelController(
 
     /**
      * The panel sits in two rows of the grid, and the height of a row changes from phone to phone.
-     * When the content is taller than that, the least useful parts give way one at a time (status
-     * line, header, a smaller clock, the date), so the shortcut row at the bottom is never cut off.
+     * When the content is taller than that, the least useful parts give way one at a time (a more
+     * compact target row, status line, header, a smaller clock, the date), so the shortcut row at the
+     * bottom is never cut off.
      */
     private fun fitToHeight() {
         fitScheduled = false
@@ -98,9 +99,18 @@ class GlancePanelController(
         val header = root.findViewById<View>(R.id.nostromo_header)
         val date = root.findViewById<View>(R.id.nostromo_date)
         val clock = root.findViewById<TextView>(R.id.nostromo_clock)
+        val lead = root.findViewById<TextView>(R.id.nostromo_target_lead)
+        val targetRow = root.findViewById<View>(R.id.nostromo_target_row)
+        val density = root.resources.displayMetrics.density
         listOfNotNull(status, header, date).forEach { it.visibility = View.VISIBLE }
         clock?.setTextSize(TypedValue.COMPLEX_UNIT_SP, CLOCK_SP)
+        lead?.setTextSize(TypedValue.COMPLEX_UNIT_SP, LEAD_SP)
+        targetRow?.minimumHeight = (TARGET_ROW_MIN_DP * density).toInt()
         val steps = listOf<() -> Unit>(
+            {
+                lead?.setTextSize(TypedValue.COMPLEX_UNIT_SP, LEAD_COMPACT_SP)
+                targetRow?.minimumHeight = 0
+            },
             { status?.visibility = View.GONE },
             { header?.visibility = View.GONE },
             { clock?.setTextSize(TypedValue.COMPLEX_UNIT_SP, CLOCK_COMPACT_SP) },
@@ -572,5 +582,10 @@ class GlancePanelController(
         /** The clock size of the layout, and the smaller one used when the panel is short on height. */
         private const val CLOCK_SP = 44f
         private const val CLOCK_COMPACT_SP = 34f
+        private const val LEAD_SP = 32f
+        private const val LEAD_COMPACT_SP = 24f
+
+        /** The target row's android:minHeight in smartspace_widget.xml. */
+        private const val TARGET_ROW_MIN_DP = 48
     }
 }

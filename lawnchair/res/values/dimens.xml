@@ -130,4 +130,6 @@
     <dimen name="aspect_ratio_portrait_and_square">1.05</dimen>
 
     <dimen name="nostromo_section_header_height">36dp</dimen>
+    <!-- Space between the status panel and the first row of icons. -->
+    <dimen name="smartspace_bottom_gap">12dp</dimen>
 </resources>
