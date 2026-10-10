@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2021 The Android Open Source Project
+<!-- Copyright (C) 2009 The Android Open Source Project
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -13,67 +13,75 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-
 <favorites xmlns:launcher="http://schemas.android.com/apk/res-auto/com.android.launcher3">
-
-    <!-- Hotseat (We use the screen as the position of the item in the hotseat) -->
-    <!-- Mail Calendar Gallery Store Internet Camera -->
-    <resolve
-        launcher:container="-101"
-        launcher:screen="0"
-        launcher:x="0"
-        launcher:y="0" >
-        <favorite
-            launcher:className="com.android.contacts.activities.TwelveKeyDialer"
-            launcher:packageName="com.android.contacts" />
+    <!--
+        Default layout of the 6-column tablet grid, in the spirit of the phone one: what a tablet is
+        used for (browsing, mail, photos, video) within reach, Google apps first. Each slot lists
+        fallbacks in order and the first one installed wins. Rows 0 and 1 of screen 0 stay free for
+        the terminal readout. A slot nothing fills stays empty, and the dock centers what is there.
+    -->
+    <!-- Hotseat: Chrome, Gmail, Messages, Photos, Camera, Play Store -->
+    <resolve launcher:container="-101" launcher:screen="0" launcher:x="0" launcher:y="0" >
+        <favorite launcher:packageName="com.android.chrome" launcher:className="com.google.android.apps.chrome.Main" />
+        <favorite launcher:uri="#Intent;action=android.intent.action.MAIN;category=android.intent.category.APP_BROWSER;end" />
+    </resolve>
+    <resolve launcher:container="-101" launcher:screen="1" launcher:x="1" launcher:y="0" >
+        <favorite launcher:packageName="com.google.android.gm" launcher:className="com.google.android.gm.ConversationListActivityGmail" />
         <favorite launcher:uri="#Intent;action=android.intent.action.MAIN;category=android.intent.category.APP_EMAIL;end" />
-        <favorite launcher:uri="mailto:" />
     </resolve>
-
-    <resolve
-        launcher:container="-101"
-        launcher:screen="1"
-        launcher:x="1"
-        launcher:y="0" >
-        <favorite launcher:uri="#Intent;action=android.intent.action.MAIN;category=android.intent.category.APP_CALENDAR;end" />
+    <resolve launcher:container="-101" launcher:screen="2" launcher:x="2" launcher:y="0" >
+        <favorite launcher:uri="#Intent;action=android.intent.action.MAIN;category=android.intent.category.APP_MESSAGING;end" />
+        <favorite launcher:uri="sms:" />
+        <favorite launcher:uri="smsto:" />
     </resolve>
-
-    <resolve
-        launcher:container="-101"
-        launcher:screen="2"
-        launcher:x="2"
-        launcher:y="0" >
+    <resolve launcher:container="-101" launcher:screen="3" launcher:x="3" launcher:y="0" >
+        <favorite launcher:packageName="com.google.android.apps.photos" launcher:className="com.google.android.apps.photos.home.HomeActivity" />
         <favorite launcher:uri="#Intent;action=android.intent.action.MAIN;category=android.intent.category.APP_GALLERY;end" />
-        <favorite launcher:uri="#Intent;type=images/*;end" />
     </resolve>
-
-    <resolve
-        launcher:container="-101"
-        launcher:screen="3"
-        launcher:x="3"
-        launcher:y="0" >
-        <favorite launcher:uri="#Intent;action=android.intent.action.MAIN;category=android.intent.category.APP_MARKET;end" />
-        <favorite launcher:uri="market://details?id=com.android.launcher" />
-    </resolve>
-
-    <resolve
-        launcher:container="-101"
-        launcher:screen="4"
-        launcher:x="4"
-        launcher:y="0" >
-        <favorite
-            launcher:uri="#Intent;action=android.intent.action.MAIN;category=android.intent.category.APP_BROWSER;end" />
-        <favorite launcher:uri="http://www.example.com/" />
-    </resolve>
-
-    <!-- Resolve camera intent if GoogleCamera is not available e.g. on emulator -->
-    <resolve
-        launcher:container="-101"
-        launcher:screen="5"
-        launcher:x="5"
-        launcher:y="0" >
+    <resolve launcher:container="-101" launcher:screen="4" launcher:x="4" launcher:y="0" >
         <favorite launcher:uri="#Intent;action=android.media.action.STILL_IMAGE_CAMERA;end" />
         <favorite launcher:uri="#Intent;action=android.intent.action.CAMERA_BUTTON;end" />
     </resolve>
-
+    <resolve launcher:container="-101" launcher:screen="5" launcher:x="5" launcher:y="0" >
+        <favorite launcher:packageName="com.android.vending" launcher:className="com.android.vending.AssetBrowserActivity" />
+        <favorite launcher:uri="#Intent;action=android.intent.action.MAIN;category=android.intent.category.APP_MARKET;end" />
+    </resolve>
+    <!-- Screen 0, row 2: calendar, maps, video, files, clock, settings -->
+    <resolve launcher:screen="0" launcher:x="0" launcher:y="2" >
+        <favorite launcher:packageName="com.google.android.calendar" launcher:className="com.android.calendar.AllInOneActivity" />
+        <favorite launcher:uri="#Intent;action=android.intent.action.MAIN;category=android.intent.category.APP_CALENDAR;end" />
+    </resolve>
+    <resolve launcher:screen="0" launcher:x="1" launcher:y="2" >
+        <favorite launcher:packageName="com.google.android.apps.maps" launcher:className="com.google.android.maps.MapsActivity" />
+        <favorite launcher:uri="#Intent;action=android.intent.action.MAIN;category=android.intent.category.APP_MAPS;end" />
+    </resolve>
+    <resolve launcher:screen="0" launcher:x="2" launcher:y="2" >
+        <favorite launcher:packageName="com.google.android.youtube" launcher:className="com.google.android.youtube.app.honeycomb.Shell$HomeActivity" />
+    </resolve>
+    <resolve launcher:screen="0" launcher:x="3" launcher:y="2" >
+        <favorite launcher:packageName="com.google.android.apps.nbu.files" launcher:className="com.google.android.apps.nbu.files.home.HomeActivity" />
+        <favorite launcher:uri="#Intent;action=android.intent.action.MAIN;category=android.intent.category.APP_FILES;end" />
+    </resolve>
+    <resolve launcher:screen="0" launcher:x="4" launcher:y="2" >
+        <favorite launcher:uri="#Intent;action=android.intent.action.SHOW_ALARMS;end" />
+    </resolve>
+    <resolve launcher:screen="0" launcher:x="5" launcher:y="2" >
+        <favorite launcher:uri="#Intent;action=android.settings.SETTINGS;end" />
+    </resolve>
+    <!-- Row 3: the Google folder (a folder with fewer than two installed apps is dropped) and contacts -->
+    <folder
+        launcher:title="@string/google_folder_title"
+        launcher:screen="0"
+        launcher:x="0"
+        launcher:y="3">
+        <favorite launcher:packageName="com.google.android.googlequicksearchbox" launcher:className="com.google.android.googlequicksearchbox.SearchActivity" />
+        <favorite launcher:packageName="com.google.android.apps.docs" launcher:className="com.google.android.apps.docs.app.NewMainProxyActivity" />
+        <favorite launcher:packageName="com.google.android.apps.tachyon" launcher:className="com.google.android.apps.tachyon.MainActivity" />
+        <favorite launcher:packageName="com.google.android.apps.youtube.music" launcher:className="com.google.android.apps.youtube.music.activities.MusicActivity" />
+        <favorite launcher:packageName="com.google.android.apps.bard" launcher:className="com.google.android.apps.bard.shellapp.BardEntryPointActivity" />
+        <favorite launcher:packageName="com.google.android.keep" launcher:className="com.google.android.keep.activities.BrowseActivity" />
+    </folder>
+    <resolve launcher:screen="0" launcher:x="1" launcher:y="3" >
+        <favorite launcher:uri="#Intent;action=android.intent.action.MAIN;category=android.intent.category.APP_CONTACTS;end" />
+    </resolve>
 </favorites>

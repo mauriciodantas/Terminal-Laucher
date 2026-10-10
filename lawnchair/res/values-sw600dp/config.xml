@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The phone drawer is a one-column directory list with small icons; on a tablet it is a grid
+         of full cells, where those icons look lost. -->
+    <item name="config_default_drawer_icon_size_factor" type="dimen" format="float">0.9</item>
+</resources>
