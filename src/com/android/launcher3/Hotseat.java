@@ -46,6 +46,8 @@ import androidx.annotation.Nullable;
 
 import com.android.launcher3.accessibility.DragAndDropAccessibilityDelegate;
 import com.android.launcher3.celllayout.CellLayoutLayoutParams;
+import com.android.launcher3.dragndrop.DragController;
+import com.android.launcher3.dragndrop.DragOptions;
 import com.android.launcher3.pageindicators.PageIndicatorDots;
 import com.android.launcher3.util.HorizontalInsettableView;
 import com.android.launcher3.util.MultiPropertyFactory;
@@ -564,6 +566,7 @@ public class Hotseat extends FrameLayout implements Insettable {
         int indicatorSpace = showIndicator ? mPageIndicatorHeight : 0;
 
         mPagedView.layout(0, 0, containerWidth, Math.max(0, containerHeight - indicatorSpace));
+        centerDockIcons();
 
         if (showIndicator) {
             int indicatorTop = containerHeight - mPageIndicatorHeight;
@@ -583,11 +586,100 @@ public class Hotseat extends FrameLayout implements Insettable {
         } else {
             left = (width - qsbMeasuredWidth) / 2;
         }
+        if (dp.isQsbInline) {
+            // The inline command bar stays next to the first icon when the icons are centered.
+            left += Utilities.isRtl(getResources()) ? -mDockQsbShiftPx : mDockQsbShiftPx;
+        }
         int right = left + qsbMeasuredWidth;
 
         int bottom = height - dp.getQsbOffsetY();
         int top = bottom - dp.getHotseatProfile().getQsbHeight();
+        if (dp.isQsbInline && dp.getDeviceProperties().isTablet()) {
+            // LC: beside a tablet's dock the command line is centered on the icons; its hint is
+            // drawn above the whole row instead of under the line.
+            int iconsCenter = paddingTop + mPagedView.getHeight() / 2;
+            top = iconsCenter - dp.getHotseatProfile().getQsbHeight() / 2;
+            bottom = top + dp.getHotseatProfile().getQsbHeight();
+        }
         mQsb.layout(left, top, right, bottom);
+    }
+
+    /** LC: how far the inline command bar moves with the centered dock icons. */
+    private int mDockQsbShiftPx;
+
+    /**
+     * LC: on a tablet the dock has more slots than most people fill, and the empty ones at the ends
+     * leave the icons off-center. The occupied slots are centered (with the inline command bar next
+     * to them) by translating the dock page, and recentered once a drag ends.
+     */
+    private void centerDockIcons() {
+        // While something is dragged the dock holds still: a jump under the finger would move the
+        // drop to the next slot. Touch maps through the page's translation, so cells stay right.
+        if (mDockDragging) return;
+        DeviceProfile dp = mActivity.getDeviceProfile();
+        CellLayout page = getCurrentPageLayout();
+        int shiftPx = 0;
+        int qsbShiftPx = 0;
+        boolean canCenter = page != null && !mHasVerticalHotseat
+                && dp.getDeviceProperties().isTablet()
+                && dp.numHotseatRows == 1 && mPagedView.getPageCount() == 1
+                && !mActivity.isBubbleBarEnabled();
+        if (canCenter) {
+            int columns = page.getCountX();
+            int min = columns;
+            int max = -1;
+            ShortcutAndWidgetContainer icons = page.getShortcutsAndWidgets();
+            for (int i = 0; i < icons.getChildCount(); i++) {
+                if (icons.getChildAt(i).getLayoutParams() instanceof CellLayoutLayoutParams lp) {
+                    min = Math.min(min, lp.getCellX());
+                    max = Math.max(max, lp.getCellX() + lp.cellHSpan - 1);
+                }
+            }
+            if (max >= 0) {
+                int stride = page.getCellWidth() + dp.hotseatBorderSpace;
+                int trailing = columns - 1 - max;
+                shiftPx = (trailing - min) * stride / 2;
+                qsbShiftPx = (trailing + min) * stride / 2;
+            }
+        }
+        if (Utilities.isRtl(getResources())) shiftPx = -shiftPx;
+        mDockQsbShiftPx = qsbShiftPx;
+        // The whole page moves, so the icons keep their cells and touch still maps through the
+        // view's translation.
+        mPagedView.setTranslationX(shiftPx);
+    }
+
+    /** LC: true while an item is dragged, when the dock keeps its current offset. */
+    private boolean mDockDragging;
+
+    private final DragController.DragListener mDockDragListener = new DragController.DragListener() {
+        @Override
+        public void onDragStart(DropTarget.DragObject dragObject, DragOptions options) {
+            mDockDragging = true;
+        }
+
+        @Override
+        public void onDragEnd() {
+            mDockDragging = false;
+            centerDockIcons();
+            requestLayout();
+        }
+    };
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        if (mActivity instanceof Launcher launcher) {
+            launcher.getDragController().addDragListener(mDockDragListener);
+        }
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        if (mActivity instanceof Launcher launcher) {
+            launcher.getDragController().removeDragListener(mDockDragListener);
+        }
+        super.onDetachedFromWindow();
     }
 
     /**

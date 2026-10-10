@@ -252,7 +252,6 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
 
     private PredictedContainerInfo mAllAppsPredictions;
     // LC-Note: Lawnchair Prediction
-    private PredictedContainerInfo mHotseatPredictions;
     private HotseatPredictionController mHotseatPredictionController;
     private DepthController mDepthController;
     private QuickstepTransitionManager mAppTransitionManager;
@@ -472,9 +471,7 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
                 predictionRowView.setPredictedApps(mAllAppsPredictions.getContents());
             }
         }
-        if (mHotseatPredictionController != null && mHotseatPredictions != null) {
-            mHotseatPredictionController.setPredictedItems(mHotseatPredictions);
-        }
+        // LC: no suggested apps in the dock, not even ones saved by an older version.
     }
 
     @Override
@@ -622,10 +619,7 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
                 }
                 break;
             case Favorites.CONTAINER_HOTSEAT_PREDICTION:
-                mHotseatPredictions = info;
-                if (mHotseatPredictionController != null) {
-                    mHotseatPredictionController.setPredictedItems(info);
-                }
+                // LC: the dock shows only what the user put there, never suggested apps.
                 break;
             case Favorites.CONTAINER_WIDGETS_PREDICTION:
                 getWidgetPickerDataProvider().setWidgetRecommendations(info.getContents());

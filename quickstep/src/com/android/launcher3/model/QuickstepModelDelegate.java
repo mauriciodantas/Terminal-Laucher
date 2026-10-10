@@ -26,7 +26,6 @@ import static com.android.launcher3.LauncherSettings.Favorites.CONTAINER_HOTSEAT
 import static com.android.launcher3.LauncherSettings.Favorites.CONTAINER_WIDGETS_PREDICTION;
 import static com.android.launcher3.LauncherSettings.Favorites.DESKTOP_ICON_FLAG;
 import static com.android.launcher3.icons.cache.CacheLookupFlag.DEFAULT_LOOKUP_FLAG;
-import static com.android.launcher3.model.PredictionHelper.getBundleForHotseatPredictions;
 import static com.android.launcher3.model.PredictionHelper.getBundleForWidgetPredictions;
 import static com.android.launcher3.util.Executors.MODEL_EXECUTOR;
 
@@ -357,13 +356,8 @@ public class QuickstepModelDelegate extends ModelDelegate {
     }
 
     private void registerHotseatPredictor(Context context) {
-        mHotseatPredictionState.registerPredictor(context,
-                new AppPredictionContext.Builder(context)
-                    .setUiSurface("hotseat")
-                    .setPredictedTargetCount(mIDP.numDatabaseHotseatIcons)
-                    .setExtras(getBundleForHotseatPredictions(context, mDataModel))
-                    .build(),
-                mModel, PredictionUpdateTask::new);
+        // LC: the dock shows only what the user put there, never suggested apps, so no hotseat
+        // predictor is registered.
     }
 
     @VisibleForTesting

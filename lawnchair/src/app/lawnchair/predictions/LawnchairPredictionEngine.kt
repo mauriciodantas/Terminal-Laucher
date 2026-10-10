@@ -14,7 +14,6 @@ import androidx.annotation.RequiresApi
 import app.lawnchair.preferences2.PreferenceManager2
 import app.lawnchair.preferences2.firstCached
 import com.android.launcher3.AppFilter
-import com.android.launcher3.LauncherSettings.Favorites.CONTAINER_HOTSEAT
 import com.android.launcher3.Utilities
 import com.android.launcher3.model.BgDataModel
 import com.android.launcher3.model.WidgetItem
@@ -146,21 +145,6 @@ class LawnchairPredictionEngine(
      * Creates a store key from a [ComponentName] and [UserHandle].
      */
     fun toStoreKey(componentName: ComponentName, user: UserHandle): String = PredictionAppKey.create(componentName, userToken(user))
-
-    /**
-     * Returns the set of store keys for items currently occupying the hotseat.
-     */
-    fun getOccupiedHotseatItems(dataModel: BgDataModel): Set<String> {
-        val itemsSnapshot = synchronized(dataModel) { dataModel.itemsIdMap.copy() }
-        return itemsSnapshot
-            .filter { it.container == CONTAINER_HOTSEAT }
-            .mapNotNull { item ->
-                item.targetComponent?.let { component ->
-                    toStoreKey(component, item.user)
-                }
-            }
-            .toSet()
-    }
 
     private fun shouldUseWeightedUsageStats(): Boolean {
         if (!prefs2.lawnchairPredictorUseWeightedUsageStats.firstCached()) return false

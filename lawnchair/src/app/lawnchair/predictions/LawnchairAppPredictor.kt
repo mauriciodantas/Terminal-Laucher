@@ -148,21 +148,13 @@ class LawnchairAppPredictor(private val context: Context) : StatsLogCompatManage
         val allAppsRanked = allAppsStore.getRanked()
         val fallbackRanked = predictionEngine.getFallbackRanked()
         val allAppsCandidateRanked = predictionEngine.mergeRanked(allAppsRanked, hotseatRanked, fallbackRanked)
-        val hotseatCandidateRanked = predictionEngine.mergeRanked(hotseatRanked, allAppsRanked, fallbackRanked)
         val widgetCandidateRanked = predictionEngine.mergeRanked(hotseatRanked, allAppsRanked, fallbackRanked)
         val currentDismissedApps = dismissedApps.toSet()
-        val occupiedHotseatItems = predictionEngine.getOccupiedHotseatItems(dataModel)
-        val excludedHotseatItems = occupiedHotseatItems + currentDismissedApps
 
         val allAppsTargets = predictionEngine.compileAppTargets(
             allAppsCandidateRanked,
             idp.numDatabaseAllAppsColumns,
             currentDismissedApps,
-        )
-        val hotseatTargets = predictionEngine.compileAppTargets(
-            hotseatCandidateRanked,
-            idp.numDatabaseHotseatIcons,
-            excludedHotseatItems,
         )
         val widgetTargets = predictionEngine.compileWidgetTargets(
             widgetCandidateRanked,
@@ -170,7 +162,8 @@ class LawnchairAppPredictor(private val context: Context) : StatsLogCompatManage
         )
 
         model.enqueueModelUpdateTask(PredictionUpdateTask(allAppsState, allAppsTargets))
-        model.enqueueModelUpdateTask(PredictionUpdateTask(hotseatState, hotseatTargets))
+        // The dock shows only what the user put there, never suggested apps.
+        model.enqueueModelUpdateTask(PredictionUpdateTask(hotseatState, emptyList()))
         model.enqueueModelUpdateTask(WidgetsPredictionUpdateTask(widgetsState, widgetTargets))
     }
 

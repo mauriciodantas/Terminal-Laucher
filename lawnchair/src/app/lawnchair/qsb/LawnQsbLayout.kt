@@ -6,19 +6,24 @@ import android.content.Intent
 import android.graphics.Rect
 import android.graphics.RectF
 import android.util.AttributeSet
+import android.util.TypedValue
 import android.view.View
 import android.widget.FrameLayout
+import android.widget.TextView
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.children
 import androidx.lifecycle.lifecycleScope
 import app.lawnchair.LawnchairLauncher
 import app.lawnchair.animateToAllApps
 import app.lawnchair.command.CommandActivity
+import app.lawnchair.font.UiFont
 import app.lawnchair.launcher
 import app.lawnchair.preferences.observeAsState
 import app.lawnchair.preferences.preferenceManager
@@ -30,6 +35,7 @@ import app.lawnchair.qsb.providers.Google
 import app.lawnchair.qsb.providers.PixelSearch
 import app.lawnchair.qsb.providers.QsbSearchProvider
 import app.lawnchair.theme.LauncherGround
+import app.lawnchair.theme.color.tokens.PhosphorColorToken
 import app.lawnchair.ui.preferences.PreferenceActivity
 import app.lawnchair.ui.preferences.navigation.Search
 import app.lawnchair.ui.theme.LawnchairTheme
@@ -54,6 +60,26 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
     private lateinit var preferenceManager2: PreferenceManager2
 
     private lateinit var searchProvider: QsbSearchProvider
+
+    /** True when the command line is inline with a tablet's dock and its hint goes above the row. */
+    private val hintAbove = mutableStateOf(false)
+
+    /**
+     * The hint drawn above a tablet's dock row. It is a plain view laid out outside this one's
+     * bounds (the parents do not clip), since Compose would cut it at the command line's edges.
+     */
+    private val rowHint = TextView(context).apply {
+        setText(R.string.nostromo_swipe_hint)
+        setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
+        letterSpacing = 0.08f
+        maxLines = 1
+        setTextColor(PhosphorColorToken(0.62f).resolveColor(context))
+        // The terminal font, or the one the user picked under Appearance.
+        typeface = ResourcesCompat.getFont(context, R.font.ibm_plex_mono_regular)
+        UiFont.apply(this)
+        importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
+        visibility = GONE
+    }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun onFinishInflate() {
@@ -146,6 +172,7 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
                                 null
                             },
                             voiceLabel = stringResource(R.string.command_voice),
+                            hintAbove = hintAbove.value,
                         )
                     }
                 }
@@ -168,6 +195,10 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
             composeView,
             LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT),
         )
+        // The hint of a tablet's inline command line is drawn above this view's bounds.
+        clipChildren = false
+        clipToPadding = false
+        addView(rowHint, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT))
 
         if (searchProvider == Google) {
             repeatOnAttached {
@@ -198,8 +229,26 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
         true
     }
 
+    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        super.onLayout(changed, left, top, right, bottom)
+        if (rowHint.visibility != VISIBLE) return
+        // Centered on the screen, where the command line and the dock icons are centered as a row,
+        // and above the command line, which sits in the middle of this view.
+        val location = IntArray(2)
+        getLocationInWindow(location)
+        val centerX = rootView.width / 2 - location[0]
+        val gap = resources.getDimensionPixelSize(R.dimen.dock_row_hint_gap)
+        val promptHalf = (PROMPT_HEIGHT.value * resources.displayMetrics.density / 2).toInt()
+        val hintBottom = (bottom - top) / 2 - promptHalf - gap
+        val hintLeft = centerX - rowHint.measuredWidth / 2
+        rowHint.layout(hintLeft, hintBottom - rowHint.measuredHeight, hintLeft + rowHint.measuredWidth, hintBottom)
+    }
+
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val dp = activity.deviceProfile
+        val inlineOnTablet = dp.isQsbInline && dp.deviceProperties.isTablet
+        hintAbove.value = inlineOnTablet
+        rowHint.visibility = if (inlineOnTablet) VISIBLE else GONE
         // Unlike Phone, for Foldable/Tablet we let the original onMeasure do that instead since it
         // matched what we need. It perfectly fit the QSB with the grid.
         if (!dp.deviceProperties.isPhone) {

@@ -341,6 +341,7 @@ fun LawnQsbUi(
     hint: String? = null,
     onVoiceClick: (() -> Unit)? = null,
     voiceLabel: String? = null,
+    hintAbove: Boolean = false,
 ) {
     val density = LocalDensity.current
 
@@ -427,6 +428,12 @@ fun LawnQsbUi(
 
     if (hint == null) {
         promptRow(containerModifier)
+    } else if (hintAbove) {
+        // Tablet with the command line beside the dock: the line sits level with the icons, and
+        // the hint is drawn above the whole row by the hosting view.
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.CenterStart) {
+            promptRow(containerModifier.height(PROMPT_HEIGHT))
+        }
     } else {
         Column(Modifier.fillMaxWidth()) {
             promptRow(containerModifier.height(48.dp))
@@ -442,6 +449,9 @@ fun LawnQsbUi(
         }
     }
 }
+
+/** Height of the command line; the home view lines its hint up with it. */
+val PROMPT_HEIGHT = 48.dp
 
 /**
  * A composable representing an icon button within the Quick Search Bar (QSB).
