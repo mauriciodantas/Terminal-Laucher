@@ -231,7 +231,7 @@ class GlancePanelController(
     private fun renderStatusLine() {
         val view = root.findViewById<TextView>(R.id.nostromo_status) ?: return
         if (!prefs2.glanceStatusLine.firstCached()) {
-            view.text = StatusLine.FALLBACK
+            view.text = StatusLine.fallback
             return
         }
         val audio = context.getSystemService(android.media.AudioManager::class.java)
@@ -495,11 +495,11 @@ class GlancePanelController(
         val parts = lead.text.split(" · ").filter { it.isNotBlank() }
         // The title bar already says the kind, so a bare value gets a short unit label instead.
         val main = parts.firstOrNull() ?: when (selected.kind) {
-            GlanceKind.CLIMA -> "TEMPERATURA"
-            GlanceKind.AGENDA -> "EVENTO"
-            GlanceKind.ALARME -> "ALARME"
-            GlanceKind.BATERIA -> "BATERIA"
-            GlanceKind.LEMBRETE -> "LEMBRETE"
+            GlanceKind.CLIMA -> context.getString(R.string.glance_unit_temperature)
+            GlanceKind.AGENDA -> context.getString(R.string.glance_unit_event)
+            GlanceKind.ALARME -> context.getString(R.string.glance_unit_alarm)
+            GlanceKind.BATERIA -> context.getString(R.string.glance_unit_battery)
+            GlanceKind.LEMBRETE -> context.getString(R.string.glance_unit_reminder)
             else -> selected.kind.label
         }
         primary?.text = main

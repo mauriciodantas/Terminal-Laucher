@@ -1,10 +1,15 @@
 package app.lawnchair.smartspace.glance
 
+import app.lawnchair.util.ResourceTexts
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Before
 import org.junit.Test
 
 class BluetoothBatteryTest {
+
+    @Before
+    fun installTexts() = ResourceTexts.install()
 
     private fun dev(name: String, percent: Int) = BluetoothDeviceBattery(name, percent)
 

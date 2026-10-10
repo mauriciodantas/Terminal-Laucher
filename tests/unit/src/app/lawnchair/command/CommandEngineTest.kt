@@ -1,12 +1,17 @@
 package app.lawnchair.command
 
+import app.lawnchair.util.ResourceTexts
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 
 class CommandEngineTest {
+
+    @Before
+    fun installTexts() = ResourceTexts.install()
 
     private val apps = listOf("Calendar", "Camera", "Chrome", "Clock", "Contacts", "Gmail", "Maps")
         .map { AppEntry(it, "pkg/$it") }
@@ -419,6 +424,9 @@ class CommandEngineTest {
 }
 
 class AliasTest {
+
+    @Before
+    fun installTexts() = ResourceTexts.install()
 
     private val apps = listOf("Chrome", "Maps").map { AppEntry(it, "pkg/$it") }
     private val contacts = listOf(ContactEntry("Maria Souza", "111"), ContactEntry("Ana Lima", "222"))

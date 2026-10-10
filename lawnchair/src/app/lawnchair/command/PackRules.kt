@@ -1,5 +1,8 @@
 package app.lawnchair.command
 
+import app.lawnchair.util.Texts
+import com.android.launcher3.R
+
 /** One entry of a pack as the import dialog shows it, checked against what the user already has. */
 data class PackEntry<T>(
     val item: T,
@@ -40,11 +43,11 @@ object PackRules {
     fun caution(action: CustomAction): String? {
         if (action.kind == ActionKind.SHORTCUT) return null
         val scheme = schemeOf(action.template.trim()) ?: return null
-        return if (scheme in COMMON_SCHEMES) null else "link de app específico ($scheme:)"
+        return if (scheme in COMMON_SCHEMES) null else Texts.get(R.string.cmd_caution_app_link, scheme)
     }
 
     private fun detail(action: CustomAction): String = when {
-        action.kind == ActionKind.SHORTCUT -> "atalho do launcher · " + action.packages.firstOrNull().orEmpty()
+        action.kind == ActionKind.SHORTCUT -> Texts.get(R.string.cmd_desc_shortcut, action.packages.firstOrNull().orEmpty())
         action.template.isEmpty() -> action.intentAction.substringAfterLast('.') + " " + action.mimeType.orEmpty()
         else -> action.template
     } + if (action.packages.isNotEmpty() && action.kind == ActionKind.INTENT) " · " + action.packages.joinToString() else ""

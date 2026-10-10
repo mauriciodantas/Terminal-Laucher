@@ -16,12 +16,14 @@
 
 package app.lawnchair.ui.preferences.destinations
 
+import androidx.compose.ui.res.stringResource
 import app.lawnchair.theme.color.ColorOption
 import app.lawnchair.ui.preferences.components.controls.ListPreferenceEntry
+import com.android.launcher3.R
 
 internal val phosphorEntries = listOf(
-    ListPreferenceEntry<ColorOption>(ColorOption.CustomColor(0xFF7DFFB2)) { "Verde" },
-    ListPreferenceEntry<ColorOption>(ColorOption.CustomColor(0xFFFFA63D)) { "Âmbar" },
-    ListPreferenceEntry<ColorOption>(ColorOption.CustomColor(0xFF6FD8FF)) { "Ciano" },
-    ListPreferenceEntry<ColorOption>(ColorOption.CustomColor(0xFFE8F0E0)) { "Branco" },
+    ListPreferenceEntry<ColorOption>(ColorOption.CustomColor(0xFF7DFFB2)) { stringResource(R.string.complementary_green) },
+    ListPreferenceEntry<ColorOption>(ColorOption.CustomColor(0xFFFFA63D)) { stringResource(R.string.complementary_amber) },
+    ListPreferenceEntry<ColorOption>(ColorOption.CustomColor(0xFF6FD8FF)) { stringResource(R.string.color_cyan) },
+    ListPreferenceEntry<ColorOption>(ColorOption.CustomColor(0xFFE8F0E0)) { stringResource(R.string.color_white) },
 )

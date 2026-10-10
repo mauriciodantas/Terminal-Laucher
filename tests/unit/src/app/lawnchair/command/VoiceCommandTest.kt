@@ -1,9 +1,14 @@
 package app.lawnchair.command
 
+import app.lawnchair.util.ResourceTexts
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Test
 
 class VoiceCommandTest {
+
+    @Before
+    fun installTexts() = ResourceTexts.install()
 
     private fun n(s: String) = VoiceCommand.normalize(s)
 

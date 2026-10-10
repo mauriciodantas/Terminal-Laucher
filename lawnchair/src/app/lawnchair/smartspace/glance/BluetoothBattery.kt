@@ -1,5 +1,9 @@
 package app.lawnchair.smartspace.glance
 
+import androidx.annotation.StringRes
+import app.lawnchair.util.Texts
+import com.android.launcher3.R
+
 /** A connected Bluetooth device and its battery, in percent. */
 data class BluetoothDeviceBattery(val name: String, val percent: Int)
 
@@ -28,12 +32,14 @@ object BluetoothBattery {
 }
 
 /** The utility shortcuts under the panel. */
-enum class GlanceShortcut(val label: String) {
-    TORCH("LANTERNA"),
-    CALCULATOR("CALC"),
-    CAMERA("CÂMERA"),
-    CLOCK("RELÓGIO"),
+enum class GlanceShortcut(@StringRes private val labelRes: Int) {
+    TORCH(R.string.glance_shortcut_torch),
+    CALCULATOR(R.string.glance_shortcut_calc),
+    CAMERA(R.string.glance_shortcut_camera),
+    CLOCK(R.string.glance_shortcut_clock),
     ;
+
+    val label: String get() = Texts.get(labelRes)
 
     companion object {
         /** Calculator apps to try when the system has no default calculator category (Samsung, Xiaomi...). */
@@ -54,6 +60,6 @@ enum class GlanceShortcut(val label: String) {
         }
 
         /** Label of the flashlight shortcut, which shows whether the torch is on. */
-        fun torchLabel(on: Boolean): String = if (on) "[LANTERNA]" else TORCH.label
+        fun torchLabel(on: Boolean): String = if (on) Texts.get(R.string.glance_shortcut_torch_on) else TORCH.label
     }
 }

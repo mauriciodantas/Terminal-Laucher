@@ -1,6 +1,8 @@
 package app.lawnchair.command
 
+import app.lawnchair.util.Texts
 import app.lawnchair.util.foldAccents
+import com.android.launcher3.R
 
 data class AppEntry(val label: String, val id: String)
 
@@ -57,16 +59,17 @@ object CommandEngine {
     const val MAX_CHIPS = 3
     const val MAX_HISTORY = 8
 
-    /** Name, usage line. "c" is a shortcut of "calc". */
-    val COMMANDS = listOf(
-        "abrir" to "abrir [app]",
-        "alarme" to "alarme HH:MM",
-        "calc" to "calc [expressão]",
-        "ligar" to "ligar [contato]",
-        "rota" to "rota [lugar]",
-        "t" to "t [tarefa] · nova tarefa",
-        "c" to "c [conta] · atalho de calc",
-    )
+    /** Name, usage line. "c" is a shortcut of "calc". The names stay Portuguese in every language. */
+    val COMMANDS: List<Pair<String, String>>
+        get() = listOf(
+            "abrir" to Texts.get(R.string.cmd_usage_open),
+            "alarme" to Texts.get(R.string.cmd_usage_alarm),
+            "calc" to Texts.get(R.string.cmd_usage_calc),
+            "ligar" to Texts.get(R.string.cmd_usage_call),
+            "rota" to Texts.get(R.string.cmd_usage_route),
+            "t" to Texts.get(R.string.cmd_usage_task),
+            "c" to Texts.get(R.string.cmd_usage_calc_short),
+        )
 
     private val splitter = Regex("^(\\S*)(\\s+(.*))?$", RegexOption.DOT_MATCHES_ALL)
 
@@ -107,7 +110,7 @@ object CommandEngine {
         return when (if (token == "c") "calc" else token) {
             "abrir" -> analyzeOpen(arg, apps)
 
-            "ligar" -> analyzeContact(arg, contacts, contactsGranted, "ligar", "LIGAR PARA") {
+            "ligar" -> analyzeContact(arg, contacts, contactsGranted, "ligar", Texts.get(R.string.cmd_call_title)) {
                 CommandAction.Call(it)
             }
 
@@ -124,10 +127,10 @@ object CommandEngine {
                 ?: analyzeOpen(text.trim(), apps).takeIf { it.action != null }
                 ?: Analysis(
                     suggestions = emptyList(),
-                    listTitle = "SUGESTÕES",
+                    listTitle = Texts.get(R.string.cmd_list_suggestions),
                     needsContacts = false,
-                    previewTitle = "COMANDO DESCONHECIDO",
-                    preview = "ENTER PARA PESQUISAR NA REDE",
+                    previewTitle = Texts.get(R.string.cmd_unknown_title),
+                    preview = Texts.get(R.string.cmd_unknown_preview),
                     tone = Tone.ERROR,
                     action = text.trim().takeIf { it.isNotEmpty() }?.let { CommandAction.WebSearch(it) },
                 )
@@ -141,16 +144,16 @@ object CommandEngine {
         custom: List<CustomAction>,
         aliases: List<CommandAlias>,
     ): Analysis {
-        val aliasItems = Aliases.matching(token, aliases).map { Suggestion(it.name, it.expansion, "APELIDO") }
+        val aliasItems = Aliases.matching(token, aliases).map { Suggestion(it.name, it.expansion, Texts.get(R.string.cmd_kind_alias)) }
         val all = COMMANDS + custom.map { it.letter to it.usage }
         val commands = all.filter { it.first.startsWith(token) }.map {
-            Suggestion(it.first + " ", it.second, if (it.first.length == 1) "ATALHO" else "COMANDO")
+            Suggestion(it.first + " ", it.second, commandKind(it.first))
         }
         val matchingApps = if (token.isEmpty()) {
             emptyList()
         } else {
             apps.filter { it.label.foldAccents().startsWith(token) }.map {
-                Suggestion("abrir " + it.label.lowercase(), it.label, "PROGRAMA")
+                Suggestion("abrir " + it.label.lowercase(), it.label, Texts.get(R.string.cmd_kind_program))
             }
         }
         // A partial word puts the user's own aliases first; with nothing typed the commands lead.
@@ -165,10 +168,10 @@ object CommandEngine {
         val none = items.isEmpty() && text.isNotBlank()
         return Analysis(
             suggestions = items,
-            listTitle = "SUGESTÕES",
+            listTitle = Texts.get(R.string.cmd_list_suggestions),
             needsContacts = false,
-            previewTitle = "PRÉ-VISUALIZAÇÃO",
-            preview = if (none) "SEM CORRESPONDÊNCIA · ENTER PESQUISA NA REDE" else "COMPLETE PARA VER O RESULTADO",
+            previewTitle = Texts.get(R.string.cmd_preview_title),
+            preview = Texts.get(if (none) R.string.cmd_no_match else R.string.cmd_complete_hint),
             tone = Tone.IDLE,
             action = if (none) CommandAction.WebSearch(text.trim()) else null,
             total = if (ordered.size > items.size) ordered.size else 0,
@@ -178,25 +181,28 @@ object CommandEngine {
     /** "?" lists everything the bar understands, without the usual cut. */
     private fun analyzeHelp(custom: List<CustomAction>, aliases: List<CommandAlias>): Analysis {
         val items = COMMANDS.map {
-            Suggestion(it.first + " ", it.second, if (it.first.length == 1) "ATALHO" else "COMANDO")
-        } + custom.map { Suggestion(it.letter + " ", it.usage, "AÇÃO") } +
-            aliases.map { Suggestion(it.name, it.name + " → " + it.expansion, "APELIDO") }
+            Suggestion(it.first + " ", it.second, commandKind(it.first))
+        } + custom.map { Suggestion(it.letter + " ", it.usage, Texts.get(R.string.cmd_kind_action)) } +
+            aliases.map { Suggestion(it.name, it.name + " → " + it.expansion, Texts.get(R.string.cmd_kind_alias)) }
         return Analysis(
             suggestions = items,
-            listTitle = "TODOS OS COMANDOS",
+            listTitle = Texts.get(R.string.cmd_all_commands),
             needsContacts = false,
-            previewTitle = "AJUDA",
-            preview = "TOQUE EM UM COMANDO PARA USAR",
+            previewTitle = Texts.get(R.string.cmd_help),
+            preview = Texts.get(R.string.cmd_help_preview),
             tone = Tone.IDLE,
             action = null,
         )
     }
 
+    /** "ATALHO" for a one-letter shortcut, "COMANDO" for a full name. */
+    private fun commandKind(name: String): String = Texts.get(if (name.length == 1) R.string.cmd_kind_shortcut else R.string.cmd_kind_command)
+
     /** Recent commands first, then the user's own aliases and letters, so a tap replaces typing. */
     fun quickChips(history: List<String>, aliases: List<CommandAlias>, custom: List<CustomAction>): List<QuickChip> {
-        val recent = history.take(MAX_CHIPS).map { QuickChip(it, it, "RECENTE") }
-        val pinned = aliases.take(MAX_CHIPS).map { QuickChip(it.name, it.name, "APELIDO") } +
-            custom.take(MAX_CHIPS).map { QuickChip(it.letter + " ", it.letter, "AÇÃO") }
+        val recent = history.take(MAX_CHIPS).map { QuickChip(it, it, Texts.get(R.string.cmd_kind_recent)) }
+        val pinned = aliases.take(MAX_CHIPS).map { QuickChip(it.name, it.name, Texts.get(R.string.cmd_kind_alias)) } +
+            custom.take(MAX_CHIPS).map { QuickChip(it.letter + " ", it.letter, Texts.get(R.string.cmd_kind_action)) }
         return (recent + pinned).distinctBy { it.fill.trim() }
     }
 
@@ -204,17 +210,17 @@ object CommandEngine {
     fun describe(action: CommandAction): String = when (action) {
         is CommandAction.OpenApp -> "launcher · " + action.app.id.substringBefore('/')
         is CommandAction.SetAlarm -> "ACTION_SET_ALARM · %02d:%02d".format(action.hour, action.minute)
-        is CommandAction.Calc -> "copia \"${action.result}\" para a área de transferência"
+        is CommandAction.Calc -> Texts.get(R.string.cmd_desc_calc, action.result)
         is CommandAction.Call -> "tel:" + action.contact.number.filter { it.isDigit() || it == '+' }
         is CommandAction.Route -> "geo:0,0?q=" + encode(action.query)
-        is CommandAction.NewTask -> "ACTION_SEND text/plain · app de tarefas"
+        is CommandAction.NewTask -> Texts.get(R.string.cmd_desc_task)
         is CommandAction.WebSearch -> "ACTION_WEB_SEARCH · \"${action.query}\""
         is CommandAction.Custom -> describeCustom(action)
     }
 
     private fun describeCustom(action: CommandAction.Custom): String {
         val spec = action.action
-        if (spec.kind == ActionKind.SHORTCUT) return "atalho do launcher · " + spec.packages.firstOrNull().orEmpty()
+        if (spec.kind == ActionKind.SHORTCUT) return Texts.get(R.string.cmd_desc_shortcut, spec.packages.firstOrNull().orEmpty())
         if (spec.template.isEmpty()) {
             return (spec.intentAction.substringAfterLast('.') + " " + spec.mimeType.orEmpty() + " · " + action.text).trim()
         }
@@ -237,18 +243,18 @@ object CommandEngine {
         val matches = apps.filter { it.label.foldAccents().startsWith(q) }
             .ifEmpty { if (q.isEmpty()) emptyList() else apps.filter { it.label.foldAccents().contains(q) } }
         val items = matches.take(MAX_SUGGESTIONS).map {
-            Suggestion("abrir " + it.label.lowercase(), it.label, "PROGRAMA")
+            Suggestion("abrir " + it.label.lowercase(), it.label, Texts.get(R.string.cmd_kind_program))
         }
         val first = matches.firstOrNull()
         return Analysis(
             suggestions = items,
-            listTitle = "PROGRAMAS",
+            listTitle = Texts.get(R.string.cmd_list_programs),
             needsContacts = false,
-            previewTitle = "ABRIR",
+            previewTitle = Texts.get(R.string.cmd_open_title),
             preview = when {
-                q.isEmpty() -> "INFORME O PROGRAMA"
+                q.isEmpty() -> Texts.get(R.string.cmd_open_empty)
                 first != null -> first.label.uppercase()
-                else -> "PROGRAMA NÃO ENCONTRADO"
+                else -> Texts.get(R.string.cmd_open_not_found)
             },
             tone = when {
                 q.isEmpty() -> Tone.IDLE
@@ -267,17 +273,7 @@ object CommandEngine {
         title: String,
         build: (ContactEntry) -> CommandAction,
     ): Analysis {
-        if (!granted) {
-            return Analysis(
-                suggestions = emptyList(),
-                listTitle = "CONTATOS",
-                needsContacts = true,
-                previewTitle = "PRÉ-VISUALIZAÇÃO",
-                preview = "ACESSO A CONTATOS PENDENTE",
-                tone = Tone.WARN,
-                action = null,
-            )
-        }
+        if (!granted) return needsContactsAnalysis()
         val q = arg.trim().foldAccents()
         val matches = contacts.filter { c ->
             val name = c.name.foldAccents()
@@ -286,15 +282,15 @@ object CommandEngine {
         val first = matches.firstOrNull()
         return Analysis(
             suggestions = matches.take(MAX_SUGGESTIONS).map {
-                Suggestion("$command ${it.name.lowercase()}", it.name, "CONTATO")
+                Suggestion("$command ${it.name.lowercase()}", it.name, Texts.get(R.string.cmd_kind_contact))
             },
-            listTitle = "CONTATOS",
+            listTitle = Texts.get(R.string.cmd_list_contacts),
             needsContacts = false,
             previewTitle = title,
             preview = when {
-                q.isEmpty() -> "INFORME O CONTATO"
+                q.isEmpty() -> Texts.get(R.string.cmd_contact_empty)
                 first != null -> first.name.uppercase()
-                else -> "CONTATO NÃO ENCONTRADO"
+                else -> Texts.get(R.string.cmd_contact_not_found)
             },
             tone = when {
                 q.isEmpty() -> Tone.IDLE
@@ -338,10 +334,10 @@ object CommandEngine {
 
     private fun needsContactsAnalysis() = Analysis(
         suggestions = emptyList(),
-        listTitle = "CONTATOS",
+        listTitle = Texts.get(R.string.cmd_list_contacts),
         needsContacts = true,
-        previewTitle = "PRÉ-VISUALIZAÇÃO",
-        preview = "ACESSO A CONTATOS PENDENTE",
+        previewTitle = Texts.get(R.string.cmd_preview_title),
+        preview = Texts.get(R.string.cmd_contacts_pending),
         tone = Tone.WARN,
         action = null,
     )
@@ -359,7 +355,7 @@ object CommandEngine {
             contacts,
             granted,
             action.letter,
-            action.label.uppercase() + " PARA",
+            Texts.get(R.string.cmd_action_to, action.label.uppercase()),
         ) { CommandAction.Custom(action, it) }
 
         ArgKind.TEXT -> {
@@ -369,7 +365,7 @@ object CommandEngine {
                 listTitle = action.label.uppercase(),
                 needsContacts = false,
                 previewTitle = action.label.uppercase(),
-                preview = if (text.isEmpty()) "DIGITE O TEXTO" else text.uppercase(),
+                preview = if (text.isEmpty()) Texts.get(R.string.cmd_text_empty) else text.uppercase(),
                 tone = if (text.isEmpty()) Tone.IDLE else Tone.OK,
                 action = text.takeIf { it.isNotEmpty() }?.let { CommandAction.Custom(action, text = it) },
             )
@@ -380,7 +376,7 @@ object CommandEngine {
             listTitle = action.label.uppercase(),
             needsContacts = false,
             previewTitle = action.label.uppercase(),
-            preview = "ENTER PARA EXECUTAR",
+            preview = Texts.get(R.string.cmd_enter_to_run),
             tone = Tone.OK,
             action = CommandAction.Custom(action),
         )
@@ -401,14 +397,14 @@ object CommandEngine {
         val tail = if (message.isEmpty()) "" else " $message"
         return Analysis(
             suggestions = matches.take(MAX_SUGGESTIONS).map {
-                Suggestion("${action.letter} ${it.name.lowercase()}$tail", it.name, "CONTATO")
+                Suggestion("${action.letter} ${it.name.lowercase()}$tail", it.name, Texts.get(R.string.cmd_kind_contact))
             },
-            listTitle = "CONTATOS",
+            listTitle = Texts.get(R.string.cmd_list_contacts),
             needsContacts = false,
-            previewTitle = action.label.uppercase() + " PARA",
+            previewTitle = Texts.get(R.string.cmd_action_to, action.label.uppercase()),
             preview = when {
-                q.isEmpty() -> "INFORME O CONTATO"
-                first == null -> "CONTATO NÃO ENCONTRADO"
+                q.isEmpty() -> Texts.get(R.string.cmd_contact_empty)
+                first == null -> Texts.get(R.string.cmd_contact_not_found)
                 message.isEmpty() -> first.name.uppercase()
                 else -> first.name.uppercase() + " · “" + message + "”"
             },
@@ -441,11 +437,11 @@ object CommandEngine {
         val time = parseTime(arg)
         val label = time?.let { "%02d:%02d".format(it.first, it.second) }
         return Analysis(
-            suggestions = label?.let { listOf(Suggestion("alarme $it", it, "HORÁRIO")) }.orEmpty(),
-            listTitle = "FORMATO",
+            suggestions = label?.let { listOf(Suggestion("alarme $it", it, Texts.get(R.string.cmd_kind_time))) }.orEmpty(),
+            listTitle = Texts.get(R.string.cmd_list_format),
             needsContacts = false,
-            previewTitle = "DEFINIR ALARME",
-            preview = label?.let { "$it · PRÓXIMA OCORRÊNCIA" } ?: "INFORME O HORÁRIO (EX.: 0630)",
+            previewTitle = Texts.get(R.string.cmd_alarm_title),
+            preview = label?.let { Texts.get(R.string.cmd_alarm_next, it) } ?: Texts.get(R.string.cmd_alarm_empty),
             tone = if (label != null) Tone.OK else Tone.IDLE,
             action = time?.let { CommandAction.SetAlarm(it.first, it.second) },
         )
@@ -457,13 +453,13 @@ object CommandEngine {
         val result = value?.let { CalcEvaluator.format(it) }
         return Analysis(
             suggestions = emptyList(),
-            listTitle = "EXPRESSÃO",
+            listTitle = Texts.get(R.string.cmd_list_expression),
             needsContacts = false,
-            previewTitle = "RESULTADO",
+            previewTitle = Texts.get(R.string.cmd_calc_title),
             preview = when {
                 result != null -> "$expression = $result"
-                expression.isEmpty() -> "DIGITE UMA CONTA (EX.: 12*8)"
-                else -> "EXPRESSÃO INCOMPLETA"
+                expression.isEmpty() -> Texts.get(R.string.cmd_calc_empty)
+                else -> Texts.get(R.string.cmd_calc_incomplete)
             },
             tone = if (result != null) Tone.OK else Tone.IDLE,
             action = result?.let { CommandAction.Calc(expression, it) },
@@ -474,10 +470,10 @@ object CommandEngine {
         val title = arg.trim()
         return Analysis(
             suggestions = emptyList(),
-            listTitle = "NOVA TAREFA",
+            listTitle = Texts.get(R.string.cmd_task_list),
             needsContacts = false,
-            previewTitle = "ENVIAR PARA SEU APP DE TAREFAS",
-            preview = if (title.isEmpty()) "DIGITE O TÍTULO DA TAREFA" else title.uppercase(),
+            previewTitle = Texts.get(R.string.cmd_task_title),
+            preview = if (title.isEmpty()) Texts.get(R.string.cmd_task_empty) else title.uppercase(),
             tone = if (title.isEmpty()) Tone.IDLE else Tone.OK,
             action = title.takeIf { it.isNotEmpty() }?.let { CommandAction.NewTask(it) },
         )
@@ -487,10 +483,10 @@ object CommandEngine {
         val place = arg.trim()
         return Analysis(
             suggestions = emptyList(),
-            listTitle = "DESTINO",
+            listTitle = Texts.get(R.string.cmd_list_destination),
             needsContacts = false,
-            previewTitle = "TRAÇAR ROTA",
-            preview = if (place.isEmpty()) "INFORME O DESTINO" else place.uppercase() + " · ABRIR NO MAPA",
+            previewTitle = Texts.get(R.string.cmd_route_title),
+            preview = if (place.isEmpty()) Texts.get(R.string.cmd_route_empty) else Texts.get(R.string.cmd_route_open, place.uppercase()),
             tone = if (place.isEmpty()) Tone.IDLE else Tone.OK,
             action = place.takeIf { it.isNotEmpty() }?.let { CommandAction.Route(it) },
         )

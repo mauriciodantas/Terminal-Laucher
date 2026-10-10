@@ -1,13 +1,18 @@
 package app.lawnchair.smartspace.glance
 
+import app.lawnchair.util.ResourceTexts
 import app.lawnchair.smartspace.model.SmartspaceTarget.FeatureType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 
 class GlanceEngineTest {
+
+    @Before
+    fun installTexts() = ResourceTexts.install()
 
     private val now = 1_000_000_000L
     private fun minutes(n: Long) = n * 60_000L

@@ -1,13 +1,18 @@
 package app.lawnchair.command
 
+import app.lawnchair.util.ResourceTexts
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 
 class PackRulesTest {
+
+    @Before
+    fun installTexts() = ResourceTexts.install()
 
     private fun action(letter: String, template: String = "https://x.test/{text}") =
         CustomAction(letter, "Ação $letter", ActionKind.INTENT, template, emptyList(), ArgKind.TEXT)

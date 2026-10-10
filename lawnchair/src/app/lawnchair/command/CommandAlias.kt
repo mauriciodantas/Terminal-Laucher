@@ -1,7 +1,9 @@
 package app.lawnchair.command
 
 import android.content.Context
+import app.lawnchair.util.Texts
 import app.lawnchair.util.foldAccents
+import com.android.launcher3.R
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -44,13 +46,13 @@ object Aliases {
         val n = name.trim()
         val k = key(n)
         return when {
-            n.isEmpty() -> "Informe o apelido"
-            !n.all { it.isLetterOrDigit() } -> "Use uma palavra só, com letras e números"
-            k in CustomActions.RESERVED -> "\"$k\" já é um comando do sistema"
-            custom.any { it.letter == k } -> "\"$k\" já é a letra de uma ação"
-            existing.any { it !== ignore && key(it.name) == k } -> "\"$k\" já está em uso"
-            expansion.isBlank() -> "Informe o comando"
-            key(expansion.trim().takeWhile { !it.isWhitespace() }) == k -> "O comando não pode começar pelo próprio apelido"
+            n.isEmpty() -> Texts.get(R.string.cmd_err_alias_empty)
+            !n.all { it.isLetterOrDigit() } -> Texts.get(R.string.cmd_err_alias_chars)
+            k in CustomActions.RESERVED -> Texts.get(R.string.cmd_err_reserved, k)
+            custom.any { it.letter == k } -> Texts.get(R.string.cmd_err_alias_letter, k)
+            existing.any { it !== ignore && key(it.name) == k } -> Texts.get(R.string.cmd_err_in_use, k)
+            expansion.isBlank() -> Texts.get(R.string.cmd_err_alias_command_empty)
+            key(expansion.trim().takeWhile { !it.isWhitespace() }) == k -> Texts.get(R.string.cmd_err_alias_self)
             else -> null
         }
     }

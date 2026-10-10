@@ -1,5 +1,8 @@
 package app.lawnchair.command
 
+import app.lawnchair.util.Texts
+import com.android.launcher3.R
+
 /** What the user types after the letter of a [CustomAction]. */
 enum class ArgKind { NONE, TEXT, CONTACT, CONTACT_AND_TEXT }
 
@@ -33,9 +36,9 @@ data class CustomAction(
     val usage: String
         get() = when (arg) {
             ArgKind.NONE -> letter
-            ArgKind.TEXT -> "$letter [texto]"
-            ArgKind.CONTACT -> "$letter [contato]"
-            ArgKind.CONTACT_AND_TEXT -> "$letter [contato] [mensagem]"
+            ArgKind.TEXT -> "$letter " + Texts.get(R.string.cmd_arg_text)
+            ArgKind.CONTACT -> "$letter " + Texts.get(R.string.cmd_arg_contact)
+            ArgKind.CONTACT_AND_TEXT -> "$letter " + Texts.get(R.string.cmd_arg_contact) + " " + Texts.get(R.string.cmd_arg_message)
         } + " · " + label.lowercase()
 }
 
@@ -52,14 +55,17 @@ object CustomActions {
      * What the scan of an app looks for. Android cannot list the filters of another app, so each
      * recipe is tested by asking whether the app resolves an intent of that shape.
      */
-    val PROBES = listOf(
+    val PROBES: List<CustomAction>
+        get() = probes()
+
+    private fun probes() = listOf(
         CustomAction(
-            "", "Compartilhar texto", ActionKind.INTENT, "", emptyList(), ArgKind.TEXT,
+            "", Texts.get(R.string.cmd_probe_share), ActionKind.INTENT, "", emptyList(), ArgKind.TEXT,
             intentAction = SEND, mimeType = "text/plain", textExtra = EXTRA_TEXT,
         ),
         CustomAction(
             "",
-            "Enviar mensagem (SMS)",
+            Texts.get(R.string.cmd_probe_sms),
             ActionKind.INTENT,
             "smsto:{phone}?body={text}",
             emptyList(),
@@ -68,7 +74,7 @@ object CustomActions {
         ),
         CustomAction(
             "",
-            "Discar número",
+            Texts.get(R.string.cmd_probe_dial),
             ActionKind.INTENT,
             "tel:{phone}",
             emptyList(),
@@ -77,7 +83,7 @@ object CustomActions {
         ),
         CustomAction(
             "",
-            "Novo e-mail",
+            Texts.get(R.string.cmd_probe_email),
             ActionKind.INTENT,
             "mailto:?subject={text}",
             emptyList(),
@@ -86,7 +92,7 @@ object CustomActions {
         ),
         CustomAction(
             "",
-            "Pesquisar no mapa",
+            Texts.get(R.string.cmd_probe_map),
             ActionKind.INTENT,
             "geo:0,0?q={text}",
             emptyList(),
@@ -111,7 +117,10 @@ object CustomActions {
     val DEFAULTS = listOf(WHATSAPP)
 
     /** Ready-made recipes the editor offers, so common apps need no manual intent. */
-    val CATALOG = listOf(
+    val CATALOG: List<CustomAction>
+        get() = catalog()
+
+    private fun catalog() = listOf(
         WHATSAPP,
         CustomAction(
             "tg",
@@ -131,7 +140,7 @@ object CustomActions {
         ),
         CustomAction(
             "yt",
-            "YouTube · pesquisar",
+            Texts.get(R.string.cmd_recipe_search, "YouTube"),
             ActionKind.INTENT,
             "https://www.youtube.com/results?search_query={text}",
             listOf("com.google.android.youtube"),
@@ -139,7 +148,7 @@ object CustomActions {
         ),
         CustomAction(
             "sp",
-            "Spotify · pesquisar",
+            Texts.get(R.string.cmd_recipe_search, "Spotify"),
             ActionKind.INTENT,
             "spotify:search:{text}",
             listOf("com.spotify.music"),
@@ -165,10 +174,10 @@ object CustomActions {
     fun validateLetter(letter: String, existing: List<CustomAction>, ignore: CustomAction? = null): String? {
         val l = letter.trim().lowercase()
         return when {
-            l.isEmpty() -> "Informe uma letra"
-            !l.all { it.isLetterOrDigit() } -> "Use apenas letras e números"
-            l in RESERVED -> "\"$l\" já é um comando do sistema"
-            existing.any { it !== ignore && it.letter == l } -> "\"$l\" já está em uso"
+            l.isEmpty() -> Texts.get(R.string.cmd_err_letter_empty)
+            !l.all { it.isLetterOrDigit() } -> Texts.get(R.string.cmd_err_letter_chars)
+            l in RESERVED -> Texts.get(R.string.cmd_err_reserved, l)
+            existing.any { it !== ignore && it.letter == l } -> Texts.get(R.string.cmd_err_in_use, l)
             else -> null
         }
     }

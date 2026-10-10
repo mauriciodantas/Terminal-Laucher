@@ -1,17 +1,26 @@
 package app.lawnchair.smartspace.glance
 
+import androidx.annotation.StringRes
 import app.lawnchair.smartspace.model.SmartspaceTarget.FeatureType
+import app.lawnchair.util.Texts
+import com.android.launcher3.R
 
 /** The kinds of information the At a Glance panel alternates between. */
-enum class GlanceKind(val label: String, val panelTitle: String) {
-    AGENDA("AGENDA", "PRÓXIMO EVENTO"),
-    CLIMA("CLIMA", "CLIMA AGORA"),
-    MIDIA("MÍDIA", "TOCANDO AGORA"),
-    ALARME("ALARME", "PRÓXIMO ALARME"),
-    LEMBRETE("LEMBRETES", "LEMBRETE"),
-    BATERIA("BATERIA", "BATERIA BLUETOOTH"),
-    AVISO("AVISO", "AVISO DO SISTEMA"),
+enum class GlanceKind(@StringRes private val labelRes: Int, @StringRes private val panelTitleRes: Int) {
+    AGENDA(R.string.glance_kind_agenda, R.string.glance_title_agenda),
+    CLIMA(R.string.glance_kind_weather, R.string.glance_title_weather),
+    MIDIA(R.string.glance_kind_media, R.string.glance_title_media),
+    ALARME(R.string.glance_kind_alarm, R.string.glance_title_alarm),
+    LEMBRETE(R.string.glance_kind_reminders, R.string.glance_title_reminder),
+    BATERIA(R.string.glance_kind_battery, R.string.glance_title_battery),
+    AVISO(R.string.glance_kind_notice, R.string.glance_title_notice),
     ;
+
+    /** Name on the tab: "AGENDA". */
+    val label: String get() = Texts.get(labelRes)
+
+    /** Title bar of the panel: "PRÓXIMO EVENTO". */
+    val panelTitle: String get() = Texts.get(panelTitleRes)
 
     companion object {
         /** Targets that only exist to hold a place and must never be shown. */
@@ -116,17 +125,21 @@ object GlanceEngine {
 
     /** "EM 18 MIN", "EM 3H 12M", "EM 2 D" or "AGORA". */
     fun countdownLabel(minutes: Long): String = when {
-        minutes <= 0 -> "AGORA"
+        minutes <= 0 -> Texts.get(R.string.glance_countdown_now)
 
-        minutes < 60 -> "EM $minutes MIN"
+        minutes < 60 -> Texts.get(R.string.glance_countdown_minutes, minutes)
 
         minutes < 24 * 60 -> {
             val hours = minutes / 60
             val rest = minutes % 60
-            if (rest == 0L) "EM ${hours}H" else "EM ${hours}H ${rest}M"
+            if (rest == 0L) {
+                Texts.get(R.string.glance_countdown_hours, hours)
+            } else {
+                Texts.get(R.string.glance_countdown_hours_minutes, hours, rest)
+            }
         }
 
-        else -> "EM ${minutes / (24 * 60)} D"
+        else -> Texts.get(R.string.glance_countdown_days, minutes / (24 * 60))
     }
 
     /** Label of the tab at [index] (zero based): "01 AGENDA". */

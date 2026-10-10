@@ -485,6 +485,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                             .horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                     ) {
+                        val recentKind = stringResource(R.string.cmd_kind_recent)
                         chips.forEach { chip ->
                             Row(
                                 Modifier
@@ -495,7 +496,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Text(
-                                    if (chip.kind == "RECENTE") "↺" else "★",
+                                    if (chip.kind == recentKind) "↺" else "★",
                                     color = dim,
                                     fontFamily = mono(),
                                     fontSize = 10.sp,

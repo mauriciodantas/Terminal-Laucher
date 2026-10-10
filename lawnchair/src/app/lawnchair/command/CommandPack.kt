@@ -4,6 +4,7 @@ import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import com.android.launcher3.R
 import java.io.File
 import org.json.JSONArray
 import org.json.JSONObject
@@ -92,9 +93,9 @@ object CommandPacks {
         val send = Intent(Intent.ACTION_SEND)
             .setType(MIME)
             .putExtra(Intent.EXTRA_STREAM, uri)
-            .putExtra(Intent.EXTRA_SUBJECT, "Comandos da barra de comando")
+            .putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.cmd_pack_subject))
             .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         send.clipData = ClipData.newRawUri(FILE_NAME, uri)
-        Intent.createChooser(send, "Compartilhar comandos").addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        Intent.createChooser(send, context.getString(R.string.cmd_pref_share_title)).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }.getOrNull()
 }

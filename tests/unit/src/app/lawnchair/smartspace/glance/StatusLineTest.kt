@@ -1,10 +1,15 @@
 package app.lawnchair.smartspace.glance
 
+import app.lawnchair.util.ResourceTexts
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Before
 import org.junit.Test
 
 class StatusLineTest {
+
+    @Before
+    fun installTexts() = ResourceTexts.install()
 
     @Test
     fun soundProfile_followsTheRingerMode() {
@@ -53,7 +58,7 @@ class StatusLineTest {
 
     @Test
     fun format_fallsBackToTheStaticLineWhenNothingIsKnown() {
-        assertEquals(StatusLine.FALLBACK, StatusLine.format(null, null, null))
+        assertEquals(StatusLine.fallback, StatusLine.format(null, null, null))
     }
 
     @Test
