@@ -136,14 +136,11 @@
     -->
     <string name="settings">Parametrlər</string>
     <string name="general_label">Ümumi</string>
-    <string name="general_description">Rənglər, ikon paketləri, bildiriş nöqtələri</string>
     <string name="home_screen_label">Əsas ekran</string>
-    <string name="home_screen_description">Feed, tor, ikonlar</string>
     <string name="home_screen_actions">Əsas ekran əməliyyatları</string>
     <string name="dock_label">Dok</string>
     <string name="dock_description">Axtarış paneli, ikon sayı</string>
     <string name="app_drawer_label">Tətbiq siyirməsi</string>
-    <string name="app_drawer_description">Gizlədilmiş tətbiqlər, sütun sayı, ikonlar</string>
     <string name="drawer_search_label">Siyirmədə axtarış</string>
     <string name="drawer_search_description">Veb təklifləri, qlobal axtarış</string>
     <string name="folders_label">Qovluqlar</string>
@@ -165,7 +162,6 @@
     <string name="internal_description">Daxili bölmə digər eksperimental qruplarla müqayisədə daha az stabil ola bilər</string>
     <string name="font_picker_label">Şrift fərdiləşdirməsi</string>
     <string name="font_picker_description">Bəzi mətnlər dəyişməz qalır</string>
-    <string name="smartspace_calendar_label">At a Glance təqviminin fərdiləşdirilməsi</string>
     <string name="smartspace_calendar_description">Tarixin Qriqorian olmayan təqvim sistemlərində göstərilməsinə icazə ver</string>
     <string name="workspace_increase_max_grid_size_label">Maksimum tor ölçüsü limitini artır</string>
     <string name="workspace_increase_max_grid_size_description">Əsas ekran üçün icazə verilən maksimum tor ölçüsünü 10 &#xd7; 10-dan 20 &#xd7; 20-yə artır</string>
@@ -217,7 +213,6 @@
     Notifications
 
     -->
-    <string name="set_default_launcher_tip">Qısayollardan və əlavə funksiyalardan istifadə etmək üçün Lawnchair-i standart başlatıcı kimi təyin edin</string>
     <string name="notification_dots">Bildiriş nöqtələri</string>
     <string name="show_notification_count">Bildiriş sayğacını göstər</string>
     <string name="notification_dots_color">Bildiriş nöqtəsinin rəngi</string>
@@ -389,7 +384,6 @@
     <string name="smartspace_battery_full">Doldurulub</string>
     <string name="smartspace_battery_low">Batareya zəifdir</string>
     <string name="battery_charging_percentage_charging_time">"%1$d%% — %2$s sonra tam dolacaq"</string>
-    <string name="smartspace_widget">At a Glance</string>
     <string name="smartspace_widget_description">Göstəriləcək məzmun</string>
     <!-- Data and time format settings -->
     <string name="smartspace_calendar">Təqvim</string>
@@ -425,9 +419,7 @@
     <string name="event_provider_missing_notification_dots"><xliff:g example="My Provider" id="providerName">%1$s</xliff:g> istifadə etmək üçün bildiriş nöqtələrini aktivləşdirin</string>
     <!-- Toggle button for enabling Smartspace -->
     <string name="smartspace_widget_toggle_label">Əsas ekranda göstər</string>
-    <string name="smartspace_widget_toggle_description">At a Glance Lawnchair vidceti vasitəsilə əsas ekrana əlavə edilə bilər</string>
     <!-- List of available providers -->
-    <string name="smartspace_mode_label">At a Glance provayderi</string>
     <string name="smartspace_mode_google">Google</string>
     <string name="smartspace_mode_google_search">Google Axtarış</string>
     <!-- Miscellaneous Smartspace strings -->
@@ -716,12 +708,7 @@
     -->
     <!-- Launcher strings used -->
     <string name="all_apps_device_search_hint">Vebdə və daha artığını axtarın</string>
-    <string name="all_apps_search_bar_hint">Tətbiqləri axtarın</string>
     <string name="all_apps_no_search_results">\"&lt;xliff:g example=\"Android\" id=\"query\"&gt;%1$s&lt;/xliff:g&gt;\" üçün uyğun tətbiq tapılmadı</string>
-    <string name="all_apps_search_result_suggestions">Vebdən</string>
-    <string name="all_apps_search_result_contacts_from_device">Cihazdakı kontaktlar</string>
-    <string name="all_apps_search_result_files">Cihazdakı fayllar</string>
-    <string name="all_apps_search_result_settings_entry_from_device">Cihaz parametrləri</string>
     <string name="all_apps_search_market_message">Daha çox tətbiq axtarın</string>
     <string name="all_apps_search_on_web_message">&lt;xliff:g example=\"Startpage\" id=\"web_search_provider\"&gt;%1$s&lt;/xliff:g&gt; üzərində axtarın</string>
     <string name="error_no_market_or_browser_installed">Heç bir tətbiq mağazası və ya brauzer quraşdırılmayıb</string>
@@ -765,7 +752,6 @@
     <string name="search_pref_result_all_files_title">Bütün fayllar</string>
     <string name="search_pref_result_web_title">Veb təklifləri</string>
     <string name="search_pref_result_history_title">Axtarış tarixçəsi</string>
-    <string name="all_apps_search_result_calculator">Kalkulyator</string>
     <string name="search_empty_state_title">Axtarışa başlayın</string>
     <string name="search_empty_state_no_history_subtitle">Tətbiqləri, kontaktları və daha çoxunu tapın. Son axtarışlarınız burada görünəcək.</string>
     <string name="search_empty_state_history_disabled_subtitle">Tətbiqləri, kontaktları və daha çoxunu tapın</string>

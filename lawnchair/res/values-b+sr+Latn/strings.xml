@@ -136,14 +136,11 @@
     -->
     <string name="settings">Podešavanja</string>
     <string name="general_label">Opšte</string>
-    <string name="general_description">Boje, paketi, tačke za obaveštenja</string>
     <string name="home_screen_label">Početni ekran</string>
-    <string name="home_screen_description">Fid, mreža, ikone</string>
     <string name="home_screen_actions">Home screen actions</string>
     <string name="dock_label">Dok</string>
     <string name="dock_description">Traka za pretragu, broj ikona</string>
     <string name="app_drawer_label">Lista aplikacija</string>
-    <string name="app_drawer_description">Skrivene aplikacije, broj kolona, ikone</string>
     <string name="drawer_search_label">Pretraga na listi aplikacija</string>
     <string name="drawer_search_description">Veb-predlozi, globalna pretraga</string>
     <string name="folders_label">Folderi</string>
@@ -165,7 +162,6 @@
     <string name="internal_description">Internal may be less stable than other experimental groups</string>
     <string name="font_picker_label">Prilagođavanje fonta</string>
     <string name="font_picker_description">Ne utiče na sav tekst</string>
-    <string name="smartspace_calendar_label">Prilagođavanje kalendara u vidžetu „Kratak pregled”</string>
     <string name="smartspace_calendar_description">Omogućava prikaz datuma u kalendarskim sistemima koji nisu gregorijanski</string>
     <string name="workspace_increase_max_grid_size_label">Veća mreža</string>
     <string name="workspace_increase_max_grid_size_description">Increase maximum allowed home screen grid size from 10 &#xd7; 10 to 20 &#xd7; 20</string>
@@ -217,7 +213,6 @@
     Notifications
 
     -->
-    <string name="set_default_launcher_tip">Da biste pristupali prečicama i drugim funkcijama, podesite Lawnchair kao podrazumevani pokretač</string>
     <string name="notification_dots">Tačke za obaveštenja</string>
     <string name="show_notification_count">Prikazuj broj obaveštenja</string>
     <string name="notification_dots_color">Boja tačke za obaveštenja</string>
@@ -389,7 +384,6 @@
     <string name="smartspace_battery_full">Napunjeno</string>
     <string name="smartspace_battery_low">Baterija je na izmaku</string>
     <string name="battery_charging_percentage_charging_time">"%1$d%% — napunjen za %2$s"</string>
-    <string name="smartspace_widget">Kratak pregled</string>
     <string name="smartspace_widget_description">Informacije za prikaz</string>
     <!-- Data and time format settings -->
     <string name="smartspace_calendar">Kalendar</string>
@@ -425,9 +419,7 @@
     <string name="event_provider_missing_notification_dots">To use <xliff:g example="My Provider" id="providerName">%1$s</xliff:g>, turn on notification dots</string>
     <!-- Toggle button for enabling Smartspace -->
     <string name="smartspace_widget_toggle_label">Prikaži na početnom ekranu</string>
-    <string name="smartspace_widget_toggle_description">At a Glance can be added to the home screen with the Lawnchair widget</string>
     <!-- List of available providers -->
-    <string name="smartspace_mode_label">Dobavljač za „Kratak pregled”</string>
     <string name="smartspace_mode_google">Google</string>
     <string name="smartspace_mode_google_search">Google pretraga</string>
     <!-- Miscellaneous Smartspace strings -->
@@ -717,13 +709,8 @@
     -->
     <!-- Launcher strings used -->
     <string name="all_apps_device_search_hint">Search web and more</string>
-    <string name="all_apps_search_bar_hint">Pretražite aplikacije</string>
     <string name="all_apps_no_search_results">No apps found matching \"<xliff:g example="Android" id="query">%1$s</xliff:g>\"
     </string>
-    <string name="all_apps_search_result_suggestions">Veb</string>
-    <string name="all_apps_search_result_contacts_from_device">Kontakti sa uređaja</string>
-    <string name="all_apps_search_result_files">Fajlovi sa uređaja</string>
-    <string name="all_apps_search_result_settings_entry_from_device">Podešavanja sa uređaja</string>
     <string name="all_apps_search_market_message">Pretražite još aplikacija</string>
     <string name="all_apps_search_on_web_message">Search on <xliff:g example="Startpage" id="web_search_provider">%1$s</xliff:g>
     </string>
@@ -768,7 +755,6 @@
     <string name="search_pref_result_all_files_title">All files</string>
     <string name="search_pref_result_web_title">Veb-predlozi</string>
     <string name="search_pref_result_history_title">Istorija pretrage</string>
-    <string name="all_apps_search_result_calculator">Kalkulator</string>
     <string name="search_empty_state_title">Start searching</string>
     <string name="search_empty_state_no_history_subtitle">Find apps, contacts, and more. Your recent searches will appear here.</string>
     <string name="search_empty_state_history_disabled_subtitle">Find apps, contacts, and more</string>

@@ -136,14 +136,11 @@
     -->
     <string name="settings">Nastavení</string>
     <string name="general_label">Obecné</string>
-    <string name="general_description">Barvy, balíčky ikon, puntíky oznámení</string>
     <string name="home_screen_label">Domovská obrazovka</string>
-    <string name="home_screen_description">Feed, mřížka, ikony</string>
     <string name="home_screen_actions">Akce domovské obrazovky</string>
     <string name="dock_label">Dok</string>
     <string name="dock_description">Vyhledávací panel, počet ikon</string>
     <string name="app_drawer_label">Seznam aplikací</string>
-    <string name="app_drawer_description">Skryté aplikace, počet sloupců, ikony</string>
     <string name="drawer_search_label">Vyhledávání aplikací</string>
     <string name="drawer_search_description">Webová doporučení, globální vyhledávání</string>
     <string name="folders_label">Složky</string>
@@ -165,7 +162,6 @@
     <string name="internal_description">Interní může výt méně stabilní než ostatní experimentální skupiny</string>
     <string name="font_picker_label">Přizpůsobení písma</string>
     <string name="font_picker_description">Některý text zůstává beze změny</string>
-    <string name="smartspace_calendar_label">Přizpůsobení kalendáře na Přehledu událostí</string>
     <string name="smartspace_calendar_description">Povolit zobrazení data v kalendářích ne-Gregoriánských systémů</string>
     <string name="workspace_increase_max_grid_size_label">Zvýšit maximální limit velikosti mřížky</string>
     <string name="workspace_increase_max_grid_size_description">Zvýšit maximální povolenou velikost mřížky na domovské obrazovce z 10 &#xd7; 10 na 20 &#xd7; 20</string>
@@ -217,7 +213,6 @@
     Notifications
 
     -->
-    <string name="set_default_launcher_tip">Pro přístup ke zkratkám a dalším funkcím nastavte Lawnchair jako výchozí spouštěč</string>
     <string name="notification_dots">Notifikační tečky</string>
     <string name="show_notification_count">Zobrazit počet oznámení</string>
     <string name="notification_dots_color">Barva tečky oznámení</string>
@@ -389,7 +384,6 @@
     <string name="smartspace_battery_full">Nabito</string>
     <string name="smartspace_battery_low">Nízký stav baterie</string>
     <string name="battery_charging_percentage_charging_time">"%1$d%% — Plná v %2$s"</string>
-    <string name="smartspace_widget">Přehled událostí</string>
     <string name="smartspace_widget_description">Co zobrazit</string>
     <!-- Data and time format settings -->
     <string name="smartspace_calendar">Kalendář</string>
@@ -425,9 +419,7 @@
     <string name="event_provider_missing_notification_dots">To use <xliff:g example="My Provider" id="providerName">%1$s</xliff:g>, turn on notification dots</string>
     <!-- Toggle button for enabling Smartspace -->
     <string name="smartspace_widget_toggle_label">Zobrazit na domovské obrazovce</string>
-    <string name="smartspace_widget_toggle_description">At a Glance can be added to the home screen with the Lawnchair widget</string>
     <!-- List of available providers -->
-    <string name="smartspace_mode_label">Poskytovatel Přehledu událostí</string>
     <string name="smartspace_mode_google">Google</string>
     <string name="smartspace_mode_google_search">Vyhledávání Google</string>
     <!-- Miscellaneous Smartspace strings -->
@@ -718,13 +710,8 @@
     -->
     <!-- Launcher strings used -->
     <string name="all_apps_device_search_hint">Prohledávejte web a další</string>
-    <string name="all_apps_search_bar_hint">Vyhledat aplikace</string>
     <string name="all_apps_no_search_results">No apps found matching \"<xliff:g example="Android" id="query">%1$s</xliff:g>\"
     </string>
-    <string name="all_apps_search_result_suggestions">Z webu</string>
-    <string name="all_apps_search_result_contacts_from_device">Kontakty ze zařízení</string>
-    <string name="all_apps_search_result_files">Soubory ze zařízení</string>
-    <string name="all_apps_search_result_settings_entry_from_device">Nastavení ze zařízení</string>
     <string name="all_apps_search_market_message">Vyhledat další aplikace</string>
     <string name="all_apps_search_on_web_message">Search on <xliff:g example="Startpage" id="web_search_provider">%1$s</xliff:g>
     </string>
@@ -769,7 +756,6 @@
     <string name="search_pref_result_all_files_title">Všechny soubory</string>
     <string name="search_pref_result_web_title">Návrhy z webu</string>
     <string name="search_pref_result_history_title">Historie vyhledávání</string>
-    <string name="all_apps_search_result_calculator">Kalkulačka</string>
     <string name="search_empty_state_title">Zahájit hledání</string>
     <string name="search_empty_state_no_history_subtitle">Najděte aplikace, kontakty a další. Vaše nedávná vyhledávání se objeví zde.</string>
     <string name="search_empty_state_history_disabled_subtitle">Find apps, contacts, and more</string>

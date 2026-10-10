@@ -136,14 +136,11 @@
     -->
     <string name="settings">ترتیبات</string>
     <string name="general_label">جنرل</string>
-    <string name="general_description">رنگ، آئیکن پیک، نوٹیفکیشن ڈاٹس</string>
     <string name="home_screen_label">ہوم اسکرین</string>
-    <string name="home_screen_description">فیڈ، گرڈ، شبیہیں</string>
     <string name="home_screen_actions">ہوم اسکرین ایکشنز</string>
     <string name="dock_label">گودی</string>
     <string name="dock_description">سرچ بار، آئیکن کاؤنٹ</string>
     <string name="app_drawer_label">ایپ دراز</string>
-    <string name="app_drawer_description">پوشیدہ ایپس، کالم شمار، شبیہیں</string>
     <string name="drawer_search_label">دراز کی تلاش</string>
     <string name="drawer_search_description">ویب تجاویز، عالمی تلاش</string>
     <string name="folders_label">فولڈرز</string>
@@ -165,7 +162,6 @@
     <string name="internal_description">انٹرنل دیگر تجرباتی گروپس کے مقابلے میں کم اسٹیبل ہو سکتا ہے۔</string>
     <string name="font_picker_label">فونٹ حسب ضرورت</string>
     <string name="font_picker_description">کچھ متن غیر تبدیل شدہ رہتا ہے۔</string>
-    <string name="smartspace_calendar_label">ایک نظر میں کیلنڈر حسب ضرورت</string>
     <string name="smartspace_calendar_description">غیر گریگورین کیلنڈر سسٹم میں تاریخ دکھانے کی اجازت دیں۔</string>
     <string name="workspace_increase_max_grid_size_label">زیادہ سے زیادہ گرڈ سائز کی حد میں اضافہ کریں۔</string>
     <string name="workspace_increase_max_grid_size_description">ہوم اسکرین گرڈ سائز کی زیادہ سے زیادہ حد 10 &#xd7; 10 سے بڑھا کر 20 &#xd7; 20 کریں۔</string>
@@ -217,7 +213,6 @@
     Notifications
 
     -->
-    <string name="set_default_launcher_tip">شارٹ کٹس اور اضافی خصوصیات تک رسائی کے لیے، لانچر کو اپنے ڈیفالٹ لانچر کے طور پر سیٹ کریں۔</string>
     <string name="notification_dots">اطلاع کے نقطے۔</string>
     <string name="show_notification_count">نوٹیفکیشن کاؤنٹر دکھائیں۔</string>
     <string name="notification_dots_color">نوٹیفکیشن ڈاٹ رنگ</string>
@@ -389,7 +384,6 @@
     <string name="smartspace_battery_full">چارج کیا گیا۔</string>
     <string name="smartspace_battery_low">بیٹری کم ہے۔</string>
     <string name="battery_charging_percentage_charging_time">"1$d%% — %2$s میں مکمل"</string>
-    <string name="smartspace_widget">ایک نظر میں</string>
     <string name="smartspace_widget_description">کیا دکھانا ہے۔</string>
     <!-- Data and time format settings -->
     <string name="smartspace_calendar">کیلنڈر</string>
@@ -425,9 +419,7 @@
     <string name="event_provider_missing_notification_dots">To use <xliff:g example="My Provider" id="providerName">%1$s</xliff:g>, turn on notification dots</string>
     <!-- Toggle button for enabling Smartspace -->
     <string name="smartspace_widget_toggle_label">ہوم اسکرین پر دکھائیں۔</string>
-    <string name="smartspace_widget_toggle_description">At a Glance can be added to the home screen with the Lawnchair widget</string>
     <!-- List of available providers -->
-    <string name="smartspace_mode_label">ایک نظر میں فراہم کنندہ</string>
     <string name="smartspace_mode_google">گوگل</string>
     <string name="smartspace_mode_google_search">گوگل سرچ</string>
     <!-- Miscellaneous Smartspace strings -->
@@ -716,13 +708,8 @@
     -->
     <!-- Launcher strings used -->
     <string name="all_apps_device_search_hint">Search web and more</string>
-    <string name="all_apps_search_bar_hint">Search Apps</string>
     <string name="all_apps_no_search_results">No apps found matching \"<xliff:g example="Android" id="query">%1$s</xliff:g>\"
     </string>
-    <string name="all_apps_search_result_suggestions">ویب سے</string>
-    <string name="all_apps_search_result_contacts_from_device">ڈیوائس سے رابطے</string>
-    <string name="all_apps_search_result_files">ڈیوائس سے فائلیں۔</string>
-    <string name="all_apps_search_result_settings_entry_from_device">ڈیوائس سے ترتیبات</string>
     <string name="all_apps_search_market_message">مزید ایپس تلاش کریں۔</string>
     <string name="all_apps_search_on_web_message">Search on <xliff:g example="Startpage" id="web_search_provider">%1$s</xliff:g>
     </string>
@@ -767,7 +754,6 @@
     <string name="search_pref_result_all_files_title">All files</string>
     <string name="search_pref_result_web_title">ویب کی تجاویز</string>
     <string name="search_pref_result_history_title">تلاش کی تاریخ</string>
-    <string name="all_apps_search_result_calculator">کیلکولیٹر</string>
     <string name="search_empty_state_title">Start searching</string>
     <string name="search_empty_state_no_history_subtitle">Find apps, contacts, and more. Your recent searches will appear here.</string>
     <string name="search_empty_state_history_disabled_subtitle">Find apps, contacts, and more</string>

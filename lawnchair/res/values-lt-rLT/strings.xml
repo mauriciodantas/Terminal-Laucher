@@ -136,14 +136,11 @@
     -->
     <string name="settings">Nustatymai</string>
     <string name="general_label">Pagrindinis</string>
-    <string name="general_description">Spalvos, piktogramų paketai, pranešimų taškeliai</string>
     <string name="home_screen_label">Pagrindinis ekranas</string>
-    <string name="home_screen_description">Naujienos, tinklelis, piktrogramos</string>
     <string name="home_screen_actions">Namų ekrano veiksmai</string>
     <string name="dock_label">Pažemynis</string>
     <string name="dock_description">Paieškos juosta, piktogramų skaičius</string>
     <string name="app_drawer_label">Programėlių lentyna</string>
-    <string name="app_drawer_description">Paslėptos programėlės, stulpelių skaičius, piktogramos</string>
     <string name="drawer_search_label">Progr. lentynos paieška</string>
     <string name="drawer_search_description">Žiniatinklio pasiūlymai, globali paieška</string>
     <string name="folders_label">Aplankai</string>
@@ -165,7 +162,6 @@
     <string name="internal_description">Internal may be less stable than other experimental groups</string>
     <string name="font_picker_label">Šriftų tinkinimas</string>
     <string name="font_picker_description">Dalis teksto liko nepakeista</string>
-    <string name="smartspace_calendar_label">\"At a Glance\" kalendoriaus tinkinimas</string>
     <string name="smartspace_calendar_description">Leisti rodyti datą ne Grigaliaus kalendoriaus sistemose</string>
     <string name="workspace_increase_max_grid_size_label">Padidinti tinklelio dydžio ribą</string>
     <string name="workspace_increase_max_grid_size_description">Increase maximum allowed home screen grid size from 10 &#xd7; 10 to 20 &#xd7; 20</string>
@@ -217,7 +213,6 @@
     Notifications
 
     -->
-    <string name="set_default_launcher_tip">Norėdami naudotis nuorodomis ir papildomomis funkcijomis, nustatykite \"Lawnchair\" kaip numatytąją paleidimo programėlę</string>
     <string name="notification_dots">Pranešimų taškeliai</string>
     <string name="show_notification_count">Rodyti pranešimų skaičių</string>
     <string name="notification_dots_color">Pranešimo taškelio spalva</string>
@@ -389,7 +384,6 @@
     <string name="smartspace_battery_full">Pakrautas</string>
     <string name="smartspace_battery_low">Battery low</string>
     <string name="battery_charging_percentage_charging_time">"%1$d%% — Visiškai įkrauta už %2$s"</string>
-    <string name="smartspace_widget">Iš Pirmo Žvilgsnio</string>
     <string name="smartspace_widget_description">What to show</string>
     <!-- Data and time format settings -->
     <string name="smartspace_calendar">Kalendorius</string>
@@ -425,9 +419,7 @@
     <string name="event_provider_missing_notification_dots">To use <xliff:g example="My Provider" id="providerName">%1$s</xliff:g>, turn on notification dots</string>
     <!-- Toggle button for enabling Smartspace -->
     <string name="smartspace_widget_toggle_label">Rodyti pagr. ekrane</string>
-    <string name="smartspace_widget_toggle_description">At a Glance can be added to the home screen with the Lawnchair widget</string>
     <!-- List of available providers -->
-    <string name="smartspace_mode_label">„At a Glance“ teikėjas</string>
     <string name="smartspace_mode_google">Google</string>
     <string name="smartspace_mode_google_search">Google Paieška</string>
     <!-- Miscellaneous Smartspace strings -->
@@ -718,13 +710,8 @@
     -->
     <!-- Launcher strings used -->
     <string name="all_apps_device_search_hint">Search web and more</string>
-    <string name="all_apps_search_bar_hint">Ieškoti Programėlių</string>
     <string name="all_apps_no_search_results">No apps found matching \"<xliff:g example="Android" id="query">%1$s</xliff:g>\"
     </string>
-    <string name="all_apps_search_result_suggestions">From the web</string>
-    <string name="all_apps_search_result_contacts_from_device">Contacts from device</string>
-    <string name="all_apps_search_result_files">Files from device</string>
-    <string name="all_apps_search_result_settings_entry_from_device">Settings from device</string>
     <string name="all_apps_search_market_message">Search for more apps</string>
     <string name="all_apps_search_on_web_message">Search on <xliff:g example="Startpage" id="web_search_provider">%1$s</xliff:g>
     </string>
@@ -769,7 +756,6 @@
     <string name="search_pref_result_all_files_title">All files</string>
     <string name="search_pref_result_web_title">Web suggestions</string>
     <string name="search_pref_result_history_title">Search history</string>
-    <string name="all_apps_search_result_calculator">Calculator</string>
     <string name="search_empty_state_title">Start searching</string>
     <string name="search_empty_state_no_history_subtitle">Find apps, contacts, and more. Your recent searches will appear here.</string>
     <string name="search_empty_state_history_disabled_subtitle">Find apps, contacts, and more</string>

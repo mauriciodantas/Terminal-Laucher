@@ -136,14 +136,11 @@
     -->
     <string name="settings">Beállítások</string>
     <string name="general_label">Általános</string>
-    <string name="general_description">Színek, ikoncsomagok, értesítési pöttyök</string>
     <string name="home_screen_label">Kezdőképernyő</string>
-    <string name="home_screen_description">Feed, rács, ikonok</string>
     <string name="home_screen_actions">Home screen actions</string>
     <string name="dock_label">Dokk</string>
     <string name="dock_description">Keresősáv, ikonszám</string>
     <string name="app_drawer_label">Alkalmazástár</string>
-    <string name="app_drawer_description">Rejtett alkalmazások, oszlopszám, ikonok</string>
     <string name="drawer_search_label">Alkalmazáskereső</string>
     <string name="drawer_search_description">Webes javaslatok, globális kereső</string>
     <string name="folders_label">Mappák</string>
@@ -165,7 +162,6 @@
     <string name="internal_description">Internal may be less stable than other experimental groups</string>
     <string name="font_picker_label">A betűkészlet testreszabása</string>
     <string name="font_picker_description">Egyes szövegek változatlanok maradnak</string>
-    <string name="smartspace_calendar_label">Az \'Áttekintés\' naptárának testreszabása</string>
     <string name="smartspace_calendar_description">Lehetővé teszi, hogy a dátum nem gregorián naptárban is megjelenjen</string>
     <string name="workspace_increase_max_grid_size_label">A maximális rácsméret-korlát növelése</string>
     <string name="workspace_increase_max_grid_size_description">Increase maximum allowed home screen grid size from 10 &#xd7; 10 to 20 &#xd7; 20</string>
@@ -217,7 +213,6 @@
     Notifications
 
     -->
-    <string name="set_default_launcher_tip">A parancsikonok és a további funkciók eléréséhez állítsa be a Lawnchair-t alapértelmezettként</string>
     <string name="notification_dots">Értesítési pöttyök</string>
     <string name="show_notification_count">Legyen látható az értesítés-számláló</string>
     <string name="notification_dots_color">Az értesítési pöttyök színe</string>
@@ -389,7 +384,6 @@
     <string name="smartspace_battery_full">Feltöltve</string>
     <string name="smartspace_battery_low">Alacsony töltöttség</string>
     <string name="battery_charging_percentage_charging_time">"%1$d%% – %2$s múlva feltöltve"</string>
-    <string name="smartspace_widget">Bepillantás</string>
     <string name="smartspace_widget_description">Mi jelenjen meg</string>
     <!-- Data and time format settings -->
     <string name="smartspace_calendar">Naptár</string>
@@ -425,9 +419,7 @@
     <string name="event_provider_missing_notification_dots">To use <xliff:g example="My Provider" id="providerName">%1$s</xliff:g>, turn on notification dots</string>
     <!-- Toggle button for enabling Smartspace -->
     <string name="smartspace_widget_toggle_label">Megjelenítés a Kezdőképernyőn</string>
-    <string name="smartspace_widget_toggle_description">At a Glance can be added to the home screen with the Lawnchair widget</string>
     <!-- List of available providers -->
-    <string name="smartspace_mode_label">Az \'Áttekintés\' szolgáltatója</string>
     <string name="smartspace_mode_google">Google</string>
     <string name="smartspace_mode_google_search">Google Kereső</string>
     <!-- Miscellaneous Smartspace strings -->
@@ -716,13 +708,8 @@
     -->
     <!-- Launcher strings used -->
     <string name="all_apps_device_search_hint">Search web and more</string>
-    <string name="all_apps_search_bar_hint">Alkalmazások keresése</string>
     <string name="all_apps_no_search_results">No apps found matching \"<xliff:g example="Android" id="query">%1$s</xliff:g>\"
     </string>
-    <string name="all_apps_search_result_suggestions">Az internetről</string>
-    <string name="all_apps_search_result_contacts_from_device">Névjegyek a készülékről</string>
-    <string name="all_apps_search_result_files">Fájlok a készülékről</string>
-    <string name="all_apps_search_result_settings_entry_from_device">Beállítások a készülékről</string>
     <string name="all_apps_search_market_message">További alkalmazások keresése</string>
     <string name="all_apps_search_on_web_message">Search on <xliff:g example="Startpage" id="web_search_provider">%1$s</xliff:g>
     </string>
@@ -767,7 +754,6 @@
     <string name="search_pref_result_all_files_title">All files</string>
     <string name="search_pref_result_web_title">Webes javaslatok</string>
     <string name="search_pref_result_history_title">Keresési előzmények</string>
-    <string name="all_apps_search_result_calculator">Számológép</string>
     <string name="search_empty_state_title">Start searching</string>
     <string name="search_empty_state_no_history_subtitle">Find apps, contacts, and more. Your recent searches will appear here.</string>
     <string name="search_empty_state_history_disabled_subtitle">Find apps, contacts, and more</string>

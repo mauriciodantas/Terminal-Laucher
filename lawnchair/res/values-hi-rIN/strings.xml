@@ -136,14 +136,11 @@
     -->
     <string name="settings">सेटिंग्स</string>
     <string name="general_label">सामान्य</string>
-    <string name="general_description">रंग, आइकन पैक, अधिसूचना बिंदु</string>
     <string name="home_screen_label">होम स्क्रीन</string>
-    <string name="home_screen_description">फ़ीड, ग्रिड, चिह्न</string>
     <string name="home_screen_actions">होम स्क्रीन क्रियाएँ</string>
     <string name="dock_label">गोदी</string>
     <string name="dock_description">खोज बार, आइकन गिनती</string>
     <string name="app_drawer_label">अनुप्रयोग का दराज</string>
-    <string name="app_drawer_description">छिपे ऐप, स्तम्भ, चिह्न</string>
     <string name="drawer_search_label">ऐप सूची में खोजें</string>
     <string name="drawer_search_description">वेब सुझाव, सार्वभौमिक खोज</string>
     <string name="folders_label">फ़ोल्डर</string>
@@ -165,7 +162,6 @@
     <string name="internal_description">\'आंतरिक\' अन्य प्रयोगात्मक समूहों की अपेक्षा कम स्थिर हो सकता है</string>
     <string name="font_picker_label">अक्षरों को पसंद के अनुसार बदलें</string>
     <string name="font_picker_description">कुछ लेख अपरिवर्तनीय रहते हैं</string>
-    <string name="smartspace_calendar_label">\'एक नज़र में\' कैलेंडर को पसंद के अनुसार बदलें</string>
     <string name="smartspace_calendar_description">तारीख को ग्रेगोरियन के अतिरिक्त अन्य कैलेंडरों में दिखाएँ</string>
     <string name="workspace_increase_max_grid_size_label">अधिकतम ग्रिड आकार की सीमा बढ़ाएँ</string>
     <string name="workspace_increase_max_grid_size_description">अधिकतम होम स्क्रीन ग्रिड आकार को 10 &#xd7; 10 से 20 &#xd7; 20 तक बढ़ाएँ</string>
@@ -217,7 +213,6 @@
     Notifications
 
     -->
-    <string name="set_default_launcher_tip">शॉर्टकट और अतिरिक्त सुविधाओं का उपयोग करने के लिए, Lawnchair को अपना डिफ़ॉल्ट लॉन्चर सेट करें</string>
     <string name="notification_dots">सूचना बिंदु</string>
     <string name="show_notification_count">Show notification counter</string>
     <string name="notification_dots_color">सूचना बिंदु का रंग</string>
@@ -389,7 +384,6 @@
     <string name="smartspace_battery_full">चार्ज हो चुका है</string>
     <string name="smartspace_battery_low">Battery low</string>
     <string name="battery_charging_percentage_charging_time">"%1$d%% -- पूर्ति होगी %2$s में"</string>
-    <string name="smartspace_widget">एक नजर में</string>
     <string name="smartspace_widget_description">What to show</string>
     <!-- Data and time format settings -->
     <string name="smartspace_calendar">कैलेंडर</string>
@@ -425,9 +419,7 @@
     <string name="event_provider_missing_notification_dots">To use <xliff:g example="My Provider" id="providerName">%1$s</xliff:g>, turn on notification dots</string>
     <!-- Toggle button for enabling Smartspace -->
     <string name="smartspace_widget_toggle_label">Show on home screen</string>
-    <string name="smartspace_widget_toggle_description">At a Glance can be added to the home screen with the Lawnchair widget</string>
     <!-- List of available providers -->
-    <string name="smartspace_mode_label">At a Glance provider</string>
     <string name="smartspace_mode_google">गूगल</string>
     <string name="smartspace_mode_google_search">गूगल खोज</string>
     <!-- Miscellaneous Smartspace strings -->
@@ -716,13 +708,8 @@
     -->
     <!-- Launcher strings used -->
     <string name="all_apps_device_search_hint">Search web and more</string>
-    <string name="all_apps_search_bar_hint">ऍप्स खोजें</string>
     <string name="all_apps_no_search_results">No apps found matching \"<xliff:g example="Android" id="query">%1$s</xliff:g>\"
     </string>
-    <string name="all_apps_search_result_suggestions">वेब से</string>
-    <string name="all_apps_search_result_contacts_from_device">Contacts from device</string>
-    <string name="all_apps_search_result_files">Files from device</string>
-    <string name="all_apps_search_result_settings_entry_from_device">Settings from device</string>
     <string name="all_apps_search_market_message">Search for more apps</string>
     <string name="all_apps_search_on_web_message">Search on <xliff:g example="Startpage" id="web_search_provider">%1$s</xliff:g>
     </string>
@@ -767,7 +754,6 @@
     <string name="search_pref_result_all_files_title">All files</string>
     <string name="search_pref_result_web_title">Web suggestions</string>
     <string name="search_pref_result_history_title">Search history</string>
-    <string name="all_apps_search_result_calculator">Calculator</string>
     <string name="search_empty_state_title">Start searching</string>
     <string name="search_empty_state_no_history_subtitle">Find apps, contacts, and more. Your recent searches will appear here.</string>
     <string name="search_empty_state_history_disabled_subtitle">Find apps, contacts, and more</string>

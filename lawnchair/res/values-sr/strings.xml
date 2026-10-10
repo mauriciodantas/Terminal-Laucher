@@ -136,14 +136,11 @@
     -->
     <string name="settings">Подешавања</string>
     <string name="general_label">Опште</string>
-    <string name="general_description">Боје, пакети, тачке за обавештења</string>
     <string name="home_screen_label">Почетни екран</string>
-    <string name="home_screen_description">Фид, мрежа, иконе</string>
     <string name="home_screen_actions">Home screen actions</string>
     <string name="dock_label">Док</string>
     <string name="dock_description">Трака за претрагу, број икона</string>
     <string name="app_drawer_label">Листа апликација</string>
-    <string name="app_drawer_description">Скривене апликације, број колона, иконе</string>
     <string name="drawer_search_label">Претрага на листи апликација</string>
     <string name="drawer_search_description">Веб-предлози, глобална претрага</string>
     <string name="folders_label">Фолдери</string>
@@ -165,7 +162,6 @@
     <string name="internal_description">Internal may be less stable than other experimental groups</string>
     <string name="font_picker_label">Прилагођавање фонта</string>
     <string name="font_picker_description">Не утиче на сав текст</string>
-    <string name="smartspace_calendar_label">Прилагођавање календара у виџету „Кратак преглед”</string>
     <string name="smartspace_calendar_description">Омогућите приказ датума из других календара</string>
     <string name="workspace_increase_max_grid_size_label">Већа мрежа</string>
     <string name="workspace_increase_max_grid_size_description">Increase maximum allowed home screen grid size from 10 &#xd7; 10 to 20 &#xd7; 20</string>
@@ -217,7 +213,6 @@
     Notifications
 
     -->
-    <string name="set_default_launcher_tip">Да бисте приступали пречицама и другим функцијама, подесите Lawnchair као подразумевани покретач</string>
     <string name="notification_dots">Тачке за обавештења</string>
     <string name="show_notification_count">Приказуј број обавештења</string>
     <string name="notification_dots_color">Боја тачке за обавештења</string>
@@ -389,7 +384,6 @@
     <string name="smartspace_battery_full">Напуњено</string>
     <string name="smartspace_battery_low">Батерија је на измаку</string>
     <string name="battery_charging_percentage_charging_time">"%1$d%% — напуњен за %2$s"</string>
-    <string name="smartspace_widget">Кратак преглед</string>
     <string name="smartspace_widget_description">Информације за приказ</string>
     <!-- Data and time format settings -->
     <string name="smartspace_calendar">Календар</string>
@@ -425,9 +419,7 @@
     <string name="event_provider_missing_notification_dots">To use <xliff:g example="My Provider" id="providerName">%1$s</xliff:g>, turn on notification dots</string>
     <!-- Toggle button for enabling Smartspace -->
     <string name="smartspace_widget_toggle_label">Прикажи на почетном екрану</string>
-    <string name="smartspace_widget_toggle_description">At a Glance can be added to the home screen with the Lawnchair widget</string>
     <!-- List of available providers -->
-    <string name="smartspace_mode_label">Добављач за „Кратак преглед”</string>
     <string name="smartspace_mode_google">Google</string>
     <string name="smartspace_mode_google_search">Google претрага</string>
     <!-- Miscellaneous Smartspace strings -->
@@ -717,13 +709,8 @@
     -->
     <!-- Launcher strings used -->
     <string name="all_apps_device_search_hint">Search web and more</string>
-    <string name="all_apps_search_bar_hint">Претражите апликације</string>
     <string name="all_apps_no_search_results">No apps found matching \"<xliff:g example="Android" id="query">%1$s</xliff:g>\"
     </string>
-    <string name="all_apps_search_result_suggestions">Веб</string>
-    <string name="all_apps_search_result_contacts_from_device">Контакти са уређаја</string>
-    <string name="all_apps_search_result_files">Фајлови са уређаја</string>
-    <string name="all_apps_search_result_settings_entry_from_device">Подешавања са уређаја</string>
     <string name="all_apps_search_market_message">Претражите још апликација</string>
     <string name="all_apps_search_on_web_message">Search on <xliff:g example="Startpage" id="web_search_provider">%1$s</xliff:g>
     </string>
@@ -768,7 +755,6 @@
     <string name="search_pref_result_all_files_title">All files</string>
     <string name="search_pref_result_web_title">Веб-предлози</string>
     <string name="search_pref_result_history_title">Историја претраге</string>
-    <string name="all_apps_search_result_calculator">Калкулатор</string>
     <string name="search_empty_state_title">Start searching</string>
     <string name="search_empty_state_no_history_subtitle">Find apps, contacts, and more. Your recent searches will appear here.</string>
     <string name="search_empty_state_history_disabled_subtitle">Find apps, contacts, and more</string>

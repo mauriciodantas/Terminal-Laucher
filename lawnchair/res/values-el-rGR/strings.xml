@@ -136,14 +136,11 @@
     -->
     <string name="settings">Ρυθμίσεις</string>
     <string name="general_label">Γενικά</string>
-    <string name="general_description">Χρώματα, πακέτα εικονιδίων, κουκκίδες ειδοποίησης</string>
     <string name="home_screen_label">Αρχική οθόνη</string>
-    <string name="home_screen_description">Ροή, πλέγμα, εικονίδια</string>
     <string name="home_screen_actions">Ενέργειες αρχικής οθόνης</string>
     <string name="dock_label">Ράφι</string>
     <string name="dock_description">Μπάρα αναζήτησης, αριθμός εικονιδίων</string>
     <string name="app_drawer_label">Συρτάρι εφαρμογών</string>
-    <string name="app_drawer_description">Κρυμμένες εφαρμογές, αριθμός στηλών, εικονίδια</string>
     <string name="drawer_search_label">Αναζήτηση συρταριού εφαρμογών</string>
     <string name="drawer_search_description">Προτάσεις ιστού, γενική αναζήτηση</string>
     <string name="folders_label">Φάκελοι</string>
@@ -165,7 +162,6 @@
     <string name="internal_description">Το εσωτερικό ενδέχεται να είναι πιο ασταθές από άλλες πειραματικές ομάδες</string>
     <string name="font_picker_label">Προσαρμογή γραμματοσειράς</string>
     <string name="font_picker_description">Μερικά κείμενα παραμένουν αμετάβλητα</string>
-    <string name="smartspace_calendar_label">Προσαρμογή ημερολογίου Με μια Ματιά</string>
     <string name="smartspace_calendar_description">Να επιτρέπεται η εμφάνιση ημερομηνίας σε μη Γρηγοριανά συστήματα ημερολογίου</string>
     <string name="workspace_increase_max_grid_size_label">Αύξηση μέγιστου ορίου μεγέθους πλέγματος</string>
     <string name="workspace_increase_max_grid_size_description">Αύξηση του μέγιστου επιτρεπόμενου μεγέθους πλέγματος αρχικής οθόνης από 10×10 έως 20×20</string>
@@ -217,7 +213,6 @@
     Notifications
 
     -->
-    <string name="set_default_launcher_tip">Για να αποκτήσετε πρόσβαση σε συντομεύσεις και πρόσθετες δυνατότητες, ορίστε τον εκκινητή Lawnchair ως προεπιλεγμένο πρόγραμμα εκκίνησης</string>
     <string name="notification_dots">Κουκκίδες ειδοποιήσεων</string>
     <string name="show_notification_count">Εμφάνιση μετρητή ειδοποιήσεων</string>
     <string name="notification_dots_color">Χρώμα κουκκίδας ειδοποιήσεων</string>
@@ -389,7 +384,6 @@
     <string name="smartspace_battery_full">Φορτισμένο</string>
     <string name="smartspace_battery_low">Χαμηλή μπαταρία</string>
     <string name="battery_charging_percentage_charging_time">"%1$d%% • Πλήρης φόρτιση σε %2$s"</string>
-    <string name="smartspace_widget">Με μια Ματιά</string>
     <string name="smartspace_widget_description">Τι να εμφανίζεται</string>
     <!-- Data and time format settings -->
     <string name="smartspace_calendar">Ημερολόγιο</string>
@@ -425,9 +419,7 @@
     <string name="event_provider_missing_notification_dots">Για να χρησιμοποιήσετε <xliff:g example="Ο Πάροχός μου" id="providerName">%1$s</xliff:g>, ενεργοποιήστε τις κουκκίδες ειδοποιήσεων</string>
     <!-- Toggle button for enabling Smartspace -->
     <string name="smartspace_widget_toggle_label">Εμφάνιση στην αρχική οθόνη</string>
-    <string name="smartspace_widget_toggle_description">Το γραφικό στοιχείο “Με μια Ματιά” μπορεί να προστεθεί χειροκίνητα τοποθετώντας το γραφικό με ονομασία “Lawnchair”</string>
     <!-- List of available providers -->
-    <string name="smartspace_mode_label">Πάροχος γραφικού Με μια Ματιά</string>
     <string name="smartspace_mode_google">Google</string>
     <string name="smartspace_mode_google_search">Αναζήτηση Google</string>
     <!-- Miscellaneous Smartspace strings -->
@@ -716,12 +708,7 @@
     -->
     <!-- Launcher strings used -->
     <string name="all_apps_device_search_hint">Αναζήτηση ιστού και άλλα</string>
-    <string name="all_apps_search_bar_hint">Αναζήτηση εφαρμογών</string>
     <string name="all_apps_no_search_results">Δεν βρέθηκαν εφαρμογές που να ταιριάζουν με το \"<xliff:g example="Android" id="query">%1$s</xliff:g>\"    </string>
-    <string name="all_apps_search_result_suggestions">Από το διαδίκτυο</string>
-    <string name="all_apps_search_result_contacts_from_device">Επαφές από τη συσκευή</string>
-    <string name="all_apps_search_result_files">Αρχεία από τη συσκευή</string>
-    <string name="all_apps_search_result_settings_entry_from_device">Ρυθμίσεις από τη συσκευή</string>
     <string name="all_apps_search_market_message">Αναζήτηση για περισσότερες εφαρμογές</string>
     <string name="all_apps_search_on_web_message">Αναζήτηση στο <xliff:g example="Startpage" id="web_search_provider">%1$s</xliff:g>    </string>
     <string name="error_no_market_or_browser_installed">Δεν υπάρχει εγκατεστημένο κατάστημα εφαρμογών ή πρόγραμμα περιήγησης</string>
@@ -765,7 +752,6 @@
     <string name="search_pref_result_all_files_title">Όλα τα αρχεία</string>
     <string name="search_pref_result_web_title">Προτάσεις ιστού</string>
     <string name="search_pref_result_history_title">Ιστορικό αναζήτησης</string>
-    <string name="all_apps_search_result_calculator">Αριθμομηχανή</string>
     <string name="search_empty_state_title">Έναρξη αναζήτησης</string>
     <string name="search_empty_state_no_history_subtitle">Βρείτε εφαρμογές, επαφές και πολλά άλλα. Οι πρόσφατες αναζητήσεις σας θα εμφανίζονται εδώ.</string>
     <string name="search_empty_state_history_disabled_subtitle">Αναζήτηση ιστού και άλλα</string>

@@ -136,14 +136,11 @@
     -->
     <string name="settings">الإعدادات</string>
     <string name="general_label">عام</string>
-    <string name="general_description">الألوان، حُزَم الأيقونات، نقاط الإشعارات</string>
     <string name="home_screen_label">الشاشة الرّئيسة</string>
-    <string name="home_screen_description">الموجز، الشبكة، الأيقونات</string>
     <string name="home_screen_actions">إجراءات الشاشة الرئيسة</string>
     <string name="dock_label">المرسى</string>
     <string name="dock_description">شريط البحث، عدد الأيقونات</string>
     <string name="app_drawer_label">درج التطبيقات</string>
-    <string name="app_drawer_description">التطبيقات المخفية، عدد الأعمدة، الأيقونات</string>
     <string name="drawer_search_label">بحث الدرج</string>
     <string name="drawer_search_description">اقتراحات الويب، البحث العالمي</string>
     <string name="folders_label">المجلدات</string>
@@ -165,7 +162,6 @@
     <string name="internal_description">قد تكون المجموعة الداخلية أقل استقرارًا من المجموعات التجريبية الأخرى</string>
     <string name="font_picker_label">تخصيص الخط</string>
     <string name="font_picker_description">لا يزال بعض النص دون تغيير</string>
-    <string name="smartspace_calendar_label">تخصيص تقويم اللمحة السريعة</string>
     <string name="smartspace_calendar_description">السماح بعرض التاريخ في أنظمة التقويم غير الميلادي</string>
     <string name="workspace_increase_max_grid_size_label">زيادة حد حجم الشبكة القصوى</string>
     <string name="workspace_increase_max_grid_size_description">زيادة الحد الأقصى المسموح به لحجم شبكة الشاشة الرّئيسة من 10 &#xd7; 10 إلى 20 &#xd7; 20</string>
@@ -218,7 +214,6 @@
     Notifications
 
     -->
-    <string name="set_default_launcher_tip">للوصول إلى الاختصارات والميزات الإضافية، عيّن Lawnchair كمشغل افتراضي</string>
     <string name="notification_dots">نقاط الإشعارات</string>
     <string name="show_notification_count">عرض عداد الإشعارات</string>
     <string name="notification_dots_color">لون نقطة الإشعار</string>
@@ -390,7 +385,6 @@
     <string name="smartspace_battery_full">تم الشحن</string>
     <string name="smartspace_battery_low">البطارية منخفضة</string>
     <string name="battery_charging_percentage_charging_time">"%1$d%% — ممتلئ في %2$s"</string>
-    <string name="smartspace_widget">لمحة</string>
     <string name="smartspace_widget_description">ماذا تعرض</string>
     <!-- Data and time format settings -->
     <string name="smartspace_calendar">التقويم</string>
@@ -426,9 +420,7 @@
     <string name="event_provider_missing_notification_dots">لاستخدام <xliff:g example="My Provider" id="providerName">%1$s</xliff:g>، فعّل نقاط الإشعارات</string>
     <!-- Toggle button for enabling Smartspace -->
     <string name="smartspace_widget_toggle_label">عرض على الشاشة الرّئيسة</string>
-    <string name="smartspace_widget_toggle_description">يمكن إضافة أداة اللمحة السريعة إلى الشاشة الرّئيسة باستخدام أداة Lawnchair</string>
     <!-- List of available providers -->
-    <string name="smartspace_mode_label">مزود لمحة</string>
     <string name="smartspace_mode_google">جوجل</string>
     <string name="smartspace_mode_google_search">بحث جوجل</string>
     <!-- Miscellaneous Smartspace strings -->
@@ -721,13 +713,8 @@
     -->
     <!-- Launcher strings used -->
     <string name="all_apps_device_search_hint">البحث في الويب والمزيد</string>
-    <string name="all_apps_search_bar_hint">البحث عن التطبيقات</string>
     <string name="all_apps_no_search_results">لم يتم العثور على تطبيقات مطابقة لـ \"<xliff:g example="Android" id="query">%1$s</xliff:g>\"
     </string>
-    <string name="all_apps_search_result_suggestions">من الويب</string>
-    <string name="all_apps_search_result_contacts_from_device">جهات الاتصال من الجهاز</string>
-    <string name="all_apps_search_result_files">ملفات من الجهاز</string>
-    <string name="all_apps_search_result_settings_entry_from_device">إعدادات من الجهاز</string>
     <string name="all_apps_search_market_message">البحث عن المزيد من التطبيقات</string>
     <string name="all_apps_search_on_web_message">البحث في <xliff:g example="Startpage" id="web_search_provider">%1$s</xliff:g>
     </string>
@@ -772,7 +759,6 @@
     <string name="search_pref_result_all_files_title">كل الملفات</string>
     <string name="search_pref_result_web_title">اقتراحات الويب</string>
     <string name="search_pref_result_history_title">سجل البحث</string>
-    <string name="all_apps_search_result_calculator">آلة حاسبة</string>
     <string name="search_empty_state_title">بدء البحث</string>
     <string name="search_empty_state_no_history_subtitle">البحث عن التطبيقات، وجهات الاتصال، والمزيد. ستظهر عمليات البحث الأخيرة هنا.</string>
     <string name="search_empty_state_history_disabled_subtitle">ابحث عن التطبيقات، وجهات الاتصال، والمزيد</string>

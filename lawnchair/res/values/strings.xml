@@ -214,7 +214,7 @@
     <string name="font_picker_label">Font customization</string>
     <string name="font_picker_description">Some text remains unchanged</string>
 
-    <string name="smartspace_calendar_label">Calendário do Painel de status</string>
+    <string name="smartspace_calendar_label">Status panel calendar</string>
     <string name="smartspace_calendar_description">Allow showing date in non-Gregorian calendar systems</string>
 
     <string name="workspace_increase_max_grid_size_label">Increase maximum grid size limit</string>
@@ -493,7 +493,7 @@
     <string name="smartspace_battery_low">Battery low</string>
     <string name="battery_charging_percentage_charging_time">"%1$d%% — Full in %2$s"</string>
 
-    <string name="smartspace_widget">Painel de status</string>
+    <string name="smartspace_widget">Status panel</string>
     <string name="smartspace_widget_description">What to show</string>
 
     <!-- Data and time format settings -->
@@ -538,10 +538,10 @@
 
     <!-- Toggle button for enabling Smartspace -->
     <string name="smartspace_widget_toggle_label">Show on home screen</string>
-    <string name="smartspace_widget_toggle_description">O Painel de status pode ser adicionado à tela inicial com o widget do Terminal</string>
+    <string name="smartspace_widget_toggle_description">The status panel can be added to the home screen with the Terminal widget</string>
 
     <!-- List of available providers -->
-    <string name="smartspace_mode_label">Provedor do Painel de status</string>
+    <string name="smartspace_mode_label">Status panel provider</string>
     <string name="smartspace_mode_lawnchair" translatable="false">Lawnchair</string>
     <string name="smartspace_mode_google">Google</string>
     <string name="smartspace_mode_google_search">Google Search</string>
@@ -931,14 +931,14 @@
     -->
     <!-- Launcher strings used -->
     <string name="all_apps_device_search_hint">Search web and more</string>
-    <string name="all_apps_search_bar_hint" translatable="false">FILTRAR PROGRAMAS</string>
+    <string name="all_apps_search_bar_hint">FILTER PROGRAMS</string>
     <string name="all_apps_no_search_results">No apps found matching \"<xliff:g example="Android" id="query">%1$s</xliff:g>\"
     </string>
 
-    <string name="all_apps_search_result_suggestions">COMANDOS</string>
-    <string name="all_apps_search_result_contacts_from_device">CONTATOS</string>
-    <string name="all_apps_search_result_files">ARQUIVOS</string>
-    <string name="all_apps_search_result_settings_entry_from_device">AJUSTES</string>
+    <string name="all_apps_search_result_suggestions">COMMANDS</string>
+    <string name="all_apps_search_result_contacts_from_device">CONTACTS</string>
+    <string name="all_apps_search_result_files">FILES</string>
+    <string name="all_apps_search_result_settings_entry_from_device">SETTINGS</string>
 
     <string name="all_apps_search_market_message">Search for more apps</string>
     <string name="all_apps_search_on_web_message">Search on <xliff:g example="Startpage" id="web_search_provider">%1$s</xliff:g>
@@ -998,7 +998,7 @@
     <string name="search_pref_result_all_files_title">All files</string>
     <string name="search_pref_result_web_title">Web suggestions</string>
     <string name="search_pref_result_history_title">Search history</string>
-    <string name="all_apps_search_result_calculator">CÁLCULO</string>
+    <string name="all_apps_search_result_calculator">CALCULATION</string>
 
     <string name="search_empty_state_title">Start searching</string>
     <string name="search_empty_state_no_history_subtitle">Find apps, contacts, and more. Your recent searches will appear here.</string>
@@ -1072,380 +1072,371 @@
     <string name="lawnchair_action_failed">Failed to trigger action</string>
 
     <string name="please_wait">Please wait…</string>
-    <string name="nostromo_status_line" translatable="false">CICLO DE HIPERSONO · SEÇÃO A</string>
-    <string name="nostromo_contact_value" translatable="false">14.2 M</string>
-    <string name="nostromo_contact_label" translatable="false">CONTATO 01</string>
-    <string name="nostromo_range_label" translatable="false">ALCANCE</string>
-    <string name="nostromo_range_value" translatable="false">20 M</string>
-    <string name="nostromo_azimuth_label" translatable="false">AZIMUTE</string>
-    <string name="nostromo_azimuth_value" translatable="false">042°</string>
-    <string name="nostromo_panel_title" translatable="false">RASTREADOR DE MOVIMENTO</string>
-    <string name="nostromo_panel_state" translatable="false">[ATIVO]</string>
-    <string name="phosphor_color_label" translatable="false">Cor do fósforo</string>
-    <string name="nostromo_header" translatable="false">MU/TH/UR 6000 · ENERGIA %1$s</string>
-    <string name="nostromo_prompt_hint" translatable="false">DIGITE UM COMANDO</string>
-    <string name="nostromo_filter_hint" translatable="false">FILTRAR PROGRAMAS</string>
-    <string name="nostromo_section_programs" translatable="false">PROGRAMAS</string>
-    <string name="nostromo_matches_one" translatable="false">1 CORRESPONDÊNCIA</string>
-    <string name="nostromo_matches_many" translatable="false">%1$d CORRESPONDÊNCIAS</string>
-    <string name="nostromo_swipe_hint" translatable="false">▲ DESLIZE PARA O DIRETÓRIO DE PROGRAMAS</string>
-    <string name="nostromo_quick_access" translatable="false">› ACESSO RÁPIDO</string>
-    <string name="smartspace_widget_summary" translatable="false">Relógio, data e alvos no topo da tela inicial</string>
-    <string name="smartspace_widget_off" translatable="false">Desligado</string>
-    <string name="smartspace_widget_terminal_description" translatable="false">Mostra o relógio, a data e o rastreador de movimento no topo da tela inicial.</string>
-    <string name="about_fork_heading" translatable="false">Sobre este projeto</string>
+    <string name="nostromo_status_line">HYPERSLEEP CYCLE · SECTION A</string>
+    <string name="nostromo_panel_title">MOTION TRACKER</string>
+    <string name="nostromo_panel_state">[ACTIVE]</string>
+    <string name="nostromo_header">MU/TH/UR 6000 · POWER %1$s</string>
+    <string name="nostromo_prompt_hint">TYPE A COMMAND</string>
+    <string name="nostromo_filter_hint">FILTER PROGRAMS</string>
+    <string name="nostromo_section_programs">PROGRAMS</string>
+    <string name="nostromo_matches_one">1 MATCH</string>
+    <string name="nostromo_matches_many">%1$d MATCHES</string>
+    <string name="nostromo_swipe_hint">▲ SWIPE UP FOR THE PROGRAM DIRECTORY</string>
+    <string name="nostromo_quick_access">› QUICK ACCESS</string>
+    <string name="smartspace_widget_summary">Clock, date and targets at the top of the home screen</string>
+    <string name="smartspace_widget_off">Off</string>
+    <string name="smartspace_widget_terminal_description">Shows the clock, the date and the motion tracker at the top of the home screen.</string>
+    <string name="about_fork_heading">About this project</string>
     <!-- Onboarding (primeira execução) -->
     <string name="onboarding_header_left" translatable="false">MU/TH/UR 6000</string>
     <string name="onboarding_header_right" translatable="false">TERMINAL 03</string>
-    <string name="onboarding_boot_title" translatable="false">&gt; INICIALIZAÇÃO</string>
-    <string name="onboarding_boot_subtitle" translatable="false">TERMINAL · FORK DO LAWNCHAIR</string>
+    <string name="onboarding_boot_title">&gt; BOOT SEQUENCE</string>
+    <string name="onboarding_boot_subtitle">TERMINAL · LAWNCHAIR FORK</string>
     <string name="onboarding_wordmark" translatable="false">TERMINAL</string>
-    <string name="onboarding_boot_memory" translatable="false">VERIFICANDO MEMÓRIA</string>
-    <string name="onboarding_boot_icons" translatable="false">CARREGANDO TEMA DE ÍCONES</string>
-    <string name="onboarding_boot_apps" translatable="false">INDEXANDO PROGRAMAS</string>
-    <string name="onboarding_boot_default" translatable="false">LAUNCHER PADRÃO</string>
-    <string name="onboarding_boot_notifications" translatable="false">ACESSO A NOTIFICAÇÕES</string>
+    <string name="onboarding_boot_memory">CHECKING MEMORY</string>
+    <string name="onboarding_boot_icons">LOADING ICON THEME</string>
+    <string name="onboarding_boot_apps">INDEXING PROGRAMS</string>
+    <string name="onboarding_boot_default">DEFAULT LAUNCHER</string>
+    <string name="onboarding_boot_notifications">NOTIFICATION ACCESS</string>
     <string name="onboarding_status_ok" translatable="false">OK</string>
-    <string name="onboarding_status_undefined" translatable="false">[NÃO DEFINIDO]</string>
-    <string name="onboarding_status_pending" translatable="false">[PENDENTE]</string>
-    <string name="onboarding_status_skipped" translatable="false">[PULADO]</string>
-    <string name="onboarding_pending_actions" translatable="false">AÇÕES PENDENTES: %1$d</string>
-    <string name="onboarding_all_done" translatable="false">TODAS AS AÇÕES CONCLUÍDAS.</string>
-    <string name="onboarding_start" translatable="false">INICIAR CONFIGURAÇÃO</string>
-    <string name="onboarding_continue" translatable="false">CONTINUAR</string>
-    <string name="onboarding_skip" translatable="false">PULAR POR ENQUANTO</string>
-    <string name="onboarding_step_of" translatable="false">PASSO %1$d/3</string>
-    <string name="onboarding_default_heading" translatable="false">&gt; LAUNCHER PADRÃO</string>
-    <string name="onboarding_default_title" translatable="false">DEFINA O TERMINAL COMO LAUNCHER PADRÃO</string>
-    <string name="onboarding_default_unlocks" translatable="false">O QUE ISSO LIBERA</string>
-    <string name="onboarding_default_benefit_home" translatable="false">[+] BOTÃO INÍCIO ABRE O TERMINAL</string>
-    <string name="onboarding_default_benefit_shortcuts" translatable="false">[+] ATALHOS DE APPS E RECURSOS EXTRAS</string>
-    <string name="onboarding_default_active" translatable="false">LAUNCHER PADRÃO ATIVO</string>
-    <string name="onboarding_default_active_desc" translatable="false">O TERMINAL É O LAUNCHER PADRÃO DESTE APARELHO.</string>
-    <string name="onboarding_color_heading" translatable="false">&gt; COR DO FÓSFORO</string>
-    <string name="onboarding_color_title" translatable="false">ESCOLHA A COR DO FÓSFORO</string>
-    <string name="onboarding_color_hint" translatable="false">VOCÊ PODE MUDAR DEPOIS EM CONFIGURAÇÕES › GERAL › COR DO FÓSFORO.</string>
-    <string name="onboarding_notifications_heading" translatable="false">&gt; PONTOS DE NOTIFICAÇÃO</string>
-    <string name="onboarding_notifications_title" translatable="false">MOSTRE AVISOS NOS ÍCONES</string>
-    <string name="onboarding_notifications_desc" translatable="false">O Terminal precisa de acesso às notificações para marcar com um ponto os apps que têm avisos.</string>
-    <string name="onboarding_notifications_grant" translatable="false">CONCEDER ACESSO</string>
-    <string name="onboarding_notifications_granted" translatable="false">ACESSO CONCEDIDO</string>
-    <string name="onboarding_ready_heading" translatable="false">&gt; SISTEMA PRONTO</string>
-    <string name="onboarding_ready_title" translatable="false">PRONTO.</string>
-    <string name="onboarding_ready_skipped" translatable="false">ITENS PULADOS PODEM SER ATIVADOS DEPOIS EM CONFIGURAÇÕES.</string>
-    <string name="onboarding_ready_hint_swipe" translatable="false">▲ DESLIZE PARA O DIRETÓRIO DE PROGRAMAS</string>
-    <string name="onboarding_ready_hint_command" translatable="false">&gt; DIGITE UM COMANDO PARA BUSCAR APPS</string>
-    <string name="onboarding_ready_color" translatable="false">COR DO FÓSFORO</string>
-    <string name="onboarding_enter" translatable="false">ENTRAR NO TERMINAL</string>
-    <string name="onboarding_skip_all" translatable="false">PULAR CONFIGURAÇÃO</string>
-    <string name="onboarding_redo_menu" translatable="false">Rever configuração inicial</string>
+    <string name="onboarding_status_undefined">[NOT SET]</string>
+    <string name="onboarding_status_pending">[PENDING]</string>
+    <string name="onboarding_status_skipped">[SKIPPED]</string>
+    <string name="onboarding_pending_actions">PENDING ACTIONS: %1$d</string>
+    <string name="onboarding_all_done">ALL ACTIONS COMPLETE.</string>
+    <string name="onboarding_start">START SETUP</string>
+    <string name="onboarding_continue">CONTINUE</string>
+    <string name="onboarding_skip">SKIP FOR NOW</string>
+    <string name="onboarding_step_of">STEP %1$d/3</string>
+    <string name="onboarding_default_heading">&gt; DEFAULT LAUNCHER</string>
+    <string name="onboarding_default_title">SET TERMINAL AS THE DEFAULT LAUNCHER</string>
+    <string name="onboarding_default_unlocks">WHAT THIS UNLOCKS</string>
+    <string name="onboarding_default_benefit_home">[+] HOME BUTTON OPENS TERMINAL</string>
+    <string name="onboarding_default_benefit_shortcuts">[+] APP SHORTCUTS AND EXTRA FEATURES</string>
+    <string name="onboarding_default_active">DEFAULT LAUNCHER ACTIVE</string>
+    <string name="onboarding_default_active_desc">TERMINAL IS THIS DEVICE\'S DEFAULT LAUNCHER.</string>
+    <string name="onboarding_color_heading">&gt; PHOSPHOR COLOR</string>
+    <string name="onboarding_color_title">CHOOSE THE PHOSPHOR COLOR</string>
+    <string name="onboarding_color_hint">YOU CAN CHANGE IT LATER IN SETTINGS › APPEARANCE.</string>
+    <string name="onboarding_notifications_heading">&gt; NOTIFICATION DOTS</string>
+    <string name="onboarding_notifications_title">SHOW ALERTS ON ICONS</string>
+    <string name="onboarding_notifications_desc">Terminal needs notification access to mark apps that have alerts with a dot.</string>
+    <string name="onboarding_notifications_grant">GRANT ACCESS</string>
+    <string name="onboarding_notifications_granted">ACCESS GRANTED</string>
+    <string name="onboarding_ready_heading">&gt; SYSTEM READY</string>
+    <string name="onboarding_ready_title">READY.</string>
+    <string name="onboarding_ready_skipped">SKIPPED ITEMS CAN BE TURNED ON LATER IN SETTINGS.</string>
+    <string name="onboarding_ready_hint_swipe">▲ SWIPE UP FOR THE PROGRAM DIRECTORY</string>
+    <string name="onboarding_ready_hint_command">&gt; TYPE A COMMAND TO FIND APPS</string>
+    <string name="onboarding_ready_color">PHOSPHOR COLOR</string>
+    <string name="onboarding_enter">ENTER TERMINAL</string>
+    <string name="onboarding_skip_all">SKIP SETUP</string>
+    <string name="onboarding_redo_menu">Run initial setup again</string>
 
-    <string name="command_bar_setting" translatable="false">Barra de comando</string>
-    <string name="command_actions_title" translatable="false">Ações da barra de comando</string>
-    <string name="command_actions_desc" translatable="false">Atribua uma letra a ações de outros apps (w = WhatsApp)</string>
-    <string name="command_bar_setting_desc" translatable="false">Tocar na barra abre o terminal de comandos com autocompletar (abrir, calc, alarme, ligar, voz...)</string>
-    <string name="command_title" translatable="false">&gt; ENTRADA DE COMANDO</string>
-    <string name="command_subtitle" translatable="false">AUTOCOMPLETAR · HISTÓRICO</string>
+    <string name="command_bar_setting">Command bar</string>
+    <string name="command_actions_title">Command bar actions</string>
+    <string name="command_actions_desc">Assign a letter to actions from other apps (w = WhatsApp)</string>
+    <string name="command_bar_setting_desc">Tapping the bar opens the command terminal with autocomplete (abrir, calc, alarme, ligar, voz...)</string>
+    <string name="command_title">&gt; COMMAND INPUT</string>
+    <string name="command_subtitle">AUTOCOMPLETE · HISTORY</string>
     <string name="command_header_right" translatable="false">TERMINAL 03</string>
-    <string name="command_contacts_needed" translatable="false">ACESSO A CONTATOS NECESSÁRIO PARA ESTE COMANDO.</string>
-    <string name="command_grant" translatable="false">CONCEDER</string>
-    <string name="command_key_history" translatable="false">[▲] HISTÓRICO</string>
-    <string name="command_key_complete" translatable="false">[TAB] COMPLETAR</string>
-    <string name="command_key_next" translatable="false">[▼] PRÓXIMA</string>
-    <string name="command_executed" translatable="false">EXECUTADO</string>
-    <string name="command_copied" translatable="false">COPIADO · %1$s</string>
-    <string name="command_failed" translatable="false">NENHUM APP PODE EXECUTAR ESTE COMANDO</string>
-    <string name="command_voice" translatable="false">Falar o comando</string>
-    <string name="command_voice_prompt" translatable="false">Diga o comando</string>
-    <string name="command_input_label" translatable="false">Comando</string>
-    <string name="command_chips_title" translatable="false">RECENTES · FIXADOS</string>
-    <string name="command_history_clear" translatable="false">[×] LIMPAR RECENTES</string>
-    <string name="command_more" translatable="false">MOSTRANDO %1$d DE %2$d · DIGITE ? PARA VER TODOS</string>
-    <string name="cmd_pref_undo" translatable="false">Desfazer</string>
-    <string name="cmd_pref_cancel" translatable="false">Cancelar</string>
-    <string name="cmd_pref_save" translatable="false">Salvar</string>
-    <string name="cmd_pref_remove" translatable="false">Remover</string>
-    <string name="cmd_pref_test" translatable="false">Testar</string>
-    <string name="cmd_pref_close" translatable="false">Fechar</string>
-    <string name="cmd_pref_back" translatable="false">Voltar</string>
-    <string name="cmd_pref_search" translatable="false">Buscar ação ou apelido</string>
-    <string name="cmd_pref_group_actions" translatable="false">Ações cadastradas</string>
-    <string name="cmd_pref_group_actions_short" translatable="false">Ações</string>
-    <string name="cmd_pref_group_aliases" translatable="false">Apelidos</string>
-    <string name="cmd_pref_group_add" translatable="false">Adicionar</string>
-    <string name="cmd_pref_group_backup" translatable="false">Backup e compartilhamento</string>
-    <string name="cmd_pref_no_actions" translatable="false">Nenhuma ação</string>
-    <string name="cmd_pref_no_actions_hint" translatable="false">Adicione abaixo</string>
-    <string name="cmd_pref_no_match" translatable="false">Nada na busca</string>
-    <string name="cmd_pref_new_alias" translatable="false">Novo apelido</string>
-    <string name="cmd_pref_new_alias_hint" translatable="false">Uma palavra sua para um comando inteiro (mae = ligar maria). Vale digitado e falado</string>
-    <string name="cmd_pref_recipes" translatable="false">Receitas prontas</string>
-    <string name="cmd_pref_recipes_hint" translatable="false">WhatsApp, Telegram, SMS, YouTube, Spotify</string>
-    <string name="cmd_pref_app_functions" translatable="false">Funções de um app</string>
-    <string name="cmd_pref_app_functions_hint" translatable="false">Atalhos do launcher e intents que o app aceita</string>
-    <string name="cmd_pref_advanced" translatable="false">Avançado</string>
-    <string name="cmd_pref_advanced_hint" translatable="false">Monte a intent manualmente (ação, URI, pacote)</string>
-    <string name="cmd_pref_backup" translatable="false">Compartilhar, exportar ou importar</string>
-    <string name="cmd_pref_backup_hint" translatable="false">Envie ações e apelidos como arquivo ou abra um arquivo .tcmd</string>
-    <string name="cmd_pref_share" translatable="false">Compartilhar comandos</string>
-    <string name="cmd_pref_share_hint" translatable="false">Escolha ações e apelidos e envie como arquivo</string>
-    <string name="cmd_pref_export" translatable="false">Exportar comandos</string>
-    <string name="cmd_pref_export_hint" translatable="false">Escolha o que salvar em um arquivo</string>
-    <string name="cmd_pref_import" translatable="false">Importar comandos</string>
-    <string name="cmd_pref_import_hint" translatable="false">Adiciona os de um arquivo, sem trocar os existentes</string>
-    <string name="cmd_pref_restore" translatable="false">Restaurar padrão</string>
-    <string name="cmd_pref_restore_hint" translatable="false">Volta apenas o w (WhatsApp)</string>
-    <string name="cmd_pref_restore_title" translatable="false">Restaurar o padrão?</string>
-    <string name="cmd_pref_restore_text" translatable="false">As ações cadastradas serão trocadas apenas pelo w (WhatsApp). Os apelidos não mudam. Dá para desfazer logo depois.</string>
-    <string name="cmd_pref_restore_ok" translatable="false">Restaurar</string>
-    <string name="cmd_pref_restored" translatable="false">Padrão restaurado</string>
-    <string name="cmd_pref_group_history" translatable="false">Histórico</string>
-    <string name="cmd_pref_clear_history" translatable="false">Limpar histórico de comandos</string>
-    <string name="cmd_pref_clear_history_count" translatable="false">%1$d comandos recentes salvos</string>
-    <string name="cmd_pref_clear_history_empty" translatable="false">Nenhum comando no histórico</string>
-    <string name="cmd_pref_history_cleared" translatable="false">Histórico limpo</string>
-    <string name="cmd_pref_action_removed" translatable="false">Ação %1$s removida</string>
-    <string name="cmd_pref_alias_removed" translatable="false">Apelido %1$s removido</string>
-    <string name="cmd_pref_exported" translatable="false">Comandos exportados</string>
-    <string name="cmd_pref_export_failed" translatable="false">Falha ao exportar</string>
-    <string name="cmd_pref_share_failed" translatable="false">Falha ao compartilhar</string>
-    <string name="cmd_pref_share_title" translatable="false">Compartilhar comandos</string>
-    <string name="cmd_pref_export_title" translatable="false">Exportar comandos</string>
-    <string name="cmd_pref_apps_title" translatable="false">Apps com integrações</string>
-    <string name="cmd_pref_searching_apps" translatable="false">Procurando apps…</string>
-    <string name="cmd_pref_no_integrations" translatable="false">Nenhum app com integrações externas. Use o modo Avançado.</string>
-    <string name="cmd_pref_no_functions" translatable="false">Nenhuma função encontrada. Use o modo Avançado para informar a intent.</string>
-    <string name="cmd_pref_kind_shortcut" translatable="false">Atalho · </string>
-    <string name="cmd_pref_kind_recipe" translatable="false">Receita · </string>
-    <string name="cmd_pref_kind_intent" translatable="false">Intent · </string>
-    <string name="cmd_pref_letter_label" translatable="false">Letra</string>
-    <string name="cmd_pref_letter_title" translatable="false">Letra da ação</string>
-    <string name="cmd_pref_name_label" translatable="false">Nome</string>
-    <string name="cmd_pref_sms_fallback" translatable="false">Sem %1$s instalado: abre SMS</string>
-    <string name="cmd_pref_try_label" translatable="false">Experimente</string>
-    <string name="cmd_pref_sample_text" translatable="false">exemplo</string>
+    <string name="command_contacts_needed">THIS COMMAND NEEDS CONTACTS ACCESS.</string>
+    <string name="command_grant">GRANT</string>
+    <string name="command_key_history">[▲] HISTORY</string>
+    <string name="command_key_complete">[TAB] COMPLETE</string>
+    <string name="command_key_next">[▼] NEXT</string>
+    <string name="command_executed">EXECUTED</string>
+    <string name="command_copied">COPIED · %1$s</string>
+    <string name="command_failed">NO APP CAN RUN THIS COMMAND</string>
+    <string name="command_voice">Speak the command</string>
+    <string name="command_voice_prompt">Say the command</string>
+    <string name="command_input_label">Command</string>
+    <string name="command_chips_title">RECENT · PINNED</string>
+    <string name="command_history_clear">[×] CLEAR RECENT</string>
+    <string name="command_more">SHOWING %1$d OF %2$d · TYPE ? TO SEE ALL</string>
+    <string name="cmd_pref_undo">Undo</string>
+    <string name="cmd_pref_cancel">Cancel</string>
+    <string name="cmd_pref_save">Save</string>
+    <string name="cmd_pref_remove">Remove</string>
+    <string name="cmd_pref_test">Test</string>
+    <string name="cmd_pref_close">Close</string>
+    <string name="cmd_pref_back">Back</string>
+    <string name="cmd_pref_search">Search actions or aliases</string>
+    <string name="cmd_pref_group_actions">Saved actions</string>
+    <string name="cmd_pref_group_actions_short">Actions</string>
+    <string name="cmd_pref_group_aliases">Aliases</string>
+    <string name="cmd_pref_group_add">Add</string>
+    <string name="cmd_pref_group_backup">Backup and sharing</string>
+    <string name="cmd_pref_no_actions">No actions</string>
+    <string name="cmd_pref_no_actions_hint">Add one below</string>
+    <string name="cmd_pref_no_match">Nothing matches the search</string>
+    <string name="cmd_pref_new_alias">New alias</string>
+    <string name="cmd_pref_new_alias_hint">A word of your own for a whole command (mae = ligar maria). Works typed and spoken</string>
+    <string name="cmd_pref_recipes">Ready-made recipes</string>
+    <string name="cmd_pref_recipes_hint">WhatsApp, Telegram, SMS, YouTube, Spotify</string>
+    <string name="cmd_pref_app_functions">An app\'s functions</string>
+    <string name="cmd_pref_app_functions_hint">Launcher shortcuts and intents the app accepts</string>
+    <string name="cmd_pref_advanced">Advanced</string>
+    <string name="cmd_pref_advanced_hint">Build the intent by hand (action, URI, package)</string>
+    <string name="cmd_pref_backup">Share, export or import</string>
+    <string name="cmd_pref_backup_hint">Send actions and aliases as a file or open a .tcmd file</string>
+    <string name="cmd_pref_share">Share commands</string>
+    <string name="cmd_pref_share_hint">Pick actions and aliases and send them as a file</string>
+    <string name="cmd_pref_export">Export commands</string>
+    <string name="cmd_pref_export_hint">Choose what to save to a file</string>
+    <string name="cmd_pref_import">Import commands</string>
+    <string name="cmd_pref_import_hint">Adds the ones in a file without replacing existing ones</string>
+    <string name="cmd_pref_restore">Restore default</string>
+    <string name="cmd_pref_restore_hint">Brings back only w (WhatsApp)</string>
+    <string name="cmd_pref_restore_title">Restore the default?</string>
+    <string name="cmd_pref_restore_text">Your saved actions will be replaced by just w (WhatsApp). Aliases don\'t change. You can undo right after.</string>
+    <string name="cmd_pref_restore_ok">Restore</string>
+    <string name="cmd_pref_restored">Default restored</string>
+    <string name="cmd_pref_group_history">History</string>
+    <string name="cmd_pref_clear_history">Clear command history</string>
+    <string name="cmd_pref_clear_history_count">%1$d recent commands saved</string>
+    <string name="cmd_pref_clear_history_empty">No commands in history</string>
+    <string name="cmd_pref_history_cleared">History cleared</string>
+    <string name="cmd_pref_action_removed">Action %1$s removed</string>
+    <string name="cmd_pref_alias_removed">Alias %1$s removed</string>
+    <string name="cmd_pref_exported">Commands exported</string>
+    <string name="cmd_pref_export_failed">Export failed</string>
+    <string name="cmd_pref_share_failed">Sharing failed</string>
+    <string name="cmd_pref_share_title">Share commands</string>
+    <string name="cmd_pref_export_title">Export commands</string>
+    <string name="cmd_pref_apps_title">Apps with integrations</string>
+    <string name="cmd_pref_searching_apps">Looking for apps…</string>
+    <string name="cmd_pref_no_integrations">No apps with external integrations. Use Advanced mode.</string>
+    <string name="cmd_pref_no_functions">No functions found. Use Advanced mode to enter the intent.</string>
+    <string name="cmd_pref_kind_shortcut">Shortcut ·</string>
+    <string name="cmd_pref_kind_recipe">Recipe ·</string>
+    <string name="cmd_pref_kind_intent">Intent ·</string>
+    <string name="cmd_pref_letter_label">Letter</string>
+    <string name="cmd_pref_letter_title">Action letter</string>
+    <string name="cmd_pref_name_label">Name</string>
+    <string name="cmd_pref_sms_fallback">%1$s not installed: opens SMS</string>
+    <string name="cmd_pref_try_label">Try it</string>
+    <string name="cmd_pref_sample_text">example</string>
     <string name="cmd_pref_sample_contact" translatable="false">ana</string>
-    <string name="cmd_pref_sample_both" translatable="false">ana chego logo</string>
-    <string name="cmd_pref_preview" translatable="false">Pré-visualização</string>
-    <string name="cmd_pref_needs_contacts" translatable="false">Conceda acesso a contatos na barra de comando para conferir</string>
-    <string name="cmd_pref_alias_new_title" translatable="false">Novo apelido</string>
-    <string name="cmd_pref_alias_edit_title" translatable="false">Editar apelido</string>
-    <string name="cmd_pref_alias_label" translatable="false">Apelido</string>
-    <string name="cmd_pref_alias_hint" translatable="false">Digitado ou falado. Acentos não importam</string>
-    <string name="cmd_pref_alias_command" translatable="false">Comando</string>
-    <string name="cmd_pref_alias_command_hint" translatable="false">Ex.: ligar maria · abrir chrome · w ana · rota casa</string>
-    <string name="cmd_pref_alias_spoken" translatable="false">Falando “%1$s”: o mesmo (acentos são ignorados)</string>
-    <string name="cmd_pref_alias_with_text" translatable="false">Com texto: %1$s oi → %2$s oi</string>
-    <string name="cmd_pref_alias_typing" translatable="false">Digitando %1$s:</string>
-    <string name="cmd_pref_nothing_to_send" translatable="false">Não há ações nem apelidos cadastrados.</string>
-    <string name="cmd_pref_continue" translatable="false">Continuar</string>
-    <string name="cmd_pref_continue_count" translatable="false">Continuar (%1$d)</string>
-    <string name="cmd_pref_none" translatable="false">Nenhum</string>
-    <string name="cmd_pref_all" translatable="false">Todos</string>
-    <string name="cmd_pref_manual_title" translatable="false">Ação manual</string>
-    <string name="cmd_pref_manual_name" translatable="false">Nome</string>
-    <string name="cmd_pref_manual_action" translatable="false">Ação da intent</string>
-    <string name="cmd_pref_action_other" translatable="false">Outra…</string>
-    <string name="cmd_pref_action_other_hint" translatable="false">Nome completo, como android.intent.action.EDIT</string>
-    <string name="cmd_pref_manual_uri" translatable="false">URI</string>
-    <string name="cmd_pref_manual_uri_hint" translatable="false">Ex.: tg://resolve?phone={number} · use {text}, {name}, {phone}</string>
-    <string name="cmd_pref_manual_package" translatable="false">Pacote (opcional)</string>
-    <string name="cmd_pref_manual_arg" translatable="false">O que digitar depois da letra</string>
-    <string name="cmd_pref_manual_share" translatable="false">Enviar o texto como EXTRA_TEXT (tipo text/plain)</string>
-    <string name="cmd_pref_arg_none" translatable="false">Nada (roda só com a letra)</string>
-    <string name="cmd_pref_arg_text" translatable="false">Um texto</string>
-    <string name="cmd_pref_arg_contact" translatable="false">Um contato</string>
-    <string name="cmd_pref_arg_contact_text" translatable="false">Um contato e uma mensagem</string>
-    <string name="cmd_imp_invalid" translatable="false">Arquivo de comandos inválido</string>
-    <string name="cmd_imp_title" translatable="false">Importar comandos</string>
-    <string name="cmd_imp_warning" translatable="false">Só importe arquivos de quem você conhece: as ações abrem outros apps. O que você já tem não é substituído.</string>
-    <string name="cmd_imp_summary" translatable="false">Arquivo com %1$d ação(ões) e %2$d apelido(s).</string>
-    <string name="cmd_imp_blocked" translatable="false">%1$d ação(ões) bloqueada(s): usam um link que pode acessar arquivos ou componentes do aparelho.</string>
-    <string name="cmd_imp_rename" translatable="false">Marque para importar como %1$s</string>
-    <string name="cmd_imp_confirm" translatable="false">Importar</string>
-    <string name="cmd_imp_confirm_count" translatable="false">Importar %1$d</string>
-    <string name="cmd_imp_done" translatable="false">%1$d ações e %2$d apelidos importados</string>
-    <string name="cmd_imp_skipped" translatable="false">, %1$d ignorados (nome em uso)</string>
-    <string name="glance_group_targets" translatable="false">Alvos</string>
-    <string name="glance_agenda" translatable="false">Agenda</string>
-    <string name="glance_agenda_desc" translatable="false">Próximo evento, local e rota</string>
-    <string name="glance_weather" translatable="false">Clima</string>
-    <string name="glance_weather_desc" translatable="false">Temperatura e condição atual</string>
-    <string name="glance_media" translatable="false">Mídia tocando</string>
-    <string name="glance_media_desc" translatable="false">Controles da faixa atual</string>
-    <string name="glance_alarm" translatable="false">Alarme</string>
-    <string name="glance_alarm_desc" translatable="false">Próximo alarme programado</string>
-    <string name="glance_bluetooth" translatable="false">Bateria Bluetooth</string>
-    <string name="glance_bluetooth_desc" translatable="false">Fones e relógio conectados</string>
-    <string name="glance_reminders" translatable="false">Lembretes</string>
-    <string name="glance_reminders_desc" translatable="false">Tarefas e lembretes que o Smartspacer fornece</string>
-    <string name="glance_shortcuts" translatable="false">Atalhos de utilidade</string>
-    <string name="glance_shortcuts_desc" translatable="false">Lanterna, calculadora, câmera e relógio sob o painel</string>
-    <string name="glance_no_calculator" translatable="false">Nenhuma calculadora encontrada</string>
-    <string name="glance_group_shortcuts" translatable="false">Atalhos</string>
-    <string name="effects_group" translatable="false">Efeitos do terminal</string>
-    <string name="terminal_icon_effect" translatable="false">Efeito dos ícones</string>
-    <string name="terminal_icon_effect_desc" translatable="false">Glifo de fósforo sobre painel escuro. Desligado, cada app mostra o ícone original</string>
-    <string name="widget_effect" translatable="false">Efeito dos widgets</string>
-    <string name="widget_effect_desc" translatable="false">Tom e linhas de varredura na cor do fósforo sobre os widgets adicionados. Desligado, cada widget mostra suas cores</string>
-    <string name="crt_effect" translatable="false">Efeito de monitor</string>
-    <string name="crt_effect_desc" translatable="false">Linhas de varredura, faixa de brilho, cintilação e vinheta sobre a tela</string>
-    <string name="effect_intensity" translatable="false">Intensidade</string>
-    <string name="lottie_widget" translatable="false">Animação Lottie</string>
-    <string name="lottie_widget_desc" translatable="false">Toca uma animação Lottie importada (.json ou .lottie). Toca em loop ou uma vez a cada toque, e o toque pode rodar um comando</string>
-    <string name="lottie_widget_animation" translatable="false">Animação</string>
-    <string name="lottie_widget_no_animation" translatable="false">Nenhuma escolhida</string>
-    <string name="lottie_widget_current" translatable="false">Animação atual</string>
-    <string name="lottie_widget_pick" translatable="false">Escolher</string>
-    <string name="lottie_widget_change" translatable="false">Trocar</string>
-    <string name="lottie_widget_command" translatable="false">Comando ao tocar (opcional)</string>
+    <string name="cmd_pref_sample_both">ana on my way</string>
+    <string name="cmd_pref_needs_contacts">Grant contacts access in the command bar to check</string>
+    <string name="cmd_pref_alias_new_title">New alias</string>
+    <string name="cmd_pref_alias_edit_title">Edit alias</string>
+    <string name="cmd_pref_alias_label">Alias</string>
+    <string name="cmd_pref_alias_hint">Typed or spoken. Accents don\'t matter</string>
+    <string name="cmd_pref_alias_command">Command</string>
+    <string name="cmd_pref_alias_command_hint">E.g.: ligar maria · abrir chrome · w ana · rota casa</string>
+    <string name="cmd_pref_alias_spoken">Saying “%1$s”: the same (accents are ignored)</string>
+    <string name="cmd_pref_alias_with_text">With text: %1$s hi → %2$s hi</string>
+    <string name="cmd_pref_alias_typing">Typing %1$s:</string>
+    <string name="cmd_pref_nothing_to_send">There are no saved actions or aliases.</string>
+    <string name="cmd_pref_continue">Continue</string>
+    <string name="cmd_pref_continue_count">Continue (%1$d)</string>
+    <string name="cmd_pref_none">None</string>
+    <string name="cmd_pref_all">All</string>
+    <string name="cmd_pref_manual_title">Manual action</string>
+    <string name="cmd_pref_manual_name">Name</string>
+    <string name="cmd_pref_manual_action">Intent action</string>
+    <string name="cmd_pref_action_other">Other…</string>
+    <string name="cmd_pref_action_other_hint">Full name, such as android.intent.action.EDIT</string>
+    <string name="cmd_pref_manual_uri">URI</string>
+    <string name="cmd_pref_manual_uri_hint">E.g.: tg://resolve?phone={number} · use {text}, {name}, {phone}</string>
+    <string name="cmd_pref_manual_package">Package (optional)</string>
+    <string name="cmd_pref_manual_arg">What to type after the letter</string>
+    <string name="cmd_pref_manual_share">Send the text as EXTRA_TEXT (type text/plain)</string>
+    <string name="cmd_pref_arg_none">Nothing (runs with just the letter)</string>
+    <string name="cmd_pref_arg_text">A text</string>
+    <string name="cmd_pref_arg_contact">A contact</string>
+    <string name="cmd_pref_arg_contact_text">A contact and a message</string>
+    <string name="cmd_imp_invalid">Invalid commands file</string>
+    <string name="cmd_imp_title">Import commands</string>
+    <string name="cmd_imp_warning">Only import files from people you know: actions open other apps. What you already have is not replaced.</string>
+    <string name="cmd_imp_summary">File with %1$d action(s) and %2$d alias(es).</string>
+    <string name="cmd_imp_blocked">%1$d action(s) blocked: they use a link that can reach files or components on the device.</string>
+    <string name="cmd_imp_rename">Check to import as %1$s</string>
+    <string name="cmd_imp_confirm">Import</string>
+    <string name="cmd_imp_confirm_count">Import %1$d</string>
+    <string name="cmd_imp_done">%1$d actions and %2$d aliases imported</string>
+    <string name="cmd_imp_skipped">, %1$d skipped (name in use)</string>
+    <string name="glance_group_targets">Targets</string>
+    <string name="glance_agenda">Agenda</string>
+    <string name="glance_agenda_desc">Next event, place and route</string>
+    <string name="glance_weather">Weather</string>
+    <string name="glance_weather_desc">Current temperature and conditions</string>
+    <string name="glance_media">Now playing</string>
+    <string name="glance_media_desc">Controls for the current track</string>
+    <string name="glance_alarm">Alarm</string>
+    <string name="glance_alarm_desc">Next scheduled alarm</string>
+    <string name="glance_bluetooth">Bluetooth battery</string>
+    <string name="glance_bluetooth_desc">Connected headphones and watch</string>
+    <string name="glance_reminders">Reminders</string>
+    <string name="glance_reminders_desc">Tasks and reminders from Smartspacer</string>
+    <string name="glance_shortcuts">Utility shortcuts</string>
+    <string name="glance_shortcuts_desc">Flashlight, calculator, camera and clock under the panel</string>
+    <string name="glance_no_calculator">No calculator found</string>
+    <string name="glance_group_shortcuts">Shortcuts</string>
+    <string name="effects_group">Terminal effects</string>
+    <string name="terminal_icon_effect">Icon effect</string>
+    <string name="terminal_icon_effect_desc">Phosphor glyph on a dark panel. When off, each app shows its original icon</string>
+    <string name="widget_effect">Widget effect</string>
+    <string name="widget_effect_desc">Phosphor-colored tint and scanlines over added widgets. When off, each widget shows its own colors</string>
+    <string name="crt_effect">Monitor effect</string>
+    <string name="crt_effect_desc">Scanlines, a glow band, flicker and vignette over the screen</string>
+    <string name="effect_intensity">Intensity</string>
+    <string name="lottie_widget">Lottie animation</string>
+    <string name="lottie_widget_desc">Plays an imported Lottie animation (.json or .lottie). Loops or plays once per tap, and a tap can run a command</string>
+    <string name="lottie_widget_animation">Animation</string>
+    <string name="lottie_widget_no_animation">None chosen</string>
+    <string name="lottie_widget_current">Current animation</string>
+    <string name="lottie_widget_pick">Choose</string>
+    <string name="lottie_widget_change">Change</string>
+    <string name="lottie_widget_command">Command on tap (optional)</string>
     <string name="lottie_widget_command_hint" translatable="false">abrir spotify</string>
-    <string name="lottie_widget_command_none" translatable="false">Sem comando, o toque pausa e retoma a animação</string>
-    <string name="lottie_widget_command_none_once" translatable="false">Sem comando, o toque só toca a animação</string>
-    <string name="lottie_widget_playback" translatable="false">Reprodução</string>
-    <string name="lottie_widget_playback_loop" translatable="false">Em loop</string>
-    <string name="lottie_widget_playback_once" translatable="false">Uma vez a cada toque</string>
-    <string name="lottie_widget_save" translatable="false">Salvar</string>
-    <string name="lottie_widget_command_failed" translatable="false">Comando \"%1$s\" não executado: %2$s</string>
-    <string name="lottie_widget_empty" translatable="false">Segure e toque em Configurar para escolher uma animação</string>
-    <string name="lottie_widget_invalid" translatable="false">O arquivo não é uma animação Lottie válida</string>
-    <string name="home_icon_size" translatable="false">Tamanho dos ícones da tela inicial</string>
-    <string name="drawer_icon_size" translatable="false">Tamanho dos ícones da gaveta</string>
-    <string name="drawer_grid_layout" translatable="false">Exibir em grade</string>
-    <string name="drawer_grid_layout_description" translatable="false">Ícones em grade, com pastas, no lugar da lista em linhas</string>
-    <string name="drawer_grid_columns" translatable="false">Colunas da gaveta</string>
-    <string name="glance_group_chats" translatable="false">Conversas rápidas</string>
-    <string name="glance_chats" translatable="false">Conversas do WhatsApp</string>
-    <string name="glance_chats_desc" translatable="false">Seção acima dos ícones fixos, abre direto no chat</string>
-    <string name="glance_chats_howto" translatable="false">No WhatsApp, abra a conversa e toque em ⋮ › Mais › Adicionar atalho. O atalho fixado aparece aqui. Sem escolha, a linha mostra os fixados e depois os mais recentes.</string>
-    <string name="glance_chats_need_default" translatable="false">Defina o Terminal como launcher padrão para ler os atalhos do WhatsApp.</string>
-    <string name="glance_chats_empty" translatable="false">Nenhum atalho de conversa encontrado.</string>
-    <string name="glance_chats_pinned" translatable="false">Atalho fixado</string>
-    <string name="glance_chats_recent" translatable="false">Recente</string>
-    <string name="glance_chats_limit" translatable="false">%1$d de %2$d na tela inicial</string>
-    <string name="glance_chats_badge" translatable="false">Mostrar não lidas</string>
-    <string name="glance_chats_badge_desc" translatable="false">Contador por conversa, lido das notificações</string>
-    <string name="glance_chats_business" translatable="false">Incluir WhatsApp Business</string>
-    <string name="glance_chats_business_desc" translatable="false">Lê também os atalhos de com.whatsapp.w4b</string>
-    <string name="glance_chats_label" translatable="false">› CONVERSAS · WHATSAPP</string>
-    <string name="glance_chats_count" translatable="false">%1$d FIXADAS</string>
-    <string name="glance_chat_open" translatable="false">Abrir conversa com %1$s</string>
-    <string name="glance_lead_time" translatable="false">Antecedência do evento</string>
-    <string name="glance_lead_time_desc" translatable="false">Só destaca o compromisso a partir deste prazo</string>
+    <string name="lottie_widget_command_none">Without a command, a tap pauses and resumes the animation</string>
+    <string name="lottie_widget_command_none_once">Without a command, a tap only plays the animation</string>
+    <string name="lottie_widget_playback">Playback</string>
+    <string name="lottie_widget_playback_loop">Loop</string>
+    <string name="lottie_widget_playback_once">Once per tap</string>
+    <string name="lottie_widget_save">Save</string>
+    <string name="lottie_widget_command_failed">Command \"%1$s\" did not run: %2$s</string>
+    <string name="lottie_widget_empty">Touch and hold, then tap Configure to choose an animation</string>
+    <string name="lottie_widget_invalid">The file is not a valid Lottie animation</string>
+    <string name="home_icon_size">Home screen icon size</string>
+    <string name="drawer_icon_size">Drawer icon size</string>
+    <string name="drawer_grid_layout">Show as grid</string>
+    <string name="drawer_grid_layout_description">Icons in a grid, with folders, instead of the list of rows</string>
+    <string name="drawer_grid_columns">Drawer columns</string>
+    <string name="glance_group_chats">Quick chats</string>
+    <string name="glance_chats">WhatsApp chats</string>
+    <string name="glance_chats_desc">A section above the pinned icons that opens straight into the chat</string>
+    <string name="glance_chats_howto">In WhatsApp, open the chat and tap ⋮ › More › Add shortcut. The pinned shortcut shows up here. With nothing chosen, the row shows pinned chats first and then the most recent ones.</string>
+    <string name="glance_chats_need_default">Set Terminal as the default launcher to read WhatsApp shortcuts.</string>
+    <string name="glance_chats_empty">No chat shortcuts found.</string>
+    <string name="glance_chats_pinned">Pinned shortcut</string>
+    <string name="glance_chats_recent">Recent</string>
+    <string name="glance_chats_limit">%1$d of %2$d on the home screen</string>
+    <string name="glance_chats_badge">Show unread</string>
+    <string name="glance_chats_badge_desc">A counter per chat, read from notifications</string>
+    <string name="glance_chats_business">Include WhatsApp Business</string>
+    <string name="glance_chats_business_desc">Also reads shortcuts from com.whatsapp.w4b</string>
+    <string name="glance_chats_label">› CHATS · WHATSAPP</string>
+    <string name="glance_chats_count">%1$d PINNED</string>
+    <string name="glance_chat_open">Open chat with %1$s</string>
+    <string name="glance_lead_time">Event lead time</string>
     <string name="glance_lead_time_value" translatable="false">%1$d min</string>
-    <string name="glance_bluetooth_setup_title" translatable="false">Bateria Bluetooth precisa de permissão</string>
-    <string name="glance_bluetooth_setup_message" translatable="false">Para mostrar a bateria dos fones e do relógio, o Terminal precisa ver quais dispositivos Bluetooth estão conectados. O Android vai pedir uma confirmação.</string>
-    <string name="glance_priority_group" translatable="false">Prioridade</string>
-    <string name="glance_auto_priority" translatable="false">Prioridade automática</string>
-    <string name="glance_auto_priority_desc" translatable="false">Sobe o evento para o topo e destaca em vermelho pouco antes de começar</string>
-    <string name="glance_max_targets" translatable="false">Número máximo de alvos</string>
-    <string name="glance_empty_primary" translatable="false">NENHUM ALVO ATIVO</string>
-    <string name="glance_empty_secondary" translatable="false">ATIVE ALVOS EM CONFIGURAÇÕES</string>
-    <string name="glance_tag_priority" translatable="false">[PRIORIDADE]</string>
-    <string name="glance_status_line" translatable="false">Linha de status dinâmica</string>
-    <string name="glance_status_line_desc" translatable="false">Perfil de som, armazenamento e memória no lugar do texto fixo sob a data</string>
-    <string name="glance_allow" translatable="false">Permitir</string>
-    <string name="glance_media_setup_title" translatable="false">Mídia tocando precisa de acesso</string>
-    <string name="glance_media_access_message" translatable="false">Para mostrar a música que está tocando, o Terminal precisa ler as notificações.\n\n1. Toque em “Abrir acesso a notificações”.\n2. Na lista, toque em Terminal.\n3. Ative “Permitir acesso a notificações” e confirme.\n4. Volte para cá.</string>
-    <string name="glance_media_access_action" translatable="false">Abrir acesso a notificações</string>
-    <string name="glance_media_dots_message" translatable="false">Para mostrar a música que está tocando, o Terminal precisa que o ponto de notificação no ícone dos apps esteja ligado.\n\n1. Toque em “Abrir notificações”.\n2. Role até o fim da lista de Notificações.\n3. Ligue a opção destacada, a do ponto de notificação no ícone do app.\n4. Volte para cá.\n\nSe nenhuma opção estiver destacada, procure por “ponto de notificação” nas configurações de Notificações.</string>
-    <string name="glance_media_dots_action" translatable="false">Abrir notificações</string>
-    <string name="follow_accent" translatable="false">Seguir o destaque</string>
-    <string name="color_conflict_accent" translatable="false">Essa cor é quase igual à cor de fundo: o texto ficaria ilegível e você perderia o acesso às configurações. Escolha outra.</string>
-    <string name="color_conflict_background" translatable="false">Essa cor é quase igual à cor do destaque: o texto ficaria ilegível e você perderia o acesso às configurações. Escolha outra.</string>
-    <string name="color_weak_contrast" translatable="false">Contraste baixo: o texto pode ficar difícil de ler com essa combinação. Dá para aplicar, mas confira o resultado.</string>
-    <string name="appearance_color_search_outline" translatable="false">Contorno da barra de busca</string>
-    <string name="appearance_color_dock" translatable="false">Fundo do dock</string>
-    <string name="appearance_color_folders" translatable="false">Fundo das pastas</string>
-    <string name="appearance_label" translatable="false">Aparência</string>
-    <string name="appearance_group_presets" translatable="false">Combinações prontas</string>
-    <string name="appearance_group_colors" translatable="false">Cores principais</string>
-    <string name="appearance_group_wallpaper" translatable="false">Papel de parede</string>
-    <string name="appearance_wallpaper_show" translatable="false">Mostrar papel de parede</string>
-    <string name="appearance_wallpaper_show_desc" translatable="false">A tela inicial deixa de ser só a cor de fundo e mostra o papel de parede do sistema</string>
-    <string name="appearance_wallpaper_dim" translatable="false">Escurecer o papel de parede</string>
-    <string name="appearance_wallpaper_choose" translatable="false">Escolher papel de parede</string>
-    <string name="appearance_wallpaper_choose_desc" translatable="false">Abre o seletor de papéis de parede do sistema</string>
-    <string name="appearance_bg_as_wallpaper" translatable="false">Cor de fundo como papel de parede</string>
-    <string name="appearance_bg_as_wallpaper_desc" translatable="false">O papel de parede do sistema vira a cor de fundo e acompanha cada mudança dela</string>
-    <string name="appearance_bg_on_lock_screen" translatable="false">Também na tela de bloqueio</string>
-    <string name="appearance_bg_on_lock_screen_desc" translatable="false">Substitui o papel de parede da tela de bloqueio pela cor de fundo. A imagem atual não pode ser recuperada</string>
-    <string name="appearance_bg_on_lock_screen_confirm_title" translatable="false">Sobrescrever a tela de bloqueio?</string>
-    <string name="appearance_bg_on_lock_screen_confirm_text" translatable="false">O papel de parede atual da tela de bloqueio será substituído pela cor de fundo e não poderá ser recuperado. Para voltar a ter uma imagem, será preciso escolhê-la de novo no seletor do sistema.</string>
-    <string name="appearance_bg_on_lock_screen_confirm" translatable="false">Sobrescrever</string>
-    <string name="appearance_group_details" translatable="false">Outros elementos</string>
-    <string name="appearance_color_accent" translatable="false">Cor de destaque</string>
-    <string name="appearance_group_font" translatable="false">Fonte</string>
-    <string name="appearance_font_ui" translatable="false">Fonte da interface</string>
-    <string name="appearance_pixel_clock" translatable="false">Relógio pixelado</string>
-    <string name="appearance_pixel_clock_desc" translatable="false">O relógio e os valores grandes do painel ficam na fonte pixelada. Desligado, usam a fonte da interface</string>
-    <string name="appearance_complementary" translatable="false">Cores complementares</string>
-    <string name="appearance_complementary_desc" translatable="false">Escolha o destaque e o fundo vem junto, na cor oposta do círculo cromático</string>
-    <string name="complementary_custom" translatable="false">Personalizada</string>
-    <string name="complementary_wheel_title" translatable="false">Círculo cromático</string>
-    <string name="complementary_wheel_hint" translatable="false">Arraste um dos dois pontos: um é o destaque e o outro, na cor oposta, é o fundo. A barra ao lado ajusta a intensidade do fundo.</string>
-    <string name="complementary_apply" translatable="false">Aplicar</string>
-    <string name="complementary_cancel" translatable="false">Cancelar</string>
-    <string name="complementary_red" translatable="false">Vermelho</string>
-    <string name="complementary_vermilion" translatable="false">Vermelhão</string>
-    <string name="complementary_orange" translatable="false">Laranja</string>
-    <string name="complementary_amber" translatable="false">Âmbar</string>
-    <string name="complementary_yellow" translatable="false">Amarelo</string>
-    <string name="complementary_chartreuse" translatable="false">Verde-limão</string>
-    <string name="complementary_green" translatable="false">Verde</string>
-    <string name="complementary_teal" translatable="false">Turquesa</string>
-    <string name="complementary_blue" translatable="false">Azul</string>
-    <string name="complementary_violet" translatable="false">Violeta</string>
-    <string name="complementary_purple" translatable="false">Roxo</string>
-    <string name="complementary_magenta" translatable="false">Magenta</string>
-    <string name="launcher_bg_default" translatable="false">Padrão (preto do terminal)</string>
-    <string name="launcher_bg_color_label" translatable="false">Cor de fundo</string>
-    <string name="glance_auto_rotate" translatable="false">Alternar os alvos sozinho</string>
-    <string name="glance_auto_rotate_desc" translatable="false">Passa para o próximo alvo de tempos em tempos enquanto você olha o painel</string>
-    <string name="glance_rotate_every" translatable="false">Tempo de cada alvo</string>
+    <string name="glance_bluetooth_setup_title">Bluetooth battery needs permission</string>
+    <string name="glance_bluetooth_setup_message">To show the battery of your headphones and watch, Terminal needs to see which Bluetooth devices are connected. Android will ask you to confirm.</string>
+    <string name="glance_priority_group">Priority</string>
+    <string name="glance_auto_priority">Automatic priority</string>
+    <string name="glance_auto_priority_desc">Moves the event to the top and highlights it in red shortly before it starts</string>
+    <string name="glance_max_targets">Maximum number of targets</string>
+    <string name="glance_empty_primary">NO ACTIVE TARGETS</string>
+    <string name="glance_empty_secondary">TURN ON TARGETS IN SETTINGS</string>
+    <string name="glance_tag_priority">[PRIORITY]</string>
+    <string name="glance_status_line">Dynamic status line</string>
+    <string name="glance_status_line_desc">Sound profile, storage and memory instead of the fixed text under the date</string>
+    <string name="glance_allow">Allow</string>
+    <string name="glance_media_setup_title">Now playing needs access</string>
+    <string name="glance_media_access_message">To show the song that is playing, Terminal needs to read notifications.\n\n1. Tap “Open notification access”.\n2. In the list, tap Terminal.\n3. Turn on “Allow notification access” and confirm.\n4. Come back here.</string>
+    <string name="glance_media_access_action">Open notification access</string>
+    <string name="glance_media_dots_message">To show the song that is playing, Terminal needs notification dots on app icons to be on.\n\n1. Tap “Open notifications”.\n2. Scroll to the end of the Notifications list.\n3. Turn on the highlighted option, the notification dot on app icon.\n4. Come back here.\n\nIf no option is highlighted, search for “notification dot” in the Notifications settings.</string>
+    <string name="glance_media_dots_action">Open notifications</string>
+    <string name="follow_accent">Follow the accent</string>
+    <string name="color_conflict_accent">This color is almost the same as the background color: text would be unreadable and you would lose access to settings. Choose another one.</string>
+    <string name="color_conflict_background">This color is almost the same as the accent color: text would be unreadable and you would lose access to settings. Choose another one.</string>
+    <string name="color_weak_contrast">Low contrast: text may be hard to read with this combination. You can apply it, but check the result.</string>
+    <string name="appearance_color_search_outline">Search bar outline</string>
+    <string name="appearance_color_dock">Dock background</string>
+    <string name="appearance_color_folders">Folder background</string>
+    <string name="appearance_label">Appearance</string>
+    <string name="appearance_group_presets">Ready-made combinations</string>
+    <string name="appearance_group_colors">Main colors</string>
+    <string name="appearance_group_wallpaper">Wallpaper</string>
+    <string name="appearance_wallpaper_show">Show wallpaper</string>
+    <string name="appearance_wallpaper_show_desc">The home screen shows the system wallpaper instead of just the background color</string>
+    <string name="appearance_wallpaper_dim">Dim the wallpaper</string>
+    <string name="appearance_wallpaper_choose">Choose wallpaper</string>
+    <string name="appearance_wallpaper_choose_desc">Opens the system wallpaper picker</string>
+    <string name="appearance_bg_as_wallpaper">Background color as wallpaper</string>
+    <string name="appearance_bg_as_wallpaper_desc">The system wallpaper becomes the background color and follows every change to it</string>
+    <string name="appearance_bg_on_lock_screen">Lock screen too</string>
+    <string name="appearance_bg_on_lock_screen_desc">Replaces the lock screen wallpaper with the background color. The current image cannot be recovered</string>
+    <string name="appearance_bg_on_lock_screen_confirm_title">Overwrite the lock screen?</string>
+    <string name="appearance_bg_on_lock_screen_confirm_text">The current lock screen wallpaper will be replaced by the background color and cannot be recovered. To have an image again, you will need to choose it again in the system picker.</string>
+    <string name="appearance_bg_on_lock_screen_confirm">Overwrite</string>
+    <string name="appearance_group_details">Other elements</string>
+    <string name="appearance_color_accent">Accent color</string>
+    <string name="appearance_group_font">Font</string>
+    <string name="appearance_font_ui">Interface font</string>
+    <string name="appearance_pixel_clock">Pixel clock</string>
+    <string name="appearance_pixel_clock_desc">The clock and the panel\'s large values use the pixel font. When off, they use the interface font</string>
+    <string name="appearance_complementary">Complementary colors</string>
+    <string name="appearance_complementary_desc">Pick the accent and the background comes with it, in the opposite color on the color wheel</string>
+    <string name="complementary_custom">Custom</string>
+    <string name="complementary_wheel_title">Color wheel</string>
+    <string name="complementary_wheel_hint">Drag one of the two dots: one is the accent and the other, in the opposite color, is the background. The bar beside it adjusts the background\'s intensity.</string>
+    <string name="complementary_apply">Apply</string>
+    <string name="complementary_cancel">Cancel</string>
+    <string name="complementary_red">Red</string>
+    <string name="complementary_vermilion">Vermilion</string>
+    <string name="complementary_orange">Orange</string>
+    <string name="complementary_amber">Amber</string>
+    <string name="complementary_yellow">Yellow</string>
+    <string name="complementary_chartreuse">Chartreuse</string>
+    <string name="complementary_green">Green</string>
+    <string name="complementary_teal">Teal</string>
+    <string name="complementary_blue">Blue</string>
+    <string name="complementary_violet">Violet</string>
+    <string name="complementary_purple">Purple</string>
+    <string name="complementary_magenta">Magenta</string>
+    <string name="launcher_bg_default">Default (terminal black)</string>
+    <string name="launcher_bg_color_label">Background color</string>
+    <string name="glance_auto_rotate">Cycle targets automatically</string>
+    <string name="glance_auto_rotate_desc">Moves to the next target every so often while you look at the panel</string>
+    <string name="glance_rotate_every">Time per target</string>
     <string name="glance_rotate_value" translatable="false">%1$d s</string>
-    <string name="glance_group_animation" translatable="false">Animação</string>
-    <string name="glance_animation" translatable="false">Animação ao lado do valor</string>
-    <string name="glance_animation_off" translatable="false">Nenhuma</string>
-    <string name="glance_animation_radar" translatable="false">Radar</string>
-    <string name="glance_animation_sonar" translatable="false">Sonar</string>
-    <string name="glance_animation_wave" translatable="false">Onda</string>
-    <string name="glance_animation_bars" translatable="false">Barras</string>
-    <string name="glance_animation_custom" translatable="false">Personalizada (Lottie)</string>
-    <string name="glance_animation_pick" translatable="false">Escolher arquivo .json</string>
-    <string name="glance_animation_none" translatable="false">Nenhum arquivo escolhido: mostrando o radar</string>
-    <string name="glance_animation_loading" translatable="false">Verificando o arquivo…</string>
-    <string name="glance_animation_invalid" translatable="false">Este arquivo não é uma animação Lottie válida</string>
-    <string name="glance_animation_too_big" translatable="false">Arquivo grande demais (máximo 512 KB)</string>
-    <string name="glance_animation_tint" translatable="false">Usar a cor do tema</string>
-    <string name="glance_animation_tint_desc" translatable="false">Pinta a animação com o verde do terminal em vez das cores originais</string>
-    <string name="settings_home_description" translatable="false">Painel de status, grade, ícones favoritos, rótulos e conversas</string>
-    <string name="settings_drawer_description" translatable="false">Apps escondidos, pastas, grade e fundo</string>
-    <string name="drawer_background_opacity" translatable="false">Opacidade do fundo</string>
-    <string name="settings_appearance_description" translatable="false">Cores, papel de parede, fonte e efeitos</string>
-    <string name="home_group_layout" translatable="false">Organização</string>
-    <string name="home_favorites_count" translatable="false">Ícones favoritos</string>
-    <string name="glance_widget_setup_title" translatable="false">Clima e agenda precisam do widget do Google</string>
-    <string name="glance_widget_setup_message" translatable="false">Permita que o Terminal leia o widget At a Glance do Google. O Android vai pedir uma confirmação; toque em Criar.</string>
+    <string name="glance_group_animation">Animation</string>
+    <string name="glance_animation">Animation next to the value</string>
+    <string name="glance_animation_off">None</string>
+    <string name="glance_animation_radar">Radar</string>
+    <string name="glance_animation_sonar">Sonar</string>
+    <string name="glance_animation_wave">Wave</string>
+    <string name="glance_animation_bars">Bars</string>
+    <string name="glance_animation_custom">Custom (Lottie)</string>
+    <string name="glance_animation_pick">Choose .json file</string>
+    <string name="glance_animation_none">No file chosen: showing the radar</string>
+    <string name="glance_animation_loading">Checking the file…</string>
+    <string name="glance_animation_invalid">This file is not a valid Lottie animation</string>
+    <string name="glance_animation_too_big">File too large (512 KB maximum)</string>
+    <string name="glance_animation_tint">Use the theme color</string>
+    <string name="glance_animation_tint_desc">Paints the animation with the terminal green instead of its original colors</string>
+    <string name="settings_home_description">Status panel, grid, favorite icons, labels and chats</string>
+    <string name="settings_drawer_description">Hidden apps, folders, grid and background</string>
+    <string name="drawer_background_opacity">Background opacity</string>
+    <string name="settings_appearance_description">Colors, wallpaper, font and effects</string>
+    <string name="home_group_layout">Layout</string>
+    <string name="home_favorites_count">Favorite icons</string>
+    <string name="glance_widget_setup_title">Weather and agenda need the Google widget</string>
+    <string name="glance_widget_setup_message">Allow Terminal to read Google\'s At a Glance widget. Android will ask you to confirm; tap Create.</string>
 
-    <string name="about_fork_intro" translatable="false">Terminal é um fork do Lawnchair, o launcher de código aberto baseado no Launcher3 do Android Open Source Project (AOSP). Este fork é mantido de forma independente e não tem afiliação, patrocínio nem aval da equipe do Lawnchair ou do Google.</string>
-    <string name="about_fork_no_claim" translatable="false">O mantenedor deste fork não reivindica direitos sobre nenhuma propriedade intelectual do projeto original nem do AOSP: o código, o nome, a marca e os logotipos do Lawnchair e do Android pertencem aos seus respectivos titulares. As alterações deste fork são distribuídas sob a mesma Licença Apache 2.0 do projeto original.</string>
-    <string name="about_fork_app_label" translatable="false">Aplicativo</string>
-    <string name="about_fork_package_label" translatable="false">Pacote</string>
-    <string name="about_fork_maintainer_label" translatable="false">Mantenedor</string>
+    <string name="about_fork_intro">Terminal is a fork of Lawnchair, the open source launcher based on Launcher3 from the Android Open Source Project (AOSP). This fork is maintained independently and is not affiliated with, sponsored or endorsed by the Lawnchair team or Google.</string>
+    <string name="about_fork_no_claim">The maintainer of this fork claims no rights over any intellectual property of the original project or of AOSP: the code, name, brand and logos of Lawnchair and Android belong to their respective owners. This fork\'s changes are distributed under the same Apache License 2.0 as the original project.</string>
+    <string name="about_fork_app_label">App</string>
+    <string name="about_fork_package_label">Package</string>
+    <string name="about_fork_maintainer_label">Maintainer</string>
     <string name="about_fork_maintainer_value" translatable="false">Mauricio Dantas (mdantas.net)</string>
-    <string name="about_fork_base_label" translatable="false">Base</string>
-    <string name="about_fork_base_value" translatable="false">Lawnchair 16 (commit 43a21b4), sobre o Launcher3 do AOSP</string>
-    <string name="about_fork_license_label" translatable="false">Licença</string>
+    <string name="about_fork_base_label">Base</string>
+    <string name="about_fork_base_value">Lawnchair 16 (commit 43a21b4), on top of AOSP Launcher3</string>
+    <string name="about_fork_license_label">License</string>
     <string name="about_fork_license_value" translatable="false">Apache License 2.0</string>
-    <string name="about_original_heading" translatable="false">Projeto original: Lawnchair</string>
+    <string name="about_original_heading">Original project: Lawnchair</string>
     <string name="about_original_copyright" translatable="false">Copyright (c) 2005-2008, The Android Open Source Project\nCopyright (c) 2024, Lawnchair</string>
-    <string name="about_original_note" translatable="false">Os autores, links e canais de comunidade abaixo pertencem ao projeto original. Não peça suporte deste fork à equipe do Lawnchair.</string>
-    <string name="about_original_repo" translatable="false">Repositório do Lawnchair</string>
-    <string name="about_original_team_heading" translatable="false">Equipe do Lawnchair (autores originais)</string>
-    <string name="about_original_support_heading" translatable="false">Suporte e RP do Lawnchair</string>
-    <string name="about_original_community_heading" translatable="false">Comunidade do Lawnchair</string>
-    <string name="about_apache_license" translatable="false">Licença Apache 2.0</string>
-    <string name="about_original_privacy" translatable="false">Política de privacidade do Lawnchair (projeto original)</string>
-    <string name="app_function_display_description" translatable="false">Abre apps, executa comandos da barra de comando e mostra o painel da tela inicial.</string>
+    <string name="about_original_note">The authors, links and community channels below belong to the original project. Don\'t ask the Lawnchair team for support with this fork.</string>
+    <string name="about_original_repo">Lawnchair repository</string>
+    <string name="about_original_team_heading">Lawnchair team (original authors)</string>
+    <string name="about_original_support_heading">Lawnchair support and PR</string>
+    <string name="about_original_community_heading">Lawnchair community</string>
+    <string name="about_apache_license">Apache License 2.0</string>
+    <string name="about_original_privacy">Lawnchair privacy policy (original project)</string>
+    <string name="app_function_display_description">Opens apps, runs command bar commands and shows the home screen panel.</string>
 </resources>

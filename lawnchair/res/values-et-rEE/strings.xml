@@ -136,14 +136,11 @@
     -->
     <string name="settings">Seaded</string>
     <string name="general_label">Üldseaded</string>
-    <string name="general_description">Värvid, ikoonipaketid, märguandetäpid</string>
     <string name="home_screen_label">Avakuva</string>
-    <string name="home_screen_description">Voog, ruudustik, ikoonid</string>
     <string name="home_screen_actions">Avakuva toimingud</string>
     <string name="dock_label">Dokk</string>
     <string name="dock_description">Otsinguriba, ikoonide arv</string>
     <string name="app_drawer_label">Rakendusesahtel</string>
-    <string name="app_drawer_description">Peidetud rakendused, tulpade arv, ikoonid</string>
     <string name="drawer_search_label">Sahtli otsing</string>
     <string name="drawer_search_description">Veebisoovitused, globaalne otsing</string>
     <string name="folders_label">Kaustad</string>
@@ -165,7 +162,6 @@
     <string name="internal_description">Siseversioon võib olla vähem stabiilne kui teised eksperimentaalsed rühmad</string>
     <string name="font_picker_label">Fondi kohandamine</string>
     <string name="font_picker_description">Osa tekstist jääb muutmata</string>
-    <string name="smartspace_calendar_label">Ülevaate vidina kalendri kohandamine</string>
     <string name="smartspace_calendar_description">Luba kuupäeva kuvamine mitte-Gregoriuse kalendrisüsteemides</string>
     <string name="workspace_increase_max_grid_size_label">Suurenda ruudustiku maksimaalse suuruse limiiti</string>
     <string name="workspace_increase_max_grid_size_description">Suurenda avakuva maksimaalset lubatud ruudustiku suurust 10 &#xd7; 10 > 20 &#xd7; 20</string>
@@ -217,7 +213,6 @@
     Notifications
 
     -->
-    <string name="set_default_launcher_tip">Otseteede ja lisafunktsioonide kasutamiseks määra Lawnchair vaikekäivitajaks</string>
     <string name="notification_dots">Märguandetäpid</string>
     <string name="show_notification_count">Kuva märguandeloendur</string>
     <string name="notification_dots_color">Märguandetäpi värv</string>
@@ -389,7 +384,6 @@
     <string name="smartspace_battery_full">Laetud</string>
     <string name="smartspace_battery_low">Aku tühi</string>
     <string name="battery_charging_percentage_charging_time">"%1$d%% — Täis %2$s pärast"</string>
-    <string name="smartspace_widget">Ülevaade</string>
     <string name="smartspace_widget_description">Mida kuvada</string>
     <!-- Data and time format settings -->
     <string name="smartspace_calendar">Kalender</string>
@@ -425,9 +419,7 @@
     <string name="event_provider_missing_notification_dots">Teenuse <xliff:g example="My Provider" id="providerName">%1$s</xliff:g> kasutamiseks lülita märguandetäpid sisse</string>
     <!-- Toggle button for enabling Smartspace -->
     <string name="smartspace_widget_toggle_label">Kuva avakuval</string>
-    <string name="smartspace_widget_toggle_description">Ülevaate saab avakuvale lisada Lawnchair vidinaga</string>
     <!-- List of available providers -->
-    <string name="smartspace_mode_label">Ülevaate pakkuja</string>
     <string name="smartspace_mode_google">Google</string>
     <string name="smartspace_mode_google_search">Google otsing</string>
     <!-- Miscellaneous Smartspace strings -->
@@ -716,12 +708,7 @@
     -->
     <!-- Launcher strings used -->
     <string name="all_apps_device_search_hint">Otsi veebist ja muudki</string>
-    <string name="all_apps_search_bar_hint">Otsi rakendusi</string>
     <string name="all_apps_no_search_results">Otsingule „<xliff:g example="Android" id="query">%1$s</xliff:g>“ vastavaid rakendusi ei leitud    </string>
-    <string name="all_apps_search_result_suggestions">Veebist</string>
-    <string name="all_apps_search_result_contacts_from_device">Kontaktid seadmest</string>
-    <string name="all_apps_search_result_files">Failid seadmest</string>
-    <string name="all_apps_search_result_settings_entry_from_device">Seaded seadmest</string>
     <string name="all_apps_search_market_message">Otsi rohkem rakendusi</string>
     <string name="all_apps_search_on_web_message">Otsi kasutades <xliff:g example="Startpage" id="web_search_provider">%1$s</xliff:g>    </string>
     <string name="error_no_market_or_browser_installed">Rakendustepoodi ega brauserit pole paigaldatud</string>
@@ -765,7 +752,6 @@
     <string name="search_pref_result_all_files_title">Kõik failid</string>
     <string name="search_pref_result_web_title">Veebisoovitused</string>
     <string name="search_pref_result_history_title">Otsinguajalugu</string>
-    <string name="all_apps_search_result_calculator">Kalkulaator</string>
     <string name="search_empty_state_title">Alusta otsimist</string>
     <string name="search_empty_state_no_history_subtitle">Leia rakendusi, kontakte ja muud. Sinu hiljutised otsingud kuvatakse siin.</string>
     <string name="search_empty_state_history_disabled_subtitle">Leia rakendusi, kontakte ja muud</string>

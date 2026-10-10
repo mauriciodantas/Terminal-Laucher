@@ -136,16 +136,13 @@
     -->
     <string name="settings">Impostazioni</string>
     <string name="general_label">Generale</string>
-    <string name="general_description">Colori, pacchetti icone, punti di notifica</string>
     <string name="home_screen_label">Schermata Home
 </string>
-    <string name="home_screen_description">Feed, griglia, icone</string>
     <string name="home_screen_actions">Azioni della schermata Home
 </string>
     <string name="dock_label">Dock</string>
     <string name="dock_description">Barra di ricerca, numero d\'icone</string>
     <string name="app_drawer_label">Menu delle app</string>
-    <string name="app_drawer_description">Applicazioni nascoste, numero di colonne, icone</string>
     <string name="drawer_search_label">Ricerca nel menu delle app</string>
     <string name="drawer_search_description">Suggerimenti dal web, ricerca globale</string>
     <string name="folders_label">Cartelle</string>
@@ -167,7 +164,6 @@
     <string name="internal_description">Internal può essere meno stabile degli altri gruppi sperimentali</string>
     <string name="font_picker_label">Personalizzazione dei font</string>
     <string name="font_picker_description">Un po\' di testo rimane invariato</string>
-    <string name="smartspace_calendar_label">Personalizzazione del calendario di ‘A Colpo d\'Occhio’</string>
     <string name="smartspace_calendar_description">Consenti la visualizzazione della data in calendari non gregoriani</string>
     <string name="workspace_increase_max_grid_size_label">Aumenta il limite massimo della dimensione della griglia</string>
     <string name="workspace_increase_max_grid_size_description">Increase maximum allowed home screen grid size from 10 &#xd7; 10 to 20 &#xd7; 20</string>
@@ -219,7 +215,6 @@
     Notifications
 
     -->
-    <string name="set_default_launcher_tip">Per accedere alle scorciatoie e ad altre funzioni aggiuntive, imposta Lawnchair come launcher predefinito</string>
     <string name="notification_dots">Punti di notifica</string>
     <string name="show_notification_count">Mostra contatore delle notifiche</string>
     <string name="notification_dots_color">Colore dei punti di notifica</string>
@@ -391,7 +386,6 @@
     <string name="smartspace_battery_full">Carico</string>
     <string name="smartspace_battery_low">Batteria scarica</string>
     <string name="battery_charging_percentage_charging_time">"%1$d%% — Carico tra %2$s"</string>
-    <string name="smartspace_widget">At a Glance</string>
     <string name="smartspace_widget_description">Cosa mostrare</string>
     <!-- Data and time format settings -->
     <string name="smartspace_calendar">Calendario</string>
@@ -427,9 +421,7 @@
     <string name="event_provider_missing_notification_dots">Per usare <xliff:g example="My Provider" id="providerName">%1$s</xliff:g>, attiva i punti di notifica</string>
     <!-- Toggle button for enabling Smartspace -->
     <string name="smartspace_widget_toggle_label">Mostra nella schermata Home</string>
-    <string name="smartspace_widget_toggle_description">A Colpo d\'Occhio può essere aggiunto alla schermata Home come un widget di Lawnchair</string>
     <!-- List of available providers -->
-    <string name="smartspace_mode_label">Fornitore di ‘A Colpo d\'Occhio’</string>
     <string name="smartspace_mode_google">Google</string>
     <string name="smartspace_mode_google_search">Ricerca Google</string>
     <!-- Miscellaneous Smartspace strings -->
@@ -718,12 +710,7 @@
     -->
     <!-- Launcher strings used -->
     <string name="all_apps_device_search_hint">Cerca sul web e altro</string>
-    <string name="all_apps_search_bar_hint">Cerca tra le app</string>
     <string name="all_apps_no_search_results">Nessuna app trovata corrispondente a \"<xliff:g example="Android" id="query">%1$s</xliff:g>\"    </string>
-    <string name="all_apps_search_result_suggestions">Dal web</string>
-    <string name="all_apps_search_result_contacts_from_device">Contatti dal dispositivo</string>
-    <string name="all_apps_search_result_files">File dal dispositivo</string>
-    <string name="all_apps_search_result_settings_entry_from_device">Impostazioni dal dispositivo</string>
     <string name="all_apps_search_market_message">Trova altre app</string>
     <string name="all_apps_search_on_web_message">Cerca su <xliff:g example="Startpage" id="web_search_provider">%1$s</xliff:g>
     </string>
@@ -768,7 +755,6 @@
     <string name="search_pref_result_all_files_title">Tutti i file</string>
     <string name="search_pref_result_web_title">Suggerimenti dal web</string>
     <string name="search_pref_result_history_title">Cronologia delle ricerche</string>
-    <string name="all_apps_search_result_calculator">Calcolatrice</string>
     <string name="search_empty_state_title">Inizia la ricerca</string>
     <string name="search_empty_state_no_history_subtitle">Trova app, contatti e altro ancora. Le tue ricerche recenti appariranno qui.</string>
     <string name="search_empty_state_history_disabled_subtitle">Cerca Apps, contatti e altro ancora</string>

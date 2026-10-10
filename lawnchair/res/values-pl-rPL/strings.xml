@@ -136,14 +136,11 @@
     -->
     <string name="settings">Ustawienia</string>
     <string name="general_label">Ogólne</string>
-    <string name="general_description">Kolory, zestawy ikon, kropki powiadomień</string>
     <string name="home_screen_label">Ekran główny</string>
-    <string name="home_screen_description">Wiadomości, siatka, ikony</string>
     <string name="home_screen_actions">Home screen actions</string>
     <string name="dock_label">Dock</string>
     <string name="dock_description">Pasek wyszukiwania, liczba ikon</string>
     <string name="app_drawer_label">Szuflada aplikacji</string>
-    <string name="app_drawer_description">Ukryte aplikacje, liczba kolumn, ikony</string>
     <string name="drawer_search_label">Wyszukiwanie w szufladzie</string>
     <string name="drawer_search_description">Sugestie internetowe, wyszukiwanie globalne</string>
     <string name="folders_label">Foldery</string>
@@ -165,7 +162,6 @@
     <string name="internal_description">Internal may be less stable than other experimental groups</string>
     <string name="font_picker_label">Dostosowanie czcionki</string>
     <string name="font_picker_description">Niektóre teksty pozostają bez zmian</string>
-    <string name="smartspace_calendar_label">Dostosowanie kalendarza w Szybkim Podglądzie</string>
     <string name="smartspace_calendar_description">Umożliwiaj wyświetlanie daty w systemach kalendarzowych innych niż gregoriański</string>
     <string name="workspace_increase_max_grid_size_label">Zwiększ limit maksymalnego rozmiaru siatki</string>
     <string name="workspace_increase_max_grid_size_description">Increase maximum allowed home screen grid size from 10 &#xd7; 10 to 20 &#xd7; 20</string>
@@ -217,7 +213,6 @@
     Notifications
 
     -->
-    <string name="set_default_launcher_tip">Aby uzyskać dostęp do skrótów i dodatkowych funkcji, ustaw Lawnchair jako domyślny ekran główny</string>
     <string name="notification_dots">Kropki powiadomień</string>
     <string name="show_notification_count">Pokazuj licznik powiadomień</string>
     <string name="notification_dots_color">Kolor kropki powiadomień</string>
@@ -389,7 +384,6 @@
     <string name="smartspace_battery_full">Naładowano</string>
     <string name="smartspace_battery_low">Niski poziom baterii</string>
     <string name="battery_charging_percentage_charging_time">"%1$d%% — Naładowany za %2$s"</string>
-    <string name="smartspace_widget">W skrócie</string>
     <string name="smartspace_widget_description">Co wyświetlić</string>
     <!-- Data and time format settings -->
     <string name="smartspace_calendar">Kalendarz</string>
@@ -425,9 +419,7 @@
     <string name="event_provider_missing_notification_dots">To use <xliff:g example="My Provider" id="providerName">%1$s</xliff:g>, turn on notification dots</string>
     <!-- Toggle button for enabling Smartspace -->
     <string name="smartspace_widget_toggle_label">Pokazuj na ekranie głównym</string>
-    <string name="smartspace_widget_toggle_description">At a Glance can be added to the home screen with the Lawnchair widget</string>
     <!-- List of available providers -->
-    <string name="smartspace_mode_label">Dostawca Szybkiego Podglądu</string>
     <string name="smartspace_mode_google">Google</string>
     <string name="smartspace_mode_google_search">Szukaj w Google</string>
     <!-- Miscellaneous Smartspace strings -->
@@ -718,13 +710,8 @@
     -->
     <!-- Launcher strings used -->
     <string name="all_apps_device_search_hint">Search web and more</string>
-    <string name="all_apps_search_bar_hint">Szukaj aplikacji</string>
     <string name="all_apps_no_search_results">No apps found matching \"<xliff:g example="Android" id="query">%1$s</xliff:g>\"
     </string>
-    <string name="all_apps_search_result_suggestions">Z sieci</string>
-    <string name="all_apps_search_result_contacts_from_device">Kontakty z urządzenia</string>
-    <string name="all_apps_search_result_files">Pliki z urządzenia</string>
-    <string name="all_apps_search_result_settings_entry_from_device">Ustawienia z urządzenia</string>
     <string name="all_apps_search_market_message">Szukaj więcej aplikacji</string>
     <string name="all_apps_search_on_web_message">Search on <xliff:g example="Startpage" id="web_search_provider">%1$s</xliff:g>
     </string>
@@ -769,7 +756,6 @@
     <string name="search_pref_result_all_files_title">Wszystkie pliki</string>
     <string name="search_pref_result_web_title">Sugestie internetowe</string>
     <string name="search_pref_result_history_title">Historia wyszukiwania</string>
-    <string name="all_apps_search_result_calculator">Kalkulator</string>
     <string name="search_empty_state_title">Rozpocznij wyszukiwanie</string>
     <string name="search_empty_state_no_history_subtitle">Znajdź aplikacje, kontakty i więcej. Twoje ostatnie wyszukiwania pojawią się tutaj.</string>
     <string name="search_empty_state_history_disabled_subtitle">Find apps, contacts, and more</string>

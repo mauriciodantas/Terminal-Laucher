@@ -136,14 +136,11 @@
     -->
     <string name="settings">அமைப்புகள்</string>
     <string name="general_label">பொது</string>
-    <string name="general_description">நிறங்கள், சின்னச்சிப்பம், அறிவிப்புப் புள்ளிகள்</string>
     <string name="home_screen_label">முகப்புத் திரை</string>
-    <string name="home_screen_description">ஊட்டம், கட்டம், சின்னங்கள்</string>
     <string name="home_screen_actions">Home screen actions</string>
     <string name="dock_label">கூண்டு பெயர்கள்</string>
     <string name="dock_description">தேடல் பட்டி, சின்ன எண்ணிக்கை</string>
     <string name="app_drawer_label">செயலி இழுப்பறை</string>
-    <string name="app_drawer_description">மறைபட்டச் செயலிகள், நெடுவரிசை எண்ணிக்கை, சின்னங்கள்</string>
     <string name="drawer_search_label">டிராயர் தேடல்</string>
     <string name="drawer_search_description">இணைய பரிந்துரைகள், உலகளாவிய தேடல்</string>
     <string name="folders_label">கோப்புறை பெயர்கள்</string>
@@ -165,7 +162,6 @@
     <string name="internal_description">Internal may be less stable than other experimental groups</string>
     <string name="font_picker_label">எழுத்துரு தனிப்பயனாக்கம்</string>
     <string name="font_picker_description">சில உரைகள் மாறாமல் இருக்கும்</string>
-    <string name="smartspace_calendar_label">கிளான்ஸ் காலண்டரை தனிப்பயனாக்குதல்</string>
     <string name="smartspace_calendar_description">கிரிகோரியன் முறை அல்லாத காலண்டர் வகையில் தேதியைக் காண்பிக்க சம்மதி</string>
     <string name="workspace_increase_max_grid_size_label">அதிகபட்ச கட்ட அளவு வரம்பை அதிகரிக்க</string>
     <string name="workspace_increase_max_grid_size_description">Increase maximum allowed home screen grid size from 10 &#xd7; 10 to 20 &#xd7; 20</string>
@@ -217,7 +213,6 @@
     Notifications
 
     -->
-    <string name="set_default_launcher_tip">குறுக்குவழிகள் மற்றும் கூடுதல் அம்சங்களை அணுக, Lawnchair ஐ உங்கள் இயல்புநிலை துவக்கியாக அமைக்கவும்</string>
     <string name="notification_dots">அறிவிப்புப் புள்ளிகள்</string>
     <string name="show_notification_count">அறிவிப்புகளின் எண்ணிக்கையைக் காண்பி</string>
     <string name="notification_dots_color">அறிவிப்பு புள்ளிகளின் வண்ணம்</string>
@@ -389,7 +384,6 @@
     <string name="smartspace_battery_full">மின் ஏறியது</string>
     <string name="smartspace_battery_low">பேட்டரி குறைவு</string>
     <string name="battery_charging_percentage_charging_time">"%1$d%% — இன்னும் %2$s முழுவதாகிடும்"</string>
-    <string name="smartspace_widget">ஒரே பார்வையில்</string>
     <string name="smartspace_widget_description">எதைக் காட்ட</string>
     <!-- Data and time format settings -->
     <string name="smartspace_calendar">காலெண்டர்</string>
@@ -425,9 +419,7 @@
     <string name="event_provider_missing_notification_dots">To use <xliff:g example="My Provider" id="providerName">%1$s</xliff:g>, turn on notification dots</string>
     <!-- Toggle button for enabling Smartspace -->
     <string name="smartspace_widget_toggle_label">முகப்புத் திரையில் காட்டு</string>
-    <string name="smartspace_widget_toggle_description">At a Glance can be added to the home screen with the Lawnchair widget</string>
     <!-- List of available providers -->
-    <string name="smartspace_mode_label">At a Glance வழங்குநர்</string>
     <string name="smartspace_mode_google">கூகிள்</string>
     <string name="smartspace_mode_google_search">கூகிள் தேடல்</string>
     <!-- Miscellaneous Smartspace strings -->
@@ -716,13 +708,8 @@
     -->
     <!-- Launcher strings used -->
     <string name="all_apps_device_search_hint">Search web and more</string>
-    <string name="all_apps_search_bar_hint">செயலிகளை தேட</string>
     <string name="all_apps_no_search_results">No apps found matching \"<xliff:g example="Android" id="query">%1$s</xliff:g>\"
     </string>
-    <string name="all_apps_search_result_suggestions">இணையத்திலிருந்து</string>
-    <string name="all_apps_search_result_contacts_from_device">சாதனத்திலிருந்து தொடர்புகள்</string>
-    <string name="all_apps_search_result_files">சாதனத்திலிருந்து கோப்புகள்</string>
-    <string name="all_apps_search_result_settings_entry_from_device">சாதனத்திலிருந்து அமைப்புகள்</string>
     <string name="all_apps_search_market_message">மேலும் செயலிகளுக்காகத் தேடு</string>
     <string name="all_apps_search_on_web_message">Search on <xliff:g example="Startpage" id="web_search_provider">%1$s</xliff:g>
     </string>
@@ -767,7 +754,6 @@
     <string name="search_pref_result_all_files_title">All files</string>
     <string name="search_pref_result_web_title">வலை ஆலோசனைகள்</string>
     <string name="search_pref_result_history_title">தேடல் வரலாறு</string>
-    <string name="all_apps_search_result_calculator">கணிப்பான்</string>
     <string name="search_empty_state_title">Start searching</string>
     <string name="search_empty_state_no_history_subtitle">Find apps, contacts, and more. Your recent searches will appear here.</string>
     <string name="search_empty_state_history_disabled_subtitle">Find apps, contacts, and more</string>

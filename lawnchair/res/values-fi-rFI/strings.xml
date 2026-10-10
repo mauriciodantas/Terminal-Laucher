@@ -136,14 +136,11 @@
     -->
     <string name="settings">Asetukset</string>
     <string name="general_label">Yleiset</string>
-    <string name="general_description">Värit, kuvakepaketit, ilmoituspisteet</string>
     <string name="home_screen_label">Aloitusnäyttö</string>
-    <string name="home_screen_description">Syöte, ruudukko, kuvakkeet</string>
     <string name="home_screen_actions">Aloitusnäytön toiminnot</string>
     <string name="dock_label">Telakka</string>
     <string name="dock_description">Hakupalkki, kuvakkeiden määrä</string>
     <string name="app_drawer_label">Sovellusvalikko</string>
-    <string name="app_drawer_description">Piilotetut sovellukset, pylväiden määrä, kuvakkeet</string>
     <string name="drawer_search_label">Sovellusvalikon haku</string>
     <string name="drawer_search_description">Internet-ehdotukset, globaali haku</string>
     <string name="folders_label">Kansiot</string>
@@ -165,7 +162,6 @@
     <string name="internal_description">Sisäinen saattaa olla epävakaampi kuin muut kokeelliset ryhmät</string>
     <string name="font_picker_label">Fontin muokkaus</string>
     <string name="font_picker_description">Jotkin tekstit eivät muutu</string>
-    <string name="smartspace_calendar_label">Silmien edessä -ominaisuuden kalenterin muokkaus</string>
     <string name="smartspace_calendar_description">Salli päivämäärän näyttö ei Gregoriaanisissa järjestelmissä</string>
     <string name="workspace_increase_max_grid_size_label">Kasvata suurimman mahdollisen ruudukon rajaa.</string>
     <string name="workspace_increase_max_grid_size_description">Suurenna aloitusnäytön ruudukon enimmäiskokoa koosta 10 x 10 kokoon 20 x 20</string>
@@ -217,7 +213,6 @@
     Notifications
 
     -->
-    <string name="set_default_launcher_tip">Päästäksesi käsiksi pikku alkeisiin ja muihin lisäominaisuuksiin, aseta Lawnchair oletusaloitusnäyttösovellukseksesi.</string>
     <string name="notification_dots">Ilmoituspisteet</string>
     <string name="show_notification_count">Näytä ilmoitusten määrä</string>
     <string name="notification_dots_color">Ilmoituspisteen väri</string>
@@ -389,7 +384,6 @@
     <string name="smartspace_battery_full">Ladattu</string>
     <string name="smartspace_battery_low">Akku vähissä</string>
     <string name="battery_charging_percentage_charging_time">"%1$d%% — Täynnä %2$s kuluttua"</string>
-    <string name="smartspace_widget">At a Glance</string>
     <string name="smartspace_widget_description">Mitä näyttää</string>
     <!-- Data and time format settings -->
     <string name="smartspace_calendar">Kalenteri</string>
@@ -425,9 +419,7 @@
     <string name="event_provider_missing_notification_dots">Käyttääksesi <xliff:g example="My Provider" id="providerName">%1$s</xliff:g>, ota ilmoituspisteet käyttöön</string>
     <!-- Toggle button for enabling Smartspace -->
     <string name="smartspace_widget_toggle_label">Näytä aloitusnäytössä</string>
-    <string name="smartspace_widget_toggle_description">At a Glance voidaan lisätä aloitusnäyttöön Lawnchair widgetin avulla</string>
     <!-- List of available providers -->
-    <string name="smartspace_mode_label">At a Glance -tarjoaja</string>
     <string name="smartspace_mode_google">Google</string>
     <string name="smartspace_mode_google_search">Google-haku</string>
     <!-- Miscellaneous Smartspace strings -->
@@ -716,12 +708,7 @@
     -->
     <!-- Launcher strings used -->
     <string name="all_apps_device_search_hint">Etsi verkosta ja muuta</string>
-    <string name="all_apps_search_bar_hint">Hae sovelluksia</string>
     <string name="all_apps_no_search_results">Yhtään \"<xliff:g example="Android" id="query">%1$s</xliff:g>\" vastaavaa sovellusta ei löytynyt</string>
-    <string name="all_apps_search_result_suggestions">Verkosta</string>
-    <string name="all_apps_search_result_contacts_from_device">Yhteystiedot laitteelta</string>
-    <string name="all_apps_search_result_files">Tiedostot laitteelta</string>
-    <string name="all_apps_search_result_settings_entry_from_device">Asetukset laitteelta</string>
     <string name="all_apps_search_market_message">Etsi lisää sovelluksia</string>
     <string name="all_apps_search_on_web_message">Hae <xliff:g example="Startpage" id="web_search_provider">%1$s</xliff:g>lla/llä    </string>
     <string name="error_no_market_or_browser_installed">Ei sovelluskauppaa tai selainta asennettuna</string>
@@ -765,7 +752,6 @@
     <string name="search_pref_result_all_files_title">Kaikki tiedostot</string>
     <string name="search_pref_result_web_title">Web-ehdotukset</string>
     <string name="search_pref_result_history_title">Hakuhistoria</string>
-    <string name="all_apps_search_result_calculator">Laskin</string>
     <string name="search_empty_state_title">Aloita haku</string>
     <string name="search_empty_state_no_history_subtitle">Etsi sovelluksia, yhteystietoja ja paljon muuta. Viimeaikaiset haut näkyvät täällä.</string>
     <string name="search_empty_state_history_disabled_subtitle">Etsi sovelluksia, yhteystietoja ja muuta</string>

@@ -136,14 +136,11 @@
     -->
     <string name="settings">Cài đặt</string>
     <string name="general_label">Chung</string>
-    <string name="general_description">Màu sắc, gói biểu tượng, chấm thông báo</string>
     <string name="home_screen_label">Trang chủ</string>
-    <string name="home_screen_description">Bản tin, lưới, biểu tượng</string>
     <string name="home_screen_actions">Hành động trên màn hình chính</string>
     <string name="dock_label">Khay</string>
     <string name="dock_description">Thanh tìm kiếm, số biểu tượng</string>
     <string name="app_drawer_label">Ngăn chứa ứng dụng</string>
-    <string name="app_drawer_description">Ẩn ứng dụng, số cột, biểu tượng</string>
     <string name="drawer_search_label">Tìm kiếm của ngăn chứa</string>
     <string name="drawer_search_description">Gợi ý trang web, tìm kiếm chung</string>
     <string name="folders_label">Thư mục</string>
@@ -165,7 +162,6 @@
     <string name="internal_description">Nhóm thí nghiệm nội bộ có thể kém ổn định hơn các nhóm thí nghiệm khác</string>
     <string name="font_picker_label">Đổi phông chữ</string>
     <string name="font_picker_description">Một số văn bản vẫn không thay đổi</string>
-    <string name="smartspace_calendar_label">Tuỳ chỉnh lịch trong Xem nhanh</string>
     <string name="smartspace_calendar_description">Cho phép hiển thị ngày trong hệ thống lịch không phải lịch tây</string>
     <string name="workspace_increase_max_grid_size_label">Tăng độ lớn tối đa của lưới</string>
     <string name="workspace_increase_max_grid_size_description">Tăng kích thước lưới màn hình chính tối đa cho phép từ 10 &#xd7; 10 lên 20 &#xd7; 20</string>
@@ -217,7 +213,6 @@
     Notifications
 
     -->
-    <string name="set_default_launcher_tip">Để truy cập các phím tắt và tính năng bổ sung, hãy đặt Lawnchair làm ứng dụng mặc định màn hình chính của bạn</string>
     <string name="notification_dots">Dấu chấm thông báo</string>
     <string name="show_notification_count">Hiển thị số lượng thông báo</string>
     <string name="notification_dots_color">Màu chấm thông báo</string>
@@ -389,7 +384,6 @@
     <string name="smartspace_battery_full">Đã sạc đầy</string>
     <string name="smartspace_battery_low">Pin yếu</string>
     <string name="battery_charging_percentage_charging_time">"%1$d%% — Sẽ đầy sau %2$s"</string>
-    <string name="smartspace_widget">Xem nhanh</string>
     <string name="smartspace_widget_description">Hiển thị những gì</string>
     <!-- Data and time format settings -->
     <string name="smartspace_calendar">Lịch</string>
@@ -425,9 +419,7 @@
     <string name="event_provider_missing_notification_dots">Để sử dụng <xliff:g example="My Provider" id="providerName">%1$s</xliff:g>, bật thông báo số lượng</string>
     <!-- Toggle button for enabling Smartspace -->
     <string name="smartspace_widget_toggle_label">Hiển thị trên màn hình chính</string>
-    <string name="smartspace_widget_toggle_description">Bạn có thể thêm mục \"Tổng quan\" vào màn hình chính bằng tiện ích Lawnchair</string>
     <!-- List of available providers -->
-    <string name="smartspace_mode_label">Nhà cung cấp Xem nhanh</string>
     <string name="smartspace_mode_google">Google</string>
     <string name="smartspace_mode_google_search">Google Tìm kiếm</string>
     <!-- Miscellaneous Smartspace strings -->
@@ -715,13 +707,8 @@
     -->
     <!-- Launcher strings used -->
     <string name="all_apps_device_search_hint">Tìm kiếm trên web và hơn thế nữa</string>
-    <string name="all_apps_search_bar_hint">Tìm kiếm ứng dụng</string>
     <string name="all_apps_no_search_results">Không tìm thấy ứng dụng nào phù hợp \"<xliff:g example="Android" id="query">%1$s</xliff:g>\"
     </string>
-    <string name="all_apps_search_result_suggestions">Từ web</string>
-    <string name="all_apps_search_result_contacts_from_device">Danh bạ từ thiết bị</string>
-    <string name="all_apps_search_result_files">Các tệp từ thiết bị</string>
-    <string name="all_apps_search_result_settings_entry_from_device">Cài đặt từ thiết bị</string>
     <string name="all_apps_search_market_message">Tìm kiếm thêm ứng dụng</string>
     <string name="all_apps_search_on_web_message">Tìm kiếm trên <xliff:g example="Startpage" id="web_search_provider">%1$s</xliff:g>
     </string>
@@ -766,7 +753,6 @@
     <string name="search_pref_result_all_files_title">Tất cả tệp</string>
     <string name="search_pref_result_web_title">Gợi ý web</string>
     <string name="search_pref_result_history_title">Lịch sử tìm kiếm</string>
-    <string name="all_apps_search_result_calculator">Máy tính toán</string>
     <string name="search_empty_state_title">Bắt đầu tìm kiếm</string>
     <string name="search_empty_state_no_history_subtitle">Tìm ứng dụng, danh bạ và nhiều nội dung khác. Các tìm kiếm gần đây của bạn sẽ hiển thị ở đây.</string>
     <string name="search_empty_state_history_disabled_subtitle">Tìm ứng dụng, liên hệ, và hơn thế nữa</string>

@@ -136,14 +136,11 @@
     -->
     <string name="settings">Innstillinger</string>
     <string name="general_label">Generelt</string>
-    <string name="general_description">Farger, ikonpakker, prikker for varsling</string>
     <string name="home_screen_label">Hjemmeskjerm</string>
-    <string name="home_screen_description">Feed, rutenett, ikoner</string>
     <string name="home_screen_actions">Home screen actions</string>
     <string name="dock_label">Bunnlinjen</string>
     <string name="dock_description">Søkefelt, antall ikoner</string>
     <string name="app_drawer_label">Appskuff</string>
-    <string name="app_drawer_description">Skulte apper, antall kolonner, ikoner</string>
     <string name="drawer_search_label">Skuffsøk</string>
     <string name="drawer_search_description">Web forslag, globalt søk</string>
     <string name="folders_label">Mapper</string>
@@ -165,7 +162,6 @@
     <string name="internal_description">Internal may be less stable than other experimental groups</string>
     <string name="font_picker_label">Endre font</string>
     <string name="font_picker_description">Noe tekst er uforandret</string>
-    <string name="smartspace_calendar_label">Hurtig overblikkskalender tilpassing</string>
     <string name="smartspace_calendar_description">Tillat å vis dato i ikke Gregoriansk kalender systemer</string>
     <string name="workspace_increase_max_grid_size_label">Endre på maksimal størrelse på rutenett</string>
     <string name="workspace_increase_max_grid_size_description">Increase maximum allowed home screen grid size from 10 &#xd7; 10 to 20 &#xd7; 20</string>
@@ -217,7 +213,6 @@
     Notifications
 
     -->
-    <string name="set_default_launcher_tip">For å få tilgang til snarveier og ytterligere funksjoner sett Lawnchair som standard appvelger</string>
     <string name="notification_dots">Prikker for varsling</string>
     <string name="show_notification_count">Vis antall varsler</string>
     <string name="notification_dots_color">Farge for varselprikk</string>
@@ -389,7 +384,6 @@
     <string name="smartspace_battery_full">Ladet</string>
     <string name="smartspace_battery_low">Lavt batteri</string>
     <string name="battery_charging_percentage_charging_time">"%1$d%% — Fullt i løpet av %2$s"</string>
-    <string name="smartspace_widget">Hurtig overblikk</string>
     <string name="smartspace_widget_description">Hva som skal vises</string>
     <!-- Data and time format settings -->
     <string name="smartspace_calendar">Kalender</string>
@@ -425,9 +419,7 @@
     <string name="event_provider_missing_notification_dots">To use <xliff:g example="My Provider" id="providerName">%1$s</xliff:g>, turn on notification dots</string>
     <!-- Toggle button for enabling Smartspace -->
     <string name="smartspace_widget_toggle_label">Vis på hjemmeskjerm</string>
-    <string name="smartspace_widget_toggle_description">At a Glance can be added to the home screen with the Lawnchair widget</string>
     <!-- List of available providers -->
-    <string name="smartspace_mode_label">Hurtig overblikkstilbyder</string>
     <string name="smartspace_mode_google">Google</string>
     <string name="smartspace_mode_google_search">Google søk</string>
     <!-- Miscellaneous Smartspace strings -->
@@ -716,13 +708,8 @@
     -->
     <!-- Launcher strings used -->
     <string name="all_apps_device_search_hint">Search web and more</string>
-    <string name="all_apps_search_bar_hint">Søk Apper</string>
     <string name="all_apps_no_search_results">No apps found matching \"<xliff:g example="Android" id="query">%1$s</xliff:g>\"
     </string>
-    <string name="all_apps_search_result_suggestions">Fra nettet</string>
-    <string name="all_apps_search_result_contacts_from_device">Kontakter fra enhet</string>
-    <string name="all_apps_search_result_files">Filer fra enhet</string>
-    <string name="all_apps_search_result_settings_entry_from_device">Instillinger fra enhet</string>
     <string name="all_apps_search_market_message">Søk etter flere apper</string>
     <string name="all_apps_search_on_web_message">Search on <xliff:g example="Startpage" id="web_search_provider">%1$s</xliff:g>
     </string>
@@ -767,7 +754,6 @@
     <string name="search_pref_result_all_files_title">Alle filer</string>
     <string name="search_pref_result_web_title">Web forslag</string>
     <string name="search_pref_result_history_title">Søkehistorikk</string>
-    <string name="all_apps_search_result_calculator">Kalkulator</string>
     <string name="search_empty_state_title">Start søk</string>
     <string name="search_empty_state_no_history_subtitle">Find apps, contacts, and more. Your recent searches will appear here.</string>
     <string name="search_empty_state_history_disabled_subtitle">Find apps, contacts, and more</string>

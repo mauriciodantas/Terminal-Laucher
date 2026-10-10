@@ -136,14 +136,11 @@
     -->
     <string name="settings">Paramètres</string>
     <string name="general_label">Général</string>
-    <string name="general_description">Couleurs, packs d\'icônes, pastilles de notification</string>
     <string name="home_screen_label">Écran d\'accueil</string>
-    <string name="home_screen_description">Flux, grille, icônes</string>
     <string name="home_screen_actions">Actions de l\'écran d\'accueil</string>
     <string name="dock_label">Dock</string>
     <string name="dock_description">Barre de recherche, nombre d\'icônes</string>
     <string name="app_drawer_label">Tiroir des applis</string>
-    <string name="app_drawer_description">Applis masquées, nombre de colonnes, icônes</string>
     <string name="drawer_search_label">Recherche dans le tiroir</string>
     <string name="drawer_search_description">Suggestions Web, recherche globale</string>
     <string name="folders_label">Dossiers</string>
@@ -165,7 +162,6 @@
     <string name="internal_description">Le groupe Interne peut être moins stable que les autres groupes de test</string>
     <string name="font_picker_label">Personnalisation de la police</string>
     <string name="font_picker_description">Certains textes restent inchangés</string>
-    <string name="smartspace_calendar_label">Personnalisation du calendrier dans Aperçu</string>
     <string name="smartspace_calendar_description">Autoriser l\'affichage de la date dans les systèmes de calendrier non grégoriens</string>
     <string name="workspace_increase_max_grid_size_label">Augmenter la taille maximale de la grille de l\'écran d\'accueil</string>
     <string name="workspace_increase_max_grid_size_description">Augmenter la taille maximale autorisée de la grille de 10 &#xd7; 10 à 20 &#xd7; 20</string>
@@ -217,7 +213,6 @@
     Notifications
 
     -->
-    <string name="set_default_launcher_tip">Pour accéder aux raccourcis et à plus de fonctionnalités, définissez Lawnchair en tant que lanceur d\'applications par défaut</string>
     <string name="notification_dots">Pastilles de notification</string>
     <string name="show_notification_count">Afficher le compteur de notifications</string>
     <string name="notification_dots_color">Couleur des pastilles de notification</string>
@@ -389,7 +384,6 @@
     <string name="smartspace_battery_full">Chargé</string>
     <string name="smartspace_battery_low">Batterie faible</string>
     <string name="battery_charging_percentage_charging_time">"%1$d% % — Chargé dans %2$s"</string>
-    <string name="smartspace_widget">Aperçu</string>
     <string name="smartspace_widget_description">Informations à afficher</string>
     <!-- Data and time format settings -->
     <string name="smartspace_calendar">Calendrier</string>
@@ -425,9 +419,7 @@
     <string name="event_provider_missing_notification_dots">Pour pouvoir utiliser <xliff:g example="My Provider" id="providerName">%1$s</xliff:g>, activez les pastilles de notification</string>
     <!-- Toggle button for enabling Smartspace -->
     <string name="smartspace_widget_toggle_label">Afficher sur l\'écran d\'accueil</string>
-    <string name="smartspace_widget_toggle_description">Aperçu peut être ajouté à l\'écran d\'accueil grâce au widget Lawnchair</string>
     <!-- List of available providers -->
-    <string name="smartspace_mode_label">Fournisseur d\'Aperçu</string>
     <string name="smartspace_mode_google">Google</string>
     <string name="smartspace_mode_google_search">Recherche Google</string>
     <!-- Miscellaneous Smartspace strings -->
@@ -716,13 +708,8 @@
     -->
     <!-- Launcher strings used -->
     <string name="all_apps_device_search_hint">Recherche Web/autres</string>
-    <string name="all_apps_search_bar_hint">Rechercher des applis</string>
     <string name="all_apps_no_search_results">Aucune application correspondant à « <xliff:g example="Android" id="query">%1$s</xliff:g> » n\'a pu être trouvée
     </string>
-    <string name="all_apps_search_result_suggestions">Depuis le Web</string>
-    <string name="all_apps_search_result_contacts_from_device">Contacts de l\'appareil</string>
-    <string name="all_apps_search_result_files">Fichiers de l\'appareil</string>
-    <string name="all_apps_search_result_settings_entry_from_device">Paramètres de l\'appareil</string>
     <string name="all_apps_search_market_message">Rechercher plus d\'applis</string>
     <string name="all_apps_search_on_web_message">Rechercher avec <xliff:g example="Startpage" id="web_search_provider">%1$s</xliff:g>
     </string>
@@ -767,7 +754,6 @@
     <string name="search_pref_result_all_files_title">Tous les fichiers</string>
     <string name="search_pref_result_web_title">Suggestions Web</string>
     <string name="search_pref_result_history_title">Historique des recherches</string>
-    <string name="all_apps_search_result_calculator">Calculatrice</string>
     <string name="search_empty_state_title">Commencez à rechercher</string>
     <string name="search_empty_state_no_history_subtitle">Recherchez des applis, des contacts et bien plus encore. Vos recherches récentes apparaîtront ici.</string>
     <string name="search_empty_state_history_disabled_subtitle">Recherchez des applis, des contacts et bien plus encore</string>
