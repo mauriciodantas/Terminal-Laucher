@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import app.lawnchair.preferences.getAdapter
+import app.lawnchair.preferences.preferenceManager
 import app.lawnchair.preferences2.preferenceManager2
 import app.lawnchair.ui.preferences.LocalIsExpandedScreen
 import app.lawnchair.ui.preferences.components.NavigationActionPreference
@@ -42,6 +43,7 @@ object AppDrawerRoutes {
 fun AppDrawerPreferences(
     modifier: Modifier = Modifier,
 ) {
+    val prefs = preferenceManager()
     val prefs2 = preferenceManager2()
     val resources = LocalContext.current.resources
 
@@ -79,6 +81,14 @@ fun AppDrawerPreferences(
                 label = stringResource(id = R.string.drawer_icon_size),
                 adapter = prefs2.drawerIconSizeFactor.getAdapter(),
                 valueRange = 0.5f..1.5f,
+                step = 0.05f,
+                showAsPercentage = true,
+            )
+            // 0% shows the home screen background through the drawer; 100% is solid.
+            SliderPreference(
+                label = stringResource(id = R.string.drawer_background_opacity),
+                adapter = prefs.drawerOpacity.getAdapter(),
+                valueRange = 0f..1f,
                 step = 0.05f,
                 showAsPercentage = true,
             )

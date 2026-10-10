@@ -1420,7 +1420,8 @@
     <string name="glance_animation_tint" translatable="false">Usar a cor do tema</string>
     <string name="glance_animation_tint_desc" translatable="false">Pinta a animação com o verde do terminal em vez das cores originais</string>
     <string name="settings_home_description" translatable="false">Painel de status, grade, ícones favoritos, rótulos e conversas</string>
-    <string name="settings_drawer_description" translatable="false">Apps escondidos, pastas e grade</string>
+    <string name="settings_drawer_description" translatable="false">Apps escondidos, pastas, grade e fundo</string>
+    <string name="drawer_background_opacity" translatable="false">Opacidade do fundo</string>
     <string name="settings_appearance_description" translatable="false">Cores, papel de parede, fonte e efeitos</string>
     <string name="home_group_layout" translatable="false">Organização</string>
     <string name="home_favorites_count" translatable="false">Ícones favoritos</string>
