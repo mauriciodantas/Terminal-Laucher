@@ -13,6 +13,7 @@ import android.widget.Toast
 import app.lawnchair.command.CommandLine
 import app.lawnchair.theme.color.tokens.PhosphorColorToken
 import app.lawnchair.util.repeatOnAttached
+import app.lawnchair.widgets.lottie.LottieWidgetStore.Playback
 import com.airbnb.lottie.LottieAnimationView
 import com.airbnb.lottie.LottieCompositionFactory
 import com.android.launcher3.R
@@ -23,15 +24,15 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * Content of the Lottie widget: the animation imported for this widget id, looping. A tap runs the
- * command line set for the widget, or pauses and resumes the animation when there is none. Without
- * an animation it shows how to pick one.
+ * Content of the Lottie widget: the animation imported for this widget id, played as its
+ * [LottieWidgetStore.Playback] says. A tap runs the command line set for the widget; in a loop
+ * without a command it pauses and resumes the animation instead, and in [Playback.ONCE_ON_TAP] it
+ * also plays the animation once. Without an animation it shows how to pick one.
  */
 @SuppressLint("ViewConstructor")
 class LottieWidgetView(context: Context, private val appWidgetId: Int) : FrameLayout(context) {
 
     private val animation = LottieAnimationView(context).apply {
-        repeatCount = ValueAnimator.INFINITE
         setFailureListener { showEmpty(true) }
     }
 
@@ -61,12 +62,18 @@ class LottieWidgetView(context: Context, private val appWidgetId: Int) : FrameLa
     /** Runs while the view is attached; a tap's command runs in it. */
     private var attachedScope: CoroutineScope? = null
 
+    /** The playback mode applied to the animation on screen; null until one is. */
+    private var playback: Playback? = null
+
     private fun onTap() {
         val command = LottieWidgetStore.command(context, appWidgetId)
-        if (command.isEmpty()) {
+        if (playback == Playback.ONCE_ON_TAP) {
+            // From the start, also when a previous tap's run has not ended.
+            animation.playAnimation()
+        } else if (command.isEmpty()) {
             if (animation.isAnimating) animation.pauseAnimation() else animation.resumeAnimation()
-            return
         }
+        if (command.isEmpty()) return
         val scope = attachedScope ?: return
         scope.launch {
             val result = CommandLine.run(context, command)
@@ -93,9 +100,21 @@ class LottieWidgetView(context: Context, private val appWidgetId: Int) : FrameLa
             return
         }
         showEmpty(false)
-        if (animation.composition !== composition) {
-            animation.setComposition(composition)
-            animation.playAnimation()
+        val mode = LottieWidgetStore.playback(context, appWidgetId)
+        if (animation.composition === composition && playback == mode) return
+        animation.setComposition(composition)
+        playback = mode
+        when (mode) {
+            Playback.LOOP -> {
+                animation.repeatCount = ValueAnimator.INFINITE
+                animation.playAnimation()
+            }
+
+            Playback.ONCE_ON_TAP -> {
+                animation.cancelAnimation()
+                animation.repeatCount = 0
+                animation.progress = 0f
+            }
         }
     }
 

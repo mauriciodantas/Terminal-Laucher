@@ -1292,7 +1292,7 @@
     <string name="crt_effect_desc" translatable="false">Linhas de varredura, faixa de brilho, cintilação e vinheta sobre a tela</string>
     <string name="effect_intensity" translatable="false">Intensidade</string>
     <string name="lottie_widget" translatable="false">Animação Lottie</string>
-    <string name="lottie_widget_desc" translatable="false">Toca uma animação Lottie importada (.json ou .lottie). O toque roda um comando, se houver, ou pausa a animação</string>
+    <string name="lottie_widget_desc" translatable="false">Toca uma animação Lottie importada (.json ou .lottie). Toca em loop ou uma vez a cada toque, e o toque pode rodar um comando</string>
     <string name="lottie_widget_animation" translatable="false">Animação</string>
     <string name="lottie_widget_no_animation" translatable="false">Nenhuma escolhida</string>
     <string name="lottie_widget_current" translatable="false">Animação atual</string>
@@ -1301,6 +1301,10 @@
     <string name="lottie_widget_command" translatable="false">Comando ao tocar (opcional)</string>
     <string name="lottie_widget_command_hint" translatable="false">abrir spotify</string>
     <string name="lottie_widget_command_none" translatable="false">Sem comando, o toque pausa e retoma a animação</string>
+    <string name="lottie_widget_command_none_once" translatable="false">Sem comando, o toque só toca a animação</string>
+    <string name="lottie_widget_playback" translatable="false">Reprodução</string>
+    <string name="lottie_widget_playback_loop" translatable="false">Em loop</string>
+    <string name="lottie_widget_playback_once" translatable="false">Uma vez a cada toque</string>
     <string name="lottie_widget_save" translatable="false">Salvar</string>
     <string name="lottie_widget_command_failed" translatable="false">Comando \"%1$s\" não executado: %2$s</string>
     <string name="lottie_widget_empty" translatable="false">Segure e toque em Configurar para escolher uma animação</string>

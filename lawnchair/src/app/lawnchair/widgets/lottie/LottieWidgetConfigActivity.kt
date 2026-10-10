@@ -12,9 +12,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -28,12 +31,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import app.lawnchair.command.Analysis
 import app.lawnchair.command.CommandLine
 import app.lawnchair.command.Tone
 import app.lawnchair.ui.theme.LawnchairTheme
+import app.lawnchair.widgets.lottie.LottieWidgetStore.Playback
 import com.android.launcher3.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -42,7 +47,7 @@ import kotlinx.coroutines.withContext
 
 /**
  * Configuration of the Lottie widget, when it is added and from "Configurar" afterwards: the
- * animation to play and, optionally, a command line to run on a tap. A new widget opens the file
+ * animation to play, how it plays and, optionally, a command line to run on a tap. A new widget opens the file
  * picker right away. Nothing changes until "Salvar"; canceling a new widget makes the launcher drop it.
  */
 class LottieWidgetConfigActivity : ComponentActivity() {
@@ -73,6 +78,7 @@ class LottieWidgetConfigActivity : ComponentActivity() {
         }
         animationName = LottieWidgetStore.animationName(this, appWidgetId)
         val initialCommand = LottieWidgetStore.command(this, appWidgetId)
+        val initialPlayback = LottieWidgetStore.playback(this, appWidgetId)
         showDialog = animationName != null
         if (savedInstanceState == null && animationName == null) pickAnimation()
 
@@ -82,6 +88,7 @@ class LottieWidgetConfigActivity : ComponentActivity() {
                     ConfigDialog(
                         animationName = animationName,
                         initialCommand = initialCommand,
+                        initialPlayback = initialPlayback,
                         onPick = ::pickAnimation,
                         onSave = ::save,
                         onDismiss = ::cancel,
@@ -106,8 +113,8 @@ class LottieWidgetConfigActivity : ComponentActivity() {
         }
     }
 
-    private fun save(command: String) {
-        if (LottieWidgetStore.save(applicationContext, appWidgetId, animationName, command)) {
+    private fun save(command: String, playback: Playback) {
+        if (LottieWidgetStore.save(applicationContext, appWidgetId, animationName, command, playback)) {
             setResult(RESULT_OK, resultIntent())
         }
         finish()
@@ -125,12 +132,14 @@ class LottieWidgetConfigActivity : ComponentActivity() {
 private fun ConfigDialog(
     animationName: String?,
     initialCommand: String,
+    initialPlayback: Playback,
     onPick: () -> Unit,
-    onSave: (String) -> Unit,
+    onSave: (String, Playback) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val context = LocalContext.current
     var command by remember { mutableStateOf(initialCommand) }
+    var playback by remember { mutableStateOf(initialPlayback) }
     var analysis by remember { mutableStateOf<Analysis?>(null) }
     LaunchedEffect(command) {
         analysis = null
@@ -162,6 +171,7 @@ private fun ConfigDialog(
                         )
                     }
                 }
+                PlaybackChoice(selected = playback, onSelect = { playback = it })
                 OutlinedTextField(
                     value = command,
                     onValueChange = { command = it },
@@ -172,11 +182,11 @@ private fun ConfigDialog(
                         .fillMaxWidth()
                         .padding(top = 16.dp),
                 )
-                CommandPreview(command = command, analysis = analysis)
+                CommandPreview(command = command, playback = playback, analysis = analysis)
             }
         },
         confirmButton = {
-            TextButton(enabled = animationName != null, onClick = { onSave(command) }) {
+            TextButton(enabled = animationName != null, onClick = { onSave(command, playback) }) {
                 Text(stringResource(R.string.lottie_widget_save))
             }
         },
@@ -186,11 +196,46 @@ private fun ConfigDialog(
     )
 }
 
+@Composable
+private fun PlaybackChoice(selected: Playback, onSelect: (Playback) -> Unit) {
+    Column(
+        modifier = Modifier
+            .padding(top = 16.dp)
+            .selectableGroup(),
+    ) {
+        Text(stringResource(R.string.lottie_widget_playback), style = MaterialTheme.typography.titleSmall)
+        Playback.entries.forEach { mode ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .selectable(selected = mode == selected, role = Role.RadioButton, onClick = { onSelect(mode) }),
+            ) {
+                RadioButton(selected = mode == selected, onClick = null, modifier = Modifier.padding(8.dp))
+                Text(
+                    stringResource(
+                        when (mode) {
+                            Playback.LOOP -> R.string.lottie_widget_playback_loop
+                            Playback.ONCE_ON_TAP -> R.string.lottie_widget_playback_once
+                        },
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+        }
+    }
+}
+
 /** What the tap will do, in the command bar's own words, colored like its preview box. */
 @Composable
-private fun CommandPreview(command: String, analysis: Analysis?) {
+private fun CommandPreview(command: String, playback: Playback, analysis: Analysis?) {
     val (text, color) = when {
-        command.isBlank() -> stringResource(R.string.lottie_widget_command_none) to MaterialTheme.colorScheme.onSurfaceVariant
+        command.isBlank() -> stringResource(
+            when (playback) {
+                Playback.LOOP -> R.string.lottie_widget_command_none
+                Playback.ONCE_ON_TAP -> R.string.lottie_widget_command_none_once
+            },
+        ) to MaterialTheme.colorScheme.onSurfaceVariant
 
         analysis == null -> "…" to MaterialTheme.colorScheme.onSurfaceVariant
 

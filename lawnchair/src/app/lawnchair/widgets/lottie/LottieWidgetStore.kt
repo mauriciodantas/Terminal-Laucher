@@ -24,6 +24,7 @@ object LottieWidgetStore {
     private const val PREFS = "lottie_widgets"
     private const val KEY_COMMAND = "command_"
     private const val KEY_NAME = "name_"
+    private const val KEY_PLAYBACK = "playback_"
 
     private val _changes = MutableStateFlow(0)
 
@@ -47,6 +48,11 @@ object LottieWidgetStore {
 
     /** The command line run when the widget is tapped; empty when the tap only pauses the animation. */
     fun command(context: Context, appWidgetId: Int): String = prefs(context).getString(KEY_COMMAND + appWidgetId, null).orEmpty()
+
+    /** How the animation plays; [Playback.LOOP] for widgets configured before the choice existed. */
+    fun playback(context: Context, appWidgetId: Int): Playback = prefs(context).getString(KEY_PLAYBACK + appWidgetId, null)
+        ?.let { name -> Playback.entries.firstOrNull { it.name == name } }
+        ?: Playback.LOOP
 
     /**
      * Copies the animation at [uri] aside for [appWidgetId] without touching the current one, and
@@ -72,16 +78,17 @@ object LottieWidgetStore {
     }
 
     /**
-     * Keeps the configuration: the staged animation, when one was picked, under [name], and
-     * [command] (blank clears it). Returns false when the staged file could not be put in place.
+     * Keeps the configuration: the staged animation, when one was picked, under [name], [command]
+     * (blank clears it) and [playback]. Returns false when the staged file could not be put in place.
      */
-    fun save(context: Context, appWidgetId: Int, name: String?, command: String): Boolean {
+    fun save(context: Context, appWidgetId: Int, name: String?, command: String, playback: Playback): Boolean {
         val pending = staged(context, appWidgetId)
         if (pending.exists() && !pending.renameTo(file(context, appWidgetId))) return false
         prefs(context).edit {
             if (name != null) putString(KEY_NAME + appWidgetId, name)
             val line = command.trim()
             if (line.isEmpty()) remove(KEY_COMMAND + appWidgetId) else putString(KEY_COMMAND + appWidgetId, line)
+            putString(KEY_PLAYBACK + appWidgetId, playback.name)
         }
         _changes.update { it + 1 }
         return true
@@ -99,6 +106,7 @@ object LottieWidgetStore {
                 staged(context, it).delete()
                 remove(KEY_COMMAND + it)
                 remove(KEY_NAME + it)
+                remove(KEY_PLAYBACK + it)
             }
         }
         _changes.update { it + 1 }
@@ -111,7 +119,7 @@ object LottieWidgetStore {
             oldIds.zip(newIds).forEach { (old, new) ->
                 val from = file(context, old)
                 if (from.exists()) from.renameTo(file(context, new))
-                listOf(KEY_COMMAND, KEY_NAME).forEach { key ->
+                listOf(KEY_COMMAND, KEY_NAME, KEY_PLAYBACK).forEach { key ->
                     prefs.getString(key + old, null)?.let { putString(key + new, it) }
                     remove(key + old)
                 }
@@ -125,4 +133,12 @@ object LottieWidgetStore {
             if (it.moveToFirst()) it.getString(0) else null
         }
     }.getOrNull() ?: uri.lastPathSegment.orEmpty()
+
+    enum class Playback {
+        /** Plays over and over; a tap without a command pauses and resumes it. */
+        LOOP,
+
+        /** Rests on its first frame and plays once on each tap, besides running the command. */
+        ONCE_ON_TAP,
+    }
 }
