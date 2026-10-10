@@ -309,6 +309,8 @@
     <string name="complementary_violet">紫罗兰色</string>
     <string name="complementary_purple">紫色</string>
     <string name="complementary_magenta">品红色</string>
+    <string name="theme_highlighter">荧光笔</string>
+    <string name="theme_cyberpunk_night">赛博朋克之夜</string>
     <string name="launcher_bg_default">默认（终端黑）</string>
     <string name="launcher_bg_color_label">背景色</string>
     <string name="glance_auto_rotate">自动轮换目标</string>

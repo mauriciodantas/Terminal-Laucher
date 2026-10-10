@@ -309,6 +309,8 @@
     <string name="complementary_violet">Fiołkowy</string>
     <string name="complementary_purple">Fioletowy</string>
     <string name="complementary_magenta">Magenta</string>
+    <string name="theme_highlighter">Zakreślacz</string>
+    <string name="theme_cyberpunk_night">Cyberpunk nocą</string>
     <string name="launcher_bg_default">Domyślny (czerń terminala)</string>
     <string name="launcher_bg_color_label">Kolor tła</string>
     <string name="glance_auto_rotate">Przełączaj cele automatycznie</string>

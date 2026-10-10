@@ -309,6 +309,8 @@
     <string name="complementary_violet">제비꽃색</string>
     <string name="complementary_purple">보라색</string>
     <string name="complementary_magenta">마젠타</string>
+    <string name="theme_highlighter">형광펜</string>
+    <string name="theme_cyberpunk_night">사이버펑크 나이트</string>
     <string name="launcher_bg_default">기본값 (터미널 검정)</string>
     <string name="launcher_bg_color_label">배경 색상</string>
     <string name="glance_auto_rotate">대상 자동 전환</string>

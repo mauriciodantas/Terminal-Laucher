@@ -309,6 +309,8 @@
     <string name="complementary_violet">Menekşe</string>
     <string name="complementary_purple">Mor</string>
     <string name="complementary_magenta">Eflatun</string>
+    <string name="theme_highlighter">Fosforlu kalem</string>
+    <string name="theme_cyberpunk_night">Cyberpunk gece</string>
     <string name="launcher_bg_default">Varsayılan (terminal siyahı)</string>
     <string name="launcher_bg_color_label">Arka plan rengi</string>
     <string name="glance_auto_rotate">Hedefleri otomatik değiştir</string>

@@ -309,6 +309,8 @@
     <string name="complementary_violet">Violet</string>
     <string name="complementary_purple">Ungu</string>
     <string name="complementary_magenta">Magenta</string>
+    <string name="theme_highlighter">Stabilo</string>
+    <string name="theme_cyberpunk_night">Cyberpunk malam</string>
     <string name="launcher_bg_default">Default (hitam terminal)</string>
     <string name="launcher_bg_color_label">Warna latar belakang</string>
     <string name="glance_auto_rotate">Ganti target secara otomatis</string>

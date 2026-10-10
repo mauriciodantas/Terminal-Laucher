@@ -1389,6 +1389,13 @@
     <string name="complementary_violet">Violet</string>
     <string name="complementary_purple">Purple</string>
     <string name="complementary_magenta">Magenta</string>
+    <string name="theme_highlighter">Highlighter</string>
+    <string name="theme_game_boy" translatable="false">Game Boy</string>
+    <string name="theme_cyberpunk" translatable="false">Cyberpunk</string>
+    <string name="theme_cyberpunk_night">Cyberpunk night</string>
+    <string name="theme_blade_runner" translatable="false">Blade Runner</string>
+    <string name="theme_blade_runner_2049" translatable="false">Blade Runner 2049</string>
+    <string name="theme_akira" translatable="false">Akira</string>
     <string name="launcher_bg_default">Default (terminal black)</string>
     <string name="launcher_bg_color_label">Background color</string>
     <string name="glance_auto_rotate">Cycle targets automatically</string>

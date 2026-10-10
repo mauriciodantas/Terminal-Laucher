@@ -309,6 +309,8 @@
     <string name="complementary_violet">बैंगनी</string>
     <string name="complementary_purple">जामुनी</string>
     <string name="complementary_magenta">मैजेंटा</string>
+    <string name="theme_highlighter">हाइलाइटर</string>
+    <string name="theme_cyberpunk_night">साइबरपंक रात</string>
     <string name="launcher_bg_default">डिफ़ॉल्ट (टर्मिनल का काला)</string>
     <string name="launcher_bg_color_label">बैकग्राउंड रंग</string>
     <string name="glance_auto_rotate">लक्ष्य अपने-आप बदलें</string>

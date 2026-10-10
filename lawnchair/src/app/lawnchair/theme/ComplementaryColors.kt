@@ -56,6 +56,20 @@ object ComplementaryColors {
         return ColorUtils.HSLToColor(floatArrayOf((h + 180f) % 360f, ACCENT_SATURATION, ACCENT_LIGHTNESS))
     }
 
+    /**
+     * Ready-made looks outside the wheel, several of them on a light ground with dark text. They are
+     * taken as they are: each pair was chosen to read well (at least 4.5 of contrast).
+     */
+    val themes: List<Pair> = listOf(
+        Pair(R.string.theme_highlighter, accent = 0xFF000000.toInt(), background = 0xFFFFE14D.toInt()),
+        Pair(R.string.theme_game_boy, accent = 0xFF0F380F.toInt(), background = 0xFF9BBC0F.toInt()),
+        Pair(R.string.theme_cyberpunk, accent = 0xFF101820.toInt(), background = 0xFFFCEE0A.toInt()),
+        Pair(R.string.theme_cyberpunk_night, accent = 0xFF55EAF7.toInt(), background = 0xFF0D0B1E.toInt()),
+        Pair(R.string.theme_blade_runner, accent = 0xFFFF9A3C.toInt(), background = 0xFF07202A.toInt()),
+        Pair(R.string.theme_blade_runner_2049, accent = 0xFF2A1205.toInt(), background = 0xFFF0954A.toInt()),
+        Pair(R.string.theme_akira, accent = 0xFFF6F1E7.toInt(), background = 0xFFC8102E.toInt()),
+    )
+
     /** Every hue of the wheel as the accent, with its complement as the background. */
     val pairs: List<Pair> = wheel.indices.map { pairOf(it) }
 

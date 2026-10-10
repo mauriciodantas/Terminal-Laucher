@@ -309,6 +309,8 @@
     <string name="complementary_violet">すみれ色</string>
     <string name="complementary_purple">紫</string>
     <string name="complementary_magenta">マゼンタ</string>
+    <string name="theme_highlighter">蛍光ペン</string>
+    <string name="theme_cyberpunk_night">サイバーパンク・ナイト</string>
     <string name="launcher_bg_default">デフォルト (ターミナルの黒)</string>
     <string name="launcher_bg_color_label">背景色</string>
     <string name="glance_auto_rotate">ターゲットを自動で切り替え</string>

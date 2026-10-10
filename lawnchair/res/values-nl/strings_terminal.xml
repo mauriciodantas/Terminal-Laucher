@@ -309,6 +309,8 @@
     <string name="complementary_violet">Violet</string>
     <string name="complementary_purple">Paars</string>
     <string name="complementary_magenta">Magenta</string>
+    <string name="theme_highlighter">Markeerstift</string>
+    <string name="theme_cyberpunk_night">Cyberpunk nacht</string>
     <string name="launcher_bg_default">Standaard (terminalzwart)</string>
     <string name="launcher_bg_color_label">Achtergrondkleur</string>
     <string name="glance_auto_rotate">Doelen automatisch wisselen</string>

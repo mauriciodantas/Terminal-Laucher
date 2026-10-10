@@ -309,6 +309,8 @@
     <string name="complementary_violet">بنفسجي</string>
     <string name="complementary_purple">أرجواني</string>
     <string name="complementary_magenta">أرجواني فاتح</string>
+    <string name="theme_highlighter">قلم تحديد</string>
+    <string name="theme_cyberpunk_night">سايبربانك ليلي</string>
     <string name="launcher_bg_default">تلقائي (أسود الطرفية)</string>
     <string name="launcher_bg_color_label">لون الخلفية</string>
     <string name="glance_auto_rotate">تبديل الأهداف تلقائيًا</string>

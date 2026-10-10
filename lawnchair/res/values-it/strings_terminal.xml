@@ -309,6 +309,8 @@
     <string name="complementary_violet">Viola</string>
     <string name="complementary_purple">Porpora</string>
     <string name="complementary_magenta">Magenta</string>
+    <string name="theme_highlighter">Evidenziatore</string>
+    <string name="theme_cyberpunk_night">Cyberpunk notte</string>
     <string name="launcher_bg_default">Predefinito (nero del terminale)</string>
     <string name="launcher_bg_color_label">Colore di sfondo</string>
     <string name="glance_auto_rotate">Alterna gli obiettivi automaticamente</string>

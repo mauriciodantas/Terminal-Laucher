@@ -309,6 +309,8 @@
     <string name="complementary_violet">Violett</string>
     <string name="complementary_purple">Lila</string>
     <string name="complementary_magenta">Magenta</string>
+    <string name="theme_highlighter">Textmarker</string>
+    <string name="theme_cyberpunk_night">Cyberpunk Nacht</string>
     <string name="launcher_bg_default">Standard (Terminal-Schwarz)</string>
     <string name="launcher_bg_color_label">Hintergrundfarbe</string>
     <string name="glance_auto_rotate">Ziele automatisch wechseln</string>
