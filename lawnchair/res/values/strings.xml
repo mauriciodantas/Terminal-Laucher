@@ -214,7 +214,7 @@
     <string name="font_picker_label">Font customization</string>
     <string name="font_picker_description">Some text remains unchanged</string>
 
-    <string name="smartspace_calendar_label">At a Glance calendar customization</string>
+    <string name="smartspace_calendar_label">Calendário do Painel de status</string>
     <string name="smartspace_calendar_description">Allow showing date in non-Gregorian calendar systems</string>
 
     <string name="workspace_increase_max_grid_size_label">Increase maximum grid size limit</string>
@@ -493,7 +493,7 @@
     <string name="smartspace_battery_low">Battery low</string>
     <string name="battery_charging_percentage_charging_time">"%1$d%% — Full in %2$s"</string>
 
-    <string name="smartspace_widget">At a Glance</string>
+    <string name="smartspace_widget">Painel de status</string>
     <string name="smartspace_widget_description">What to show</string>
 
     <!-- Data and time format settings -->
@@ -538,10 +538,10 @@
 
     <!-- Toggle button for enabling Smartspace -->
     <string name="smartspace_widget_toggle_label">Show on home screen</string>
-    <string name="smartspace_widget_toggle_description">At a Glance can be added to the home screen with the Lawnchair widget</string>
+    <string name="smartspace_widget_toggle_description">O Painel de status pode ser adicionado à tela inicial com o widget do Terminal</string>
 
     <!-- List of available providers -->
-    <string name="smartspace_mode_label">At a Glance provider</string>
+    <string name="smartspace_mode_label">Provedor do Painel de status</string>
     <string name="smartspace_mode_lawnchair" translatable="false">Lawnchair</string>
     <string name="smartspace_mode_google">Google</string>
     <string name="smartspace_mode_google_search">Google Search</string>
@@ -1139,7 +1139,6 @@
     <string name="onboarding_skip_all" translatable="false">PULAR CONFIGURAÇÃO</string>
     <string name="onboarding_redo_menu" translatable="false">Rever configuração inicial</string>
 
-    <!-- At a Glance -->
     <string name="command_bar_setting" translatable="false">Barra de comando</string>
     <string name="command_actions_title" translatable="false">Ações da barra de comando</string>
     <string name="command_actions_desc" translatable="false">Atribua uma letra a ações de outros apps (w = WhatsApp)</string>
