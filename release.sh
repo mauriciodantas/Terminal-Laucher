@@ -12,6 +12,10 @@ set -e
 #                             publica em várias faixas com UM só build
 #   ./release.sh --build-only compila e assina o bundle (.aab), sem publicar
 #   ./release.sh --apk        compila e assina um APK para instalar/testar
+#   ./release.sh --promote-only
+#                             sem compilar, promove o build atual da faixa internal
+#                             para o teste fechado; com --tracks, da primeira faixa
+#                             para as demais (ex.: --tracks closed-testing,production)
 #
 # Variáveis opcionais:
 #   OP_VAULT     cofre do 1Password (padrão: Android)
@@ -21,9 +25,11 @@ set -e
 #                closed-testing/closed -> alpha, open-testing/open -> beta,
 #                prod -> production. Faixas personalizadas valem pelo nome.
 #   GRADLE_TASK  tarefa de publicação (padrão: publishLawnWithQuickstepPlayReleaseBundle)
+#   PROMOTE_TASK tarefa de promoção (padrão: promoteLawnWithQuickstepPlayReleaseArtifact)
 
 BUILD_ONLY=0
 BUILD_APK=0
+PROMOTE_ONLY=0
 ARGS=("$@")
 for ((i = 0; i < ${#ARGS[@]}; i++)); do
     arg="${ARGS[$i]}"
@@ -31,13 +37,21 @@ for ((i = 0; i < ${#ARGS[@]}; i++)); do
         --tracks) i=$((i + 1)); PLAY_TRACK="${ARGS[$i]:?ERRO: --tracks precisa de um valor}" ;;
         --build-only) BUILD_ONLY=1 ;;
         --apk) BUILD_APK=1 ;;
+        --promote-only) PROMOTE_ONLY=1 ;;
         --tracks=*) PLAY_TRACK="${arg#--tracks=}" ;;
-        -h|--help) sed -n '4,24p' "$0"; exit 0 ;;
+        -h|--help) sed -n '4,29p' "$0"; exit 0 ;;
         *) echo "ERRO: argumento desconhecido: $arg" >&2; exit 1 ;;
     esac
 done
 
 cd "$(dirname "$0")"
+
+if [ "$PROMOTE_ONLY" -eq 1 ]; then
+    [ "$BUILD_ONLY" -eq 0 ] && [ "$BUILD_APK" -eq 0 ] || {
+        echo "ERRO: --promote-only não combina com --build-only nem com --apk." >&2; exit 1; }
+    # Sem --tracks, leva o build da faixa interna para o teste fechado.
+    PLAY_TRACK="${PLAY_TRACK:-internal,closed-testing}"
+fi
 
 # ── Faixas de publicação ─────────────────────────────────────────────────────
 # Normaliza a lista (apelidos, espaços, repetidas) e valida antes de gastar
@@ -59,6 +73,10 @@ for raw in "${RAW_TRACKS[@]}"; do
 done
 [ "${#TRACKS[@]}" -gt 0 ] || TRACKS=(internal)
 PRIMARY_TRACK="${TRACKS[0]}"
+if [ "$PROMOTE_ONLY" -eq 1 ] && [ "${#TRACKS[@]}" -lt 2 ]; then
+    echo "ERRO: --promote-only precisa de uma faixa de origem e ao menos uma de destino (ex.: --tracks internal,closed-testing)." >&2
+    exit 1
+fi
 
 # ── Credenciais via 1Password CLI ────────────────────────────────────────────
 # Keystore, service account e senhas de assinatura vêm do 1Password em tempo
@@ -80,8 +98,11 @@ SECRETS_DIR="$(mktemp -d)"; chmod 700 "$SECRETS_DIR"
 trap 'rm -rf "$SECRETS_DIR"' EXIT INT TERM
 
 echo "-> Buscando credenciais no 1Password (cofre: $OP_VAULT)..."
-op document get "playconsole-keystore" --vault "$OP_VAULT" --out-file "$SECRETS_DIR/keystore.jks" >/dev/null
-# A conta de serviço do Play só é necessária para publicar.
+# Promover não compila nada, então dispensa o keystore e as senhas de assinatura.
+if [ "$PROMOTE_ONLY" -eq 0 ]; then
+    op document get "playconsole-keystore" --vault "$OP_VAULT" --out-file "$SECRETS_DIR/keystore.jks" >/dev/null
+fi
+# A conta de serviço do Play só é necessária para publicar ou promover.
 if [ "$BUILD_ONLY" -eq 0 ] && [ "$BUILD_APK" -eq 0 ]; then
     op document get "play-service-account" --vault "$OP_VAULT" --out-file "$SECRETS_DIR/service-account.json" >/dev/null
 fi
@@ -89,14 +110,16 @@ chmod 600 "$SECRETS_DIR"/*
 
 # Senhas vão por ORG_GRADLE_PROJECT_*, e não por -P, para não ficarem
 # visíveis no `ps` da máquina.
-export ORG_GRADLE_PROJECT_RELEASE_STORE_FILE="$SECRETS_DIR/keystore.jks"
 [ -f "$SECRETS_DIR/service-account.json" ] && export ORG_GRADLE_PROJECT_PLAY_STORE_KEY="$SECRETS_DIR/service-account.json"
-ORG_GRADLE_PROJECT_RELEASE_STORE_PASSWORD="$(op read "op://$OP_VAULT/Play Signing/store_password")"
-ORG_GRADLE_PROJECT_RELEASE_KEY_ALIAS="$(op read "op://$OP_VAULT/Play Signing/key_alias")"
-ORG_GRADLE_PROJECT_RELEASE_KEY_PASSWORD="$(op read "op://$OP_VAULT/Play Signing/key_password")"
-export ORG_GRADLE_PROJECT_RELEASE_STORE_PASSWORD \
-       ORG_GRADLE_PROJECT_RELEASE_KEY_ALIAS \
-       ORG_GRADLE_PROJECT_RELEASE_KEY_PASSWORD
+if [ "$PROMOTE_ONLY" -eq 0 ]; then
+    export ORG_GRADLE_PROJECT_RELEASE_STORE_FILE="$SECRETS_DIR/keystore.jks"
+    ORG_GRADLE_PROJECT_RELEASE_STORE_PASSWORD="$(op read "op://$OP_VAULT/Play Signing/store_password")"
+    ORG_GRADLE_PROJECT_RELEASE_KEY_ALIAS="$(op read "op://$OP_VAULT/Play Signing/key_alias")"
+    ORG_GRADLE_PROJECT_RELEASE_KEY_PASSWORD="$(op read "op://$OP_VAULT/Play Signing/key_password")"
+    export ORG_GRADLE_PROJECT_RELEASE_STORE_PASSWORD \
+           ORG_GRADLE_PROJECT_RELEASE_KEY_ALIAS \
+           ORG_GRADLE_PROJECT_RELEASE_KEY_PASSWORD
+fi
 
 # O Gradle precisa localizar o SDK; este repo não versiona local.properties.
 export ANDROID_HOME="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
@@ -118,6 +141,43 @@ if [ -z "$(ls -A platform_frameworks_libs_systemui 2>/dev/null)" ]; then
     git submodule update --init --depth 1
 fi
 echo "-> Credenciais carregadas."
+
+# As demais faixas recebem o MESMO build, promovido a partir da primeira. Uma
+# faixa que falhe (nome inexistente, por exemplo) não impede as outras; o
+# resumo no fim diz o que foi promovido e o script sai com erro.
+FAILED=()
+promote_tracks() {
+    for track in ${TRACKS[@]+"${TRACKS[@]:1}"}; do
+        echo "Promovendo $PRIMARY_TRACK -> $track..."
+        if ! ./gradlew "${PROMOTE_TASK:-promoteLawnWithQuickstepPlayReleaseArtifact}" \
+            --from-track "$PRIMARY_TRACK" --promote-track "$track" --no-daemon; then
+            FAILED+=("$track")
+        fi
+    done
+}
+
+# Lista o resultado de cada faixa e sai com erro se alguma falhou.
+report_promotions() {
+    for track in ${TRACKS[@]+"${TRACKS[@]:1}"}; do
+        case " ${FAILED[*]-} " in
+            *" $track "*) echo "  FALHOU: $track" ;;
+            *) echo "  promovido: $track" ;;
+        esac
+    done
+    if [ "${#FAILED[@]}" -gt 0 ]; then
+        echo "ERRO: não foi possível promover para: ${FAILED[*]}" >&2
+        exit 1
+    fi
+}
+
+if [ "$PROMOTE_ONLY" -eq 1 ]; then
+    # O plugin lê a faixa padrão da configuração; a de origem vem por --from-track.
+    export ORG_GRADLE_PROJECT_PLAY_TRACK="$PRIMARY_TRACK"
+    promote_tracks
+    echo "Build atual de $PRIMARY_TRACK:"
+    report_promotions
+    exit 0
+fi
 
 
 # Dynamically generate versions
@@ -168,22 +228,7 @@ echo "Building and Publishing to Play Store (faixa: $PRIMARY_TRACK)..."
 # As demais faixas recebem o MESMO build, promovido a partir da primeira. Uma
 # faixa que falhe (nome inexistente, por exemplo) não impede as outras; o
 # resumo no fim diz o que foi publicado e o script sai com erro.
-FAILED=()
-for track in ${TRACKS[@]+"${TRACKS[@]:1}"}; do
-    echo "Promovendo $PRIMARY_TRACK -> $track..."
-    if ! ./gradlew promoteArtifact --from-track "$PRIMARY_TRACK" --promote-track "$track" --no-daemon; then
-        FAILED+=("$track")
-    fi
-done
+promote_tracks
 
 echo "Release $VERSION_NAME (code $VERSION_CODE) publicado em: $PRIMARY_TRACK"
-for track in ${TRACKS[@]+"${TRACKS[@]:1}"}; do
-    case " ${FAILED[*]-} " in
-        *" $track "*) echo "  FALHOU: $track" ;;
-        *) echo "  promovido: $track" ;;
-    esac
-done
-if [ "${#FAILED[@]}" -gt 0 ]; then
-    echo "ERRO: não foi possível promover para: ${FAILED[*]}" >&2
-    exit 1
-fi
+report_promotions
