@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The second target of the motion tracker panel, shown beside the first where the screen is wide
+     enough: the next target in line. A tap brings it to the main panel. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/nostromo_second"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:clickable="true"
+    android:focusable="true"
+    android:orientation="vertical"
+    android:visibility="gone">
+
+    <LinearLayout
+        android:id="@+id/nostromo_second_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingStart="8dp"
+        android:paddingTop="3dp"
+        android:paddingEnd="8dp"
+        android:paddingBottom="3dp">
+
+        <TextView
+            android:id="@+id/nostromo_second_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:fontFamily="@font/ibm_plex_mono_semibold"
+            android:includeFontPadding="false"
+            android:letterSpacing="0.1"
+            android:maxLines="1"
+            android:textColor="#FF07090A"
+            android:textSize="10sp" />
+
+        <TextView
+            android:id="@+id/nostromo_second_state"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/ibm_plex_mono_semibold"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:textColor="#FF07090A"
+            android:textSize="10sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:minHeight="48dp"
+        android:orientation="horizontal"
+        android:paddingStart="4dp"
+        android:paddingTop="4dp"
+        android:paddingEnd="4dp"
+        android:paddingBottom="4dp">
+
+        <TextView
+            android:id="@+id/nostromo_second_lead"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="12dp"
+            android:fontFamily="@font/vt323_regular"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:shadowColor="#667DFFB2"
+            android:shadowDx="0"
+            android:shadowDy="0"
+            android:shadowRadius="8"
+            android:textColor="#FF7DFFB2"
+            android:textSize="32sp"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/nostromo_second_primary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="@font/ibm_plex_mono_semibold"
+                android:includeFontPadding="false"
+                android:letterSpacing="0.05"
+                android:maxLines="1"
+                android:textColor="#FFE8FBEE"
+                android:textSize="12.5sp" />
+
+            <TextView
+                android:id="@+id/nostromo_second_secondary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:ellipsize="end"
+                android:fontFamily="@font/ibm_plex_mono_regular"
+                android:includeFontPadding="false"
+                android:letterSpacing="0.06"
+                android:maxLines="1"
+                android:textColor="#FF6FCF98"
+                android:textSize="10.5sp" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

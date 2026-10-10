@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Nostromo terminal home on a tablet: the readout, the motion tracker panel and the next target
+     side by side, so the panel's two grid rows hold them all without shrinking the clock. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="4dp"
+    android:paddingEnd="4dp">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="32dp"
+        android:orientation="vertical">
+
+        <include layout="@layout/smartspace_widget_readout" />
+
+        <TextView
+            android:id="@+id/nostromo_quick_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:fontFamily="@font/ibm_plex_mono_regular"
+            android:includeFontPadding="false"
+            android:letterSpacing="0.1"
+            android:maxLines="1"
+            android:text="@string/nostromo_quick_access"
+            android:textColor="#FF50A172"
+            android:textSize="10sp" />
+    </LinearLayout>
+
+    <!-- Both cards keep their tops lined up. -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
+
+        <include
+            layout="@layout/smartspace_widget_panel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
+        <include
+            layout="@layout/smartspace_widget_second"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="0.7" />
+    </LinearLayout>
+</LinearLayout>

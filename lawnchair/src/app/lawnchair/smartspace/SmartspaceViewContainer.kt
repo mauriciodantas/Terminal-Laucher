@@ -85,6 +85,11 @@ class SmartspaceViewContainer @JvmOverloads constructor(
             setStroke(density.toInt().coerceAtLeast(1), PhosphorColorToken(0.32f).resolveColor(context))
         }
         root.findViewById<View>(R.id.nostromo_panel_title)?.setBackgroundColor(phosphor)
+        // The second card of a tablet, drawn like the first.
+        root.findViewById<View>(R.id.nostromo_second)?.background = GradientDrawable().apply {
+            setColor(Color.TRANSPARENT)
+            setStroke(density.toInt().coerceAtLeast(1), PhosphorColorToken(0.32f).resolveColor(context))
+        }
         root.findViewById<TextView>(R.id.nostromo_target_secondary)?.setTextColor(dim)
         applyFont(root)
         root.findViewById<TextView>(R.id.nostromo_target_primary)?.setTextColor(LauncherGround.ink(context))
@@ -101,8 +106,12 @@ class SmartspaceViewContainer @JvmOverloads constructor(
             R.id.nostromo_panel_state,
             R.id.nostromo_target_primary,
             R.id.nostromo_target_secondary,
+            R.id.nostromo_second_name,
+            R.id.nostromo_second_state,
+            R.id.nostromo_second_primary,
+            R.id.nostromo_second_secondary,
         ).forEach { id -> root.findViewById<TextView>(id)?.let { UiFont.apply(it) } }
-        listOf(R.id.nostromo_clock, R.id.nostromo_target_lead).forEach { id ->
+        listOf(R.id.nostromo_clock, R.id.nostromo_target_lead, R.id.nostromo_second_lead).forEach { id ->
             root.findViewById<TextView>(id)?.let { UiFont.applyToClock(it) }
         }
     }

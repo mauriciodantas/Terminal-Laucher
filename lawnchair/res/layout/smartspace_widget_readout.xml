@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Status readout of the Nostromo panel: header, clock, date and status line. -->
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <TextView
+        android:id="@+id/nostromo_header"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/ibm_plex_mono_medium"
+        android:includeFontPadding="false"
+        android:letterSpacing="0.12"
+        android:maxLines="1"
+        android:text="@string/nostromo_header"
+        android:textColor="#FF7DFFB2"
+        android:textSize="10sp" />
+
+    <TextClock
+        android:id="@+id/nostromo_clock"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/vt323_regular"
+        android:format12Hour="HH:mm"
+        android:format24Hour="HH:mm"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:shadowColor="#667DFFB2"
+        android:shadowDx="0"
+        android:shadowDy="0"
+        android:shadowRadius="8"
+        android:textColor="#FF7DFFB2"
+        android:textSize="44sp"
+        tools:text="03:47" />
+
+    <TextClock
+        android:id="@+id/nostromo_date"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/ibm_plex_mono_medium"
+        android:format12Hour="EEEE · dd.MMM.yyyy"
+        android:format24Hour="EEEE · dd.MMM.yyyy"
+        android:includeFontPadding="false"
+        android:letterSpacing="0.08"
+        android:maxLines="1"
+        android:textAllCaps="true"
+        android:textColor="#FF7DFFB2"
+        android:textSize="12sp"
+        tools:text="SÁBADO · 02.OUT.2026" />
+
+    <TextView
+        android:id="@+id/nostromo_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:fontFamily="@font/ibm_plex_mono_regular"
+        android:includeFontPadding="false"
+        android:letterSpacing="0.08"
+        android:maxLines="1"
+        android:text="@string/nostromo_status_line"
+        android:textColor="#FF50A172"
+        android:textSize="10sp" />
+</merge>

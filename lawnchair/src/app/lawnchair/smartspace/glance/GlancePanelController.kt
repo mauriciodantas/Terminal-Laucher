@@ -5,7 +5,9 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.StateListDrawable
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
 import android.os.Handler
@@ -14,6 +16,7 @@ import android.provider.AlarmClock
 import android.provider.MediaStore
 import android.util.TypedValue
 import android.view.Gravity
+import android.view.PointerIcon
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -300,7 +303,10 @@ class GlancePanelController(
                     layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
                         if (index > 0) marginStart = (6 * density).toInt()
                     }
-                    if (!previewMode) setOnClickListener { run(shortcut) }
+                    if (!previewMode) {
+                        setOnClickListener { run(shortcut) }
+                        pointerFeedback()
+                    }
                 },
             )
         }
@@ -469,6 +475,7 @@ class GlancePanelController(
             content?.isClickable = false
             tabs.removeAllViews()
             bar?.setOnClickListener(null)
+            renderSecond(null)
             return
         }
 
@@ -490,25 +497,15 @@ class GlancePanelController(
         leadView?.setTextColor(if (urgent) urgentColor else phosphor)
         leadView?.setShadowLayer(8f, 0f, 0f, (if (urgent) urgentColor else phosphor) and 0x00FFFFFF or 0x66000000)
 
-        val countdown = GlanceEngine.minutesUntil(selected.startsAtMillis, clock())
-            ?.let { GlanceEngine.countdownLabel(it) }
-        val parts = lead.text.split(" · ").filter { it.isNotBlank() }
-        // The title bar already says the kind, so a bare value gets a short unit label instead.
-        val main = parts.firstOrNull() ?: when (selected.kind) {
-            GlanceKind.CLIMA -> context.getString(R.string.glance_unit_temperature)
-            GlanceKind.AGENDA -> context.getString(R.string.glance_unit_event)
-            GlanceKind.ALARME -> context.getString(R.string.glance_unit_alarm)
-            GlanceKind.BATERIA -> context.getString(R.string.glance_unit_battery)
-            GlanceKind.LEMBRETE -> context.getString(R.string.glance_unit_reminder)
-            else -> selected.kind.label
-        }
+        val (main, rest) = targetLines(selected, lead)
         primary?.text = main
-        secondary?.text = (parts.drop(1) + listOfNotNull(countdown)).joinToString(" · ")
+        secondary?.text = rest
         secondary?.setTextColor(if (urgent) urgentColor else dim)
 
         val action = actions[selected.id]
         if (!previewMode && action != null) {
             content?.setOnClickListener { launch(action) }
+            content?.pointerFeedback()
         } else {
             content?.setOnClickListener(null)
             content?.isClickable = false
@@ -524,6 +521,7 @@ class GlancePanelController(
                 selectedId = panel.tabs[next % panel.tabs.size].id
                 render()
             }
+            if (!previewMode) bar?.pointerIcon = PointerIcon.getSystemIcon(context, PointerIcon.TYPE_HAND)
         } else {
             tabs.visibility = View.VISIBLE
             bar?.setOnClickListener(null)
@@ -532,6 +530,74 @@ class GlancePanelController(
                 tabs.addView(tabView(index, target, target.id == selectedId))
             }
         }
+        renderSecond(selected)
+    }
+
+    /** The main line and the detail line of [target]'s text, beside its big [lead] value. */
+    private fun targetLines(target: GlanceTarget, lead: GlanceEngine.Lead): Pair<String, String> {
+        val countdown = GlanceEngine.minutesUntil(target.startsAtMillis, clock())
+            ?.let { GlanceEngine.countdownLabel(it) }
+        val parts = lead.text.split(" · ").filter { it.isNotBlank() }
+        // The title bar already says the kind, so a bare value gets a short unit label instead.
+        val main = parts.firstOrNull() ?: when (target.kind) {
+            GlanceKind.CLIMA -> context.getString(R.string.glance_unit_temperature)
+            GlanceKind.AGENDA -> context.getString(R.string.glance_unit_event)
+            GlanceKind.ALARME -> context.getString(R.string.glance_unit_alarm)
+            GlanceKind.BATERIA -> context.getString(R.string.glance_unit_battery)
+            GlanceKind.LEMBRETE -> context.getString(R.string.glance_unit_reminder)
+            else -> target.kind.label
+        }
+        return main to (parts.drop(1) + listOfNotNull(countdown)).joinToString(" · ")
+    }
+
+    /**
+     * Where the layout has room for it (tablets), the target after the selected one is shown in a
+     * second card, so two things are read at a glance instead of waiting for the turn. A tap on it
+     * brings it to the main panel.
+     */
+    private fun renderSecond(selected: GlanceTarget?) {
+        val card = root.findViewById<View>(R.id.nostromo_second) ?: return
+        val tabs = panel.tabs
+        val other = if (selected == null || tabs.size < 2) null else tabs[(tabs.indexOf(selected) + 1) % tabs.size]
+        if (other == null) {
+            card.visibility = View.GONE
+            return
+        }
+        card.visibility = View.VISIBLE
+        val urgent = panel.isUrgent(other)
+        val color = if (urgent) urgentColor else phosphor
+        val name = root.findViewById<TextView>(R.id.nostromo_second_name)
+        val state = root.findViewById<TextView>(R.id.nostromo_second_state)
+        root.findViewById<View>(R.id.nostromo_second_title)?.setBackgroundColor(color)
+        colorTitleBar(name, state, color)
+        name?.text = other.kind.panelTitle
+        state?.text = if (urgent) {
+            context.getString(R.string.glance_tag_priority)
+        } else {
+            "[%02d/%02d]".format(tabs.indexOf(other) + 1, tabs.size)
+        }
+        val lead = GlanceEngine.lead(other)
+        root.findViewById<TextView>(R.id.nostromo_second_lead)?.apply {
+            visibility = if (lead.value == null) View.GONE else View.VISIBLE
+            text = lead.value
+            setTextColor(color)
+            setShadowLayer(8f, 0f, 0f, color and 0x00FFFFFF or 0x66000000)
+        }
+        val (main, rest) = targetLines(other, lead)
+        root.findViewById<TextView>(R.id.nostromo_second_primary)?.apply {
+            text = main
+            setTextColor(LauncherGround.ink(context))
+        }
+        root.findViewById<TextView>(R.id.nostromo_second_secondary)?.apply {
+            text = rest
+            setTextColor(if (urgent) urgentColor else dim)
+        }
+        card.setOnClickListener {
+            pickedByUser()
+            selectedId = other.id
+            render()
+        }
+        if (!previewMode) card.pointerFeedback()
     }
 
     private fun tabView(index: Int, target: GlanceTarget, selected: Boolean): TextView {
@@ -555,7 +621,20 @@ class GlancePanelController(
                 selectedId = target.id
                 render()
             }
+            pointerFeedback()
         }
+    }
+
+    /**
+     * With a mouse or trackpad (tablets with a keyboard cover) the panel's buttons light up under
+     * the pointer and show the hand cursor, like links, so it is clear what can be clicked.
+     */
+    private fun View.pointerFeedback() {
+        foreground = StateListDrawable().apply {
+            addState(intArrayOf(android.R.attr.state_hovered), ColorDrawable((phosphor and 0x00FFFFFF) or 0x1F000000))
+            addState(intArrayOf(), ColorDrawable(Color.TRANSPARENT))
+        }
+        pointerIcon = PointerIcon.getSystemIcon(context, PointerIcon.TYPE_HAND)
     }
 
     private fun launch(action: SmartspaceAction) {
