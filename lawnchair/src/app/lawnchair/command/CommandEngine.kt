@@ -81,6 +81,8 @@ data class Analysis(
     val total: Int = 0,
     /** A permission the command waits for, besides contacts. */
     val need: Need? = null,
+    /** What the command being typed does and how to write it, shown under the preview. */
+    val help: CommandHelpText? = null,
 )
 
 /** A one-tap start for the empty command line: a recent command, an alias or a custom letter. */
@@ -154,7 +156,7 @@ object CommandEngine {
         extras: CommandExtras = CommandExtras(),
     ): Analysis {
         val ctx = Ctx(apps, contacts, contactsGranted, custom, aliases, extras)
-        val analysis = analyzeLine(typed, ctx, 0)
+        val analysis = analyzeLine(typed, ctx, 0).copy(help = CommandHelp.of(typed, custom, aliases))
         return analysis.action?.let { analysis.copy(intent = describe(it)) } ?: analysis
     }
 

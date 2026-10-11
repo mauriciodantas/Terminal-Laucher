@@ -841,6 +841,27 @@ private fun CommandScreen(onClose: () -> Unit) {
                         )
                     }
                 }
+                // Help: what the command being typed does, with examples.
+                val help = analysis.help
+                if (done == null && help != null) {
+                    Column(
+                        Modifier
+                            .padding(top = 8.dp)
+                            .fillMaxWidth()
+                            .border(1.dp, line)
+                            .padding(horizontal = 10.dp, vertical = 7.dp),
+                    ) {
+                        Label(stringResource(R.string.cmd_help) + " · " + help.title, dim, 10.sp)
+                        Text(
+                            help.text,
+                            color = dim,
+                            fontFamily = mono(),
+                            fontSize = 12.sp,
+                            lineHeight = 17.sp,
+                            modifier = Modifier.padding(top = 3.dp),
+                        )
+                    }
+                }
             }
 
             // Keys that a phone keyboard lacks.
