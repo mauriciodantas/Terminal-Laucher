@@ -14,7 +14,9 @@ import app.lawnchair.search.adapter.HISTORY
 import app.lawnchair.search.adapter.SETTINGS
 import app.lawnchair.search.adapter.SearchTargetCompat
 import app.lawnchair.search.adapter.WEB_SUGGESTION
+import app.lawnchair.util.SECONDARY_TEXT_STRENGTH
 import app.lawnchair.util.copyToClipboard
+import app.lawnchair.util.drawerTextColor
 import com.android.app.search.LayoutType
 import com.android.launcher3.R
 import com.android.launcher3.views.BubbleTextHolder
@@ -50,6 +52,11 @@ class SearchResultIconRow(context: Context, attrs: AttributeSet?) :
         FontManager.INSTANCE.get(context).setCustomFont(title, R.id.font_heading)
         FontManager.INSTANCE.get(context).setCustomFont(subtitle, R.id.font_body)
         delimiter = findViewById(R.id.delimiter)
+        // The layout's theme colors are made for a dark drawer; the rows follow the drawer text instead.
+        val text = drawerTextColor(context)
+        title.setTextColor(text)
+        (delimiter as? TextView)?.setTextColor(text)
+        subtitle.setTextColor(drawerTextColor(context, SECONDARY_TEXT_STRENGTH))
         setOnClickListener(icon)
 
         shortcutIcons = listOf(

@@ -227,13 +227,13 @@ public class AllAppsGridAdapter<T extends Context & ActivityContext> extends
                 return totalSpans;
             }
             int viewType = items.get(position).viewType;
-            if (isIconViewType(viewType)) {
+            // The search provider sizes its own views first: its app results also carry the icon
+            // view type, but list one per row instead of taking a grid cell.
+            if (mAdapterProvider.isViewSupported(viewType)) {
+                return totalSpans / mAdapterProvider.getItemsPerRow(viewType, mAppsPerRow);
+            } else if (isIconViewType(viewType)) {
                 return totalSpans / mAppsPerRow;
             } else {
-                if (mAdapterProvider.isViewSupported(viewType)) {
-                    return totalSpans / mAdapterProvider.getItemsPerRow(viewType, mAppsPerRow);
-                }
-
                 // Section breaks span the full width
                 return totalSpans;
             }

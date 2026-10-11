@@ -15,6 +15,8 @@ import app.lawnchair.search.adapter.SearchTargetCompat
 import app.lawnchair.util.AppInfo
 import app.lawnchair.util.AppInfoHelper
 import app.lawnchair.util.ImageViewWrapper
+import app.lawnchair.util.SECONDARY_TEXT_STRENGTH
+import app.lawnchair.util.drawerTextColor
 import com.android.app.search.LayoutType
 import com.android.launcher3.DeviceProfile
 import com.android.launcher3.R
@@ -49,6 +51,11 @@ class SearchResultRightLeftIcon(context: Context, attrs: AttributeSet?) :
         message = ViewCompat.requireViewById(this, R.id.icon1)
         preview = ViewCompat.requireViewById(this, R.id.files_preview)
         FontManager.INSTANCE.get(context).setCustomFont(title, R.id.font_body)
+        // The layout's theme colors are made for a dark drawer; the rows follow the drawer text instead.
+        val text = drawerTextColor(context)
+        title.setTextColor(text)
+        findViewById<TextView>(R.id.delimiter)?.setTextColor(text)
+        findViewById<TextView>(R.id.subtitle)?.setTextColor(drawerTextColor(context, SECONDARY_TEXT_STRENGTH))
         setUpdateResources()
     }
 

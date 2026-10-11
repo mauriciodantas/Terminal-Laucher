@@ -42,7 +42,6 @@ import android.provider.OpenableColumns
 import android.util.Log
 import android.util.Size
 import android.view.View
-import android.widget.TextView
 import androidx.compose.ui.util.lerp
 import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.createBitmap
@@ -149,26 +148,51 @@ fun supportsRoundedCornersOnWindows(context: Context): Boolean {
     }
 }
 
-fun overrideAllAppsTextColor(textView: TextView) {
-    val context = textView.context
+/** The color the drawer is painted with: the launcher ground when it is see-through, else its own base color. */
+private fun drawerBaseColor(context: Context): Int {
     val opacity = PreferenceManager.getInstance(context).drawerOpacity.get()
-    // A see-through drawer shows the launcher ground; otherwise it is painted with its own base color.
-    val base = if (opacity <= 0.3f) {
+    return if (opacity <= 0.3f) {
         app.lawnchair.theme.LauncherGround.get(context)
     } else {
         getAllAppsBaseColor(context, ColorTokens.AllAppsScrimColor.resolveColor(context))
     }
-    // The text keeps its color while it reads over the drawer. When it does not (a light text on a
-    // light drawer, a dark accent on a dark one) the phosphor takes over if it reads, else a plain ink.
-    val current = textView.currentTextColor or 0xFF000000.toInt()
-    if (ColorUtils.calculateContrast(current, base) >= MIN_TEXT_CONTRAST) return
+}
+
+/** How strongly secondary drawer text (subtitles, hints) shows its color, as the dim phosphor does. */
+const val SECONDARY_TEXT_STRENGTH = 0.62f
+
+/**
+ * The color of text in the app drawer: the user's phosphor, like the home screen labels, or a plain
+ * ink when the phosphor does not read over the drawer. [strength] below 1 fades it toward the drawer
+ * for secondary text, the same way the dim phosphor fades toward the ground.
+ *
+ * Callers set it outright rather than checking the view's own color first: a BubbleTextView is still
+ * transparent while it is being built, which read as black and kept the theme's light gray on light
+ * drawers.
+ */
+@JvmOverloads
+fun drawerTextColor(context: Context, strength: Float = 1f): Int = readableTextColor(context, drawerBaseColor(context), strength)
+
+/**
+ * The color of text in an open folder (its name, its apps' labels and its buttons), chosen the same
+ * way as [drawerTextColor] but over the folder's own background laid on the launcher ground.
+ */
+@JvmOverloads
+fun folderTextColor(context: Context, strength: Float = 1f): Int {
+    val folder = ColorUtils.setAlphaComponent(resolveFolderBackgroundColor(context), getFolderBackgroundAlpha(context))
+    val base = ColorUtils.compositeColors(folder, app.lawnchair.theme.LauncherGround.get(context))
+    return readableTextColor(context, base, strength)
+}
+
+/** The user's phosphor when it reads over [base], else a plain ink; [strength] below 1 fades it toward [base]. */
+private fun readableTextColor(context: Context, base: Int, strength: Float): Int {
     val phosphor = PhosphorColorToken(1f).resolveColor(context)
     val readable = if (ColorUtils.calculateContrast(phosphor, base) >= MIN_TEXT_CONTRAST) {
         phosphor
     } else {
         app.lawnchair.theme.LauncherGround.ink(base)
     }
-    textView.setTextColor(readable)
+    return if (strength >= 1f) readable else ColorUtils.blendARGB(base, readable, strength)
 }
 
 @Suppress("UNCHECKED_CAST")

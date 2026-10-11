@@ -9,8 +9,9 @@ import androidx.core.view.ViewCompat
 import app.lawnchair.font.FontManager
 import app.lawnchair.search.adapter.SearchTargetCompat
 import app.lawnchair.theme.color.tokens.ColorTokens
+import app.lawnchair.util.SECONDARY_TEXT_STRENGTH
+import app.lawnchair.util.drawerTextColor
 import com.android.launcher3.R
-import com.android.launcher3.util.Themes
 
 class SearchResultEmptyState(context: Context, attrs: AttributeSet?) :
     LinearLayout(context, attrs),
@@ -29,7 +30,8 @@ class SearchResultEmptyState(context: Context, attrs: AttributeSet?) :
         FontManager.INSTANCE.get(context).setCustomFont(title, R.id.font_heading)
         FontManager.INSTANCE.get(context).setCustomFont(subtitle, R.id.font_body)
 
-        subtitle.setTextColor(Themes.getAttrColor(context, android.R.attr.textColorTertiary))
+        title.setTextColor(drawerTextColor(context))
+        subtitle.setTextColor(drawerTextColor(context, SECONDARY_TEXT_STRENGTH))
         icon.setColorFilter(ColorTokens.ColorAccent.resolveColor(context))
     }
 

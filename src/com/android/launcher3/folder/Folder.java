@@ -41,6 +41,7 @@ import android.annotation.ColorInt;
 import android.annotation.SuppressLint;
 import android.appwidget.AppWidgetHostView;
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.graphics.Canvas;
 import android.graphics.Insets;
 import android.graphics.Path;
@@ -368,6 +369,12 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
                 | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
                 | InputType.TYPE_TEXT_FLAG_CAP_WORDS);
         mFolderName.forceDisableSuggestions(true);
+        // The folder's name and buttons follow the phosphor like its apps' labels.
+        int folderText = LawnchairUtilsKt.folderTextColor(getContext());
+        mFolderName.setTextColor(folderText);
+        mFolderName.setHintTextColor(LawnchairUtilsKt.folderTextColor(
+                getContext(), LawnchairUtilsKt.SECONDARY_TEXT_STRENGTH));
+        mResizeButton.setImageTintList(ColorStateList.valueOf(folderText));
 
         @ColorInt
         int accentColor = Themes.getColorAccent(mFolderName.getContext());

@@ -1,6 +1,7 @@
 package app.lawnchair.allapps.views
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.util.AttributeSet
 import android.widget.ImageButton
 import android.widget.LinearLayout
@@ -9,6 +10,7 @@ import app.lawnchair.search.adapter.SearchTargetCompat
 import app.lawnchair.ui.preferences.PreferenceActivity
 import app.lawnchair.ui.preferences.destinations.SearchRoute
 import app.lawnchair.ui.preferences.navigation.Search
+import app.lawnchair.util.drawerTextColor
 import com.android.launcher3.R
 
 class SearchResultSearchSettings(context: Context, attrs: AttributeSet?) :
@@ -20,6 +22,7 @@ class SearchResultSearchSettings(context: Context, attrs: AttributeSet?) :
     override fun onFinishInflate() {
         super.onFinishInflate()
         iconButton = ViewCompat.requireViewById(this, R.id.search_settings)
+        iconButton.imageTintList = ColorStateList.valueOf(drawerTextColor(context))
         iconButton.setOnClickListener {
             context.startActivity(PreferenceActivity.createIntent(context, Search(SearchRoute.DRAWER_SEARCH)))
         }

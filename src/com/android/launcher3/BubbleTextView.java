@@ -301,11 +301,12 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
             setCompoundDrawablePadding(
                     mDeviceProfile.getAllAppsProfile().getIconDrawablePaddingPx());
             defaultIconSize = mDeviceProfile.getAllAppsProfile().getIconSizePx();
-            LawnchairUtilsKt.overrideAllAppsTextColor(this);
+            applyTerminalTextColor();
         } else if (mDisplay == DISPLAY_FOLDER) {
             setTextSize(TypedValue.COMPLEX_UNIT_PX, mDeviceProfile.folderChildTextSizePx);
             setCompoundDrawablePadding(mDeviceProfile.folderChildDrawablePaddingPx);
             defaultIconSize = mDeviceProfile.folderChildIconSizePx;
+            applyTerminalTextColor();
         } else if (mDisplay == DISPLAY_SEARCH_RESULT) {
             setTextSize(TypedValue.COMPLEX_UNIT_PX,
                     mDeviceProfile.getAllAppsProfile().getIconTextSizePx());
@@ -978,16 +979,26 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
     /** Makes this view a directory row with an explicit dim [code] before the [title]. */
     public void setDirectoryLabel(String code, CharSequence title) {
         mDirectoryIndex = 0;
-        if (mDisplay == DISPLAY_ALL_APPS || mDisplay == DISPLAY_DRAWER_FOLDER) {
-            // The theme text color is set after construction, so the drawer check runs again here.
-            LawnchairUtilsKt.overrideAllAppsTextColor(this);
-        }
+        applyTerminalTextColor();
         SpannableString label = new SpannableString(code + "  " + title);
         int dim = ColorUtils.setAlphaComponent(getCurrentTextColor(), 0x99);
         label.setSpan(new ForegroundColorSpan(dim), 0, code.length(),
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         setText(label);
         invalidate();
+    }
+
+    /**
+     * Labels in the drawer and in open folders take the user's phosphor (or a plain ink where it
+     * would not read) instead of the theme's text colors, which are made for a dark ground.
+     */
+    private void applyTerminalTextColor() {
+        if (mDisplay == DISPLAY_FOLDER || mDisplay == DISPLAY_DRAWER_FOLDER) {
+            setTextColor(LawnchairUtilsKt.folderTextColor(getContext()));
+        } else if (mDisplay == DISPLAY_ALL_APPS || mDisplay == DISPLAY_PREDICTION_ROW
+                || mDisplay == DISPLAY_SEARCH_RESULT_APP_ROW) {
+            setTextColor(LawnchairUtilsKt.drawerTextColor(getContext()));
+        }
     }
 
     /** A directory row that is touched or focused is marked with a tinted band and a left bar. */
