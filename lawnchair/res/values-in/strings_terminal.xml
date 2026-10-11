@@ -218,6 +218,8 @@
     <string name="lottie_widget_playback">Pemutaran</string>
     <string name="lottie_widget_playback_loop">Berulang</string>
     <string name="lottie_widget_playback_once">Sekali per ketukan</string>
+    <string name="lottie_widget_theme_colors">Warna tema</string>
+    <string name="lottie_widget_theme_colors_summary">Mewarnai animasi dengan warna aksen tema</string>
     <string name="lottie_widget_save">Simpan</string>
     <string name="lottie_widget_command_failed">Perintah \"%1$s\" tidak dijalankan: %2$s</string>
     <string name="lottie_widget_empty">Sentuh lama lalu ketuk Konfigurasi untuk memilih animasi</string>

@@ -14,9 +14,10 @@ import kotlinx.coroutines.flow.update
 
 /**
  * What each Lottie widget shows and does: the imported animation (one file per widget id under the
- * app's files folder, as imported: .json, .lottie or gzip), its file name and the optional command
- * line run on a tap. The widget, the configuration screen and the provider all run in the launcher
- * process, so [changes] tells the widgets on screen to reload right away.
+ * app's files folder, as imported: .json, .lottie or gzip), its file name, the optional command
+ * line run on a tap, how it plays and whether it takes the theme colors. The widget, the
+ * configuration screen and the provider all run in the launcher process, so [changes] tells the
+ * widgets on screen to reload right away.
  */
 object LottieWidgetStore {
 
@@ -25,6 +26,7 @@ object LottieWidgetStore {
     private const val KEY_COMMAND = "command_"
     private const val KEY_NAME = "name_"
     private const val KEY_PLAYBACK = "playback_"
+    private const val KEY_THEME_COLORS = "theme_colors_"
 
     private val _changes = MutableStateFlow(0)
 
@@ -54,6 +56,9 @@ object LottieWidgetStore {
         ?.let { name -> Playback.entries.firstOrNull { it.name == name } }
         ?: Playback.LOOP
 
+    /** Whether the animation is painted in the theme colors instead of its own; off for older widgets. */
+    fun themeColors(context: Context, appWidgetId: Int): Boolean = prefs(context).getBoolean(KEY_THEME_COLORS + appWidgetId, false)
+
     /**
      * Copies the animation at [uri] aside for [appWidgetId] without touching the current one, and
      * returns its file name, or null when it is not a valid Lottie animation. [save] puts it in place.
@@ -79,9 +84,9 @@ object LottieWidgetStore {
 
     /**
      * Keeps the configuration: the staged animation, when one was picked, under [name], [command]
-     * (blank clears it) and [playback]. Returns false when the staged file could not be put in place.
+     * (blank clears it), [playback] and [themeColors]. Returns false when the staged file could not be put in place.
      */
-    fun save(context: Context, appWidgetId: Int, name: String?, command: String, playback: Playback): Boolean {
+    fun save(context: Context, appWidgetId: Int, name: String?, command: String, playback: Playback, themeColors: Boolean): Boolean {
         val pending = staged(context, appWidgetId)
         if (pending.exists() && !pending.renameTo(file(context, appWidgetId))) return false
         prefs(context).edit {
@@ -89,6 +94,7 @@ object LottieWidgetStore {
             val line = command.trim()
             if (line.isEmpty()) remove(KEY_COMMAND + appWidgetId) else putString(KEY_COMMAND + appWidgetId, line)
             putString(KEY_PLAYBACK + appWidgetId, playback.name)
+            putBoolean(KEY_THEME_COLORS + appWidgetId, themeColors)
         }
         _changes.update { it + 1 }
         return true
@@ -107,6 +113,7 @@ object LottieWidgetStore {
                 remove(KEY_COMMAND + it)
                 remove(KEY_NAME + it)
                 remove(KEY_PLAYBACK + it)
+                remove(KEY_THEME_COLORS + it)
             }
         }
         _changes.update { it + 1 }
@@ -123,6 +130,8 @@ object LottieWidgetStore {
                     prefs.getString(key + old, null)?.let { putString(key + new, it) }
                     remove(key + old)
                 }
+                if (prefs.contains(KEY_THEME_COLORS + old)) putBoolean(KEY_THEME_COLORS + new, prefs.getBoolean(KEY_THEME_COLORS + old, false))
+                remove(KEY_THEME_COLORS + old)
             }
         }
         _changes.update { it + 1 }

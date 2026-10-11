@@ -218,6 +218,8 @@
     <string name="lottie_widget_playback">प्लेबैक</string>
     <string name="lottie_widget_playback_loop">लूप में</string>
     <string name="lottie_widget_playback_once">हर टैप पर एक बार</string>
+    <string name="lottie_widget_theme_colors">थीम के रंग</string>
+    <string name="lottie_widget_theme_colors_summary">ऐनिमेशन को थीम के एक्सेंट रंग में रंगता है</string>
     <string name="lottie_widget_save">सेव करें</string>
     <string name="lottie_widget_command_failed">कमांड \"%1$s\" नहीं चली: %2$s</string>
     <string name="lottie_widget_empty">ऐनिमेशन चुनने के लिए दबाकर रखें और कॉन्फ़िगर करें पर टैप करें</string>

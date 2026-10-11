@@ -218,6 +218,8 @@
     <string name="lottie_widget_playback">Wiedergabe</string>
     <string name="lottie_widget_playback_loop">In Schleife</string>
     <string name="lottie_widget_playback_once">Einmal pro Tippen</string>
+    <string name="lottie_widget_theme_colors">Designfarben</string>
+    <string name="lottie_widget_theme_colors_summary">Färbt die Animation in der Akzentfarbe des Designs</string>
     <string name="lottie_widget_save">Speichern</string>
     <string name="lottie_widget_command_failed">Befehl \"%1$s\" nicht ausgeführt: %2$s</string>
     <string name="lottie_widget_empty">Gedrückt halten und auf Konfigurieren tippen, um eine Animation auszuwählen</string>

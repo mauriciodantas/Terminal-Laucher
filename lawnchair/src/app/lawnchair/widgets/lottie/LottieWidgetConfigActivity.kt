@@ -14,10 +14,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -47,8 +49,8 @@ import kotlinx.coroutines.withContext
 
 /**
  * Configuration of the Lottie widget, when it is added and from "Configurar" afterwards: the
- * animation to play, how it plays and, optionally, a command line to run on a tap. A new widget opens the file
- * picker right away. Nothing changes until "Salvar"; canceling a new widget makes the launcher drop it.
+ * animation to play, how it plays, whether it takes the theme colors and, optionally, a command line
+ * to run on a tap. A new widget opens the file picker right away. Nothing changes until "Salvar"; canceling a new widget makes the launcher drop it.
  */
 class LottieWidgetConfigActivity : ComponentActivity() {
 
@@ -79,6 +81,7 @@ class LottieWidgetConfigActivity : ComponentActivity() {
         animationName = LottieWidgetStore.animationName(this, appWidgetId)
         val initialCommand = LottieWidgetStore.command(this, appWidgetId)
         val initialPlayback = LottieWidgetStore.playback(this, appWidgetId)
+        val initialThemeColors = LottieWidgetStore.themeColors(this, appWidgetId)
         showDialog = animationName != null
         if (savedInstanceState == null && animationName == null) pickAnimation()
 
@@ -89,6 +92,7 @@ class LottieWidgetConfigActivity : ComponentActivity() {
                         animationName = animationName,
                         initialCommand = initialCommand,
                         initialPlayback = initialPlayback,
+                        initialThemeColors = initialThemeColors,
                         onPick = ::pickAnimation,
                         onSave = ::save,
                         onDismiss = ::cancel,
@@ -113,8 +117,8 @@ class LottieWidgetConfigActivity : ComponentActivity() {
         }
     }
 
-    private fun save(command: String, playback: Playback) {
-        if (LottieWidgetStore.save(applicationContext, appWidgetId, animationName, command, playback)) {
+    private fun save(command: String, playback: Playback, themeColors: Boolean) {
+        if (LottieWidgetStore.save(applicationContext, appWidgetId, animationName, command, playback, themeColors)) {
             setResult(RESULT_OK, resultIntent())
         }
         finish()
@@ -133,13 +137,15 @@ private fun ConfigDialog(
     animationName: String?,
     initialCommand: String,
     initialPlayback: Playback,
+    initialThemeColors: Boolean,
     onPick: () -> Unit,
-    onSave: (String, Playback) -> Unit,
+    onSave: (String, Playback, Boolean) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val context = LocalContext.current
     var command by remember { mutableStateOf(initialCommand) }
     var playback by remember { mutableStateOf(initialPlayback) }
+    var themeColors by remember { mutableStateOf(initialThemeColors) }
     var analysis by remember { mutableStateOf<Analysis?>(null) }
     LaunchedEffect(command) {
         analysis = null
@@ -172,6 +178,7 @@ private fun ConfigDialog(
                     }
                 }
                 PlaybackChoice(selected = playback, onSelect = { playback = it })
+                ThemeColorsSwitch(checked = themeColors, onChange = { themeColors = it })
                 OutlinedTextField(
                     value = command,
                     onValueChange = { command = it },
@@ -186,7 +193,7 @@ private fun ConfigDialog(
             }
         },
         confirmButton = {
-            TextButton(enabled = animationName != null, onClick = { onSave(command, playback) }) {
+            TextButton(enabled = animationName != null, onClick = { onSave(command, playback, themeColors) }) {
                 Text(stringResource(R.string.lottie_widget_save))
             }
         },
@@ -223,6 +230,27 @@ private fun PlaybackChoice(selected: Playback, onSelect: (Playback) -> Unit) {
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun ThemeColorsSwitch(checked: Boolean, onChange: (Boolean) -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .padding(top = 16.dp)
+            .fillMaxWidth()
+            .toggleable(value = checked, role = Role.Switch, onValueChange = onChange),
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.lottie_widget_theme_colors), style = MaterialTheme.typography.titleSmall)
+            Text(
+                stringResource(R.string.lottie_widget_theme_colors_summary),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Switch(checked = checked, onCheckedChange = null, modifier = Modifier.padding(start = 8.dp))
     }
 }
 

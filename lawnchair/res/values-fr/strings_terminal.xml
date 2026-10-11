@@ -218,6 +218,8 @@
     <string name="lottie_widget_playback">Lecture</string>
     <string name="lottie_widget_playback_loop">En boucle</string>
     <string name="lottie_widget_playback_once">Une fois par toucher</string>
+    <string name="lottie_widget_theme_colors">Couleurs du thème</string>
+    <string name="lottie_widget_theme_colors_summary">Peint l’animation dans la couleur d’accent du thème</string>
     <string name="lottie_widget_save">Enregistrer</string>
     <string name="lottie_widget_command_failed">La commande \"%1$s\" n\'a pas été exécutée : %2$s</string>
     <string name="lottie_widget_empty">Appuyez de manière prolongée puis sur Configurer pour choisir une animation</string>

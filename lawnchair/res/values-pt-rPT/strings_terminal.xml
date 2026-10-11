@@ -218,6 +218,8 @@
     <string name="lottie_widget_playback">Reprodução</string>
     <string name="lottie_widget_playback_loop">Em ciclo</string>
     <string name="lottie_widget_playback_once">Uma vez a cada toque</string>
+    <string name="lottie_widget_theme_colors">Cores do tema</string>
+    <string name="lottie_widget_theme_colors_summary">Pinta a animação na cor de destaque do tema</string>
     <string name="lottie_widget_save">Guardar</string>
     <string name="lottie_widget_command_failed">Comando \"%1$s\" não executado: %2$s</string>
     <string name="lottie_widget_empty">Mantenha premido e toque em Configurar para escolher uma animação</string>

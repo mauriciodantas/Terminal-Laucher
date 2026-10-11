@@ -218,6 +218,8 @@
     <string name="lottie_widget_playback">Odtwarzanie</string>
     <string name="lottie_widget_playback_loop">W pętli</string>
     <string name="lottie_widget_playback_once">Raz przy każdym dotknięciu</string>
+    <string name="lottie_widget_theme_colors">Kolory motywu</string>
+    <string name="lottie_widget_theme_colors_summary">Maluje animację kolorem akcentu motywu</string>
     <string name="lottie_widget_save">Zapisz</string>
     <string name="lottie_widget_command_failed">Nie wykonano polecenia \"%1$s\": %2$s</string>
     <string name="lottie_widget_empty">Przytrzymaj i dotknij Skonfiguruj, aby wybrać animację</string>

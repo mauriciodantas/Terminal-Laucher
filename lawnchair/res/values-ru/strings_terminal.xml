@@ -218,6 +218,8 @@
     <string name="lottie_widget_playback">Воспроизведение</string>
     <string name="lottie_widget_playback_loop">По кругу</string>
     <string name="lottie_widget_playback_once">Один раз на нажатие</string>
+    <string name="lottie_widget_theme_colors">Цвета темы</string>
+    <string name="lottie_widget_theme_colors_summary">Окрашивает анимацию в акцентный цвет темы</string>
     <string name="lottie_widget_save">Сохранить</string>
     <string name="lottie_widget_command_failed">Команда \"%1$s\" не выполнена: %2$s</string>
     <string name="lottie_widget_empty">Нажмите и удерживайте, затем выберите «Настроить», чтобы выбрать анимацию</string>

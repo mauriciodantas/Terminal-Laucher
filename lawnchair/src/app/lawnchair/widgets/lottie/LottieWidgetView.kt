@@ -4,6 +4,10 @@ import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.appwidget.AppWidgetProviderInfo
 import android.content.Context
+import android.graphics.Color
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
+import android.graphics.Paint
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -100,6 +104,7 @@ class LottieWidgetView(context: Context, private val appWidgetId: Int) : FrameLa
             return
         }
         showEmpty(false)
+        applyThemeColors(LottieWidgetStore.themeColors(context, appWidgetId))
         val mode = LottieWidgetStore.playback(context, appWidgetId)
         if (animation.composition === composition && playback == mode) return
         animation.setComposition(composition)
@@ -118,12 +123,42 @@ class LottieWidgetView(context: Context, private val appWidgetId: Int) : FrameLa
         }
     }
 
+    /** Paints the animation in the theme accent, or gives it back its own colors. */
+    private fun applyThemeColors(on: Boolean) {
+        if (on) {
+            animation.setLayerType(View.LAYER_TYPE_HARDWARE, Paint().apply { colorFilter = themeFilter(context) })
+        } else {
+            animation.setLayerType(View.LAYER_TYPE_NONE, null)
+        }
+    }
+
     private fun showEmpty(show: Boolean) {
         empty.visibility = if (show) View.VISIBLE else View.GONE
         animation.visibility = if (show) View.INVISIBLE else View.VISIBLE
     }
 
     companion object {
+        /** How bright the darkest parts stay, so dark lines still show against the background. */
+        private const val FLOOR = 0.35f
+
+        /**
+         * Keeps the animation's light and shade but paints it in the theme accent, the color the
+         * terminal draws its text in, so it reads in the light and the dark mode alike. Black lands
+         * on a dim accent instead of black, which would vanish over a dark background.
+         */
+        fun themeFilter(context: Context): ColorMatrixColorFilter {
+            val accent = PhosphorColorToken(1f).resolveColor(context)
+            val lr = 0.2126f
+            val lg = 0.7152f
+            val lb = 0.0722f
+            val rows = listOf(Color.red(accent), Color.green(accent), Color.blue(accent)).flatMap { channel ->
+                val c = channel / 255f
+                val k = c * (1 - FLOOR)
+                listOf(k * lr, k * lg, k * lb, 0f, c * FLOOR * 255)
+            }
+            return ColorMatrixColorFilter(ColorMatrix((rows + listOf(0f, 0f, 0f, 1f, 0f)).toFloatArray()))
+        }
+
         /** Whether [view] is the content already built for [appWidgetId]. */
         @JvmStatic
         fun isFor(view: View?, appWidgetId: Int): Boolean = view is LottieWidgetView && view.appWidgetId == appWidgetId

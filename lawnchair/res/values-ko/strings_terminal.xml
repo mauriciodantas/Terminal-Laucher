@@ -218,6 +218,8 @@
     <string name="lottie_widget_playback">재생</string>
     <string name="lottie_widget_playback_loop">반복</string>
     <string name="lottie_widget_playback_once">탭할 때마다 한 번</string>
+    <string name="lottie_widget_theme_colors">테마 색상</string>
+    <string name="lottie_widget_theme_colors_summary">애니메이션을 테마의 강조 색상으로 칠합니다</string>
     <string name="lottie_widget_save">저장</string>
     <string name="lottie_widget_command_failed">명령어 \"%1$s\"을(를) 실행하지 못했습니다: %2$s</string>
     <string name="lottie_widget_empty">길게 누른 다음 구성을 탭하여 애니메이션을 선택하세요</string>

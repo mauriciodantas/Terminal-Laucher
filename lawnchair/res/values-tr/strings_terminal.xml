@@ -218,6 +218,8 @@
     <string name="lottie_widget_playback">Oynatma</string>
     <string name="lottie_widget_playback_loop">Döngü</string>
     <string name="lottie_widget_playback_once">Her dokunuşta bir kez</string>
+    <string name="lottie_widget_theme_colors">Tema renkleri</string>
+    <string name="lottie_widget_theme_colors_summary">Animasyonu temanın vurgu rengiyle boyar</string>
     <string name="lottie_widget_save">Kaydet</string>
     <string name="lottie_widget_command_failed">\"%1$s\" komutu çalıştırılamadı: %2$s</string>
     <string name="lottie_widget_empty">Bir animasyon seçmek için basılı tutun ve Yapılandır\'a dokunun</string>

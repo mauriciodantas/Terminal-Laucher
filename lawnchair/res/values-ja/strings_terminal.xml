@@ -218,6 +218,8 @@
     <string name="lottie_widget_playback">再生</string>
     <string name="lottie_widget_playback_loop">ループ</string>
     <string name="lottie_widget_playback_once">タップごとに 1 回</string>
+    <string name="lottie_widget_theme_colors">テーマの色</string>
+    <string name="lottie_widget_theme_colors_summary">アニメーションをテーマのアクセントカラーで描画します</string>
     <string name="lottie_widget_save">保存</string>
     <string name="lottie_widget_command_failed">コマンド \"%1$s\" を実行できませんでした: %2$s</string>
     <string name="lottie_widget_empty">長押しして [設定] をタップし、アニメーションを選択してください</string>

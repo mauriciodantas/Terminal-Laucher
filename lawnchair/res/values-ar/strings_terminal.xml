@@ -218,6 +218,8 @@
     <string name="lottie_widget_playback">التشغيل</string>
     <string name="lottie_widget_playback_loop">تكرار</string>
     <string name="lottie_widget_playback_once">مرة واحدة لكل نقرة</string>
+    <string name="lottie_widget_theme_colors">ألوان المظهر</string>
+    <string name="lottie_widget_theme_colors_summary">يلوّن الرسوم المتحركة بلون التمييز في المظهر</string>
     <string name="lottie_widget_save">حفظ</string>
     <string name="lottie_widget_command_failed">لم يتم تنفيذ الأمر \"%1$s\": %2$s</string>
     <string name="lottie_widget_empty">انقر مع الاستمرار ثم انقر على ضبط لاختيار رسوم متحركة</string>

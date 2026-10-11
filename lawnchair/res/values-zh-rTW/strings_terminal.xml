@@ -218,6 +218,8 @@
     <string name="lottie_widget_playback">播放</string>
     <string name="lottie_widget_playback_loop">循環</string>
     <string name="lottie_widget_playback_once">每次輕觸播放一次</string>
+    <string name="lottie_widget_theme_colors">主題顏色</string>
+    <string name="lottie_widget_theme_colors_summary">用主題的強調色繪製動畫</string>
     <string name="lottie_widget_save">儲存</string>
     <string name="lottie_widget_command_failed">未執行指令「%1$s」：%2$s</string>
     <string name="lottie_widget_empty">按住並輕觸「設定」來選擇動畫</string>

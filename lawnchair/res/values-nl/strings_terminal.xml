@@ -218,6 +218,8 @@
     <string name="lottie_widget_playback">Afspelen</string>
     <string name="lottie_widget_playback_loop">In een lus</string>
     <string name="lottie_widget_playback_once">Eén keer per tik</string>
+    <string name="lottie_widget_theme_colors">Themakleuren</string>
+    <string name="lottie_widget_theme_colors_summary">Kleurt de animatie in de accentkleur van het thema</string>
     <string name="lottie_widget_save">Opslaan</string>
     <string name="lottie_widget_command_failed">Opdracht \"%1$s\" niet uitgevoerd: %2$s</string>
     <string name="lottie_widget_empty">Houd ingedrukt en tik op Configureren om een animatie te kiezen</string>
