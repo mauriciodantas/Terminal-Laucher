@@ -10,6 +10,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -30,6 +31,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -47,8 +50,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.Key
@@ -673,9 +680,10 @@ private fun CommandScreen(onClose: () -> Unit) {
             }
 
             // Suggestions.
-            val suggestions: @Composable () -> Unit = {
+            // The list takes the room left on the screen and scrolls past it.
+            val suggestions: @Composable (Modifier) -> Unit = { modifier ->
                 Column(
-                    Modifier
+                    modifier
                         .padding(top = 8.dp)
                         .fillMaxWidth()
                         .heightIn(min = 100.dp)
@@ -689,7 +697,13 @@ private fun CommandScreen(onClose: () -> Unit) {
                             .fillMaxWidth()
                             .padding(horizontal = 8.dp, vertical = 5.dp),
                     )
-                    Column(Modifier.heightIn(max = 280.dp).verticalScroll(rememberScrollState())) {
+                    val listScroll = rememberScrollState()
+                    Column(
+                        Modifier
+                            .weight(1f, fill = false)
+                            .scrollHint(listScroll, phosphor.copy(alpha = 0.6f), ground)
+                            .verticalScroll(listScroll),
+                    ) {
                         if (analysis.needsContacts) {
                             Row(
                                 Modifier
@@ -764,8 +778,12 @@ private fun CommandScreen(onClose: () -> Unit) {
                         }
                         analysis.suggestions.forEachIndexed { index, suggestion ->
                             val active = index == sel
+                            // [▼] and the arrow keys can move past what the list shows; it follows them.
+                            val requester = remember { BringIntoViewRequester() }
+                            if (active) LaunchedEffect(sel, analysis.suggestions) { requester.bringIntoView() }
                             Row(
                                 Modifier
+                                    .bringIntoViewRequester(requester)
                                     .fillMaxWidth()
                                     .height(44.dp)
                                     .background(if (active) phosphor else Color.Transparent)
@@ -879,7 +897,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                     Column(Modifier.weight(1.4f)) {
                         commandLine()
                         quickStarts()
-                        suggestions()
+                        suggestions(Modifier.weight(1f, fill = false))
                     }
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
@@ -891,13 +909,38 @@ private fun CommandScreen(onClose: () -> Unit) {
             } else {
                 commandLine()
                 quickStarts()
-                suggestions()
-                preview()
-                Spacer(Modifier.weight(1f))
+                // The preview stays right under the list, and the keys at the bottom.
+                Column(Modifier.weight(1f)) {
+                    suggestions(Modifier.weight(1f, fill = false))
+                    preview()
+                }
                 keys()
             }
         }
     }
+}
+
+/**
+ * Shows that a list scrolls: a thin bar at the right edge for where the view is, and the bottom
+ * fading into [ground] while there is more below.
+ */
+private fun Modifier.scrollHint(state: ScrollState, bar: Color, ground: Color): Modifier = drawWithContent {
+    drawContent()
+    val max = state.maxValue
+    if (max <= 0 || max == Int.MAX_VALUE) return@drawWithContent
+    val viewport = size.height
+    val fade = 28.dp.toPx().coerceAtMost(viewport / 3)
+    if (state.value < max) {
+        drawRect(
+            Brush.verticalGradient(listOf(Color.Transparent, ground), startY = viewport - fade, endY = viewport),
+            topLeft = Offset(0f, viewport - fade),
+            size = Size(size.width, fade),
+        )
+    }
+    val length = (viewport * viewport / (viewport + max)).coerceAtLeast(24.dp.toPx())
+    val top = (viewport - length) * state.value / max
+    val width = 3.dp.toPx()
+    drawRect(bar, topLeft = Offset(size.width - width - 1.dp.toPx(), top), size = Size(width, length))
 }
 
 @Composable
