@@ -81,6 +81,7 @@ import androidx.compose.ui.unit.sp
 import app.lawnchair.theme.LauncherGround
 import app.lawnchair.theme.color.tokens.PhosphorColorToken
 import app.lawnchair.ui.theme.LawnchairTheme
+import app.lawnchair.util.foldAccents
 import com.android.launcher3.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -111,6 +112,10 @@ class CommandActivity : ComponentActivity() {
 
         private const val EXTRA_VOICE = "start_voice"
         private const val EXTRA_TEXT = "start_text"
+        private const val EXTRA_RUN = "start_run"
+
+        /** The scheme of links that open the bar with a command typed: terminal://cmd?text=... */
+        const val LINK_SCHEME = "terminal"
 
         /**
          * [voice] opens the speech recognizer right away, for the microphone on the home screen.
@@ -118,14 +123,28 @@ class CommandActivity : ComponentActivity() {
          */
         fun start(context: Context, voice: Boolean = false, text: String = "") {
             CommandExecutor.prewarm(context)
-            // A task of its own, outside the home task: the system cannot split the screen with
+            context.startActivity(intent(context, voice, text))
+        }
+
+        /** [run] runs [text] right away, for a scheduled command tapped in its notification. */
+        fun intent(context: Context, voice: Boolean = false, text: String = "", run: Boolean = false): Intent = // A task of its own, outside the home task: the system cannot split the screen with
             // the home screen, and "dividir" opens an app beside the bar.
-            context.startActivity(
-                Intent(context, CommandActivity::class.java)
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    .putExtra(EXTRA_VOICE, voice)
-                    .putExtra(EXTRA_TEXT, text),
-            )
+            Intent(context, CommandActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                .putExtra(EXTRA_VOICE, voice)
+                .putExtra(EXTRA_TEXT, text)
+                .putExtra(EXTRA_RUN, run)
+
+        /** True only for the app's own intents: a link or another app cannot make the bar run a command unseen. */
+        private fun isOwn(intent: Intent?): Boolean = intent?.component?.className == CommandActivity::class.java.name
+
+        internal fun wantsRun(intent: Intent?): Boolean = isOwn(intent) && intent?.getBooleanExtra(EXTRA_RUN, false) == true
+
+        /** Text selected in another app and sent to the bar from its menu. */
+        internal fun selection(intent: Intent?): String? = if (intent?.action == Intent.ACTION_PROCESS_TEXT) {
+            intent.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT)?.toString()
+        } else {
+            null
         }
 
         fun voiceIntent(context: Context): Intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
@@ -137,7 +156,20 @@ class CommandActivity : ComponentActivity() {
 
         internal fun wantsVoice(intent: Intent?): Boolean = intent?.getBooleanExtra(EXTRA_VOICE, false) == true
 
-        internal fun initialText(intent: Intent?): String = intent?.getStringExtra(EXTRA_TEXT).orEmpty()
+        /**
+         * What the command line starts with: the key typed at home, the command of a link, or for
+         * selected text a " {sel}" with the cursor before it, so "rota" typed makes "rota {sel}".
+         */
+        internal fun initialText(intent: Intent?): String = when {
+            intent == null -> ""
+
+            intent.action == Intent.ACTION_PROCESS_TEXT -> " {sel}"
+
+            intent.action == Intent.ACTION_VIEW && intent.data?.scheme == LINK_SCHEME ->
+                intent.data?.let { it.getQueryParameter("text") ?: it.getQueryParameter("cmd") }.orEmpty()
+
+            else -> intent.getStringExtra(EXTRA_TEXT).orEmpty()
+        }
 
         fun loadHistory(context: Context): List<String> = context.getSharedPreferences(STORE, Context.MODE_PRIVATE)
             .getString(KEY_HISTORY, "")
@@ -211,26 +243,46 @@ private fun CommandScreen(onClose: () -> Unit) {
     var history by remember { mutableStateOf<List<String>>(emptyList()) }
     var custom by remember { mutableStateOf(CustomActions.DEFAULTS) }
     var aliases by remember { mutableStateOf<List<CommandAlias>>(emptyList()) }
+    val startIntent = (context as? android.app.Activity)?.intent
+    val selection = remember { CommandActivity.selection(startIntent) }
+    // History, calendar, notes, jobs, device: what the newer commands complete from and show.
+    var extras by remember { mutableStateOf(CommandExtras(selection = selection)) }
+    var usual by remember { mutableStateOf<List<String>>(emptyList()) }
+
+    suspend fun reloadExtras() {
+        val clip = extras.clipboard
+        extras = withContext(Dispatchers.IO) { CommandSources.load(context, history, selection) }.copy(clipboard = clip)
+    }
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
             history = CommandActivity.loadHistory(context)
             custom = CustomActionStore.load(context)
             aliases = AliasStore.load(context)
+            usual = CommandStats.rank(StatsStore.load(context), java.time.LocalTime.now().hour)
             contacts = CommandExecutor.loadContacts(context)
             apps = CommandExecutor.loadApps(context)
         }
+        reloadExtras()
+        RatesStore.refresh(context)?.let { rates -> extras = extras.copy(rates = rates) }
     }
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
         granted = CommandExecutor.hasContactsPermission(context)
         scope.launch { contacts = withContext(Dispatchers.IO) { CommandExecutor.loadContacts(context) } }
+    }
+    // Calendar and location for "agenda" and {location}: granted, the extras load again.
+    val needPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+        scope.launch { reloadExtras() }
     }
 
     var pendingAction by remember { mutableStateOf<CommandAction?>(null) }
     var pendingCommand by remember { mutableStateOf("") }
 
     var field by remember {
-        val typed = CommandActivity.initialText((context as? android.app.Activity)?.intent)
-        mutableStateOf(TextFieldValue(typed, TextRange(typed.length)))
+        val intent = (context as? android.app.Activity)?.intent
+        val typed = CommandActivity.initialText(intent)
+        // Selected text waits as {sel} after the cursor: the command is typed before it.
+        val cursor = if (CommandActivity.selection(intent) != null) 0 else typed.length
+        mutableStateOf(TextFieldValue(typed, TextRange(cursor)))
     }
     var selected by remember { mutableIntStateOf(0) }
     var historyIndex by remember { mutableIntStateOf(-1) }
@@ -238,15 +290,26 @@ private fun CommandScreen(onClose: () -> Unit) {
     val focus = remember { FocusRequester() }
 
     val text = field.text
-    val analysis = remember(text, apps, contacts, granted, custom, aliases) {
-        CommandEngine.analyze(text, apps, contacts, granted, custom, aliases)
+    val analysis = remember(text, apps, contacts, granted, custom, aliases, extras, history) {
+        CommandEngine.analyze(text, apps, contacts, granted, custom, aliases, extras.copy(history = history))
+    }
+    // The clipboard is read only when the line asks for it ("colar", {clip}): each read shows the
+    // system's "pasted" notice, and Android lets only the app in front read it, once it has focus.
+    val windowInfo = androidx.compose.ui.platform.LocalWindowInfo.current
+    val resolved = Aliases.resolve(text, aliases)
+    val wantsClip = Variables.uses(resolved, Variables.Var.CLIP) ||
+        BuiltInCommand.of(resolved.trim().substringBefore(' ').foldAccents()) == BuiltInCommand.PASTE
+    LaunchedEffect(wantsClip, windowInfo.isWindowFocused) {
+        if (wantsClip && windowInfo.isWindowFocused && extras.clipboard == null) {
+            extras = extras.copy(clipboard = CommandSources.clipboard(context).orEmpty())
+        }
     }
     val sel = selected.coerceIn(0, maxOf(0, analysis.suggestions.size - 1))
     val top = analysis.suggestions.getOrNull(sel)
     val ghost = if (done == null) CommandEngine.ghost(text, top) else ""
 
-    fun setText(value: String) {
-        field = TextFieldValue(value, TextRange(value.length))
+    fun setText(value: String, cursor: Int = value.length) {
+        field = TextFieldValue(value, TextRange(cursor))
         selected = 0
         done = null
     }
@@ -254,18 +317,47 @@ private fun CommandScreen(onClose: () -> Unit) {
     val executedLabel = stringResource(R.string.command_executed)
     val failedLabel = stringResource(R.string.command_failed)
 
+    fun record(action: CommandAction, command: String) {
+        // "!!" is not kept: the command it repeated stays the last one.
+        if (command.trim() == BuiltInCommand.REPEAT) return
+        history = CommandEngine.pushHistory(history, command)
+        CommandActivity.saveHistory(context, history)
+        CommandUsage.record(context, CommandUsage.keysFor(action, command, aliases))
+        StatsStore.record(context, command.trim())
+    }
+
     fun commit(action: CommandAction, command: String) {
+        when (action) {
+            // Puts the text on the line instead of running anything.
+            is CommandAction.FillLine -> {
+                setText(action.text)
+                return
+            }
+
+            // The output shows in the preview; the bar stays open to read it.
+            is CommandAction.Ping -> {
+                record(action, command)
+                done = context.getString(R.string.command_running)
+                scope.launch { done = withContext(Dispatchers.IO) { CommandSources.ping(action.host) } }
+                return
+            }
+
+            else -> {}
+        }
         val ok = CommandExecutor.execute(context, action)
         if (!ok) {
             done = failedLabel
             return
         }
-        history = CommandEngine.pushHistory(history, command)
-        CommandActivity.saveHistory(context, history)
-        CommandUsage.record(context, CommandUsage.keysFor(action, command, aliases))
+        record(action, command)
         historyIndex = -1
+        if (action is CommandAction.Schedule || action is CommandAction.CancelJob || action is CommandAction.AddNote) {
+            scope.launch { reloadExtras() }
+        }
         if (action is CommandAction.Calc) {
             done = context.getString(R.string.command_copied, action.result)
+        } else if (action is CommandAction.Copy) {
+            done = context.getString(R.string.command_copied, action.text.lineSequence().first())
         } else if (action is CommandAction.SplitScreen) {
             // The bar stays a moment to open the first app from inside the split; it closes itself.
             done = executedLabel
@@ -281,11 +373,25 @@ private fun CommandScreen(onClose: () -> Unit) {
         pendingAction = null
     }
 
+    // A reminder or a scheduled command needs notifications to show; asked once, then it runs either way.
+    val notifyPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+        pendingAction?.let { commit(it, pendingCommand) }
+        pendingAction = null
+    }
+
     fun runAction(action: CommandAction, command: String) {
         if (action is CommandAction.Call && !CommandExecutor.hasCallPermission(context)) {
             pendingAction = action
             pendingCommand = command
             callPermission.launch(android.Manifest.permission.CALL_PHONE)
+            return
+        }
+        if (action is CommandAction.Schedule && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU &&
+            !CommandSources.granted(context, android.Manifest.permission.POST_NOTIFICATIONS)
+        ) {
+            pendingAction = action
+            pendingCommand = command
+            notifyPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
             return
         }
         commit(action, command)
@@ -298,7 +404,7 @@ private fun CommandScreen(onClose: () -> Unit) {
     /** A suggestion that is already a complete, runnable command runs on the tap, without Enter. */
     fun pick(suggestion: Suggestion) {
         setText(suggestion.completion)
-        CommandEngine.analyze(suggestion.completion, apps, contacts, granted, custom, aliases).action
+        CommandEngine.analyze(suggestion.completion, apps, contacts, granted, custom, aliases, extras.copy(history = history)).action
             ?.let { runAction(it, suggestion.completion.trim()) }
     }
 
@@ -312,7 +418,7 @@ private fun CommandScreen(onClose: () -> Unit) {
             selected = 0
             done = null
             // A spoken command that is already complete and runnable runs on its own.
-            val action = CommandEngine.analyze(value, apps, contacts, granted, custom, aliases).action
+            val action = CommandEngine.analyze(value, apps, contacts, granted, custom, aliases, extras.copy(history = history)).action
             if (action != null) {
                 runAction(action, value.trim())
                 return@rememberLauncherForActivityResult
@@ -349,6 +455,17 @@ private fun CommandScreen(onClose: () -> Unit) {
     }
     LaunchedEffect(Unit) {
         if (startWithVoice) runCatching { voice.launch(voiceIntent) } else focus.requestFocus()
+    }
+    // A scheduled command tapped in its notification runs once everything it needs has loaded.
+    val runAtStart = remember { CommandActivity.wantsRun(startIntent) && text.isNotBlank() }
+    var ranAtStart by remember { mutableStateOf(false) }
+    LaunchedEffect(analysis.action, apps) {
+        if (runAtStart && !ranAtStart && apps.isNotEmpty()) {
+            analysis.action?.let {
+                ranAtStart = true
+                runAction(it, text.trim())
+            }
+        }
     }
 
     val ground = remember { Color(LauncherGround.get(context)) }
@@ -507,7 +624,7 @@ private fun CommandScreen(onClose: () -> Unit) {
             // One-tap starts while nothing is typed: recent commands, aliases and letters.
             val quickStarts: @Composable () -> Unit = {
                 if (text.isEmpty() && done == null) {
-                    val chips = remember(history, aliases, custom) { CommandEngine.quickChips(history, aliases, custom) }
+                    val chips = remember(history, aliases, custom, usual) { CommandEngine.quickChips(history, aliases, custom, usual) }
                     if (chips.isNotEmpty()) {
                         Row(Modifier.padding(top = 10.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                             Label(stringResource(R.string.command_chips_title), dim, 10.sp, Modifier.weight(1f))
@@ -600,6 +717,44 @@ private fun CommandScreen(onClose: () -> Unit) {
                                     Text(
                                         stringResource(R.string.command_grant),
                                         color = Color(0xFF1A0502),
+                                        fontFamily = mono(),
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 11.sp,
+                                    )
+                                }
+                            }
+                        }
+                        analysis.need?.let { need ->
+                            Row(
+                                Modifier
+                                    .padding(6.dp)
+                                    .fillMaxWidth()
+                                    .border(1.dp, Amber)
+                                    .padding(10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    stringResource(if (need == Need.CALENDAR) R.string.command_calendar_needed else R.string.command_location_needed),
+                                    color = Amber,
+                                    fontFamily = mono(),
+                                    fontSize = 11.5.sp,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                Box(
+                                    Modifier
+                                        .width(92.dp)
+                                        .height(44.dp)
+                                        .background(Amber)
+                                        .clickable {
+                                            needPermission.launch(
+                                                if (need == Need.CALENDAR) android.Manifest.permission.READ_CALENDAR else android.Manifest.permission.ACCESS_COARSE_LOCATION,
+                                            )
+                                        },
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(
+                                        stringResource(R.string.command_grant),
+                                        color = Color(0xFF1A1202),
                                         fontFamily = mono(),
                                         fontWeight = FontWeight.SemiBold,
                                         fontSize = 11.sp,

@@ -10,6 +10,7 @@ import android.content.pm.LauncherApps
 import android.net.Uri
 import android.os.Process
 import android.provider.AlarmClock
+import android.provider.CalendarContract
 import android.provider.ContactsContract
 import app.lawnchair.theme.SystemColorMode
 
@@ -25,6 +26,7 @@ object CommandExecutor {
     fun prewarm(context: Context) {
         val app = context.applicationContext
         Thread { runCatching { loadApps(app) } }.start()
+        SystemSwitches.watchTorch(app)
     }
 
     fun loadApps(context: Context): List<AppEntry> {
@@ -57,9 +59,29 @@ object CommandExecutor {
                     result.putIfAbsent(name, ContactEntry(name, number))
                 }
             }
-            result.values.toList()
+            val emails = loadEmails(context)
+            result.values.map { it.copy(email = emails[it.name].orEmpty()) }
         }.getOrDefault(emptyList())
     }
+
+    /** The first e-mail of each contact name, for "ana?". */
+    private fun loadEmails(context: Context): Map<String, String> = runCatching {
+        val emails = HashMap<String, String>()
+        context.contentResolver.query(
+            ContactsContract.CommonDataKinds.Email.CONTENT_URI,
+            arrayOf(ContactsContract.CommonDataKinds.Email.DISPLAY_NAME_PRIMARY, ContactsContract.CommonDataKinds.Email.ADDRESS),
+            null,
+            null,
+            null,
+        )?.use { cursor ->
+            while (cursor.moveToNext() && emails.size < MAX_CONTACTS) {
+                val name = cursor.getString(0) ?: continue
+                val address = cursor.getString(1) ?: continue
+                emails.putIfAbsent(name, address)
+            }
+        }
+        emails
+    }.getOrDefault(emptyMap())
 
     fun hasContactsPermission(context: Context): Boolean = context.checkSelfPermission(android.Manifest.permission.READ_CONTACTS) ==
         android.content.pm.PackageManager.PERMISSION_GRANTED
@@ -77,13 +99,51 @@ object CommandExecutor {
                 context,
                 Intent(AlarmClock.ACTION_SET_ALARM)
                     .putExtra(AlarmClock.EXTRA_HOUR, action.hour)
-                    .putExtra(AlarmClock.EXTRA_MINUTES, action.minute),
+                    .putExtra(AlarmClock.EXTRA_MINUTES, action.minute)
+                    .apply { if (action.days.isNotEmpty()) putIntegerArrayListExtra(AlarmClock.EXTRA_DAYS, ArrayList(action.days)) },
             )
 
-            is CommandAction.Calc -> {
-                val clipboard = context.getSystemService(ClipboardManager::class.java)
-                clipboard.setPrimaryClip(ClipData.newPlainText("calc", action.result))
-            }
+            is CommandAction.SetTimer -> start(
+                context,
+                Intent(AlarmClock.ACTION_SET_TIMER)
+                    .putExtra(AlarmClock.EXTRA_LENGTH, action.seconds)
+                    .putExtra(AlarmClock.EXTRA_SKIP_UI, true),
+            )
+
+            is CommandAction.Calc -> copy(context, action.result)
+
+            is CommandAction.Copy -> copy(context, action.text)
+
+            is CommandAction.Schedule -> CommandScheduler.add(context, action.job)
+
+            is CommandAction.CancelJob -> CommandScheduler.cancel(context, action.job)
+
+            is CommandAction.Toggle -> return SystemSwitches.toggle(context, action.target, action.on)
+
+            is CommandAction.Brightness -> return SystemSwitches.brightness(context, action.percent)
+
+            is CommandAction.Volume -> return SystemSwitches.volume(context, action.percent)
+
+            is CommandAction.Media -> return SystemSwitches.media(context, action.key)
+
+            is CommandAction.OpenSettings -> openSettings(context, action.page)
+
+            is CommandAction.OpenCalendar -> start(
+                context,
+                Intent(Intent.ACTION_VIEW, CalendarContract.CONTENT_URI.buildUpon().appendPath("time").appendPath(action.at.toString()).build()),
+            )
+
+            is CommandAction.AddNote -> NoteStore.add(context, action.text)
+
+            is CommandAction.ShareNotes -> start(
+                context,
+                Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, action.text), null),
+            )
+
+            // The command bar puts the text on its line and shows the ping output itself.
+            is CommandAction.FillLine, is CommandAction.Ping -> return false
+
+            is CommandAction.Chain -> return action.steps.map { execute(context, it) }.all { it }
 
             is CommandAction.Call -> {
                 val uri = Uri.fromParts("tel", action.contact.number, null)
@@ -122,6 +182,43 @@ object CommandExecutor {
         }
         true
     }.getOrDefault(false)
+
+    /**
+     * True when [action] works without the command bar in front: it changes a setting or saves
+     * something instead of opening a screen, which Android blocks from the background.
+     */
+    fun runsInBackground(context: Context, action: CommandAction): Boolean = when (action) {
+        is CommandAction.Theme, is CommandAction.Calc, is CommandAction.Copy, is CommandAction.Schedule,
+        is CommandAction.CancelJob, is CommandAction.Volume, is CommandAction.Media, is CommandAction.AddNote,
+        -> true
+
+        // Without the special access these open the screen that grants it, which needs the bar in front.
+        is CommandAction.Brightness -> android.provider.Settings.System.canWrite(context)
+
+        is CommandAction.Toggle -> when (action.target) {
+            SystemToggle.TORCH -> true
+            SystemToggle.ROTATION -> android.provider.Settings.System.canWrite(context)
+            SystemToggle.DND -> context.getSystemService(android.app.NotificationManager::class.java)?.isNotificationPolicyAccessGranted == true
+            SystemToggle.WIFI, SystemToggle.BLUETOOTH -> false
+        }
+
+        is CommandAction.Chain -> action.steps.all { runsInBackground(context, it) }
+
+        else -> false
+    }
+
+    private fun copy(context: Context, text: String) {
+        context.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("command", text))
+    }
+
+    private fun openSettings(context: Context, page: SettingsPage) {
+        if (page == SettingsPage.LAUNCHER) {
+            start(context, Intent(context, app.lawnchair.ui.preferences.PreferenceActivity::class.java))
+            return
+        }
+        val intent = Intent(page.action)
+        start(context, if (context.packageManager.resolveActivity(intent, 0) != null) intent else Intent(android.provider.Settings.ACTION_SETTINGS))
+    }
 
     fun hasCallPermission(context: Context): Boolean = context.checkSelfPermission(android.Manifest.permission.CALL_PHONE) ==
         android.content.pm.PackageManager.PERMISSION_GRANTED

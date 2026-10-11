@@ -19,6 +19,7 @@ object CommandLine {
             CommandExecutor.hasContactsPermission(context),
             CustomActionStore.load(context),
             AliasStore.load(context),
+            CommandSources.load(context, CommandActivity.loadHistory(context)),
         )
     }
 
@@ -30,7 +31,12 @@ object CommandLine {
         val analysis = analyze(context, text)
         val action = analysis.action ?: return Result(analysis, ran = false)
         // Starting activities from the main thread, as the command bar does.
-        val ran = withContext(Dispatchers.Main) { CommandExecutor.execute(context, action) }
+        val ran = when (action) {
+            // Off the bar there is nowhere to show the output, but the ping still runs.
+            is CommandAction.Ping -> withContext(Dispatchers.IO) { CommandSources.ping(action.host) }.isNotEmpty()
+
+            else -> withContext(Dispatchers.Main) { CommandExecutor.execute(context, action) }
+        }
         return Result(analysis, ran)
     }
 

@@ -6,7 +6,7 @@ import com.android.launcher3.R
 
 data class AppEntry(val label: String, val id: String)
 
-data class ContactEntry(val name: String, val number: String)
+data class ContactEntry(val name: String, val number: String, val email: String = "")
 
 /** How the preview box is colored: neutral, a command that can run, or a problem. */
 enum class Tone { IDLE, OK, WARN, ERROR }
@@ -16,7 +16,10 @@ data class Suggestion(val completion: String, val label: String, val kind: Strin
 /** What running the command does. */
 sealed interface CommandAction {
     data class OpenApp(val app: AppEntry) : CommandAction
-    data class SetAlarm(val hour: Int, val minute: Int) : CommandAction
+
+    /** [days] are [java.util.Calendar] day numbers for a repeating alarm; empty for a single one. */
+    data class SetAlarm(val hour: Int, val minute: Int, val days: List<Int> = emptyList()) : CommandAction
+    data class SetTimer(val seconds: Int) : CommandAction
     data class Calc(val expression: String, val result: String) : CommandAction
     data class Call(val contact: ContactEntry) : CommandAction
 
@@ -35,6 +38,32 @@ sealed interface CommandAction {
     /** Inverts the theme colors, lays them light or dark, or makes them follow the system mode. */
     data class Theme(val change: ThemeChange) : CommandAction
     data class WebSearch(val query: String) : CommandAction
+
+    /** A reminder, a command at a time or a rule; the id is given when it is saved. */
+    data class Schedule(val job: ScheduledJob) : CommandAction
+    data class CancelJob(val job: ScheduledJob) : CommandAction
+
+    /** [on] null flips the switch. */
+    data class Toggle(val target: SystemToggle, val on: Boolean?) : CommandAction
+
+    /** [percent] null is automatic brightness. */
+    data class Brightness(val percent: Int?) : CommandAction
+    data class Volume(val percent: Int) : CommandAction
+    data class Media(val key: MediaKey) : CommandAction
+    data class Copy(val text: String) : CommandAction
+
+    /** Puts [text] on the command line instead of running anything: "colar", an AI suggestion. */
+    data class FillLine(val text: String) : CommandAction
+    data class OpenSettings(val page: SettingsPage) : CommandAction
+    data class OpenCalendar(val at: Long) : CommandAction
+    data class AddNote(val text: String) : CommandAction
+    data class ShareNotes(val text: String) : CommandAction
+
+    /** Runs and shows its output in the bar instead of closing it. */
+    data class Ping(val host: String) : CommandAction
+
+    /** "tema escuro; silencio on; abrir kindle": [steps] run in order. */
+    data class Chain(val steps: List<CommandAction>, val lines: List<String>) : CommandAction
 }
 
 /** Everything the screen needs for the text typed so far. [action] is null while it cannot run. */
@@ -50,6 +79,8 @@ data class Analysis(
     val intent: String = "",
     /** How many suggestions exist when the list is cut short; 0 when nothing was cut. */
     val total: Int = 0,
+    /** A permission the command waits for, besides contacts. */
+    val need: Need? = null,
 )
 
 /** A one-tap start for the empty command line: a recent command, an alias or a custom letter. */
@@ -79,6 +110,36 @@ object CommandEngine {
                 BuiltInCommand.CALC_SHORT to BuiltInCommand.CALC_SHORT + " " + Texts.get(R.string.cmd_usage_calc_short),
                 BuiltInCommand.SPLIT.word to BuiltInCommand.SPLIT.word + " " + Texts.get(R.string.cmd_usage_split),
                 BuiltInCommand.THEME.word to BuiltInCommand.THEME.word + " " + ThemeChange.usage(),
+            ) +
+            listOf(
+                BuiltInCommand.TIMER to R.string.cmd_usage_timer,
+                BuiltInCommand.REMIND to R.string.cmd_usage_remind,
+                BuiltInCommand.NOTE to R.string.cmd_usage_note,
+                BuiltInCommand.AGENDA to R.string.cmd_usage_agenda,
+                BuiltInCommand.TORCH to R.string.cmd_usage_switch,
+                BuiltInCommand.DND to R.string.cmd_usage_switch,
+                BuiltInCommand.ROTATION to R.string.cmd_usage_switch,
+                BuiltInCommand.WIFI to R.string.cmd_usage_panel,
+                BuiltInCommand.BLUETOOTH to R.string.cmd_usage_panel,
+                BuiltInCommand.BRIGHTNESS to R.string.cmd_usage_brightness,
+                BuiltInCommand.VOLUME to R.string.cmd_usage_volume,
+                BuiltInCommand.PLAY to R.string.cmd_usage_media,
+                BuiltInCommand.PAUSE to R.string.cmd_usage_media,
+                BuiltInCommand.NEXT to R.string.cmd_usage_media,
+                BuiltInCommand.PREVIOUS to R.string.cmd_usage_media,
+                BuiltInCommand.COPY to R.string.cmd_usage_copy,
+                BuiltInCommand.PASTE to R.string.cmd_usage_paste,
+                BuiltInCommand.SETTINGS to R.string.cmd_usage_settings,
+                BuiltInCommand.SCHEDULED to R.string.cmd_usage_scheduled,
+                BuiltInCommand.CANCEL to R.string.cmd_usage_cancel,
+                BuiltInCommand.BATTERY to R.string.cmd_usage_info,
+                BuiltInCommand.STORAGE to R.string.cmd_usage_info,
+                BuiltInCommand.IP to R.string.cmd_usage_info,
+                BuiltInCommand.UPTIME to R.string.cmd_usage_info,
+                BuiltInCommand.PING to R.string.cmd_usage_ping,
+            ).map { (command, usage) -> command.word to command.word + " " + Texts.get(usage) } +
+            listOf(
+                BuiltInCommand.REPEAT to BuiltInCommand.REPEAT + " " + Texts.get(R.string.cmd_usage_repeat),
             )
 
     private val splitter = Regex("^(\\S*)(\\s+(.*))?$", RegexOption.DOT_MATCHES_ALL)
@@ -90,21 +151,96 @@ object CommandEngine {
         contactsGranted: Boolean,
         custom: List<CustomAction> = CustomActions.DEFAULTS,
         aliases: List<CommandAlias> = emptyList(),
+        extras: CommandExtras = CommandExtras(),
     ): Analysis {
-        val analysis = analyzeText(typed, apps, contacts, contactsGranted, custom, aliases)
+        val ctx = Ctx(apps, contacts, contactsGranted, custom, aliases, extras)
+        val analysis = analyzeLine(typed, ctx, 0)
         return analysis.action?.let { analysis.copy(intent = describe(it)) } ?: analysis
     }
 
-    private fun analyzeText(
-        typed: String,
-        apps: List<AppEntry>,
-        contacts: List<ContactEntry>,
-        contactsGranted: Boolean,
-        custom: List<CustomAction>,
-        aliases: List<CommandAlias>,
-    ): Analysis {
+    /** Everything a line is analyzed against. */
+    private data class Ctx(
+        val apps: List<AppEntry>,
+        val contacts: List<ContactEntry>,
+        val contactsGranted: Boolean,
+        val custom: List<CustomAction>,
+        val aliases: List<CommandAlias>,
+        val extras: CommandExtras,
+    )
+
+    /** How deep aliases that hold chains may nest before the bar stops expanding them. */
+    private const val MAX_DEPTH = 4
+
+    /**
+     * A whole line: "!!" repeats the last command, an alias stands for its command, "em 30m: ..."
+     * schedules what follows and ";" chains several commands.
+     */
+    private fun analyzeLine(typed: String, ctx: Ctx, depth: Int): Analysis {
+        if (typed.trim() == BuiltInCommand.REPEAT) {
+            val last = ctx.extras.history.firstOrNull { it.trim() != BuiltInCommand.REPEAT }
+                ?: return Analysis(
+                    suggestions = emptyList(),
+                    listTitle = Texts.get(R.string.cmd_list_suggestions),
+                    needsContacts = false,
+                    previewTitle = Texts.get(R.string.cmd_repeat_title),
+                    preview = Texts.get(R.string.cmd_repeat_empty),
+                    tone = Tone.IDLE,
+                    action = null,
+                )
+            val again = analyzeLine(last, ctx, depth + 1)
+            return again.copy(previewTitle = Texts.get(R.string.cmd_repeat_title) + " · " + again.previewTitle, suggestions = emptyList())
+        }
         // An alias typed in full stands for its command; a partial one is only suggested.
-        val text = Aliases.resolve(typed, aliases).trimStart()
+        val text = Aliases.resolve(typed, ctx.aliases).trimStart()
+        if (depth == 0) MoreCommands.schedule(text, ctx.extras) { analyzeLine(it, ctx, depth + 1) }?.let { return it }
+        val parts = splitChain(text)
+        if (parts.size > 1 && depth < MAX_DEPTH) return analyzeChain(text, parts, ctx, depth)
+        return analyzeText(text, ctx)
+    }
+
+    /** The commands of "a; b; c", keeping an empty last one while it is being typed. */
+    fun splitChain(text: String): List<String> {
+        if (';' !in text) return listOf(text)
+        val parts = text.split(';').map { it.trim() }
+        return parts.dropLast(1).filter { it.isNotEmpty() } + parts.last()
+    }
+
+    private fun analyzeChain(text: String, parts: List<String>, ctx: Ctx, depth: Int): Analysis {
+        val results = parts.map { analyzeLine(it, ctx, depth + 1) }
+        // A part the bar does not understand would only search the web: the chain waits for a fix.
+        val stuck = results.indexOfFirst { it.action == null || it.tone == Tone.ERROR }
+        if (stuck >= 0) {
+            val r = results[stuck]
+            // While the last command is typed, its suggestions complete the whole line.
+            val prefix = text.substring(0, text.lastIndexOf(';') + 1) + " "
+            return r.copy(
+                previewTitle = Texts.get(R.string.cmd_chain_step, stuck + 1, parts.size) + " · " + r.previewTitle,
+                action = null,
+                suggestions = if (stuck == parts.size - 1) r.suggestions.map { it.copy(completion = prefix + it.completion) } else emptyList(),
+            )
+        }
+        val steps = results.flatMap { (it.action as? CommandAction.Chain)?.steps ?: listOf(it.action!!) }
+        return Analysis(
+            suggestions = emptyList(),
+            listTitle = Texts.get(R.string.cmd_list_suggestions),
+            needsContacts = false,
+            previewTitle = Texts.get(R.string.cmd_chain_title, steps.size),
+            preview = results.joinToString(" › ") { it.preview.lineSequence().first() },
+            tone = Tone.OK,
+            action = CommandAction.Chain(steps, parts),
+        )
+    }
+
+    private fun analyzeText(typed: String, ctx: Ctx): Analysis {
+        val apps = ctx.apps
+        val contacts = ctx.contacts
+        val contactsGranted = ctx.contactsGranted
+        val custom = ctx.custom
+        val aliases = ctx.aliases
+        val extras = ctx.extras
+        val expansion = Variables.expand(typed, extras)
+        if (expansion.missing.isNotEmpty()) missingVariables(expansion.missing, extras)?.let { return it }
+        val text = expansion.text
         val m = splitter.find(text)
         val token = m?.groupValues?.get(1).orEmpty().foldAccents()
         val hasArg = m != null && m.groups[2] != null
@@ -112,13 +248,62 @@ object CommandEngine {
 
         if (!hasArg) {
             if (token == "?") return analyzeHelp(custom, aliases)
+            if (token.length > 1 && token.endsWith("?")) {
+                MoreCommands.contactInfo(text.trim().dropLast(1), contacts, contactsGranted)?.let { return it }
+                if (!contactsGranted) return needsContactsAnalysis()
+            }
             val bare = custom.firstOrNull { it.letter == token && it.arg == ArgKind.NONE }
-            if (bare != null) return analyzeCustom(bare, "", contacts, contactsGranted)
-            return analyzeCommandName(text, token, apps, custom, aliases)
+            if (bare != null) return analyzeCustom(bare, "", contacts, contactsGranted, extras)
+            BuiltInCommand.of(token)?.takeIf { it.runsBare }?.let { return analyzeBuiltIn(it, "", ctx) }
+            return analyzeCommandName(text, token, apps, custom, aliases, extras)
         }
 
         if (token == BuiltInCommand.TASK) return analyzeTask(arg)
-        return when (BuiltInCommand.of(token)) {
+        val command = BuiltInCommand.of(token)
+        if (command != null) return analyzeBuiltIn(command, arg, ctx)
+        return custom.firstOrNull { it.letter == token }
+            ?.let { analyzeCustom(it, arg, contacts, contactsGranted, extras) }
+            ?: analyzeOpen(text.trim(), apps).takeIf { it.action != null }
+            ?: unknown(text)
+    }
+
+    /** A line the bar does not understand: Enter searches it on the web. */
+    private fun unknown(text: String): Analysis = Analysis(
+        suggestions = emptyList(),
+        listTitle = Texts.get(R.string.cmd_list_suggestions),
+        needsContacts = false,
+        previewTitle = Texts.get(R.string.cmd_unknown_title),
+        preview = Texts.get(R.string.cmd_unknown_preview),
+        tone = Tone.ERROR,
+        action = text.trim().takeIf { it.isNotEmpty() }?.let { CommandAction.WebSearch(it) },
+    )
+
+    /** The preview when a variable has no value: location can be granted, the others are just empty. */
+    private fun missingVariables(missing: Set<Variables.Var>, extras: CommandExtras): Analysis? {
+        val location = Variables.Var.LOCATION in missing || Variables.Var.MAPS in missing
+        return Analysis(
+            suggestions = emptyList(),
+            listTitle = Texts.get(R.string.cmd_list_suggestions),
+            needsContacts = false,
+            previewTitle = Texts.get(R.string.cmd_variables_title),
+            preview = when {
+                location && !extras.locationGranted -> Texts.get(R.string.cmd_location_pending)
+                location -> Texts.get(R.string.cmd_location_unknown)
+                Variables.Var.CLIP in missing -> Texts.get(R.string.cmd_paste_empty)
+                else -> Texts.get(R.string.cmd_selection_empty)
+            },
+            tone = Tone.WARN,
+            action = null,
+            need = if (location && !extras.locationGranted) Need.LOCATION else null,
+        )
+    }
+
+    private fun analyzeBuiltIn(command: BuiltInCommand, arg: String, ctx: Ctx): Analysis {
+        val apps = ctx.apps
+        val contacts = ctx.contacts
+        val contactsGranted = ctx.contactsGranted
+        val extras = ctx.extras
+        return when (command) {
             BuiltInCommand.OPEN -> analyzeOpen(arg, apps)
 
             BuiltInCommand.CALL -> analyzeContact(arg, contacts, contactsGranted, BuiltInCommand.CALL.word, Texts.get(R.string.cmd_call_title)) {
@@ -127,7 +312,7 @@ object CommandEngine {
 
             BuiltInCommand.ALARM -> analyzeAlarm(arg)
 
-            BuiltInCommand.CALC -> analyzeCalc(arg)
+            BuiltInCommand.CALC -> analyzeCalc(arg, extras.rates)
 
             BuiltInCommand.ROUTE -> analyzeRoute(arg)
 
@@ -135,18 +320,49 @@ object CommandEngine {
 
             BuiltInCommand.THEME -> analyzeTheme(arg)
 
-            null -> custom.firstOrNull { it.letter == token }
-                ?.let { analyzeCustom(it, arg, contacts, contactsGranted) }
-                ?: analyzeOpen(text.trim(), apps).takeIf { it.action != null }
-                ?: Analysis(
-                    suggestions = emptyList(),
-                    listTitle = Texts.get(R.string.cmd_list_suggestions),
-                    needsContacts = false,
-                    previewTitle = Texts.get(R.string.cmd_unknown_title),
-                    preview = Texts.get(R.string.cmd_unknown_preview),
-                    tone = Tone.ERROR,
-                    action = text.trim().takeIf { it.isNotEmpty() }?.let { CommandAction.WebSearch(it) },
-                )
+            BuiltInCommand.TIMER -> MoreCommands.timer(arg)
+
+            BuiltInCommand.REMIND -> MoreCommands.remind(arg, extras)
+
+            BuiltInCommand.WIFI -> MoreCommands.toggle(command, SystemToggle.WIFI, arg)
+
+            BuiltInCommand.BLUETOOTH -> MoreCommands.toggle(command, SystemToggle.BLUETOOTH, arg)
+
+            BuiltInCommand.TORCH -> MoreCommands.toggle(command, SystemToggle.TORCH, arg)
+
+            BuiltInCommand.DND -> MoreCommands.toggle(command, SystemToggle.DND, arg)
+
+            BuiltInCommand.ROTATION -> MoreCommands.toggle(command, SystemToggle.ROTATION, arg)
+
+            BuiltInCommand.BRIGHTNESS -> MoreCommands.brightness(arg)
+
+            BuiltInCommand.VOLUME -> MoreCommands.volume(arg)
+
+            BuiltInCommand.PLAY -> MoreCommands.media(MediaKey.PLAY)
+
+            BuiltInCommand.PAUSE -> MoreCommands.media(MediaKey.PAUSE)
+
+            BuiltInCommand.NEXT -> MoreCommands.media(MediaKey.NEXT)
+
+            BuiltInCommand.PREVIOUS -> MoreCommands.media(MediaKey.PREVIOUS)
+
+            BuiltInCommand.COPY -> MoreCommands.copy(arg)
+
+            BuiltInCommand.PASTE -> MoreCommands.paste(extras)
+
+            BuiltInCommand.SETTINGS -> MoreCommands.settings(arg)
+
+            BuiltInCommand.AGENDA -> MoreCommands.agenda(extras)
+
+            BuiltInCommand.NOTE -> MoreCommands.note(arg, extras)
+
+            BuiltInCommand.SCHEDULED -> MoreCommands.scheduled(extras)
+
+            BuiltInCommand.CANCEL -> MoreCommands.cancel(arg, extras)
+
+            BuiltInCommand.BATTERY, BuiltInCommand.STORAGE, BuiltInCommand.IP, BuiltInCommand.UPTIME -> MoreCommands.info(command, extras)
+
+            BuiltInCommand.PING -> MoreCommands.ping(arg)
         }
     }
 
@@ -156,8 +372,16 @@ object CommandEngine {
         apps: List<AppEntry>,
         custom: List<CustomAction>,
         aliases: List<CommandAlias>,
+        extras: CommandExtras,
     ): Analysis {
         val aliasItems = Aliases.matching(token, aliases).map { Suggestion(it.name, it.expansion, Texts.get(R.string.cmd_kind_alias)) }
+        // Commands run before that start with what is typed: "ab" offers "abrir chrome".
+        val recent = if (token.isEmpty()) {
+            emptyList()
+        } else {
+            extras.history.filter { it.foldAccents().startsWith(token) && it.trim().foldAccents() != token && it.trim() != BuiltInCommand.REPEAT }
+                .map { Suggestion(it, it, Texts.get(R.string.cmd_kind_recent)) }
+        }
         val all = COMMANDS + custom.map { it.letter to it.usage }
         val commands = all.filter { it.first.foldAccents().startsWith(token) }.map {
             Suggestion(it.first + " ", it.second, commandKind(it.first))
@@ -170,11 +394,11 @@ object CommandEngine {
             }
         }
         // A partial word puts the user's own aliases first; with nothing typed the commands lead.
-        val ordered = if (token.isEmpty()) commands + aliasItems + matchingApps else aliasItems + commands + matchingApps
+        val ordered = if (token.isEmpty()) commands + aliasItems + matchingApps else aliasItems + commands + recent + matchingApps
         val limit = if (token.isEmpty()) EMPTY_SUGGESTIONS else MAX_SUGGESTIONS
         val items = ordered.take(limit)
         // Nothing is a command or alias: a bare word is taken as "abrir <word>" (open).
-        if (commands.isEmpty() && aliasItems.isEmpty() && token.isNotEmpty()) {
+        if (commands.isEmpty() && aliasItems.isEmpty() && recent.isEmpty() && token.isNotEmpty()) {
             val open = analyzeOpen(text.trim(), apps)
             if (open.action != null) return open
         }
@@ -212,8 +436,15 @@ object CommandEngine {
     private fun commandKind(name: String): String = Texts.get(if (name.length == 1) R.string.cmd_kind_shortcut else R.string.cmd_kind_command)
 
     /** Recent commands first, then the user's own aliases and letters, so a tap replaces typing. */
-    fun quickChips(history: List<String>, aliases: List<CommandAlias>, custom: List<CustomAction>): List<QuickChip> {
-        val recent = history.take(MAX_CHIPS).map { QuickChip(it, it, Texts.get(R.string.cmd_kind_recent)) }
+    fun quickChips(
+        history: List<String>,
+        aliases: List<CommandAlias>,
+        custom: List<CustomAction>,
+        /** Commands usually run at this hour, most likely first; see [CommandStats.rank]. */
+        usual: List<String> = emptyList(),
+    ): List<QuickChip> {
+        val recent = (usual + history).filter { it.trim() != BuiltInCommand.REPEAT }.distinct().take(MAX_CHIPS)
+            .map { QuickChip(it, it, Texts.get(R.string.cmd_kind_recent)) }
         val pinned = aliases.take(MAX_CHIPS).map { QuickChip(it.name, it.name, Texts.get(R.string.cmd_kind_alias)) } +
             custom.take(MAX_CHIPS).map { QuickChip(it.letter + " ", it.letter, Texts.get(R.string.cmd_kind_action)) }
         return (recent + pinned).distinctBy { it.fill.trim() }
@@ -223,7 +454,41 @@ object CommandEngine {
     fun describe(action: CommandAction): String = when (action) {
         is CommandAction.OpenApp -> "launcher · " + action.app.id.substringBefore('/')
 
-        is CommandAction.SetAlarm -> "ACTION_SET_ALARM · %02d:%02d".format(action.hour, action.minute)
+        is CommandAction.SetAlarm -> "ACTION_SET_ALARM · %02d:%02d".format(action.hour, action.minute) +
+            if (action.days.isEmpty()) "" else " · " + TimeParse.formatDays(action.days)
+
+        is CommandAction.SetTimer -> "ACTION_SET_TIMER · ${action.seconds}s"
+
+        is CommandAction.Schedule -> when (action.job.kind) {
+            JobKind.RULE -> "on " + action.job.event?.name?.lowercase() + " → " + action.job.text
+            else -> "AlarmManager · " + java.time.Instant.ofEpochMilli(action.job.at).toString().take(16)
+        }
+
+        is CommandAction.CancelJob -> "cancel #" + action.job.id
+
+        is CommandAction.Toggle -> action.target.name.lowercase() + " = " + (action.on?.let { if (it) "on" else "off" } ?: "toggle")
+
+        is CommandAction.Brightness -> "screen_brightness = " + (action.percent?.let { "$it%" } ?: "auto")
+
+        is CommandAction.Volume -> "STREAM_MUSIC = ${action.percent}%"
+
+        is CommandAction.Media -> "KEYCODE_MEDIA_" + action.key.name
+
+        is CommandAction.Copy -> Texts.get(R.string.cmd_desc_copy)
+
+        is CommandAction.FillLine -> Texts.get(R.string.cmd_desc_fill)
+
+        is CommandAction.OpenSettings -> action.page.action.ifEmpty { "launcher settings" }
+
+        is CommandAction.OpenCalendar -> "content://com.android.calendar/time"
+
+        is CommandAction.AddNote -> Texts.get(R.string.cmd_desc_note)
+
+        is CommandAction.ShareNotes -> "ACTION_SEND text/plain"
+
+        is CommandAction.Ping -> "ping -c 3 " + action.host
+
+        is CommandAction.Chain -> action.steps.joinToString(" ; ") { describe(it).substringBefore(" · ") }
 
         is CommandAction.Calc -> Texts.get(R.string.cmd_desc_calc, action.result)
 
@@ -434,7 +699,9 @@ object CommandEngine {
      */
     fun splitNameAndMessage(arg: String, contacts: List<ContactEntry>): Pair<String, String> {
         val trimmed = arg.trim()
-        if (':' in trimmed) return trimmed.substringBefore(':').trim() to trimmed.substringAfter(':').trim()
+        // A ":" of a link ("https://") is part of the message, not the separator.
+        val colon = Regex(":(?!//)").find(trimmed)?.range?.first
+        if (colon != null) return trimmed.substring(0, colon).trim() to trimmed.substring(colon + 1).trim()
         val words = trimmed.split(Regex("\\s+")).filter { it.isNotEmpty() }
         for (k in words.size downTo 1) {
             val name = words.take(k).joinToString(" ")
@@ -467,7 +734,29 @@ object CommandEngine {
         action = null,
     )
 
+    /** [action] with the variables of its template filled, encoded as the URI wants them. */
+    private fun withVariables(action: CustomAction, extras: CommandExtras): CustomAction {
+        if ('{' !in action.template) return action
+        var template = action.template
+        Regex("\\{([^{}\\s]+)\\}").findAll(action.template).forEach { m ->
+            if (m.value in PLACEHOLDERS) return@forEach
+            val value = Variables.expand(m.value, extras)
+            if (value.missing.isEmpty() && value.text != m.value) template = template.replace(m.value, encode(value.text))
+        }
+        return action.copy(template = template)
+    }
+
+    private val PLACEHOLDERS = setOf("{number}", "{phone}", "{name}", "{text}")
+
     private fun analyzeCustom(
+        unfilled: CustomAction,
+        arg: String,
+        contacts: List<ContactEntry>,
+        granted: Boolean,
+        extras: CommandExtras = CommandExtras(),
+    ): Analysis = withVariables(unfilled, extras).let { action -> analyzeCustomFilled(action, arg, contacts, granted) }
+
+    private fun analyzeCustomFilled(
         action: CustomAction,
         arg: String,
         contacts: List<ContactEntry>,
@@ -558,23 +847,59 @@ object CommandEngine {
         return if (hh in 0..23 && mm in 0..59) hh to mm else null
     }
 
+    /** "7h30 seg-sex": the time, and the days when the words after it name days. */
+    fun splitAlarm(arg: String): Pair<String, List<Int>> {
+        val words = arg.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
+        for (k in 1 until words.size) {
+            val days = TimeParse.days(words.drop(k).joinToString(" ")) ?: continue
+            return words.take(k).joinToString(" ") to days
+        }
+        return arg to emptyList()
+    }
+
     private fun analyzeAlarm(arg: String): Analysis {
-        val time = parseTime(arg)
-        val label = time?.let { "%02d:%02d".format(it.first, it.second) }
+        val (timeText, days) = splitAlarm(arg)
+        val time = parseTime(timeText)
+        val clock = time?.let { "%02d:%02d".format(it.first, it.second) }
+        val label = clock?.let { if (days.isEmpty()) it else it + " · " + TimeParse.formatDays(days) }
         return Analysis(
-            suggestions = label?.let { listOf(Suggestion(BuiltInCommand.ALARM.word + " " + it, it, Texts.get(R.string.cmd_kind_time))) }.orEmpty(),
+            suggestions = clock?.takeIf { days.isEmpty() }?.let { listOf(Suggestion(BuiltInCommand.ALARM.word + " " + it, it, Texts.get(R.string.cmd_kind_time))) }.orEmpty(),
             listTitle = Texts.get(R.string.cmd_list_format),
             needsContacts = false,
             previewTitle = Texts.get(R.string.cmd_alarm_title),
             preview = label?.let { Texts.get(R.string.cmd_alarm_next, it) } ?: Texts.get(R.string.cmd_alarm_empty),
             tone = if (label != null) Tone.OK else Tone.IDLE,
-            action = time?.let { CommandAction.SetAlarm(it.first, it.second) },
+            action = time?.let { CommandAction.SetAlarm(it.first, it.second, days) },
         )
     }
 
-    private fun analyzeCalc(arg: String): Analysis {
+    private fun analyzeCalc(arg: String, rates: CurrencyRates? = null): Analysis {
         val expression = arg.trim()
         val value = if (expression.isEmpty()) null else CalcEvaluator.evaluate(expression)
+        if (value == null && expression.isNotEmpty()) {
+            Conversions.convert(expression, rates)?.let { converted ->
+                return Analysis(
+                    suggestions = emptyList(),
+                    listTitle = Texts.get(R.string.cmd_list_expression),
+                    needsContacts = false,
+                    previewTitle = Texts.get(R.string.cmd_calc_title),
+                    preview = converted.shown,
+                    tone = Tone.OK,
+                    action = CommandAction.Calc(expression, converted.result),
+                )
+            }
+            if (rates == null && Conversions.needsRates(expression)) {
+                return Analysis(
+                    suggestions = emptyList(),
+                    listTitle = Texts.get(R.string.cmd_list_expression),
+                    needsContacts = false,
+                    previewTitle = Texts.get(R.string.cmd_calc_title),
+                    preview = Conversions.ratesPending(),
+                    tone = Tone.WARN,
+                    action = null,
+                )
+            }
+        }
         val result = value?.let { CalcEvaluator.format(it) }
         return Analysis(
             suggestions = emptyList(),

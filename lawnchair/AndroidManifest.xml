@@ -38,6 +38,19 @@
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
+    <!-- Command bar: "agenda", {location}, brilho/rotação, silêncio and the scheduled commands. -->
+    <uses-permission android:name="android.permission.READ_CALENDAR" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+
+    <!-- Lets automation apps the user chooses run command bar lines (CommandRunActivity). -->
+    <permission
+        android:name="${applicationId}.permission.RUN_COMMAND"
+        android:description="@string/cmd_run_permission_description"
+        android:label="@string/cmd_run_permission_label"
+        android:protectionLevel="dangerous" />
 
     <!-- Support non-cellular enabled devices -->
     <uses-feature android:name="android.hardware.telephony" android:required="false" />
@@ -134,6 +147,65 @@
             android:taskAffinity="${applicationId}.command"
             android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.Lawnchair" />
+
+        <!-- "Terminal" in the menu of selected text: the bar opens with it as {sel}. -->
+        <activity-alias
+            android:name="app.lawnchair.command.CommandSelection"
+            android:exported="true"
+            android:label="@string/cmd_selection_label"
+            android:targetActivity="app.lawnchair.command.CommandActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.PROCESS_TEXT" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- terminal://cmd?text=... (an NFC tag, a link) opens the bar with the command typed, not run. -->
+        <activity-alias
+            android:name="app.lawnchair.command.CommandLink"
+            android:exported="true"
+            android:targetActivity="app.lawnchair.command.CommandActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="terminal" android:host="cmd" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity
+            android:name="app.lawnchair.command.CommandRunActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:permission="${applicationId}.permission.RUN_COMMAND"
+            android:theme="@style/Theme.Transparent">
+            <intent-filter>
+                <action android:name="${applicationId}.RUN_COMMAND" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <service
+            android:name="app.lawnchair.command.CommandTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_command_notification"
+            android:label="@string/cmd_tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
+        <receiver
+            android:name="app.lawnchair.command.CommandJobReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
 
         <activity
             android:name="app.lawnchair.command.ImportCommandsActivity"

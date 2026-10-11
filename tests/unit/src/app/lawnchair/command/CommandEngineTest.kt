@@ -34,14 +34,14 @@ class CommandEngineTest {
             a.suggestions.map { it.completion },
         )
         assertNull(a.action)
-        // 9 commands plus the "w" action: four do not fit.
-        assertEquals(10, a.total)
+        // Every command plus the "w" action; the rest does not fit.
+        assertEquals(CommandEngine.COMMANDS.size + 1, a.total)
     }
 
     @Test fun emptyTextShowsAliasesAndLettersWhenThereIsRoom() {
         val a = CommandEngine.analyze("", apps, contacts, true, emptyList(), listOf(CommandAlias("mae", "ligar maria")))
         assertEquals(CommandEngine.EMPTY_SUGGESTIONS, a.suggestions.size)
-        assertEquals(10, a.total)
+        assertEquals(CommandEngine.COMMANDS.size + 1, a.total)
         // Nothing was cut when everything fits.
         assertEquals(0, CommandEngine.analyze("ca", apps, contacts, true).total)
     }
