@@ -34,14 +34,14 @@ class CommandEngineTest {
             a.suggestions.map { it.completion },
         )
         assertNull(a.action)
-        // 8 commands plus the "w" action: three do not fit.
-        assertEquals(9, a.total)
+        // 9 commands plus the "w" action: four do not fit.
+        assertEquals(10, a.total)
     }
 
     @Test fun emptyTextShowsAliasesAndLettersWhenThereIsRoom() {
         val a = CommandEngine.analyze("", apps, contacts, true, emptyList(), listOf(CommandAlias("mae", "ligar maria")))
         assertEquals(CommandEngine.EMPTY_SUGGESTIONS, a.suggestions.size)
-        assertEquals(9, a.total)
+        assertEquals(10, a.total)
         // Nothing was cut when everything fits.
         assertEquals(0, CommandEngine.analyze("ca", apps, contacts, true).total)
     }
@@ -456,6 +456,31 @@ class CommandEngineTest {
         assertNull(split("dividir chrome / chrome").action)
         assertNull(split("dividir xyz / chrome").action)
         assertEquals(Tone.ERROR, split("dividir xyz").tone)
+    }
+
+    // ---- theme ----
+
+    @Test fun themeListsItsOptions() {
+        val a = run("tema ")
+        assertEquals(listOf("tema inverter", "tema claro", "tema escuro", "tema sistema"), a.suggestions.map { it.completion })
+        assertNull(a.action)
+        assertEquals(Tone.IDLE, a.tone)
+    }
+
+    @Test fun themeRunsTheOptionTyped() {
+        assertEquals(CommandAction.Theme(ThemeChange.INVERT), run("tema inverter").action)
+        assertEquals(CommandAction.Theme(ThemeChange.SYSTEM), run("tema sistema").action)
+        assertEquals("TEXTO ⇄ FUNDO", run("tema inverter").preview)
+        // The English words always work.
+        assertEquals(CommandAction.Theme(ThemeChange.DARK), run("theme dark").action)
+        assertEquals(CommandAction.Theme(ThemeChange.LIGHT), run("tema light").action)
+    }
+
+    @Test fun themeNarrowsAndRejects() {
+        assertEquals(listOf("tema escuro"), run("tema esc").suggestions.map { it.completion })
+        assertNull(run("tema esc").action)
+        assertEquals(Tone.ERROR, run("tema xyz").tone)
+        assertNull(run("tema xyz").action)
     }
 
     @Test fun splitWorksInEnglishToo() {

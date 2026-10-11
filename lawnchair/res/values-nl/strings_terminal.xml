@@ -504,4 +504,16 @@
     <string name="cmd_split_empty">GEEF TWEE PROGRAMMA\'S OP</string>
     <string name="cmd_split_second">TWEEDE PROGRAMMA?</string>
     <string name="cmd_voice_split">splits,splitsen,naast elkaar</string>
+    <string name="cmd_word_theme">thema</string>
+    <string name="cmd_theme_title">THEMA</string>
+    <string name="cmd_theme_empty">OMKEREN, LICHT, DONKER OF SYSTEEM</string>
+    <string name="cmd_kind_option">OPTIE</string>
+    <string name="cmd_theme_invert">omkeren</string>
+    <string name="cmd_theme_light">licht</string>
+    <string name="cmd_theme_dark">donker</string>
+    <string name="cmd_theme_system">systeem</string>
+    <string name="cmd_theme_invert_preview">TEKST ⇄ ACHTERGROND</string>
+    <string name="cmd_theme_light_preview">LICHTE ACHTERGROND</string>
+    <string name="cmd_theme_dark_preview">DONKERE ACHTERGROND</string>
+    <string name="cmd_theme_system_preview">SYSTEEMMODUS VOLGEN</string>
 </resources>

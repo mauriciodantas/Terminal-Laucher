@@ -504,4 +504,16 @@
     <string name="cmd_split_empty">INFORME DOIS PROGRAMAS</string>
     <string name="cmd_split_second">SEGUNDO PROGRAMA?</string>
     <string name="cmd_voice_split">dividir,dividida,lado a lado</string>
+    <string name="cmd_word_theme">tema</string>
+    <string name="cmd_theme_title">TEMA</string>
+    <string name="cmd_theme_empty">INVERTER, CLARO, ESCURO OU SISTEMA</string>
+    <string name="cmd_kind_option">OPÇÃO</string>
+    <string name="cmd_theme_invert">inverter</string>
+    <string name="cmd_theme_light">claro</string>
+    <string name="cmd_theme_dark">escuro</string>
+    <string name="cmd_theme_system">sistema</string>
+    <string name="cmd_theme_invert_preview">TEXTO ⇄ FUNDO</string>
+    <string name="cmd_theme_light_preview">FUNDO CLARO</string>
+    <string name="cmd_theme_dark_preview">FUNDO ESCURO</string>
+    <string name="cmd_theme_system_preview">ACOMPANHAR O MODO DO SISTEMA</string>
 </resources>

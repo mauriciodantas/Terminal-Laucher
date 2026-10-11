@@ -11,6 +11,7 @@ import android.net.Uri
 import android.os.Process
 import android.provider.AlarmClock
 import android.provider.ContactsContract
+import app.lawnchair.theme.SystemColorMode
 
 /** Runs a [CommandAction] and loads the data the command bar completes from. */
 object CommandExecutor {
@@ -93,6 +94,13 @@ object CommandExecutor {
             is CommandAction.Custom -> return runCustom(context, action)
 
             is CommandAction.SplitScreen -> return launchSplit(context, action)
+
+            is CommandAction.Theme -> when (action.change) {
+                ThemeChange.INVERT -> SystemColorMode.pin(context, SystemColorMode.Pin.INVERTED)
+                ThemeChange.LIGHT -> SystemColorMode.pin(context, SystemColorMode.Pin.LIGHT)
+                ThemeChange.DARK -> SystemColorMode.pin(context, SystemColorMode.Pin.DARK)
+                ThemeChange.SYSTEM -> SystemColorMode.follow(context)
+            }
 
             is CommandAction.Route -> start(
                 context,

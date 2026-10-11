@@ -504,4 +504,16 @@
     <string name="cmd_split_empty">İKİ PROGRAM GİRİN</string>
     <string name="cmd_split_second">İKİNCİ PROGRAM?</string>
     <string name="cmd_voice_split">böl,yan yana</string>
+    <string name="cmd_word_theme">tema</string>
+    <string name="cmd_theme_title">TEMA</string>
+    <string name="cmd_theme_empty">TERS, AÇIK, KOYU VEYA SİSTEM</string>
+    <string name="cmd_kind_option">SEÇENEK</string>
+    <string name="cmd_theme_invert">ters</string>
+    <string name="cmd_theme_light">açık</string>
+    <string name="cmd_theme_dark">koyu</string>
+    <string name="cmd_theme_system">sistem</string>
+    <string name="cmd_theme_invert_preview">METİN ⇄ ARKA PLAN</string>
+    <string name="cmd_theme_light_preview">AÇIK ARKA PLAN</string>
+    <string name="cmd_theme_dark_preview">KOYU ARKA PLAN</string>
+    <string name="cmd_theme_system_preview">SİSTEM MODUNU TAKİP ET</string>
 </resources>

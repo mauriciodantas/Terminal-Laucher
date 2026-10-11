@@ -504,4 +504,16 @@
     <string name="cmd_split_empty">2つのプログラムを入力</string>
     <string name="cmd_split_second">2つ目のプログラム?</string>
     <string name="cmd_voice_split">分割,並べて</string>
+    <string name="cmd_word_theme">テーマ</string>
+    <string name="cmd_theme_title">テーマ</string>
+    <string name="cmd_theme_empty">反転・ライト・ダーク・システム</string>
+    <string name="cmd_kind_option">オプション</string>
+    <string name="cmd_theme_invert">反転</string>
+    <string name="cmd_theme_light">ライト</string>
+    <string name="cmd_theme_dark">ダーク</string>
+    <string name="cmd_theme_system">システム</string>
+    <string name="cmd_theme_invert_preview">文字 ⇄ 背景</string>
+    <string name="cmd_theme_light_preview">明るい背景</string>
+    <string name="cmd_theme_dark_preview">暗い背景</string>
+    <string name="cmd_theme_system_preview">システムのモードに合わせる</string>
 </resources>

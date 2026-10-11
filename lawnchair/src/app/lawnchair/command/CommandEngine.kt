@@ -31,6 +31,9 @@ sealed interface CommandAction {
     /** Two apps side by side in split screen. */
     data class SplitScreen(val first: AppEntry, val second: AppEntry) : CommandAction
     data class NewTask(val title: String) : CommandAction
+
+    /** Inverts the theme colors, lays them light or dark, or makes them follow the system mode. */
+    data class Theme(val change: ThemeChange) : CommandAction
     data class WebSearch(val query: String) : CommandAction
 }
 
@@ -75,6 +78,7 @@ object CommandEngine {
                 BuiltInCommand.TASK to BuiltInCommand.TASK + " " + Texts.get(R.string.cmd_usage_task),
                 BuiltInCommand.CALC_SHORT to BuiltInCommand.CALC_SHORT + " " + Texts.get(R.string.cmd_usage_calc_short),
                 BuiltInCommand.SPLIT.word to BuiltInCommand.SPLIT.word + " " + Texts.get(R.string.cmd_usage_split),
+                BuiltInCommand.THEME.word to BuiltInCommand.THEME.word + " " + ThemeChange.usage(),
             )
 
     private val splitter = Regex("^(\\S*)(\\s+(.*))?$", RegexOption.DOT_MATCHES_ALL)
@@ -128,6 +132,8 @@ object CommandEngine {
             BuiltInCommand.ROUTE -> analyzeRoute(arg)
 
             BuiltInCommand.SPLIT -> analyzeSplit(arg, apps)
+
+            BuiltInCommand.THEME -> analyzeTheme(arg)
 
             null -> custom.firstOrNull { it.letter == token }
                 ?.let { analyzeCustom(it, arg, contacts, contactsGranted) }
@@ -230,6 +236,13 @@ object CommandEngine {
                 action.first.id.substringBefore('/') + " | " + action.second.id.substringBefore('/')
 
         is CommandAction.NewTask -> Texts.get(R.string.cmd_desc_task)
+
+        is CommandAction.Theme -> when (action.change) {
+            ThemeChange.INVERT -> "accent ⇄ background"
+            ThemeChange.LIGHT -> "background = lighter"
+            ThemeChange.DARK -> "background = darker"
+            ThemeChange.SYSTEM -> "follow_system_color_mode = true"
+        }
 
         is CommandAction.WebSearch -> "ACTION_WEB_SEARCH · \"${action.query}\""
 
@@ -346,6 +359,27 @@ object CommandEngine {
                 else -> Tone.ERROR
             },
             action = if (first != null && second != null) CommandAction.SplitScreen(first, second) else null,
+        )
+    }
+
+    /** "tema inverter": the options start out listed and narrow down as the word is typed. */
+    private fun analyzeTheme(arg: String): Analysis {
+        val typed = arg.trim().foldAccents()
+        val chosen = ThemeChange.of(typed)
+        val matches = ThemeChange.entries.filter { change -> change.words().any { it.startsWith(typed) } }
+        val word = BuiltInCommand.THEME.word
+        return Analysis(
+            suggestions = matches.map { Suggestion("$word ${it.word}", it.preview, Texts.get(R.string.cmd_kind_option)) },
+            listTitle = Texts.get(R.string.cmd_list_suggestions),
+            needsContacts = false,
+            previewTitle = Texts.get(R.string.cmd_theme_title),
+            preview = chosen?.preview ?: Texts.get(R.string.cmd_theme_empty),
+            tone = when {
+                chosen != null -> Tone.OK
+                matches.isEmpty() -> Tone.ERROR
+                else -> Tone.IDLE
+            },
+            action = chosen?.let { CommandAction.Theme(it) },
         )
     }
 

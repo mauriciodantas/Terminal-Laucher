@@ -504,4 +504,16 @@
     <string name="cmd_split_empty">أدخل برنامجين</string>
     <string name="cmd_split_second">البرنامج الثاني؟</string>
     <string name="cmd_voice_split">تقسيم,جنبا إلى جنب</string>
+    <string name="cmd_word_theme">سمة</string>
+    <string name="cmd_theme_title">السمة</string>
+    <string name="cmd_theme_empty">عكس أو فاتح أو داكن أو النظام</string>
+    <string name="cmd_kind_option">خيار</string>
+    <string name="cmd_theme_invert">عكس</string>
+    <string name="cmd_theme_light">فاتح</string>
+    <string name="cmd_theme_dark">داكن</string>
+    <string name="cmd_theme_system">النظام</string>
+    <string name="cmd_theme_invert_preview">النص ⇄ الخلفية</string>
+    <string name="cmd_theme_light_preview">خلفية فاتحة</string>
+    <string name="cmd_theme_dark_preview">خلفية داكنة</string>
+    <string name="cmd_theme_system_preview">اتباع وضع النظام</string>
 </resources>

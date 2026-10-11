@@ -1585,4 +1585,16 @@
     <string name="cmd_split_empty">ENTER TWO PROGRAMS</string>
     <string name="cmd_split_second">SECOND PROGRAM?</string>
     <string name="cmd_voice_split">split,side by side</string>
+    <string name="cmd_word_theme">theme</string>
+    <string name="cmd_theme_title">THEME</string>
+    <string name="cmd_theme_empty">INVERT, LIGHT, DARK OR SYSTEM</string>
+    <string name="cmd_kind_option">OPTION</string>
+    <string name="cmd_theme_invert">invert</string>
+    <string name="cmd_theme_light">light</string>
+    <string name="cmd_theme_dark">dark</string>
+    <string name="cmd_theme_system">system</string>
+    <string name="cmd_theme_invert_preview">TEXT ⇄ BACKGROUND</string>
+    <string name="cmd_theme_light_preview">LIGHT BACKGROUND</string>
+    <string name="cmd_theme_dark_preview">DARK BACKGROUND</string>
+    <string name="cmd_theme_system_preview">FOLLOW THE SYSTEM MODE</string>
 </resources>

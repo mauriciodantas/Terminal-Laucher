@@ -504,4 +504,16 @@
     <string name="cmd_split_empty">दो प्रोग्राम लिखें</string>
     <string name="cmd_split_second">दूसरा प्रोग्राम?</string>
     <string name="cmd_voice_split">विभाजित,साथ साथ</string>
+    <string name="cmd_word_theme">थीम</string>
+    <string name="cmd_theme_title">थीम</string>
+    <string name="cmd_theme_empty">उलटें, लाइट, डार्क या सिस्टम</string>
+    <string name="cmd_kind_option">विकल्प</string>
+    <string name="cmd_theme_invert">उलटें</string>
+    <string name="cmd_theme_light">लाइट</string>
+    <string name="cmd_theme_dark">डार्क</string>
+    <string name="cmd_theme_system">सिस्टम</string>
+    <string name="cmd_theme_invert_preview">टेक्स्ट ⇄ बैकग्राउंड</string>
+    <string name="cmd_theme_light_preview">लाइट बैकग्राउंड</string>
+    <string name="cmd_theme_dark_preview">डार्क बैकग्राउंड</string>
+    <string name="cmd_theme_system_preview">सिस्टम मोड का पालन करें</string>
 </resources>

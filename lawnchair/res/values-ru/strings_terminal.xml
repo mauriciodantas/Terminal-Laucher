@@ -504,4 +504,16 @@
     <string name="cmd_split_empty">УКАЖИТЕ ДВЕ ПРОГРАММЫ</string>
     <string name="cmd_split_second">ВТОРАЯ ПРОГРАММА?</string>
     <string name="cmd_voice_split">разделить,рядом</string>
+    <string name="cmd_word_theme">тема</string>
+    <string name="cmd_theme_title">ТЕМА</string>
+    <string name="cmd_theme_empty">ИНВЕРСИЯ, СВЕТЛАЯ, ТЁМНАЯ ИЛИ СИСТЕМА</string>
+    <string name="cmd_kind_option">ОПЦИЯ</string>
+    <string name="cmd_theme_invert">инверсия</string>
+    <string name="cmd_theme_light">светлая</string>
+    <string name="cmd_theme_dark">тёмная</string>
+    <string name="cmd_theme_system">система</string>
+    <string name="cmd_theme_invert_preview">ТЕКСТ ⇄ ФОН</string>
+    <string name="cmd_theme_light_preview">СВЕТЛЫЙ ФОН</string>
+    <string name="cmd_theme_dark_preview">ТЁМНЫЙ ФОН</string>
+    <string name="cmd_theme_system_preview">СЛЕДОВАТЬ РЕЖИМУ СИСТЕМЫ</string>
 </resources>

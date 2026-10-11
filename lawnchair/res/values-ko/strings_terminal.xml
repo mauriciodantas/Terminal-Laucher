@@ -504,4 +504,16 @@
     <string name="cmd_split_empty">프로그램 두 개 입력</string>
     <string name="cmd_split_second">두 번째 프로그램?</string>
     <string name="cmd_voice_split">분할,나란히</string>
+    <string name="cmd_word_theme">테마</string>
+    <string name="cmd_theme_title">테마</string>
+    <string name="cmd_theme_empty">반전, 라이트, 다크 또는 시스템</string>
+    <string name="cmd_kind_option">옵션</string>
+    <string name="cmd_theme_invert">반전</string>
+    <string name="cmd_theme_light">라이트</string>
+    <string name="cmd_theme_dark">다크</string>
+    <string name="cmd_theme_system">시스템</string>
+    <string name="cmd_theme_invert_preview">텍스트 ⇄ 배경</string>
+    <string name="cmd_theme_light_preview">밝은 배경</string>
+    <string name="cmd_theme_dark_preview">어두운 배경</string>
+    <string name="cmd_theme_system_preview">시스템 모드 따르기</string>
 </resources>

@@ -504,4 +504,16 @@
     <string name="cmd_split_empty">ZWEI PROGRAMME EINGEBEN</string>
     <string name="cmd_split_second">ZWEITES PROGRAMM?</string>
     <string name="cmd_voice_split">teilen,nebeneinander</string>
+    <string name="cmd_word_theme">thema</string>
+    <string name="cmd_theme_title">THEMA</string>
+    <string name="cmd_theme_empty">UMKEHREN, HELL, DUNKEL ODER SYSTEM</string>
+    <string name="cmd_kind_option">OPTION</string>
+    <string name="cmd_theme_invert">umkehren</string>
+    <string name="cmd_theme_light">hell</string>
+    <string name="cmd_theme_dark">dunkel</string>
+    <string name="cmd_theme_system">system</string>
+    <string name="cmd_theme_invert_preview">TEXT ⇄ HINTERGRUND</string>
+    <string name="cmd_theme_light_preview">HELLER HINTERGRUND</string>
+    <string name="cmd_theme_dark_preview">DUNKLER HINTERGRUND</string>
+    <string name="cmd_theme_system_preview">DEM SYSTEMMODUS FOLGEN</string>
 </resources>

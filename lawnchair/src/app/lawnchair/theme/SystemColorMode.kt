@@ -6,6 +6,8 @@ import android.content.res.Resources
 import androidx.core.graphics.ColorUtils
 import app.lawnchair.preferences2.PreferenceManager2
 import app.lawnchair.preferences2.firstCached
+import app.lawnchair.theme.color.ColorOption
+import com.patrykmichalik.opto.core.setBlocking
 
 /**
  * Following the system's light and dark mode. The accent and the background the user picked stay
@@ -32,6 +34,35 @@ object SystemColorMode {
 
     /** True when the screen should draw [accent] as the background and [ground] as the text right now. */
     fun swaps(context: Context, accent: Int, ground: Int): Boolean = follows(context) && swaps(accent, ground, isNight())
+
+    /** How [pin] lays out the pair the screen shows now. */
+    enum class Pin { INVERTED, LIGHT, DARK }
+
+    /**
+     * Keeps the pair the screen draws now, laid out as [pin] asks (traded, or with the lighter or the
+     * darker color as the background), as the user's own colors, and stops following the system so
+     * it stays that way.
+     */
+    fun pin(context: Context, pin: Pin) {
+        val prefs2 = PreferenceManager2.getInstance(context)
+        val accent = ThemeProvider.INSTANCE.get(context).phosphorColor
+        val ground = LauncherGround.get(context)
+        val trade = when (pin) {
+            Pin.INVERTED -> true
+            Pin.LIGHT -> swaps(accent, ground, night = false)
+            Pin.DARK -> swaps(accent, ground, night = true)
+        }
+        val (newAccent, newGround) = if (trade) ground to accent else accent to ground
+        prefs2.followSystemColorMode.setBlocking(false)
+        // The background goes first, as when a ready-made pair is picked.
+        prefs2.launcherBackgroundColor.setBlocking(ColorOption.CustomColor(newGround or OPAQUE))
+        prefs2.accentColor.setBlocking(ColorOption.CustomColor(newAccent or OPAQUE))
+    }
+
+    /** Makes the colors follow the system mode from now on. */
+    fun follow(context: Context) {
+        PreferenceManager2.getInstance(context).followSystemColorMode.setBlocking(true)
+    }
 
     private const val OPAQUE = 0xFF000000.toInt()
 }

@@ -504,4 +504,16 @@
     <string name="cmd_split_empty">MASUKKAN DUA PROGRAM</string>
     <string name="cmd_split_second">PROGRAM KEDUA?</string>
     <string name="cmd_voice_split">bagi,berdampingan</string>
+    <string name="cmd_word_theme">tema</string>
+    <string name="cmd_theme_title">TEMA</string>
+    <string name="cmd_theme_empty">BALIK, TERANG, GELAP ATAU SISTEM</string>
+    <string name="cmd_kind_option">OPSI</string>
+    <string name="cmd_theme_invert">balik</string>
+    <string name="cmd_theme_light">terang</string>
+    <string name="cmd_theme_dark">gelap</string>
+    <string name="cmd_theme_system">sistem</string>
+    <string name="cmd_theme_invert_preview">TEKS ⇄ LATAR</string>
+    <string name="cmd_theme_light_preview">LATAR TERANG</string>
+    <string name="cmd_theme_dark_preview">LATAR GELAP</string>
+    <string name="cmd_theme_system_preview">IKUTI MODE SISTEM</string>
 </resources>

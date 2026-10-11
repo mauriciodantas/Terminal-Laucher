@@ -504,4 +504,16 @@
     <string name="cmd_split_empty">输入两个程序</string>
     <string name="cmd_split_second">第二个程序?</string>
     <string name="cmd_voice_split">分屏,并排</string>
+    <string name="cmd_word_theme">主题</string>
+    <string name="cmd_theme_title">主题</string>
+    <string name="cmd_theme_empty">反转、浅色、深色或系统</string>
+    <string name="cmd_kind_option">选项</string>
+    <string name="cmd_theme_invert">反转</string>
+    <string name="cmd_theme_light">浅色</string>
+    <string name="cmd_theme_dark">深色</string>
+    <string name="cmd_theme_system">系统</string>
+    <string name="cmd_theme_invert_preview">文字 ⇄ 背景</string>
+    <string name="cmd_theme_light_preview">浅色背景</string>
+    <string name="cmd_theme_dark_preview">深色背景</string>
+    <string name="cmd_theme_system_preview">跟随系统模式</string>
 </resources>

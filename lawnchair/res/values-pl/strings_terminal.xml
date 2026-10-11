@@ -504,4 +504,16 @@
     <string name="cmd_split_empty">PODAJ DWA PROGRAMY</string>
     <string name="cmd_split_second">DRUGI PROGRAM?</string>
     <string name="cmd_voice_split">podziel,obok siebie</string>
+    <string name="cmd_word_theme">motyw</string>
+    <string name="cmd_theme_title">MOTYW</string>
+    <string name="cmd_theme_empty">ODWRÓĆ, JASNY, CIEMNY LUB SYSTEM</string>
+    <string name="cmd_kind_option">OPCJA</string>
+    <string name="cmd_theme_invert">odwróć</string>
+    <string name="cmd_theme_light">jasny</string>
+    <string name="cmd_theme_dark">ciemny</string>
+    <string name="cmd_theme_system">system</string>
+    <string name="cmd_theme_invert_preview">TEKST ⇄ TŁO</string>
+    <string name="cmd_theme_light_preview">JASNE TŁO</string>
+    <string name="cmd_theme_dark_preview">CIEMNE TŁO</string>
+    <string name="cmd_theme_system_preview">PODĄŻAJ ZA TRYBEM SYSTEMU</string>
 </resources>
