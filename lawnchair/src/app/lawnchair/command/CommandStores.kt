@@ -51,6 +51,15 @@ object JobStore {
     fun remove(context: Context, id: Long) {
         save(context, load(context).filter { it.id != id })
     }
+
+    /** Removes the job [id] and returns it, so a job fired twice at once runs only once. */
+    @Synchronized
+    fun take(context: Context, id: Long): ScheduledJob? {
+        val jobs = load(context)
+        val job = jobs.firstOrNull { it.id == id } ?: return null
+        save(context, jobs.filter { it.id != id })
+        return job
+    }
 }
 
 /** How often each command runs at each hour, for the quick starts. */

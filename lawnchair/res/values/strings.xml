@@ -1773,6 +1773,9 @@
     <string name="cmd_notify_reminder">Reminder</string>
     <string name="cmd_notify_failed">A scheduled command could not run</string>
     <string name="cmd_notify_tap_to_run">Tap to run</string>
+    <string name="cmd_notify_blocked_reminder">SCHEDULED · NOTIFICATIONS ARE OFF, THE REMINDER WILL NOT SHOW</string>
+    <string name="cmd_notify_blocked_command">SCHEDULED · NOTIFICATIONS ARE OFF, ERRORS AND TAP TO RUN WILL NOT SHOW</string>
+    <string name="cmd_exact_alarm_hint">SCHEDULED · ALLOW ALARMS SO IT RUNS ON TIME</string>
     <string name="cmd_selection_label">Terminal</string>
     <string name="cmd_tile_label">Command bar</string>
     <string name="cmd_run_permission_label">run command bar commands</string>

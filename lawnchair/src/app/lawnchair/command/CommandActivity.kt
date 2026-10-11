@@ -365,6 +365,24 @@ private fun CommandScreen(onClose: () -> Unit) {
             done = context.getString(R.string.command_copied, action.result)
         } else if (action is CommandAction.Copy) {
             done = context.getString(R.string.command_copied, action.text.lineSequence().first())
+        } else if (action is CommandAction.Schedule) {
+            val problem = CommandScheduler.notificationProblem(context, action.job)
+            val exactAlarms = CommandScheduler.exactAlarmRequest(context, action.job)
+            when {
+                // The bar stays to say it: the job is saved but would come and go unseen.
+                problem != null -> done = context.getString(problem)
+
+                exactAlarms != null -> {
+                    done = context.getString(R.string.cmd_exact_alarm_hint)
+                    runCatching { context.startActivity(exactAlarms.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+                    onClose()
+                }
+
+                else -> {
+                    done = executedLabel
+                    onClose()
+                }
+            }
         } else if (action is CommandAction.SplitScreen) {
             // The bar stays a moment to open the first app from inside the split; it closes itself.
             done = executedLabel

@@ -70,6 +70,7 @@ class LawnchairApp : LauncherApplication() {
         Texts.install(this)
         // The command bar's rules ("quando carregar: ...") and its scheduled commands.
         app.lawnchair.command.CommandScheduler.watchEvents(this)
+        app.lawnchair.command.CommandScheduler.armAll(this)
         QuickStepContract.sRecentsDisabled = !recentsEnabled
         Flowerpot.Manager.getInstance(this)
         registerActivityLifecycleCallbacks(activityHandler)
