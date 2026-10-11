@@ -30,6 +30,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import app.lawnchair.ui.theme.LawnchairTheme
+import app.lawnchair.widgets.lottie.ImportWidgetActivity
+import app.lawnchair.widgets.lottie.LottieWidgetPacks
 import com.android.launcher3.R
 
 /**
@@ -42,7 +44,19 @@ class ImportCommandsActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val pack = incomingUri(intent)?.let { CommandPacks.read(this, it) }
+        val uri = incomingUri(intent)
+        val pack = uri?.let { CommandPacks.read(this, it) }
+        // Chats hand any file over as octet-stream, so a widget file may land here first.
+        if (pack == null && uri != null && LottieWidgetPacks.looksLikePack(this, uri)) {
+            startActivity(
+                Intent(this, ImportWidgetActivity::class.java)
+                    .setAction(Intent.ACTION_VIEW)
+                    .setData(uri)
+                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION),
+            )
+            finish()
+            return
+        }
         if (pack == null) {
             Toast.makeText(this, R.string.cmd_imp_invalid, Toast.LENGTH_LONG).show()
             finish()

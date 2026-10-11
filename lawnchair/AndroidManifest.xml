@@ -260,6 +260,37 @@
             android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.Transparent" />
 
+        <activity
+            android:name="app.lawnchair.widgets.lottie.ImportWidgetActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:label="@string/lottie_widget_import_title"
+            android:theme="@style/Theme.Transparent">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/x-terminal-widget" />
+            </intent-filter>
+            <!-- Files sent as octet-stream reach ImportCommandsActivity, which hands widgets over here. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:mimeType="*/*" />
+                <data android:host="*" />
+                <data android:pathPattern=".*\\.twgt" />
+                <data android:pathPattern=".*\\..*\\.twgt" />
+                <data android:pathPattern=".*\\..*\\..*\\.twgt" />
+            </intent-filter>
+        </activity>
+
+        <receiver
+            android:name="app.lawnchair.widgets.lottie.LottieWidgetPinReceiver"
+            android:exported="false" />
+
         <receiver
             android:name="app.lawnchair.widgets.lottie.LottieAppWidgetProvider"
             android:exported="false"

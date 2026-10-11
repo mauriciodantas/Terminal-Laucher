@@ -78,6 +78,12 @@ class LottieWidgetConfigActivity : ComponentActivity() {
             finish()
             return
         }
+        // A widget the home screen adds right after a widget file was imported comes ready.
+        if (LottieWidgetStore.applyPending(this, appWidgetId)) {
+            setResult(RESULT_OK, resultIntent())
+            finish()
+            return
+        }
         animationName = LottieWidgetStore.animationName(this, appWidgetId)
         val initialCommand = LottieWidgetStore.command(this, appWidgetId)
         val initialPlayback = LottieWidgetStore.playback(this, appWidgetId)
@@ -95,6 +101,7 @@ class LottieWidgetConfigActivity : ComponentActivity() {
                         initialThemeColors = initialThemeColors,
                         onPick = ::pickAnimation,
                         onSave = ::save,
+                        onShare = ::share,
                         onDismiss = ::cancel,
                     )
                 }
@@ -124,6 +131,17 @@ class LottieWidgetConfigActivity : ComponentActivity() {
         finish()
     }
 
+    private fun share(command: String, playback: Playback, themeColors: Boolean) {
+        val file = LottieWidgetStore.shownFile(this, appWidgetId) ?: return
+        val name = animationName ?: file.name
+        lifecycleScope.launch {
+            val intent = withContext(Dispatchers.IO) {
+                LottieWidgetPacks.shareIntent(applicationContext, file, name, command, playback, themeColors)
+            }
+            if (intent != null) startActivity(intent) else Toast.makeText(applicationContext, R.string.lottie_widget_share_failed, Toast.LENGTH_LONG).show()
+        }
+    }
+
     private fun cancel() {
         LottieWidgetStore.discardStaged(applicationContext, appWidgetId)
         finish()
@@ -140,6 +158,7 @@ private fun ConfigDialog(
     initialThemeColors: Boolean,
     onPick: () -> Unit,
     onSave: (String, Playback, Boolean) -> Unit,
+    onShare: (String, Playback, Boolean) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -190,6 +209,13 @@ private fun ConfigDialog(
                         .padding(top = 16.dp),
                 )
                 CommandPreview(command = command, playback = playback, analysis = analysis)
+                TextButton(
+                    enabled = animationName != null,
+                    onClick = { onShare(command, playback, themeColors) },
+                    modifier = Modifier.padding(top = 8.dp),
+                ) {
+                    Text(stringResource(R.string.lottie_widget_share))
+                }
             }
         },
         confirmButton = {

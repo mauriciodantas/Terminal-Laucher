@@ -27,6 +27,11 @@ object LottieWidgetStore {
     private const val KEY_NAME = "name_"
     private const val KEY_PLAYBACK = "playback_"
     private const val KEY_THEME_COLORS = "theme_colors_"
+    private const val PENDING = "pending"
+    private const val KEY_PENDING_AT = "pending_at"
+
+    /** An imported widget waits this long for the home screen to add it; later it is left unused. */
+    private const val PENDING_MAX_AGE = 30 * 60 * 1000L
 
     private val _changes = MutableStateFlow(0)
 
@@ -58,6 +63,9 @@ object LottieWidgetStore {
 
     /** Whether the animation is painted in the theme colors instead of its own; off for older widgets. */
     fun themeColors(context: Context, appWidgetId: Int): Boolean = prefs(context).getBoolean(KEY_THEME_COLORS + appWidgetId, false)
+
+    /** The animation the configuration screen shows: the one just picked, or the saved one; null without either. */
+    fun shownFile(context: Context, appWidgetId: Int): File? = staged(context, appWidgetId).takeIf { it.exists() } ?: file(context, appWidgetId).takeIf { it.exists() }
 
     /**
      * Copies the animation at [uri] aside for [appWidgetId] without touching the current one, and
@@ -95,6 +103,48 @@ object LottieWidgetStore {
             if (line.isEmpty()) remove(KEY_COMMAND + appWidgetId) else putString(KEY_COMMAND + appWidgetId, line)
             putString(KEY_PLAYBACK + appWidgetId, playback.name)
             putBoolean(KEY_THEME_COLORS + appWidgetId, themeColors)
+        }
+        _changes.update { it + 1 }
+        return true
+    }
+
+    /**
+     * Keeps an imported [pack] for the next Lottie widget added to the home screen, which takes it
+     * in [applyPending] instead of asking for an animation. A later import replaces it.
+     */
+    fun setPending(context: Context, pack: LottieWidgetPack) {
+        val target = File(File(context.filesDir, DIR), PENDING)
+        target.parentFile?.mkdirs()
+        target.writeBytes(pack.animation)
+        prefs(context).edit {
+            putString(KEY_NAME + PENDING, pack.name)
+            putString(KEY_COMMAND + PENDING, pack.command)
+            putString(KEY_PLAYBACK + PENDING, pack.playback.name)
+            putBoolean(KEY_THEME_COLORS + PENDING, pack.themeColors)
+            putLong(KEY_PENDING_AT, System.currentTimeMillis())
+        }
+    }
+
+    /**
+     * Gives [appWidgetId] the imported widget waiting in [setPending], when there is one and the
+     * widget has no animation yet. Returns true when it did. The home screen may report a new
+     * widget twice (its configuration and the pin callback), and only the first one takes it.
+     */
+    @Synchronized
+    fun applyPending(context: Context, appWidgetId: Int): Boolean {
+        if (hasAnimation(context, appWidgetId)) return false
+        val pending = File(File(context.filesDir, DIR), PENDING)
+        val prefs = prefs(context)
+        val fresh = System.currentTimeMillis() - prefs.getLong(KEY_PENDING_AT, 0) <= PENDING_MAX_AGE
+        if (!pending.exists() || !fresh || !pending.renameTo(file(context, appWidgetId))) return false
+        prefs.edit {
+            listOf(KEY_NAME, KEY_COMMAND, KEY_PLAYBACK).forEach { key ->
+                prefs.getString(key + PENDING, null)?.let { putString(key + appWidgetId, it) }
+                remove(key + PENDING)
+            }
+            putBoolean(KEY_THEME_COLORS + appWidgetId, prefs.getBoolean(KEY_THEME_COLORS + PENDING, false))
+            remove(KEY_THEME_COLORS + PENDING)
+            remove(KEY_PENDING_AT)
         }
         _changes.update { it + 1 }
         return true

@@ -2,6 +2,7 @@
 <paths>
     <cache-path name="log_files" path="logs"/>
     <cache-path name="command_packs" path="commands" />
+    <cache-path name="widget_packs" path="widgets" />
     <cache-path name="nightly_updates" path="updates" />
     <external-path name="external_files" path="." />
     <external-path name="external_storage" path="/"/>
