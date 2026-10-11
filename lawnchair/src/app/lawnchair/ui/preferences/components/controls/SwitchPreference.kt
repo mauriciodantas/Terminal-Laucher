@@ -78,6 +78,7 @@ fun SwitchPreference(
     description: String? = null,
     enabled: Boolean = true,
     onClick: (() -> Unit)? = null,
+    startWidget: (@Composable () -> Unit)? = null,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val mMSDLPlayerWrapper = MSDLPlayerWrapper.INSTANCE.get(LocalContext.current)
@@ -92,6 +93,7 @@ fun SwitchPreference(
         modifier = modifier,
         enabled = enabled,
         description = description?.let { { Text(text = it) } },
+        startWidget = startWidget,
         endWidget = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,

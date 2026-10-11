@@ -292,6 +292,10 @@
     <string name="appearance_pixel_clock_desc">时钟和面板中的大数值使用像素字体。关闭后使用界面字体</string>
     <string name="appearance_complementary">互补色</string>
     <string name="appearance_complementary_desc">选择强调色后，背景会自动采用色轮上的相反颜色</string>
+    <string name="appearance_follow_system_mode">跟随系统模式</string>
+    <string name="appearance_follow_system_mode_desc">手机在浅色和深色之间切换时，互换这两种颜色</string>
+    <string name="appearance_follow_system_mode_now_dark">当前为深色。手机切换模式时互换这两种颜色</string>
+    <string name="appearance_follow_system_mode_now_light">当前为浅色。手机切换模式时互换这两种颜色</string>
     <string name="complementary_custom">自定义</string>
     <string name="complementary_wheel_title">色轮</string>
     <string name="complementary_wheel_hint">拖动两个点中的任意一个：一个是强调色，另一个相反颜色的是背景。旁边的滑杆用于调整背景的强度。</string>

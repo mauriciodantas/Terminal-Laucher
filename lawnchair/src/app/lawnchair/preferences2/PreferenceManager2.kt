@@ -223,6 +223,13 @@ class PreferenceManager2 @Inject constructor(
         defaultValue = ColorOption.Default,
     )
 
+    /** Swaps the accent and the background on screen so the pair follows the system's light and dark mode. */
+    val followSystemColorMode = preference(
+        key = booleanPreferencesKey(name = "follow_system_color_mode"),
+        defaultValue = false,
+        onSet = { reloadHelper.recreate() },
+    )
+
     val hotseatBackgroundColor = preference(
         key = stringPreferencesKey(name = "hotseat_bg_color"),
         parse = ColorOption::fromString,

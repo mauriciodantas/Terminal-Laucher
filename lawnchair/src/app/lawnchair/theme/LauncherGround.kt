@@ -39,11 +39,24 @@ object LauncherGround {
     /** True when text in [accent] reads over [ground] with at least [MIN_VISIBILITY]. */
     fun isVisible(accent: Int, ground: Int, minContrast: Double = MIN_VISIBILITY): Boolean = ColorUtils.calculateContrast(accent or OPAQUE, ground or OPAQUE) >= minContrast
 
+    /** The background [option] stands for, before the system mode is applied: the default when it is unset or would hide [accent]. */
+    private fun chosen(option: ColorOption, accent: Int, context: Context): Int = resolve(option, context)?.takeIf { isVisible(accent, it) } ?: DEFAULT
+
+    /**
+     * The accent and the background as the screen draws them, from the [accent] and [background] the
+     * user picked: the same pair, traded when it should follow the system mode (see [SystemColorMode]).
+     */
+    fun drawn(accent: Int, background: ColorOption, context: Context, follows: Boolean = SystemColorMode.follows(context)): Pair<Int, Int> {
+        val ground = chosen(background, accent, context)
+        return if (follows && SystemColorMode.swaps(accent, ground, SystemColorMode.isNight())) (ground or OPAQUE) to (accent or OPAQUE) else accent to ground
+    }
+
     /** The background [option] stands for, or null for the default; also null when it would hide the accent. */
     fun resolveBackground(option: ColorOption, context: Context): Int? {
-        val color = resolve(option, context) ?: return null
-        val accent = ThemeProvider.INSTANCE.get(context).phosphorColor
-        return color.takeIf { isVisible(accent, it) }
+        val accent = ThemeProvider.INSTANCE.get(context).chosenPhosphorColor
+        val color = resolve(option, context)?.takeIf { isVisible(accent, it) }
+        // Following the system mode, the accent can take the background's place.
+        return if (SystemColorMode.swaps(context, accent, color ?: DEFAULT)) accent or OPAQUE else color
     }
 
     /** The user's color, or null when they kept the default or it would hide the accent. */

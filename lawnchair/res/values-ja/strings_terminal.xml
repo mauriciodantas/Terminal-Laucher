@@ -292,6 +292,10 @@
     <string name="appearance_pixel_clock_desc">時計とパネルの大きな値をピクセルフォントで表示します。オフにすると UI フォントを使用します</string>
     <string name="appearance_complementary">補色</string>
     <string name="appearance_complementary_desc">アクセントを選ぶと、色相環の反対側の色が背景になります</string>
+    <string name="appearance_follow_system_mode">システムのモードに合わせる</string>
+    <string name="appearance_follow_system_mode_desc">スマートフォンがライトとダークを切り替えると、2つの色を入れ替えます</string>
+    <string name="appearance_follow_system_mode_now_dark">現在はダーク。モードが切り替わると2つの色を入れ替えます</string>
+    <string name="appearance_follow_system_mode_now_light">現在はライト。モードが切り替わると2つの色を入れ替えます</string>
     <string name="complementary_custom">カスタム</string>
     <string name="complementary_wheel_title">色相環</string>
     <string name="complementary_wheel_hint">2 つの点のどちらかをドラッグします。一方がアクセント、反対色のもう一方が背景です。横のバーで背景の濃さを調整できます。</string>

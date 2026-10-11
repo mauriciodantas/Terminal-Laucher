@@ -292,6 +292,10 @@
     <string name="appearance_pixel_clock_desc">De klok en de grote waarden van het paneel gebruiken het pixellettertype. Uit: ze gebruiken het lettertype van de interface</string>
     <string name="appearance_complementary">Complementaire kleuren</string>
     <string name="appearance_complementary_desc">Kies het accent en de achtergrond komt mee, in de tegenovergestelde kleur van de kleurcirkel</string>
+    <string name="appearance_follow_system_mode">Systeemmodus volgen</string>
+    <string name="appearance_follow_system_mode_desc">Wisselt de twee kleuren om als de telefoon tussen licht en donker wisselt</string>
+    <string name="appearance_follow_system_mode_now_dark">Nu donker. Wisselt de twee kleuren om als de telefoon van modus wisselt</string>
+    <string name="appearance_follow_system_mode_now_light">Nu licht. Wisselt de twee kleuren om als de telefoon van modus wisselt</string>
     <string name="complementary_custom">Aangepast</string>
     <string name="complementary_wheel_title">Kleurcirkel</string>
     <string name="complementary_wheel_hint">Sleep een van de twee punten: de ene is het accent, de andere, in de tegenovergestelde kleur, de achtergrond. De balk ernaast regelt de intensiteit van de achtergrond.</string>

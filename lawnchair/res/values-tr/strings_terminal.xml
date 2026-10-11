@@ -292,6 +292,10 @@
     <string name="appearance_pixel_clock_desc">Saat ve paneldeki büyük değerler piksel yazı tipini kullanır. Kapalıyken arayüz yazı tipini kullanır</string>
     <string name="appearance_complementary">Tamamlayıcı renkler</string>
     <string name="appearance_complementary_desc">Vurguyu seçin, arka plan renk çemberinin karşı renginde onunla birlikte gelsin</string>
+    <string name="appearance_follow_system_mode">Sistem modunu takip et</string>
+    <string name="appearance_follow_system_mode_desc">Telefon açık ve koyu arasında geçiş yaptığında iki rengin yerini değiştirir</string>
+    <string name="appearance_follow_system_mode_now_dark">Şu an koyu. Telefon mod değiştirdiğinde iki rengin yerini değiştirir</string>
+    <string name="appearance_follow_system_mode_now_light">Şu an açık. Telefon mod değiştirdiğinde iki rengin yerini değiştirir</string>
     <string name="complementary_custom">Özel</string>
     <string name="complementary_wheel_title">Renk çemberi</string>
     <string name="complementary_wheel_hint">İki noktadan birini sürükleyin: biri vurgu, karşı renkteki diğeri arka plandır. Yanındaki çubuk arka planın yoğunluğunu ayarlar.</string>

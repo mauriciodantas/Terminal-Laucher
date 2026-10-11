@@ -88,8 +88,11 @@ class ThemeProvider @Inject constructor(
         )
     }
 
-    /** The terminal phosphor color: the user's custom accent, or Nostromo green. */
-    val phosphorColor: Int get() = phosphorOf(accentColor)
+    /** The terminal phosphor color as drawn: the user's accent, or the background when it follows the system mode and the two trade places. */
+    val phosphorColor: Int get() = LauncherGround.drawn(chosenPhosphorColor, preferenceManager2.launcherBackgroundColor.firstCached(preferenceManager2), context).first
+
+    /** The phosphor color the user picked: their custom accent, or Nostromo green. */
+    val chosenPhosphorColor: Int get() = phosphorOf(accentColor)
 
     /** The phosphor color an accent [option] stands for. */
     fun phosphorOf(option: ColorOption): Int = (option as? ColorOption.CustomColor)?.color ?: NOSTROMO_PHOSPHOR

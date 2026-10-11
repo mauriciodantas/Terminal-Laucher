@@ -40,7 +40,7 @@ object ColorGuard {
             Role.ACCENT -> themes.phosphorOf(candidate) to
                 (LauncherGround.resolve(prefs2.launcherBackgroundColor.firstCached(prefs2), context) ?: LauncherGround.DEFAULT)
 
-            Role.BACKGROUND -> themes.phosphorColor to (LauncherGround.resolve(candidate, context) ?: LauncherGround.DEFAULT)
+            Role.BACKGROUND -> themes.chosenPhosphorColor to (LauncherGround.resolve(candidate, context) ?: LauncherGround.DEFAULT)
         }
         return !LauncherGround.isVisible(accent, ground, LauncherGround.COMFORTABLE_VISIBILITY)
     }
@@ -58,7 +58,7 @@ object ColorGuard {
 
             Role.BACKGROUND -> {
                 val ground = LauncherGround.resolve(candidate, context) ?: LauncherGround.DEFAULT
-                !LauncherGround.isVisible(themes.phosphorColor, ground)
+                !LauncherGround.isVisible(themes.chosenPhosphorColor, ground)
             }
         }
     }

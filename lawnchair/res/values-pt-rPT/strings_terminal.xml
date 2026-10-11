@@ -292,6 +292,10 @@
     <string name="appearance_pixel_clock_desc">O relógio e os valores grandes do painel usam o tipo de letra pixelizado. Desligado, usam o tipo de letra da interface</string>
     <string name="appearance_complementary">Cores complementares</string>
     <string name="appearance_complementary_desc">Escolha o destaque e o fundo vem com ele, na cor oposta do círculo cromático</string>
+    <string name="appearance_follow_system_mode">Acompanhar o modo do sistema</string>
+    <string name="appearance_follow_system_mode_desc">Troca as duas cores quando o telemóvel muda entre claro e escuro</string>
+    <string name="appearance_follow_system_mode_now_dark">Agora no escuro. Troca as duas cores quando o telemóvel muda de modo</string>
+    <string name="appearance_follow_system_mode_now_light">Agora no claro. Troca as duas cores quando o telemóvel muda de modo</string>
     <string name="complementary_custom">Personalizada</string>
     <string name="complementary_wheel_title">Círculo cromático</string>
     <string name="complementary_wheel_hint">Arraste um dos dois pontos: um é o destaque e o outro, na cor oposta, é o fundo. A barra ao lado ajusta a intensidade do fundo.</string>

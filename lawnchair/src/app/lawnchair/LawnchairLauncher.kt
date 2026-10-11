@@ -20,6 +20,7 @@ import android.animation.AnimatorSet
 import android.app.ActivityOptions
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.RectF
@@ -60,6 +61,7 @@ import app.lawnchair.preferences2.firstCached
 import app.lawnchair.root.RootHelperManager
 import app.lawnchair.root.RootNotAvailableException
 import app.lawnchair.theme.LauncherGround
+import app.lawnchair.theme.SystemColorMode
 import app.lawnchair.theme.ThemeProvider
 import app.lawnchair.theme.color.ColorOption
 import app.lawnchair.ui.onboarding.OnboardingActivity
@@ -289,7 +291,20 @@ class LawnchairLauncher : QuickstepLauncher() {
         )
     }
 
+    /** The accent and the background this launcher was built with, to tell when the system mode trades them. */
+    private var builtColors: kotlin.Pair<Int, Int>? = null
+
+    private fun drawnColors() = themeProvider.phosphorColor to LauncherGround.get(this)
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        // The launcher handles uiMode changes itself, so a switch between light and dark that trades
+        // the colors has to rebuild it by hand.
+        if (SystemColorMode.follows(this) && drawnColors() != builtColors) recreateIfNotScheduled()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        builtColors = drawnColors()
         layoutInflater.factory2 = LawnchairLayoutFactory(this)
         // The wallpaper and its dimmer can be turned on while the launcher runs. A window made opaque
         // is not cleared between frames, so a translucent background over it piles up until it is black.

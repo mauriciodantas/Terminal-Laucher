@@ -103,11 +103,12 @@ fun getColorScheme(@Suppress("UNUSED_PARAMETER") darkTheme: Boolean): ColorSchem
     // A color being tried in a picker shows on this very screen before it is applied.
     val accentColor = ColorPreview.optionFor(prefs.accentColor.key.name) ?: savedAccent
     val background = ColorPreview.optionFor(prefs.launcherBackgroundColor.key.name) ?: savedBackground
-    return remember(accentColor, background) {
-        nostromoColorScheme(
-            ThemeProvider.INSTANCE.get(context).phosphorOf(accentColor),
-            LauncherGround.resolveBackground(background, context) ?: LauncherGround.DEFAULT,
-        )
+    val followsSystem by prefs.followSystemColorMode.asState()
+    // Read so the colors are worked out again when the system switches between light and dark.
+    val systemDark = isSystemInDarkTheme()
+    return remember(accentColor, background, followsSystem, systemDark) {
+        val (accent, ground) = LauncherGround.drawn(ThemeProvider.INSTANCE.get(context).phosphorOf(accentColor), background, context, followsSystem)
+        nostromoColorScheme(accent, ground)
     }
 }
 

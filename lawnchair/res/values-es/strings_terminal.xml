@@ -292,6 +292,10 @@
     <string name="appearance_pixel_clock_desc">El reloj y los valores grandes del panel usan la fuente pixelada. Desactivado, usan la fuente de la interfaz</string>
     <string name="appearance_complementary">Colores complementarios</string>
     <string name="appearance_complementary_desc">Elige el acento y el fondo viene con él, en el color opuesto del círculo cromático</string>
+    <string name="appearance_follow_system_mode">Seguir el modo del sistema</string>
+    <string name="appearance_follow_system_mode_desc">Intercambia los dos colores cuando el teléfono cambia entre claro y oscuro</string>
+    <string name="appearance_follow_system_mode_now_dark">Ahora en oscuro. Intercambia los dos colores cuando el teléfono cambia de modo</string>
+    <string name="appearance_follow_system_mode_now_light">Ahora en claro. Intercambia los dos colores cuando el teléfono cambia de modo</string>
     <string name="complementary_custom">Personalizado</string>
     <string name="complementary_wheel_title">Círculo cromático</string>
     <string name="complementary_wheel_hint">Arrastra uno de los dos puntos: uno es el acento y el otro, en el color opuesto, es el fondo. La barra de al lado ajusta la intensidad del fondo.</string>

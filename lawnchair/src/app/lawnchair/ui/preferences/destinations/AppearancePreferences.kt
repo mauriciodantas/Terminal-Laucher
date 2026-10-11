@@ -21,6 +21,7 @@ import app.lawnchair.ui.preferences.LocalIsExpandedScreen
 import app.lawnchair.ui.preferences.components.FontPreference
 import app.lawnchair.ui.preferences.components.colorpreference.ColorPreference
 import app.lawnchair.ui.preferences.components.colorpreference.ComplementaryColorsPreference
+import app.lawnchair.ui.preferences.components.colorpreference.FollowSystemColorModePreference
 import app.lawnchair.ui.preferences.components.controls.ClickablePreference
 import app.lawnchair.ui.preferences.components.controls.SliderPreference
 import app.lawnchair.ui.preferences.components.controls.SwitchPreference
@@ -44,6 +45,7 @@ fun AppearancePreferences(modifier: Modifier = Modifier) {
     ) {
         PreferenceGroup(heading = stringResource(id = R.string.appearance_group_presets)) {
             ComplementaryColorsPreference()
+            FollowSystemColorModePreference()
         }
 
         PreferenceGroup(

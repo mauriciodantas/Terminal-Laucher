@@ -292,6 +292,10 @@
     <string name="appearance_pixel_clock_desc">घड़ी और पैनल की बड़ी वैल्यू पिक्सल फ़ॉन्ट में दिखती हैं। बंद होने पर इंटरफ़ेस फ़ॉन्ट इस्तेमाल होता है</string>
     <string name="appearance_complementary">पूरक रंग</string>
     <string name="appearance_complementary_desc">ऐक्सेंट चुनें और बैकग्राउंड कलर व्हील के उलटे रंग में साथ आ जाएगा</string>
+    <string name="appearance_follow_system_mode">सिस्टम मोड का पालन करें</string>
+    <string name="appearance_follow_system_mode_desc">फ़ोन के लाइट और डार्क के बीच बदलने पर दोनों रंगों की जगह बदल देता है</string>
+    <string name="appearance_follow_system_mode_now_dark">अभी डार्क में। फ़ोन का मोड बदलने पर दोनों रंगों की जगह बदल देता है</string>
+    <string name="appearance_follow_system_mode_now_light">अभी लाइट में। फ़ोन का मोड बदलने पर दोनों रंगों की जगह बदल देता है</string>
     <string name="complementary_custom">कस्टम</string>
     <string name="complementary_wheel_title">कलर व्हील</string>
     <string name="complementary_wheel_hint">दोनों में से किसी एक बिंदु को खींचें: एक ऐक्सेंट है और दूसरा, उलटे रंग वाला, बैकग्राउंड है। बगल की पट्टी बैकग्राउंड की तीव्रता बदलती है।</string>
