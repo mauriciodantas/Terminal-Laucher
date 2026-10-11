@@ -1408,6 +1408,14 @@
     <string name="complementary_purple">Purple</string>
     <string name="complementary_magenta">Magenta</string>
     <string name="theme_highlighter">Highlighter</string>
+    <string name="theme_pastel_rose">Baby pink</string>
+    <string name="theme_pastel_bubblegum">Bubblegum</string>
+    <string name="theme_pastel_sakura">Sakura</string>
+    <string name="theme_pastel_cotton_candy">Cotton candy</string>
+    <string name="theme_pastel_lavender">Lavender</string>
+    <string name="theme_pastel_lilac">Lilac</string>
+    <string name="theme_pastel_peach">Peach</string>
+    <string name="theme_pastel_mint">Mint</string>
     <string name="theme_game_boy" translatable="false">Game Boy</string>
     <string name="theme_cyberpunk" translatable="false">Cyberpunk</string>
     <string name="theme_cyberpunk_night">Cyberpunk night</string>

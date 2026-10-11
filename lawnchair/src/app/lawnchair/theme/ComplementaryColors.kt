@@ -70,6 +70,21 @@ object ComplementaryColors {
         Pair(R.string.theme_akira, accent = 0xFFF6F1E7.toInt(), background = 0xFFC8102E.toInt()),
     )
 
+    /**
+     * Soft looks: a pastel ground with a deep shade of the same family as the text, all well above
+     * 4.5 of contrast. In the dark mode the pair swaps and the pastel becomes the text.
+     */
+    val pastels: List<Pair> = listOf(
+        Pair(R.string.theme_pastel_rose, accent = 0xFF6B1F45.toInt(), background = 0xFFF8C8DC.toInt()),
+        Pair(R.string.theme_pastel_bubblegum, accent = 0xFF4A0E2E.toInt(), background = 0xFFFF9FCB.toInt()),
+        Pair(R.string.theme_pastel_sakura, accent = 0xFF8A2D4F.toInt(), background = 0xFFFBE0E6.toInt()),
+        Pair(R.string.theme_pastel_cotton_candy, accent = 0xFF2B3A78.toInt(), background = 0xFFFFC8E8.toInt()),
+        Pair(R.string.theme_pastel_lavender, accent = 0xFF3B2266.toInt(), background = 0xFFD9C8F0.toInt()),
+        Pair(R.string.theme_pastel_lilac, accent = 0xFF5B2A73.toInt(), background = 0xFFE6D3F2.toInt()),
+        Pair(R.string.theme_pastel_peach, accent = 0xFF6B2E14.toInt(), background = 0xFFFFD3B8.toInt()),
+        Pair(R.string.theme_pastel_mint, accent = 0xFF1E4D3A.toInt(), background = 0xFFC4EBD9.toInt()),
+    )
+
     /** Every hue of the wheel as the accent, with its complement as the background. */
     val pairs: List<Pair> = wheel.indices.map { pairOf(it) }
 

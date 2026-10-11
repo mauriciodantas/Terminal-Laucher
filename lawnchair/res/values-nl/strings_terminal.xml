@@ -328,6 +328,14 @@
     <string name="complementary_purple">Paars</string>
     <string name="complementary_magenta">Magenta</string>
     <string name="theme_highlighter">Markeerstift</string>
+    <string name="theme_pastel_rose">Babyroze</string>
+    <string name="theme_pastel_bubblegum">Kauwgom</string>
+    <string name="theme_pastel_sakura">Sakura</string>
+    <string name="theme_pastel_cotton_candy">Suikerspin</string>
+    <string name="theme_pastel_lavender">Lavendel</string>
+    <string name="theme_pastel_lilac">Lila</string>
+    <string name="theme_pastel_peach">Perzik</string>
+    <string name="theme_pastel_mint">Munt</string>
     <string name="theme_cyberpunk_night">Cyberpunk nacht</string>
     <string name="launcher_bg_default">Standaard (terminalzwart)</string>
     <string name="launcher_bg_color_label">Achtergrondkleur</string>

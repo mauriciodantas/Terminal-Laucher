@@ -328,6 +328,14 @@
     <string name="complementary_purple">Roxo</string>
     <string name="complementary_magenta">Magenta</string>
     <string name="theme_highlighter">Marca-texto</string>
+    <string name="theme_pastel_rose">Rosa bebê</string>
+    <string name="theme_pastel_bubblegum">Chiclete</string>
+    <string name="theme_pastel_sakura">Sakura</string>
+    <string name="theme_pastel_cotton_candy">Algodão-doce</string>
+    <string name="theme_pastel_lavender">Lavanda</string>
+    <string name="theme_pastel_lilac">Lilás</string>
+    <string name="theme_pastel_peach">Pêssego</string>
+    <string name="theme_pastel_mint">Menta</string>
     <string name="theme_cyberpunk_night">Cyberpunk noturno</string>
     <string name="launcher_bg_default">Padrão (preto do terminal)</string>
     <string name="launcher_bg_color_label">Cor de fundo</string>

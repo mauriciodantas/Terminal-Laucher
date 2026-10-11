@@ -328,6 +328,14 @@
     <string name="complementary_purple">紫色</string>
     <string name="complementary_magenta">品红色</string>
     <string name="theme_highlighter">荧光笔</string>
+    <string name="theme_pastel_rose">婴儿粉</string>
+    <string name="theme_pastel_bubblegum">泡泡糖</string>
+    <string name="theme_pastel_sakura">樱花</string>
+    <string name="theme_pastel_cotton_candy">棉花糖</string>
+    <string name="theme_pastel_lavender">薰衣草</string>
+    <string name="theme_pastel_lilac">丁香紫</string>
+    <string name="theme_pastel_peach">蜜桃</string>
+    <string name="theme_pastel_mint">薄荷</string>
     <string name="theme_cyberpunk_night">赛博朋克之夜</string>
     <string name="launcher_bg_default">默认（终端黑）</string>
     <string name="launcher_bg_color_label">背景色</string>

@@ -328,6 +328,14 @@
     <string name="complementary_purple">紫色</string>
     <string name="complementary_magenta">洋紅色</string>
     <string name="theme_highlighter">螢光筆</string>
+    <string name="theme_pastel_rose">嬰兒粉</string>
+    <string name="theme_pastel_bubblegum">泡泡糖</string>
+    <string name="theme_pastel_sakura">櫻花</string>
+    <string name="theme_pastel_cotton_candy">棉花糖</string>
+    <string name="theme_pastel_lavender">薰衣草</string>
+    <string name="theme_pastel_lilac">丁香紫</string>
+    <string name="theme_pastel_peach">蜜桃</string>
+    <string name="theme_pastel_mint">薄荷</string>
     <string name="theme_cyberpunk_night">賽博龐克之夜</string>
     <string name="launcher_bg_default">預設（終端機黑）</string>
     <string name="launcher_bg_color_label">背景色</string>

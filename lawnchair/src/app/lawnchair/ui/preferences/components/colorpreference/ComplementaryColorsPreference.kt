@@ -37,7 +37,7 @@ import app.lawnchair.ui.preferences.components.layout.PreferenceTemplate
 import com.android.launcher3.R
 
 /**
- * The ready-made looks, then the twelve hues of the color wheel, each shown as its accent over the
+ * The ready-made looks, the pastel ones, then the twelve hues of the color wheel, each shown as its accent over the
  * complement it brings along. Tapping one sets the accent and the background together.
  */
 @Composable
@@ -78,7 +78,7 @@ fun ComplementaryColorsPreference(modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             WheelChip(onClick = { wheelOpen = true })
-            (ComplementaryColors.themes + ComplementaryColors.pairs).forEach { pair ->
+            (ComplementaryColors.themes + ComplementaryColors.pastels + ComplementaryColors.pairs).forEach { pair ->
                 val selected = currentAccent == pair.accent && currentBackground == pair.background
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,

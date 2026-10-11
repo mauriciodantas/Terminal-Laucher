@@ -328,6 +328,14 @@
     <string name="complementary_purple">Porpora</string>
     <string name="complementary_magenta">Magenta</string>
     <string name="theme_highlighter">Evidenziatore</string>
+    <string name="theme_pastel_rose">Rosa confetto</string>
+    <string name="theme_pastel_bubblegum">Gomma da masticare</string>
+    <string name="theme_pastel_sakura">Sakura</string>
+    <string name="theme_pastel_cotton_candy">Zucchero filato</string>
+    <string name="theme_pastel_lavender">Lavanda</string>
+    <string name="theme_pastel_lilac">Lilla</string>
+    <string name="theme_pastel_peach">Pesca</string>
+    <string name="theme_pastel_mint">Menta</string>
     <string name="theme_cyberpunk_night">Cyberpunk notte</string>
     <string name="launcher_bg_default">Predefinito (nero del terminale)</string>
     <string name="launcher_bg_color_label">Colore di sfondo</string>

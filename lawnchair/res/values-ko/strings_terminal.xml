@@ -328,6 +328,14 @@
     <string name="complementary_purple">보라색</string>
     <string name="complementary_magenta">마젠타</string>
     <string name="theme_highlighter">형광펜</string>
+    <string name="theme_pastel_rose">베이비 핑크</string>
+    <string name="theme_pastel_bubblegum">풍선껌</string>
+    <string name="theme_pastel_sakura">벚꽃</string>
+    <string name="theme_pastel_cotton_candy">솜사탕</string>
+    <string name="theme_pastel_lavender">라벤더</string>
+    <string name="theme_pastel_lilac">라일락</string>
+    <string name="theme_pastel_peach">복숭아</string>
+    <string name="theme_pastel_mint">민트</string>
     <string name="theme_cyberpunk_night">사이버펑크 나이트</string>
     <string name="launcher_bg_default">기본값 (터미널 검정)</string>
     <string name="launcher_bg_color_label">배경 색상</string>

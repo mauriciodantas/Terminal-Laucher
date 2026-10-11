@@ -328,6 +328,14 @@
     <string name="complementary_purple">紫</string>
     <string name="complementary_magenta">マゼンタ</string>
     <string name="theme_highlighter">蛍光ペン</string>
+    <string name="theme_pastel_rose">ベビーピンク</string>
+    <string name="theme_pastel_bubblegum">バブルガム</string>
+    <string name="theme_pastel_sakura">桜</string>
+    <string name="theme_pastel_cotton_candy">綿あめ</string>
+    <string name="theme_pastel_lavender">ラベンダー</string>
+    <string name="theme_pastel_lilac">ライラック</string>
+    <string name="theme_pastel_peach">ピーチ</string>
+    <string name="theme_pastel_mint">ミント</string>
     <string name="theme_cyberpunk_night">サイバーパンク・ナイト</string>
     <string name="launcher_bg_default">デフォルト (ターミナルの黒)</string>
     <string name="launcher_bg_color_label">背景色</string>

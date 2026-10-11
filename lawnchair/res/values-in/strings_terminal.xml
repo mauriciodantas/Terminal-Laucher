@@ -328,6 +328,14 @@
     <string name="complementary_purple">Ungu</string>
     <string name="complementary_magenta">Magenta</string>
     <string name="theme_highlighter">Stabilo</string>
+    <string name="theme_pastel_rose">Merah muda bayi</string>
+    <string name="theme_pastel_bubblegum">Permen karet</string>
+    <string name="theme_pastel_sakura">Sakura</string>
+    <string name="theme_pastel_cotton_candy">Gulali</string>
+    <string name="theme_pastel_lavender">Lavender</string>
+    <string name="theme_pastel_lilac">Ungu muda</string>
+    <string name="theme_pastel_peach">Persik</string>
+    <string name="theme_pastel_mint">Mint</string>
     <string name="theme_cyberpunk_night">Cyberpunk malam</string>
     <string name="launcher_bg_default">Default (hitam terminal)</string>
     <string name="launcher_bg_color_label">Warna latar belakang</string>

@@ -328,6 +328,14 @@
     <string name="complementary_purple">أرجواني</string>
     <string name="complementary_magenta">أرجواني فاتح</string>
     <string name="theme_highlighter">قلم تحديد</string>
+    <string name="theme_pastel_rose">وردي فاتح</string>
+    <string name="theme_pastel_bubblegum">علكة</string>
+    <string name="theme_pastel_sakura">ساكورا</string>
+    <string name="theme_pastel_cotton_candy">غزل البنات</string>
+    <string name="theme_pastel_lavender">خزامى</string>
+    <string name="theme_pastel_lilac">ليلكي</string>
+    <string name="theme_pastel_peach">خوخي</string>
+    <string name="theme_pastel_mint">نعناعي</string>
     <string name="theme_cyberpunk_night">سايبربانك ليلي</string>
     <string name="launcher_bg_default">تلقائي (أسود الطرفية)</string>
     <string name="launcher_bg_color_label">لون الخلفية</string>

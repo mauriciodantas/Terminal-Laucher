@@ -328,6 +328,14 @@
     <string name="complementary_purple">Pourpre</string>
     <string name="complementary_magenta">Magenta</string>
     <string name="theme_highlighter">Surligneur</string>
+    <string name="theme_pastel_rose">Rose bébé</string>
+    <string name="theme_pastel_bubblegum">Chewing-gum</string>
+    <string name="theme_pastel_sakura">Sakura</string>
+    <string name="theme_pastel_cotton_candy">Barbe à papa</string>
+    <string name="theme_pastel_lavender">Lavande</string>
+    <string name="theme_pastel_lilac">Lilas</string>
+    <string name="theme_pastel_peach">Pêche</string>
+    <string name="theme_pastel_mint">Menthe</string>
     <string name="theme_cyberpunk_night">Cyberpunk nuit</string>
     <string name="launcher_bg_default">Par défaut (noir du terminal)</string>
     <string name="launcher_bg_color_label">Couleur de fond</string>

@@ -328,6 +328,14 @@
     <string name="complementary_purple">Пурпурный</string>
     <string name="complementary_magenta">Маджента</string>
     <string name="theme_highlighter">Маркер</string>
+    <string name="theme_pastel_rose">Нежно-розовый</string>
+    <string name="theme_pastel_bubblegum">Жвачка</string>
+    <string name="theme_pastel_sakura">Сакура</string>
+    <string name="theme_pastel_cotton_candy">Сахарная вата</string>
+    <string name="theme_pastel_lavender">Лаванда</string>
+    <string name="theme_pastel_lilac">Сирень</string>
+    <string name="theme_pastel_peach">Персик</string>
+    <string name="theme_pastel_mint">Мята</string>
     <string name="theme_cyberpunk_night">Киберпанк ночью</string>
     <string name="launcher_bg_default">По умолчанию (чёрный терминала)</string>
     <string name="launcher_bg_color_label">Цвет фона</string>

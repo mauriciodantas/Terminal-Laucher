@@ -328,6 +328,14 @@
     <string name="complementary_purple">Mor</string>
     <string name="complementary_magenta">Eflatun</string>
     <string name="theme_highlighter">Fosforlu kalem</string>
+    <string name="theme_pastel_rose">Bebek pembesi</string>
+    <string name="theme_pastel_bubblegum">Sakız</string>
+    <string name="theme_pastel_sakura">Sakura</string>
+    <string name="theme_pastel_cotton_candy">Pamuk şeker</string>
+    <string name="theme_pastel_lavender">Lavanta</string>
+    <string name="theme_pastel_lilac">Leylak</string>
+    <string name="theme_pastel_peach">Şeftali</string>
+    <string name="theme_pastel_mint">Nane</string>
     <string name="theme_cyberpunk_night">Cyberpunk gece</string>
     <string name="launcher_bg_default">Varsayılan (terminal siyahı)</string>
     <string name="launcher_bg_color_label">Arka plan rengi</string>

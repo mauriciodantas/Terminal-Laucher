@@ -328,6 +328,14 @@
     <string name="complementary_purple">जामुनी</string>
     <string name="complementary_magenta">मैजेंटा</string>
     <string name="theme_highlighter">हाइलाइटर</string>
+    <string name="theme_pastel_rose">बेबी पिंक</string>
+    <string name="theme_pastel_bubblegum">बबलगम</string>
+    <string name="theme_pastel_sakura">साकुरा</string>
+    <string name="theme_pastel_cotton_candy">कॉटन कैंडी</string>
+    <string name="theme_pastel_lavender">लैवेंडर</string>
+    <string name="theme_pastel_lilac">लाइलैक</string>
+    <string name="theme_pastel_peach">आड़ू</string>
+    <string name="theme_pastel_mint">पुदीना</string>
     <string name="theme_cyberpunk_night">साइबरपंक रात</string>
     <string name="launcher_bg_default">डिफ़ॉल्ट (टर्मिनल का काला)</string>
     <string name="launcher_bg_color_label">बैकग्राउंड रंग</string>
