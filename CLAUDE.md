@@ -9,7 +9,7 @@ Lawnchair 16 is an Android home launcher built on AOSP Launcher3 from Android 16
 ## Setup
 
 - Run `git submodule update --init` first. `platform_frameworks_libs_systemui` is a submodule on the `16-dev` branch, and `settings.gradle` includes its `iconloaderlib`, `searchuilib`, `animationlib` and `msdllib` modules. The build fails without it.
-- JDK 21 (CI uses Zulu 21). `build.gradle` pins compileSdk 37 and buildTools 37.0.0.
+- JDK 21. `build.gradle` pins compileSdk 37 and buildTools 37.0.0.
 
 ## Commands
 
@@ -20,7 +20,7 @@ Build variants are `flavor x recents x channel`. The flavor dimensions are `lawn
 ./gradlew assembleLawnWithQuickstepPlayRelease
 ```
 
-Lint and formatting (CI runs `spotlessCheck` on every PR):
+Lint and formatting:
 
 ```
 ./gradlew spotlessCheck
@@ -64,7 +64,7 @@ When the user asks for a "release", they always mean: build a new version and pu
 
 ## Conventions
 
-- Branch names end in `-dev`. CI (`.github/workflows/ci.yml`) runs on pushes to `*-dev` branches and on PRs. The nightly release is published from `16-dev` pushes.
+- Branch names end in `-dev`. There are no GitHub Actions; builds and releases run locally (`release.sh`).
 - Commit messages in this repo are written in Portuguese and prefixed with the feature area, for example `Barra de comando: ...` or `Botão [MIC] na barra da tela inicial: ...`. Follow that pattern for the same areas.
 - Kotlin is formatted by Spotless with ktlint + Compose rules, and only `lawnchair/src/**/*.kt` is in its target. Java in `src/` and `quickstep/` is formatted with google-java-format AOSP style. Do not run Spotless against `compatLib/` (the Spotless config comments out that path intentionally).
 - `.editorconfig` sets 4-space indentation, and `ktlint` allows trailing commas.
