@@ -66,8 +66,7 @@ object CommandScheduler {
         }
     }
 
-    private fun exactAllowed(context: Context): Boolean =
-        Build.VERSION.SDK_INT < Build.VERSION_CODES.S || alarms(context)?.canScheduleExactAlarms() == true
+    private fun exactAllowed(context: Context): Boolean = Build.VERSION.SDK_INT < Build.VERSION_CODES.S || alarms(context)?.canScheduleExactAlarms() == true
 
     /**
      * The screen that grants exact alarms, when a job at a time was just saved without them:
