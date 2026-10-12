@@ -697,6 +697,7 @@
     <string name="cmd_notify_channel">Barra de comando</string>
     <string name="cmd_notify_reminder">Lembrete</string>
     <string name="cmd_notify_failed">Um comando agendado não pôde rodar</string>
+    <string name="cmd_notify_done">Comando agendado executado</string>
     <string name="cmd_notify_tap_to_run">Toque para executar</string>
     <string name="cmd_selection_label">Terminal</string>
     <string name="cmd_tile_label">Barra de comando</string>

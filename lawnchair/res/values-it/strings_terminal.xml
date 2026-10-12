@@ -697,6 +697,7 @@
     <string name="cmd_notify_channel">Barra dei comandi</string>
     <string name="cmd_notify_reminder">Promemoria</string>
     <string name="cmd_notify_failed">Un comando programmato non è stato eseguito</string>
+    <string name="cmd_notify_done">Comando programmato eseguito</string>
     <string name="cmd_notify_tap_to_run">Tocca per eseguire</string>
     <string name="cmd_selection_label">Terminal</string>
     <string name="cmd_tile_label">Barra dei comandi</string>

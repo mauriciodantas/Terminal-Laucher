@@ -697,6 +697,7 @@
     <string name="cmd_notify_channel">Bilah perintah</string>
     <string name="cmd_notify_reminder">Pengingat</string>
     <string name="cmd_notify_failed">Perintah terjadwal tidak dapat dijalankan</string>
+    <string name="cmd_notify_done">Perintah terjadwal dijalankan</string>
     <string name="cmd_notify_tap_to_run">Ketuk untuk menjalankan</string>
     <string name="cmd_selection_label">Terminal</string>
     <string name="cmd_tile_label">Bilah perintah</string>

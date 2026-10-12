@@ -697,6 +697,7 @@
     <string name="cmd_notify_channel">명령 바</string>
     <string name="cmd_notify_reminder">알림</string>
     <string name="cmd_notify_failed">예약된 명령을 실행하지 못했습니다</string>
+    <string name="cmd_notify_done">예약된 명령을 실행했습니다</string>
     <string name="cmd_notify_tap_to_run">탭하여 실행</string>
     <string name="cmd_selection_label">Terminal</string>
     <string name="cmd_tile_label">명령 바</string>

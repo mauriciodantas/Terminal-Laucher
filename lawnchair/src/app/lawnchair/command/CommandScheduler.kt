@@ -28,7 +28,8 @@ import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Runs the jobs of the command bar later: reminders become notifications, commands scheduled
- * with "em 30m: ..." run at their time and "quando carregar: ..." rules run on each event.
+ * with "em 30m: ..." run at their time and "quando carregar: ..." rules run on each event, each
+ * run told by a notification.
  * A command that only works with the bar in front (opening an app, a call) is not started from
  * the background, which Android blocks: it comes as a notification that runs it on a tap.
  */
@@ -147,7 +148,9 @@ object CommandScheduler {
         when {
             action == null -> notify(app, id, app.getString(R.string.cmd_notify_failed), line, null)
 
-            CommandExecutor.runsInBackground(app, action) -> if (!CommandExecutor.execute(app, action)) {
+            CommandExecutor.runsInBackground(app, action) -> if (CommandExecutor.execute(app, action)) {
+                notify(app, id, app.getString(R.string.cmd_notify_done), line, null, NotificationCompat.CATEGORY_STATUS)
+            } else {
                 notify(app, id, app.getString(R.string.cmd_notify_failed), line, null)
             }
 
@@ -156,7 +159,14 @@ object CommandScheduler {
     }
 
     /** [run] is a command line that a tap on the notification runs in the command bar. */
-    private fun notify(context: Context, id: Long, title: String, text: String, run: String?) {
+    private fun notify(
+        context: Context,
+        id: Long,
+        title: String,
+        text: String,
+        run: String?,
+        category: String = if (run == null) NotificationCompat.CATEGORY_REMINDER else NotificationCompat.CATEGORY_EVENT,
+    ) {
         val manager = context.getSystemService(NotificationManager::class.java) ?: return
         manager.createNotificationChannel(
             NotificationChannel(CHANNEL, context.getString(R.string.cmd_notify_channel), NotificationManager.IMPORTANCE_HIGH),
@@ -172,7 +182,7 @@ object CommandScheduler {
             .setContentTitle(title)
             .setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
-            .setCategory(if (run == null) NotificationCompat.CATEGORY_REMINDER else NotificationCompat.CATEGORY_EVENT)
+            .setCategory(category)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .setContentIntent(tap)

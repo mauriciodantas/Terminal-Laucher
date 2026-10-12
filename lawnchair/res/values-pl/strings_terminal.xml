@@ -697,6 +697,7 @@
     <string name="cmd_notify_channel">Pasek poleceń</string>
     <string name="cmd_notify_reminder">Przypomnienie</string>
     <string name="cmd_notify_failed">Nie udało się wykonać zaplanowanego polecenia</string>
+    <string name="cmd_notify_done">Wykonano zaplanowane polecenie</string>
     <string name="cmd_notify_tap_to_run">Dotknij, aby wykonać</string>
     <string name="cmd_selection_label">Terminal</string>
     <string name="cmd_tile_label">Pasek poleceń</string>

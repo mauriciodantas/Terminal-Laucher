@@ -697,6 +697,7 @@
     <string name="cmd_notify_channel">Barre de commande</string>
     <string name="cmd_notify_reminder">Rappel</string>
     <string name="cmd_notify_failed">Une commande planifiée n\'a pas pu s\'exécuter</string>
+    <string name="cmd_notify_done">Commande planifiée exécutée</string>
     <string name="cmd_notify_tap_to_run">Touchez pour exécuter</string>
     <string name="cmd_selection_label">Terminal</string>
     <string name="cmd_tile_label">Barre de commande</string>

@@ -697,6 +697,7 @@
     <string name="cmd_notify_channel">Barra de comandos</string>
     <string name="cmd_notify_reminder">Recordatorio</string>
     <string name="cmd_notify_failed">Un comando programado no pudo ejecutarse</string>
+    <string name="cmd_notify_done">Comando programado ejecutado</string>
     <string name="cmd_notify_tap_to_run">Toca para ejecutar</string>
     <string name="cmd_selection_label">Terminal</string>
     <string name="cmd_tile_label">Barra de comandos</string>

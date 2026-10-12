@@ -697,6 +697,7 @@
     <string name="cmd_notify_channel">Komut çubuğu</string>
     <string name="cmd_notify_reminder">Hatırlatıcı</string>
     <string name="cmd_notify_failed">Planlanan bir komut çalıştırılamadı</string>
+    <string name="cmd_notify_done">Zamanlanmış komut çalıştırıldı</string>
     <string name="cmd_notify_tap_to_run">Çalıştırmak için dokunun</string>
     <string name="cmd_selection_label">Terminal</string>
     <string name="cmd_tile_label">Komut çubuğu</string>

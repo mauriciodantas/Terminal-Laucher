@@ -697,6 +697,7 @@
     <string name="cmd_notify_channel">指令列</string>
     <string name="cmd_notify_reminder">提醒</string>
     <string name="cmd_notify_failed">無法執行已排程的指令</string>
+    <string name="cmd_notify_done">已執行排定的指令</string>
     <string name="cmd_notify_tap_to_run">輕觸即可執行</string>
     <string name="cmd_selection_label">Terminal</string>
     <string name="cmd_tile_label">指令列</string>

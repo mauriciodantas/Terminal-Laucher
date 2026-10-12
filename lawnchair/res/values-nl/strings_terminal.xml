@@ -697,6 +697,7 @@
     <string name="cmd_notify_channel">Opdrachtbalk</string>
     <string name="cmd_notify_reminder">Herinnering</string>
     <string name="cmd_notify_failed">Een geplande opdracht kon niet worden uitgevoerd</string>
+    <string name="cmd_notify_done">Geplande opdracht uitgevoerd</string>
     <string name="cmd_notify_tap_to_run">Tik om uit te voeren</string>
     <string name="cmd_selection_label">Terminal</string>
     <string name="cmd_tile_label">Opdrachtbalk</string>

@@ -697,6 +697,7 @@
     <string name="cmd_notify_channel">Командная строка</string>
     <string name="cmd_notify_reminder">Напоминание</string>
     <string name="cmd_notify_failed">Не удалось выполнить запланированную команду</string>
+    <string name="cmd_notify_done">Запланированная команда выполнена</string>
     <string name="cmd_notify_tap_to_run">Нажмите, чтобы выполнить</string>
     <string name="cmd_selection_label">Terminal</string>
     <string name="cmd_tile_label">Командная строка</string>

@@ -697,6 +697,7 @@
     <string name="cmd_notify_channel">コマンドバー</string>
     <string name="cmd_notify_reminder">リマインダー</string>
     <string name="cmd_notify_failed">予約したコマンドを実行できませんでした</string>
+    <string name="cmd_notify_done">予約したコマンドを実行しました</string>
     <string name="cmd_notify_tap_to_run">タップして実行</string>
     <string name="cmd_selection_label">Terminal</string>
     <string name="cmd_tile_label">コマンドバー</string>

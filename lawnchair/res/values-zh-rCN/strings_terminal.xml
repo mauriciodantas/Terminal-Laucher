@@ -697,6 +697,7 @@
     <string name="cmd_notify_channel">命令栏</string>
     <string name="cmd_notify_reminder">提醒</string>
     <string name="cmd_notify_failed">无法运行计划的命令</string>
+    <string name="cmd_notify_done">已运行计划的命令</string>
     <string name="cmd_notify_tap_to_run">点按即可运行</string>
     <string name="cmd_selection_label">Terminal</string>
     <string name="cmd_tile_label">命令栏</string>

@@ -697,6 +697,7 @@
     <string name="cmd_notify_channel">कमांड बार</string>
     <string name="cmd_notify_reminder">रिमाइंडर</string>
     <string name="cmd_notify_failed">एक निर्धारित कमांड नहीं चल सका</string>
+    <string name="cmd_notify_done">शेड्यूल किया गया कमांड चला</string>
     <string name="cmd_notify_tap_to_run">चलाने के लिए टैप करें</string>
     <string name="cmd_selection_label">Terminal</string>
     <string name="cmd_tile_label">कमांड बार</string>
