@@ -7,11 +7,16 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.location.LocationManager
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.net.wifi.WifiManager
 import android.os.BatteryManager
+import android.os.Build
 import android.os.Environment
 import android.os.StatFs
 import android.os.SystemClock
 import android.provider.CalendarContract
+import android.telephony.TelephonyManager
 import java.net.Inet4Address
 import java.net.NetworkInterface
 import java.util.Locale
@@ -43,6 +48,7 @@ object CommandSources {
             info = snapshot(context),
             taskApp = TaskApp.label(context),
             ai = AiStore.load(context)?.label,
+            network = network(context),
             theme = runCatching { ThemeStore.current(context) }.getOrNull(),
             themes = ThemeStore.load(context),
             themePresets = ThemeStore.presets(context),
@@ -122,6 +128,77 @@ object CommandSources {
             .filter { it.isUp && !it.isLoopback }
             .flatMap { nic -> nic.inetAddresses.toList().filterIsInstance<Inet4Address>().map { "${nic.name} ${it.hostAddress}" } }
     }.getOrDefault(emptyList())
+
+    /**
+     * The connection in use. The Wi-Fi name needs precise location, which the app does not ask for,
+     * so on recent Android it is usually left out; the rest needs no permission the user grants.
+     */
+    @Suppress("DEPRECATION")
+    fun network(context: Context): NetworkSnapshot? = runCatching {
+        val cm = context.getSystemService(ConnectivityManager::class.java) ?: return null
+        val active = cm.activeNetwork ?: return NetworkSnapshot(NetKind.NONE)
+        val caps = cm.getNetworkCapabilities(active) ?: return NetworkSnapshot(NetKind.NONE)
+        val link = cm.getLinkProperties(active)
+        val kind = when {
+            caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> NetKind.WIFI
+            caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> NetKind.CELLULAR
+            caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> NetKind.ETHERNET
+            else -> NetKind.NONE
+        }
+        // Behind a VPN the active network is the VPN itself; the link underneath tells the kind.
+        val vpn = caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
+        val under = if (vpn || kind == NetKind.NONE) {
+            cm.allNetworks.mapNotNull { cm.getNetworkCapabilities(it) }.firstOrNull { !it.hasTransport(NetworkCapabilities.TRANSPORT_VPN) && it.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) }
+        } else {
+            null
+        }
+        val realKind = if (kind != NetKind.NONE) {
+            kind
+        } else {
+            when {
+                under?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true -> NetKind.WIFI
+                under?.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) == true -> NetKind.CELLULAR
+                under?.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) == true -> NetKind.ETHERNET
+                else -> NetKind.NONE
+            }
+        }
+        val wifi = if (realKind == NetKind.WIFI) context.applicationContext.getSystemService(WifiManager::class.java)?.connectionInfo else null
+        val ssid = wifi?.ssid?.trim('"')?.takeIf { it.isNotBlank() && it != "<unknown ssid>" }
+        val addresses = link?.linkAddresses.orEmpty().map { it.address }
+            .filter { !it.isLoopbackAddress && !it.isLinkLocalAddress }
+            .sortedBy { if (it is Inet4Address) 0 else 1 }
+            .mapNotNull { it.hostAddress?.substringBefore('%') }
+        val gateway = link?.routes.orEmpty().firstOrNull { it.isDefaultRoute && it.gateway != null && !it.gateway!!.isAnyLocalAddress }?.gateway?.hostAddress
+        NetworkSnapshot(
+            kind = realKind,
+            internet = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED),
+            metered = !caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED),
+            vpn = vpn,
+            ssid = ssid,
+            signalDbm = wifi?.rssi?.takeIf { it in -126..0 },
+            frequencyMhz = wifi?.frequency?.takeIf { it > 0 },
+            wifiStandard = if (wifi != null && Build.VERSION.SDK_INT >= 30) {
+                when (wifi.wifiStandard) {
+                    4 -> 4
+                    5 -> 5
+                    6 -> 6
+                    8 -> 7
+                    else -> null
+                }
+            } else {
+                null
+            },
+            linkMbps = wifi?.linkSpeed?.takeIf { it > 0 },
+            carrier = if (realKind == NetKind.CELLULAR) context.getSystemService(TelephonyManager::class.java)?.networkOperatorName else null,
+            downKbps = caps.linkDownstreamBandwidthKbps.takeIf { it > 0 },
+            upKbps = caps.linkUpstreamBandwidthKbps.takeIf { it > 0 },
+            addresses = addresses,
+            gateway = gateway,
+            dns = link?.dnsServers.orEmpty().mapNotNull { it.hostAddress?.substringBefore('%') },
+            privateDns = if (Build.VERSION.SDK_INT >= 28 && link?.isPrivateDnsActive == true) link.privateDnsServerName ?: "auto" else null,
+            interfaceName = link?.interfaceName,
+        )
+    }.onFailure { android.util.Log.w("CommandSources", "network", it) }.getOrNull()
 
     /** Runs ping and gives its summary lines, or the error. */
     fun ping(host: String): String = runCatching {

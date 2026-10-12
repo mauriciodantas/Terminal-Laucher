@@ -157,6 +157,7 @@ object CommandEngine {
                 BuiltInCommand.STORAGE to R.string.cmd_usage_info,
                 BuiltInCommand.IP to R.string.cmd_usage_info,
                 BuiltInCommand.UPTIME to R.string.cmd_usage_info,
+                BuiltInCommand.NETWORK to R.string.cmd_usage_info,
                 BuiltInCommand.PING to R.string.cmd_usage_ping,
                 BuiltInCommand.AI to R.string.cmd_usage_ai,
             ).map { (command, usage) -> command.word to command.word + " " + Texts.get(usage) } +
@@ -397,6 +398,8 @@ object CommandEngine {
             BuiltInCommand.BATTERY, BuiltInCommand.STORAGE, BuiltInCommand.IP, BuiltInCommand.UPTIME -> MoreCommands.info(command, extras)
 
             BuiltInCommand.PING -> MoreCommands.ping(arg)
+
+            BuiltInCommand.NETWORK -> MoreCommands.network(extras)
 
             BuiltInCommand.AI -> MoreCommands.ai(arg, extras)
         }

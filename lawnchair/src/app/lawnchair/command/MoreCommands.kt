@@ -398,6 +398,81 @@ internal object MoreCommands {
         return listOfNotNull(days.takeIf { it > 0 }?.let { "${it}d" }, "${hours}h", "${mins}min").joinToString(" ")
     }
 
+    /**
+     * "rede": the connection in use, one fact a line, and Enter copies it. What the system does not
+     * give is left out; the Wi-Fi name says why when it is hidden.
+     */
+    fun network(extras: CommandExtras): Analysis {
+        val title = BuiltInCommand.NETWORK.word.uppercase()
+        val net = extras.network ?: return result(title, Texts.get(R.string.cmd_info_pending), Tone.IDLE, null)
+        if (net.kind == NetKind.NONE) return result(title, Texts.get(R.string.cmd_net_offline), Tone.WARN, null)
+        val text = networkText(net)
+        return result(title + " · " + kindName(net.kind), text, if (net.internet) Tone.OK else Tone.WARN, CommandAction.Copy(text))
+    }
+
+    private fun kindName(kind: NetKind): String = when (kind) {
+        NetKind.WIFI -> "WI-FI"
+        NetKind.CELLULAR -> Texts.get(R.string.cmd_net_cellular)
+        NetKind.ETHERNET -> "ETHERNET"
+        NetKind.NONE -> ""
+    }
+
+    /** The lines of "rede", in the order they matter: the state, the link, then the addresses. */
+    fun networkText(net: NetworkSnapshot): String = buildList {
+        add(
+            listOfNotNull(
+                Texts.get(if (net.internet) R.string.cmd_net_internet else R.string.cmd_net_no_internet),
+                Texts.get(R.string.cmd_net_metered).takeIf { net.metered },
+                "VPN".takeIf { net.vpn },
+            ).joinToString(" · "),
+        )
+        when (net.kind) {
+            NetKind.WIFI -> {
+                add("SSID " + (net.ssid ?: Texts.get(R.string.cmd_net_ssid_hidden)))
+                net.signalDbm?.let { add(Texts.get(R.string.cmd_net_signal, it, Texts.get(signalQuality(it)))) }
+                listOfNotNull(
+                    net.frequencyMhz?.let { band(it) },
+                    net.wifiStandard?.let { "Wi-Fi $it" },
+                    net.linkMbps?.takeIf { it > 0 }?.let { "$it Mbps" },
+                ).takeIf { it.isNotEmpty() }?.let { add(it.joinToString(" · ")) }
+            }
+
+            NetKind.CELLULAR -> net.carrier?.takeIf { it.isNotBlank() }?.let { add(Texts.get(R.string.cmd_net_carrier, it)) }
+
+            else -> {}
+        }
+        if (net.kind != NetKind.WIFI || net.linkMbps == null) {
+            // Without a link speed, the system's estimate is the best figure there is.
+            if (net.downKbps != null && net.upKbps != null && net.downKbps > 0) {
+                add(Texts.get(R.string.cmd_net_estimate, mbps(net.downKbps), mbps(net.upKbps)))
+            }
+        }
+        if (net.addresses.isNotEmpty()) add("IP " + net.addresses.joinToString(" · "))
+        net.gateway?.let { add("GATEWAY $it") }
+        if (net.dns.isNotEmpty() || net.privateDns != null) {
+            add("DNS " + (listOfNotNull(net.privateDns?.let { Texts.get(R.string.cmd_net_private_dns, it) }) + net.dns).joinToString(" · "))
+        }
+    }.joinToString("\n")
+
+    /** The band of a Wi-Fi channel at [mhz]. */
+    fun band(mhz: Int): String = when {
+        mhz in 2400..2500 -> "2.4 GHz"
+        mhz in 4900..5900 -> "5 GHz"
+        mhz in 5925..7125 -> "6 GHz"
+        mhz >= 57000 -> "60 GHz"
+        else -> "$mhz MHz"
+    }
+
+    /** How a Wi-Fi signal of [dbm] is read: -50 and up excellent, to -60 good, to -70 fair, below weak. */
+    fun signalQuality(dbm: Int): Int = when {
+        dbm >= -50 -> R.string.cmd_net_signal_excellent
+        dbm >= -60 -> R.string.cmd_net_signal_good
+        dbm >= -70 -> R.string.cmd_net_signal_fair
+        else -> R.string.cmd_net_signal_weak
+    }
+
+    private fun mbps(kbps: Int): String = CalcEvaluator.format(Math.round(kbps / 100.0) / 10.0)
+
     private val hostPattern = Regex("^[a-zA-Z0-9.:-]+$")
 
     fun ping(arg: String): Analysis {

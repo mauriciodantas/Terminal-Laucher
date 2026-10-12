@@ -33,6 +33,8 @@ data class CommandExtras(
     val taskApp: String? = null,
     /** "Claude · claude-opus-5-5" once an AI key is saved; null keeps "ia" locked. */
     val ai: String? = null,
+    /** The connection in use; null while it is not read yet. */
+    val network: NetworkSnapshot? = null,
     /** The theme on screen now, every element set; null when unknown. */
     val theme: ThemeSpec? = null,
     /** The themes the user saved, by name. */
@@ -69,6 +71,37 @@ data class SystemSnapshot(
     val storageTotal: Long,
     val addresses: List<String>,
     val uptimeMillis: Long,
+)
+
+/** How the phone is connected. */
+enum class NetKind { WIFI, CELLULAR, ETHERNET, NONE }
+
+/**
+ * The connection in use, for "rede". A field the system does not give (the Wi-Fi name needs precise
+ * location; a mobile network has no link speed) is null and left out of the text.
+ */
+data class NetworkSnapshot(
+    val kind: NetKind,
+    /** The system checked that this network reaches the internet. */
+    val internet: Boolean = false,
+    /** Charged by the data used (mobile data, a hotspot). */
+    val metered: Boolean = false,
+    val vpn: Boolean = false,
+    val ssid: String? = null,
+    val signalDbm: Int? = null,
+    val frequencyMhz: Int? = null,
+    /** 4, 5, 6 or 7 for Wi-Fi 4 to 7; null when unknown. */
+    val wifiStandard: Int? = null,
+    val linkMbps: Int? = null,
+    val carrier: String? = null,
+    /** The system's estimate of what the link can carry, in kbps. */
+    val downKbps: Int? = null,
+    val upKbps: Int? = null,
+    val addresses: List<String> = emptyList(),
+    val gateway: String? = null,
+    val dns: List<String> = emptyList(),
+    val privateDns: String? = null,
+    val interfaceName: String? = null,
 )
 
 /** A media key the command bar can press. */

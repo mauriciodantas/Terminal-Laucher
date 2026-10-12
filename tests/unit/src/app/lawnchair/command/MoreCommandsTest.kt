@@ -332,4 +332,57 @@ class MoreCommandsTest {
             ResourceTexts.install()
         }
     }
+
+    // ---- rede ----
+
+    private val wifi = NetworkSnapshot(
+        kind = NetKind.WIFI,
+        internet = true,
+        ssid = "Casa",
+        signalDbm = -55,
+        frequencyMhz = 5180,
+        wifiStandard = 6,
+        linkMbps = 866,
+        addresses = listOf("192.168.0.10", "2804:14c::1"),
+        gateway = "192.168.0.1",
+        dns = listOf("192.168.0.1"),
+        privateDns = "dns.google",
+    )
+
+    @Test fun networkShowsTheWifi() {
+        val a = run("rede", extras.copy(network = wifi))
+        assertEquals(Tone.OK, a.tone)
+        assertEquals("REDE · WI-FI", a.previewTitle)
+        assertEquals(
+            "internet ok\nSSID Casa\nsinal -55 dBm · bom\n5 GHz · Wi-Fi 6 · 866 Mbps\n" +
+                "IP 192.168.0.10 · 2804:14c::1\nGATEWAY 192.168.0.1\nDNS privado dns.google · 192.168.0.1",
+            a.preview,
+        )
+        // Enter copies what is shown.
+        assertEquals(CommandAction.Copy(a.preview), a.action)
+        // The English word and the short one work too.
+        assertEquals(a.preview, run("net", extras.copy(network = wifi)).preview)
+    }
+
+    @Test fun networkWithoutTheWifiNameOrInternet() {
+        val text = run("rede", extras.copy(network = wifi.copy(ssid = null, internet = false, metered = true, vpn = true))).preview
+        assertTrue(text.startsWith("sem internet · cobrada por uso · VPN\nSSID oculto"))
+        assertEquals(Tone.WARN, run("rede", extras.copy(network = wifi.copy(internet = false))).tone)
+    }
+
+    @Test fun networkOnMobileDataAndOffline() {
+        val cell = NetworkSnapshot(kind = NetKind.CELLULAR, internet = true, metered = true, carrier = "Vivo", downKbps = 45000, upKbps = 12000)
+        val a = run("rede", extras.copy(network = cell))
+        assertEquals("REDE · DADOS MÓVEIS", a.previewTitle)
+        assertEquals("internet ok · cobrada por uso\noperadora Vivo\nestimativa ↓ 45 ↑ 12 Mbps", a.preview)
+        assertEquals("SEM CONEXÃO", run("rede", extras.copy(network = NetworkSnapshot(NetKind.NONE))).preview)
+        assertNull(run("rede", extras.copy(network = NetworkSnapshot(NetKind.NONE))).action)
+        assertEquals("LENDO…", run("rede", extras.copy(network = null)).preview)
+    }
+
+    @Test fun wifiBandsAndSignal() {
+        assertEquals("2.4 GHz", MoreCommands.band(2437))
+        assertEquals("6 GHz", MoreCommands.band(6115))
+        assertEquals("fraco", app.lawnchair.util.Texts.get(MoreCommands.signalQuality(-80)))
+    }
 }

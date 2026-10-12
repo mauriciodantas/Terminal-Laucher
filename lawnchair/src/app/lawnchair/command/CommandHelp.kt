@@ -81,6 +81,7 @@ object CommandHelp {
             BuiltInCommand.IP -> R.string.cmd_help_ip
             BuiltInCommand.UPTIME -> R.string.cmd_help_uptime
             BuiltInCommand.PING -> R.string.cmd_help_ping
+            BuiltInCommand.NETWORK -> R.string.cmd_help_network
             BuiltInCommand.AI -> R.string.cmd_help_ai
         },
     )
