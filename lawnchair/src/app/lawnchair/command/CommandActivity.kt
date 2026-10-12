@@ -189,8 +189,10 @@ class CommandActivity : ComponentActivity() {
                 .putString(KEY_HISTORY, history.joinToString("\n")).apply()
         }
 
+        /** Forgets the typed history and the per-hour counts, which also feed the recent chips. */
         fun clearHistory(context: Context) {
             context.getSharedPreferences(STORE, Context.MODE_PRIVATE).edit().remove(KEY_HISTORY).apply()
+            StatsStore.clear(context)
         }
     }
 }
@@ -458,6 +460,7 @@ private fun CommandScreen(onClose: () -> Unit) {
 
     fun clearHistory() {
         history = emptyList()
+        usual = emptyList()
         historyIndex = -1
         CommandActivity.clearHistory(context)
     }
@@ -653,7 +656,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                     if (chips.isNotEmpty()) {
                         Row(Modifier.padding(top = 10.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                             Label(stringResource(R.string.command_chips_title), dim, 10.sp, Modifier.weight(1f))
-                            if (history.isNotEmpty()) {
+                            if (history.isNotEmpty() || usual.isNotEmpty()) {
                                 Box(
                                     Modifier
                                         .heightIn(min = 32.dp)

@@ -78,6 +78,7 @@ import app.lawnchair.command.CustomAction
 import app.lawnchair.command.CustomActionStore
 import app.lawnchair.command.CustomActions
 import app.lawnchair.command.ImportCommandsActivity
+import app.lawnchair.command.StatsStore
 import app.lawnchair.command.Tone
 import app.lawnchair.ui.preferences.components.controls.ClickablePreference
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
@@ -171,11 +172,13 @@ fun CommandActionsPreferences() {
 
     fun clearHistory() {
         val before = history
+        val stats = StatsStore.load(context)
         history = emptyList()
         CommandActivity.clearHistory(context)
         undoable(context.getString(R.string.cmd_pref_history_cleared)) {
             history = before
             CommandActivity.saveHistory(context, before)
+            StatsStore.save(context, stats)
         }
     }
 

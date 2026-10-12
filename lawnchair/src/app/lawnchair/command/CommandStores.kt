@@ -73,6 +73,10 @@ object StatsStore {
         prefs(context).edit().putString(KEY, CommandStats.encode(CommandStats.record(load(context), command, hour))).apply()
     }
 
+    fun save(context: Context, stats: Map<String, IntArray>) {
+        prefs(context).edit().putString(KEY, CommandStats.encode(stats)).apply()
+    }
+
     fun clear(context: Context) {
         prefs(context).edit().remove(KEY).apply()
     }
