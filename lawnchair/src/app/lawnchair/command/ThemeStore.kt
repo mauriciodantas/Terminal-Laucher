@@ -49,11 +49,13 @@ object ThemeStore {
     fun saveCurrent(context: Context, name: String) = keep(context, current(context).copy(name = name))
 
     /** The ready-made looks of Appearance, with their names in the app language. */
-    fun presets(context: Context): List<ThemeSpec> = (ComplementaryColors.themes + ComplementaryColors.pastels + ComplementaryColors.pairs).map {
+    fun presets(context: Context): List<ThemeSpec> = ComplementaryColors.all.map {
         ThemeSpec(
             name = context.getString(it.name),
             accent = ThemeColor.Custom(it.accent),
             background = ThemeColor.Custom(it.background),
+            // A pair brings no third color: the secondary text goes back to the dimmed accent, as in Appearance.
+            secondary = it.secondary?.let { color -> ThemeColor.Custom(color) } ?: ThemeColor.Default,
         )
     }
 
@@ -70,6 +72,7 @@ object ThemeStore {
         return ThemeSpec(
             accent = colorOf(p.accentColor.firstCached(p)),
             background = colorOf(p.launcherBackgroundColor.firstCached(p)),
+            secondary = colorOf(p.secondaryColor.firstCached(p)),
             outline = colorOf(p.strokeColorStyle.firstCached(p)),
             dock = colorOf(p.hotseatBackgroundColor.firstCached(p)),
             folder = colorOf(p.folderColor.firstCached(p)),
@@ -129,6 +132,7 @@ object ThemeStore {
         followSystem?.let { p.followSystemColorMode.update(p, it) }
         spec.background?.let { p.launcherBackgroundColor.update(p, optionOf(it)) }
         spec.accent?.let { p.accentColor.update(p, optionOf(it)) }
+        spec.secondary?.let { p.secondaryColor.update(p, optionOf(it)) }
         spec.dock?.let { p.hotseatBackgroundColor.update(p, optionOf(it)) }
         spec.folder?.let { p.folderColor.update(p, optionOf(it)) }
         spec.pixelClock?.let { p.terminalPixelClock.update(p, it) }
@@ -149,7 +153,7 @@ object ThemeStore {
     /** Every element of the theme back to how the app comes; the lock screen is left alone. */
     fun reset(context: Context) {
         val p = PreferenceManager2.getInstance(context)
-        listOf(p.launcherBackgroundColor, p.accentColor, p.hotseatBackgroundColor, p.folderColor).forEach { it.update(p, it.defaultValue) }
+        listOf(p.launcherBackgroundColor, p.accentColor, p.secondaryColor, p.hotseatBackgroundColor, p.folderColor).forEach { it.update(p, it.defaultValue) }
         listOf(p.followSystemColorMode, p.terminalPixelClock, p.terminalIconEffect, p.widgetEffect, p.crtEffect, p.showSystemWallpaper, p.backgroundColorAsWallpaper)
             .forEach { it.update(p, it.defaultValue) }
         listOf(p.widgetEffectIntensity, p.crtEffectIntensity, p.wallpaperDim).forEach { it.update(p, it.defaultValue) }

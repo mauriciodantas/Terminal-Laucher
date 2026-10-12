@@ -46,6 +46,8 @@ data class ThemeSpec(
     val name: String = "",
     val accent: ThemeColor? = null,
     val background: ThemeColor? = null,
+    /** Secondary text, hints and lines; [ThemeColor.Default] keeps the dimmed accent. */
+    val secondary: ThemeColor? = null,
     /** The outline of the search bar. */
     val outline: ThemeColor? = null,
     val dock: ThemeColor? = null,
@@ -71,6 +73,7 @@ data class ThemeSpec(
         name = other.name.ifEmpty { name },
         accent = other.accent ?: accent,
         background = other.background ?: background,
+        secondary = other.secondary ?: secondary,
         outline = other.outline ?: outline,
         dock = other.dock ?: dock,
         folder = other.folder ?: folder,
@@ -115,6 +118,7 @@ object ThemeSpecs {
         if (spec.name.isNotEmpty()) o.put("name", spec.name)
         spec.accent?.let { o.put("accent", it.encode()) }
         spec.background?.let { o.put("background", it.encode()) }
+        spec.secondary?.let { o.put("secondary", it.encode()) }
         spec.outline?.let { o.put("outline", it.encode()) }
         spec.dock?.let { o.put("dock", it.encode()) }
         spec.folder?.let { o.put("folder", it.encode()) }
@@ -157,6 +161,7 @@ object ThemeSpecs {
         name = cleanName(o.optString("name")),
         accent = color(o, "accent"),
         background = color(o, "background"),
+        secondary = color(o, "secondary"),
         outline = color(o, "outline"),
         dock = color(o, "dock"),
         folder = color(o, "folder"),
@@ -306,11 +311,19 @@ object ThemeSpecs {
         else -> null
     }
 
-    /** True when the theme, over [current], would leave text that cannot be read. */
-    fun unreadable(spec: ThemeSpec, current: ThemeSpec?): Boolean = contrastOf(spec, current)?.let { it < MIN_VISIBILITY } == true
+    /** The contrast between the secondary color and the background, as [contrastOf]; null when it keeps the dimmed accent. */
+    fun secondaryContrastOf(spec: ThemeSpec, current: ThemeSpec?): Double? {
+        val secondary = (spec.secondary ?: current?.secondary) as? ThemeColor.Custom ?: return null
+        val ground = fixed(spec.background ?: current?.background, DEFAULT_BACKGROUND) ?: return null
+        return contrast(secondary.argb, ground)
+    }
+
+    /** True when the theme, over [current], would leave text that cannot be read: the main text or the secondary one. */
+    fun unreadable(spec: ThemeSpec, current: ThemeSpec?): Boolean = listOfNotNull(contrastOf(spec, current), secondaryContrastOf(spec, current)).any { it < MIN_VISIBILITY }
 
     /** True when it reads, but not comfortably. */
-    fun weak(spec: ThemeSpec, current: ThemeSpec?): Boolean = contrastOf(spec, current)?.let { it >= MIN_VISIBILITY && it < COMFORTABLE_VISIBILITY } == true
+    fun weak(spec: ThemeSpec, current: ThemeSpec?): Boolean = !unreadable(spec, current) &&
+        listOfNotNull(contrastOf(spec, current), secondaryContrastOf(spec, current)).any { it < COMFORTABLE_VISIBILITY }
 
     private const val OPAQUE = 0xFF000000.toInt()
 }

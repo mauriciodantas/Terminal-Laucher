@@ -313,7 +313,7 @@
     <string name="appearance_follow_system_mode_now_light">Agora no claro. Inverte as duas cores quando o celular muda de modo</string>
     <string name="complementary_custom">Personalizada</string>
     <string name="complementary_wheel_title">Círculo cromático</string>
-    <string name="complementary_wheel_hint">Arraste um dos dois pontos: um é o destaque e o outro, na cor oposta, é o fundo. A barra ao lado ajusta a intensidade do fundo.</string>
+    <string name="complementary_wheel_hint">Arraste um ponto da roda: o destaque e a cor secundária giram juntos na harmonia escolhida (em Livre, cada um anda sozinho). A barra ajusta a intensidade do fundo.</string>
     <string name="complementary_apply">Aplicar</string>
     <string name="complementary_cancel">Cancelar</string>
     <string name="complementary_red">Vermelho</string>
@@ -329,6 +329,7 @@
     <string name="complementary_purple">Roxo</string>
     <string name="complementary_magenta">Magenta</string>
     <string name="theme_highlighter">Marca-texto</string>
+    <string name="theme_trio_deep_sea">Mar profundo</string>
     <string name="theme_pastel_rose">Rosa bebê</string>
     <string name="theme_pastel_bubblegum">Chiclete</string>
     <string name="theme_pastel_sakura">Sakura</string>
@@ -712,7 +713,7 @@
     <string name="cmd_help_call">Liga para um contato achado pelo começo de qualquer um dos nomes. nome? mostra o número e o e-mail.\n› ligar ana\n› ana?</string>
     <string name="cmd_help_route">Abre a rota até um lugar no app de mapas.\n› rota aeroporto\n› rota av paulista 1000</string>
     <string name="cmd_help_split">Abre dois apps lado a lado em tela dividida. Separe os dois com /.\n› dividir chrome / notas</string>
-    <string name="cmd_help_theme">inverter troca o destaque e o fundo, claro e escuro fixam o modo, sistema acompanha o modo do sistema e padrão volta tudo ao original. Cada elemento muda sozinho: destaque, fundo, contorno, dock e pasta recebem uma cor (#rrggbb ou padrão); fonte recebe uma fonte do Google Fonts ou do sistema; relógio, ícones, papel e pintar recebem on ou off; widgets e crt recebem on, off ou uma intensidade; escurecer recebe uma porcentagem. O nome de um tema aplica um tema salvo ou pronto; salvar guarda o que está na tela, compartilhar envia como arquivo .tthm e apagar remove um salvo. ia tema cria um novo.\n› tema escuro\n› tema destaque #ffb000\n› tema fonte Space Mono\n› tema crt 40%\n› tema salvar noite\n› tema compartilhar noite</string>
+    <string name="cmd_help_theme">inverter troca o destaque e o fundo, claro e escuro fixam o modo, sistema acompanha o modo do sistema e padrão volta tudo ao original. Cada elemento muda sozinho: destaque, fundo, secundária, contorno, dock e pasta recebem uma cor (#rrggbb ou padrão); fonte recebe uma fonte do Google Fonts ou do sistema; relógio, ícones, papel e pintar recebem on ou off; widgets e crt recebem on, off ou uma intensidade; escurecer recebe uma porcentagem. O nome de um tema aplica um tema salvo ou pronto; salvar guarda o que está na tela, compartilhar envia como arquivo .tthm e apagar remove um salvo. ia tema cria um novo.\n› tema escuro\n› tema destaque #ffb000\n› tema fonte Space Mono\n› tema crt 40%\n› tema salvar noite\n› tema compartilhar noite</string>
     <string name="cmd_help_timer">Inicia um timer no app de relógio, de até 7 dias.\n› timer 10m\n› timer 1h30\n› timer 90s</string>
     <string name="cmd_help_remind">Avisa em uma hora. Uma hora sozinha é a próxima vez que o relógio mostrar ela; em conta a partir de agora.\n› lembrar em 30m tirar o lixo\n› lembrar 18h ligar pra mãe\n› lembrar amanhã 9h reunião</string>
     <string name="cmd_help_wifi">Abre o painel de Wi-Fi do sistema: o Android não deixa apps ligarem ou desligarem direto.\n› wifi</string>
@@ -790,6 +791,21 @@
     <string name="cmd_theme_delete_desc">APAGAR UM TEMA SALVO</string>
     <string name="cmd_theme_el_accent">destaque</string>
     <string name="cmd_theme_el_background">fundo</string>
+    <string name="cmd_theme_el_secondary">secundária</string>
+    <string name="cmd_theme_el_secondary_desc">SECUNDÁRIA · DICAS, RÓTULOS E LINHAS</string>
+    <string name="appearance_color_secondary">Cor secundária</string>
+    <string name="appearance_color_secondary_default">Destaque atenuado</string>
+    <string name="color_conflict_secondary">Essa cor é quase igual à cor de fundo: dicas e rótulos ficariam ilegíveis. Escolha outra.</string>
+    <string name="complementary_harmony_mono">Uma cor</string>
+    <string name="complementary_harmony_analogous">Análoga</string>
+    <string name="complementary_harmony_split">Dividida</string>
+    <string name="complementary_harmony_free">Livre</string>
+    <string name="complementary_tint">Tom do fundo</string>
+    <string name="complementary_tint_neutral">Neutro</string>
+    <string name="complementary_tint_accent">Do destaque</string>
+    <string name="complementary_tint_opposite">Oposto</string>
+    <string name="complementary_triad">Tríade</string>
+    <string name="complementary_mode_pair">Complementar</string>
     <string name="cmd_theme_el_outline">contorno</string>
     <string name="cmd_theme_el_dock">dock</string>
     <string name="cmd_theme_el_folder">pasta</string>

@@ -58,6 +58,17 @@ class ThemeCommandTest {
         assertNull(run("tema fundo azulado").action)
     }
 
+    @Test fun secondaryColor() {
+        assertEquals(CommandAction.ThemeApply(ThemeSpec(secondary = ThemeColor.Custom(0xFFFF8800.toInt()))), run("tema secundária #ff8800").action)
+        assertEquals(CommandAction.ThemeApply(ThemeSpec(secondary = ThemeColor.Default)), run("theme secondary default").action)
+        // It is read over the background too.
+        assertNull(run("tema secundaria #050505").action)
+        assertTrue(ThemeSpecs.unreadable(ThemeSpec(secondary = ThemeColor.Custom(0xFF0A0A0A.toInt())), current))
+        // Over a new background, the secondary already chosen is checked as well.
+        assertTrue(ThemeSpecs.unreadable(ThemeSpec(background = ThemeColor.Custom(0xFFFF8800.toInt())), current.copy(secondary = ThemeColor.Custom(0xFFFF8000.toInt()))))
+        assertTrue(AiPrompts.system(AiMode.THEME, AiContext()).contains("\"secondary\""))
+    }
+
     @Test fun refusesTextThatCannotBeRead() {
         // Green text over a background of nearly the same green.
         val a = run("tema fundo #30f060")
@@ -115,7 +126,7 @@ class ThemeCommandTest {
     // ---- the file ----
 
     @Test fun fileRoundTrip() {
-        val full = current.copy(name = "Verde", font = ThemeFont.Google("Space Mono"), crtIntensity = 0.4f)
+        val full = current.copy(name = "Verde", font = ThemeFont.Google("Space Mono"), crtIntensity = 0.4f, secondary = ThemeColor.Custom(0xFF8844FF.toInt()))
         assertEquals(full, ThemeSpecs.decode(ThemeSpecs.encode(full)))
         assertEquals(night, ThemeSpecs.decode(ThemeSpecs.encode(night)))
         assertEquals("Verde.tthm", ThemeSpecs.fileName(full))

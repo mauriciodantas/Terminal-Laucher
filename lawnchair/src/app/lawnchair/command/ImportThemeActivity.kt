@@ -167,7 +167,7 @@ private fun ThemeSample(spec: ThemeSpec, current: ThemeSpec) {
             .padding(12.dp),
     ) {
         Text("> " + spec.name.ifBlank { "terminal" }.lowercase() + "_", color = Color(accent), fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodyLarge)
-        Text(listOf(BuiltInCommand.OPEN, BuiltInCommand.ALARM, BuiltInCommand.CALC, BuiltInCommand.THEME).joinToString(" · ") { it.word }, color = Color(accent).copy(alpha = 0.7f), fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodySmall)
+        Text(listOf(BuiltInCommand.OPEN, BuiltInCommand.ALARM, BuiltInCommand.CALC, BuiltInCommand.THEME).joinToString(" · ") { it.word }, color = argbOf(spec.secondary ?: current.secondary)?.let { Color(it) } ?: Color(accent).copy(alpha = 0.7f), fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodySmall)
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 8.dp)) {
             listOf(spec.dock, spec.folder, spec.outline).mapNotNull { argbOf(it) }.forEach { Swatch(it) }
         }
@@ -193,6 +193,7 @@ private fun Warning(text: String, color: Color) {
 private fun swatchOf(element: ThemeElement, spec: ThemeSpec): Int? = when (element) {
     ThemeElement.ACCENT -> argbOf(spec.accent)
     ThemeElement.BACKGROUND -> argbOf(spec.background)
+    ThemeElement.SECONDARY -> argbOf(spec.secondary)
     ThemeElement.OUTLINE -> argbOf(spec.outline)
     ThemeElement.DOCK -> argbOf(spec.dock)
     ThemeElement.FOLDER -> argbOf(spec.folder)

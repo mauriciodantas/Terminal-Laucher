@@ -71,9 +71,9 @@ object Nostromo {
     val Alert = androidx.compose.ui.graphics.Color(0xFFFF5A45)
 }
 
-/** Builds the terminal color scheme for the given phosphor [accent] color. */
-fun nostromoColorScheme(accent: Int, groundColor: Int = LauncherGround.DEFAULT): androidx.compose.material3.ColorScheme {
-    fun shade(mix: Float) = androidx.compose.ui.graphics.Color(ColorUtils.blendARGB(groundColor, accent, mix))
+/** Builds the terminal color scheme for the given phosphor [accent] color, with the user's [secondary] color for the dimmer tones. */
+fun nostromoColorScheme(accent: Int, groundColor: Int = LauncherGround.DEFAULT, secondary: Int? = null): androidx.compose.material3.ColorScheme {
+    fun shade(mix: Float) = androidx.compose.ui.graphics.Color(LauncherGround.shade(groundColor, accent, secondary, mix))
     val phosphor = shade(1f)
     val ground = shade(0f)
     val dim = shade(0.62f)

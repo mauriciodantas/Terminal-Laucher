@@ -55,6 +55,20 @@ class ColorPreferenceModelList @Inject constructor(
         )
         registerModel(
             ColorPreferenceModel(
+                prefObject = prefs.secondaryColor,
+                labelRes = R.string.appearance_color_secondary,
+                // Only its own color or the dimmed accent: the system and wallpaper colors would not be checked against the background.
+                dynamicEntries = listOf(
+                    ColorPreferenceEntry<ColorOption>(
+                        ColorOption.Default,
+                        { stringResource(R.string.appearance_color_secondary_default) },
+                        { 0 },
+                    ),
+                ),
+            ),
+        )
+        registerModel(
+            ColorPreferenceModel(
                 prefObject = prefs.hotseatBackgroundColor,
                 labelRes = R.string.appearance_color_dock,
                 dynamicEntries = dynamicColorsWithDefault,

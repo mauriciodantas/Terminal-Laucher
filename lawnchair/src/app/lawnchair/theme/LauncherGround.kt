@@ -67,6 +67,31 @@ object LauncherGround {
 
     fun get(context: Context): Int = custom(context) ?: DEFAULT
 
+    /**
+     * The user's secondary color as the screen draws it over [ground], or null when they keep the
+     * dimmed accent. It is also null when it would not read over [ground]: following the system mode
+     * can trade the background for the accent, and the dimmed accent then takes its place.
+     */
+    fun secondary(context: Context, ground: Int = get(context), option: ColorOption? = null): Int? {
+        val prefs2 = PreferenceManager2.getInstance(context)
+        val chosen = option ?: prefs2.secondaryColor.firstCached(prefs2)
+        return (chosen as? ColorOption.CustomColor)?.color?.let { it or OPAQUE }?.takeIf { isVisible(it, ground) }
+    }
+
+    /** The mix at which the dimmed accent stands for secondary text; the user's secondary color is drawn there as it is. */
+    const val SECONDARY_MIX = 0.62f
+
+    /**
+     * A tone between [ground] (0) and [accent] (1): the surfaces, the lines, the secondary text and
+     * the text itself. With a [secondary] color, the middle tones (lines and secondary text) are
+     * drawn from it instead, reaching it at [SECONDARY_MIX]; the surfaces and the text keep the accent.
+     */
+    fun shade(ground: Int, accent: Int, secondary: Int?, mix: Float): Int = if (secondary != null && mix >= 0.25f && mix < 0.9f) {
+        ColorUtils.blendARGB(ground, secondary, (mix / SECONDARY_MIX).coerceAtMost(1f))
+    } else {
+        ColorUtils.blendARGB(ground, accent, mix)
+    }
+
     /** The least contrast that still reads as text over a fill. */
     private const val READABLE = 4.5
 

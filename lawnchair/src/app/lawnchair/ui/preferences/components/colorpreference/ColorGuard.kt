@@ -9,7 +9,7 @@ import app.lawnchair.theme.color.ColorOption
 import com.android.launcher3.R
 
 /**
- * Keeps the accent (text and lines) and the background apart. A pair with less than
+ * Keeps the accent (text and lines), and the secondary color, apart from the background. A pair with less than
  * [LauncherGround.MIN_VISIBILITY] of contrast would leave the settings unreadable and the user
  * locked out of changing it back, so picking one is refused. A pair that is allowed but under
  * [LauncherGround.COMFORTABLE_VISIBILITY] only draws a warning.
@@ -19,6 +19,7 @@ object ColorGuard {
     enum class Role(val explanation: Int) {
         ACCENT(R.string.color_conflict_accent),
         BACKGROUND(R.string.color_conflict_background),
+        SECONDARY(R.string.color_conflict_secondary),
     }
 
     /** What the preference named [prefKey] is: the accent, the background, or neither. */
@@ -27,6 +28,7 @@ object ColorGuard {
         return when (prefKey) {
             prefs2.accentColor.key.name -> Role.ACCENT
             prefs2.launcherBackgroundColor.key.name -> Role.BACKGROUND
+            prefs2.secondaryColor.key.name -> Role.SECONDARY
             else -> null
         }
     }
@@ -41,6 +43,10 @@ object ColorGuard {
                 (LauncherGround.resolve(prefs2.launcherBackgroundColor.firstCached(prefs2), context) ?: LauncherGround.DEFAULT)
 
             Role.BACKGROUND -> themes.chosenPhosphorColor to (LauncherGround.resolve(candidate, context) ?: LauncherGround.DEFAULT)
+
+            // The secondary color is read over the background just like the accent.
+            Role.SECONDARY -> (LauncherGround.resolve(candidate, context) ?: return false) to
+                (LauncherGround.resolve(prefs2.launcherBackgroundColor.firstCached(prefs2), context) ?: LauncherGround.DEFAULT)
         }
         return !LauncherGround.isVisible(accent, ground, LauncherGround.COMFORTABLE_VISIBILITY)
     }
@@ -59,6 +65,14 @@ object ColorGuard {
             Role.BACKGROUND -> {
                 val ground = LauncherGround.resolve(candidate, context) ?: LauncherGround.DEFAULT
                 !LauncherGround.isVisible(themes.chosenPhosphorColor, ground)
+            }
+
+            Role.SECONDARY -> {
+                // Keeping the dimmed accent never conflicts.
+                val color = LauncherGround.resolve(candidate, context) ?: return false
+                val ground = LauncherGround.resolve(prefs2.launcherBackgroundColor.firstCached(prefs2), context)
+                    ?: LauncherGround.DEFAULT
+                !LauncherGround.isVisible(color, ground)
             }
         }
     }

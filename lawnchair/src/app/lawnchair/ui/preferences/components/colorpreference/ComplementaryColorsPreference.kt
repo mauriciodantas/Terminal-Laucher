@@ -45,6 +45,8 @@ fun ComplementaryColorsPreference(modifier: Modifier = Modifier) {
     val prefs2 = preferenceManager2()
     val accent = prefs2.accentColor.getAdapter()
     val background = prefs2.launcherBackgroundColor.getAdapter()
+    val secondary = prefs2.secondaryColor.getAdapter()
+    val currentSecondary = (secondary.state.value as? ColorOption.CustomColor)?.color
     val currentAccent = (accent.state.value as? ColorOption.CustomColor)?.color
     val currentBackground = (background.state.value as? ColorOption.CustomColor)?.color
 
@@ -53,11 +55,14 @@ fun ComplementaryColorsPreference(modifier: Modifier = Modifier) {
         // The background goes first: the accent is checked against it as it lands.
         background.onChange(ColorOption.CustomColor(pair.background))
         accent.onChange(ColorOption.CustomColor(pair.accent))
+        // A pair goes back to the dimmed accent; a triad brings its third color.
+        secondary.onChange(pair.secondary?.let { ColorOption.CustomColor(it) } ?: ColorOption.Default)
     }
     if (wheelOpen) {
         ComplementaryWheelDialog(
-            initialHue = currentAccent?.let(ComplementaryColors::hueOf) ?: 0f,
-            initialIntensity = currentBackground?.let(ComplementaryColors::intensityOf) ?: ComplementaryColors.DEFAULT_INTENSITY,
+            accent = currentAccent,
+            background = currentBackground,
+            secondary = currentSecondary,
             onApply = {
                 wheelOpen = false
                 applyPair(it)
@@ -78,8 +83,9 @@ fun ComplementaryColorsPreference(modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             WheelChip(onClick = { wheelOpen = true })
-            (ComplementaryColors.themes + ComplementaryColors.pastels + ComplementaryColors.pairs).forEach { pair ->
-                val selected = currentAccent == pair.accent && currentBackground == pair.background
+            ComplementaryColors.all.forEach { pair ->
+                val selected = currentAccent == pair.accent && currentBackground == pair.background &&
+                    currentSecondary == pair.secondary
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
@@ -101,7 +107,11 @@ fun ComplementaryColorsPreference(modifier: Modifier = Modifier) {
                             .background(Color(pair.background)),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text(text = ">_", color = Color(pair.accent), style = MaterialTheme.typography.titleMedium)
+                        Row(verticalAlignment = Alignment.Bottom) {
+                            Text(text = ">_", color = Color(pair.accent), style = MaterialTheme.typography.titleMedium)
+                            // A three-color look shows its secondary color beside the prompt.
+                            pair.secondary?.let { Text(text = " ~", color = Color(it), style = MaterialTheme.typography.titleMedium) }
+                        }
                     }
                     Text(
                         text = stringResource(id = pair.name),

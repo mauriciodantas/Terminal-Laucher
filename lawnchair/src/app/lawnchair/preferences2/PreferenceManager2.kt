@@ -223,6 +223,18 @@ class PreferenceManager2 @Inject constructor(
         defaultValue = ColorOption.Default,
     )
 
+    /**
+     * The secondary color: secondary text, hints and lines. [ColorOption.Default] keeps them as the
+     * accent dimmed over the background, the single-phosphor look.
+     */
+    val secondaryColor = preference(
+        key = stringPreferencesKey(name = "secondary_color"),
+        parse = ColorOption::fromString,
+        save = ColorOption::toString,
+        onSet = { reloadHelper.recreate() },
+        defaultValue = ColorOption.Default,
+    )
+
     /** Swaps the accent and the background on screen so the pair follows the system's light and dark mode. */
     val followSystemColorMode = preference(
         key = booleanPreferencesKey(name = "follow_system_color_mode"),

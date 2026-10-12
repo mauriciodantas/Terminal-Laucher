@@ -7,13 +7,20 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SelectableChipColors
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -34,13 +41,14 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.ColorUtils
 import app.lawnchair.preferences2.preferenceManager2
 import app.lawnchair.theme.ComplementaryColors
+import app.lawnchair.theme.ComplementaryColors.Harmony
+import app.lawnchair.theme.ComplementaryColors.Tint
 import app.lawnchair.theme.color.ColorOption
 import app.lawnchair.ui.theme.ColorPreview
 import com.android.launcher3.R
@@ -51,41 +59,86 @@ import kotlin.math.min
 import kotlin.math.sin
 
 /**
- * A color wheel: dragging picks the accent's hue and the opposite point of the ring, the
- * complement, becomes the background. The preview in the middle shows the pair as it will look.
+ * A color wheel with the accent and, besides one-color looks, the secondary color. The [Harmony]
+ * fixes the angle between the two, so dragging either turns both; in [Harmony.FREE] each moves on
+ * its own. The background is not a point of the wheel: it is a dark tint (gray, the accent's or the
+ * opposite hue) whose intensity the bar sets. The settings behind the dialog show the result live.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ComplementaryWheelDialog(
-    initialHue: Float,
-    initialIntensity: Float,
+    accent: Int?,
+    background: Int?,
+    secondary: Int?,
     onApply: (ComplementaryColors.Pair) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    var hue by remember { mutableFloatStateOf(initialHue) }
-    var intensity by remember { mutableFloatStateOf(initialIntensity) }
-    val pair = ComplementaryColors.pairForHue(hue, intensity)
+    val startHue = accent?.let(ComplementaryColors::hueOf) ?: 0f
+    val startSecondary = secondary?.let(ComplementaryColors::hueOf)
+    var accentHue by remember { mutableFloatStateOf(startHue) }
+    var harmony by remember { mutableStateOf(ComplementaryColors.harmonyOf(startHue, startSecondary)) }
+    // Kept for the free harmony; the fixed ones work it out from the accent.
+    var freeSecondary by remember { mutableFloatStateOf(startSecondary ?: ((startHue + 120f) % 360f)) }
+    var tint by remember {
+        mutableStateOf(if (accent != null && background != null) ComplementaryColors.tintOf(accent, background) else Tint.OPPOSITE)
+    }
+    var intensity by remember { mutableFloatStateOf(background?.let(ComplementaryColors::intensityOf) ?: ComplementaryColors.DEFAULT_INTENSITY) }
+
+    val secondaryHue = when (harmony) {
+        Harmony.MONO -> null
+        Harmony.FREE -> freeSecondary
+        else -> (accentHue + harmony.angle!!) % 360f
+    }
+    val pair = ComplementaryColors.compose(accentHue, secondaryHue, tint, intensity)
     val prefs2 = preferenceManager2()
 
-    // The settings behind the dialog take the pair's colors as the wheel turns, so the user sees the result.
     LaunchedEffect(pair) {
         ColorPreview.set(prefs2.accentColor.key.name, ColorOption.CustomColor(pair.accent))
         ColorPreview.set(prefs2.launcherBackgroundColor.key.name, ColorOption.CustomColor(pair.background))
+        ColorPreview.set(prefs2.secondaryColor.key.name, pair.secondary?.let { ColorOption.CustomColor(it) } ?: ColorOption.Default)
     }
     DisposableEffect(Unit) { onDispose { ColorPreview.clear() } }
+
+    // The chosen chip filled with the accent; the plain dark container would hide which it is.
+    val chipColors = FilterChipDefaults.filterChipColors(
+        selectedContainerColor = MaterialTheme.colorScheme.primary,
+        selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+    )
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(text = stringResource(id = R.string.complementary_wheel_title)) },
         text = {
-            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+                    Harmony.entries.forEach { h ->
+                        Chip(stringResource(id = harmonyLabel(h)), harmony == h, chipColors) {
+                            // Leaving a fixed harmony for the free one keeps the secondary color where it is.
+                            if (h == Harmony.FREE && secondaryHue != null) freeSecondary = secondaryHue
+                            harmony = h
+                        }
+                    }
+                }
                 Text(
                     text = stringResource(id = R.string.complementary_wheel_hint),
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(bottom = 16.dp),
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(vertical = 12.dp),
                 )
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Box(contentAlignment = Alignment.Center) {
-                        Wheel(hue = hue, pair = pair, onHue = { hue = it })
+                        Wheel(
+                            accentHue = accentHue,
+                            secondaryHue = secondaryHue,
+                            pair = pair,
+                            free = harmony == Harmony.FREE,
+                            onAccent = { accentHue = it },
+                            onSecondary = { freeSecondary = it },
+                        )
                         Box(
                             modifier = Modifier
                                 .size(80.dp)
@@ -93,10 +146,29 @@ fun ComplementaryWheelDialog(
                                 .background(Color(pair.background)),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Text(text = ">_", color = Color(pair.accent), style = MaterialTheme.typography.titleLarge)
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(text = ">_", color = Color(pair.accent), style = MaterialTheme.typography.titleLarge)
+                                pair.secondary?.let { Text(text = "~/", color = Color(it), style = MaterialTheme.typography.titleSmall) }
+                            }
                         }
                     }
-                    IntensityBar(hue = hue, intensity = intensity, onIntensity = { intensity = it })
+                    IntensityBar(
+                        intensity = intensity,
+                        backgroundAt = { ComplementaryColors.backgroundOf(accentHue, tint, it) },
+                        onIntensity = { intensity = it },
+                    )
+                }
+                Text(
+                    text = stringResource(id = R.string.complementary_tint),
+                    style = MaterialTheme.typography.labelLarge,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp, bottom = 4.dp),
+                )
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+                    Tint.entries.forEach { t ->
+                        Chip(stringResource(id = tintLabel(t)), tint == t, chipColors) { tint = t }
+                    }
                 }
             }
         },
@@ -110,15 +182,44 @@ fun ComplementaryWheelDialog(
 }
 
 @Composable
-private fun Wheel(hue: Float, pair: ComplementaryColors.Pair, onHue: (Float) -> Unit) {
+private fun Chip(label: String, selected: Boolean, colors: SelectableChipColors, onClick: () -> Unit) {
+    FilterChip(selected = selected, onClick = onClick, label = { Text(label) }, colors = colors)
+}
+
+private fun harmonyLabel(harmony: Harmony): Int = when (harmony) {
+    Harmony.MONO -> R.string.complementary_harmony_mono
+    Harmony.ANALOGOUS -> R.string.complementary_harmony_analogous
+    Harmony.TRIAD -> R.string.complementary_triad
+    Harmony.SPLIT -> R.string.complementary_harmony_split
+    Harmony.COMPLEMENTARY -> R.string.complementary_mode_pair
+    Harmony.FREE -> R.string.complementary_harmony_free
+}
+
+private fun tintLabel(tint: Tint): Int = when (tint) {
+    Tint.NEUTRAL -> R.string.complementary_tint_neutral
+    Tint.ACCENT -> R.string.complementary_tint_accent
+    Tint.OPPOSITE -> R.string.complementary_tint_opposite
+}
+
+@Composable
+private fun Wheel(
+    accentHue: Float,
+    secondaryHue: Float?,
+    pair: ComplementaryColors.Pair,
+    free: Boolean,
+    onAccent: (Float) -> Unit,
+    onSecondary: (Float) -> Unit,
+) {
     val ring = remember {
         Brush.sweepGradient(
             (0..360 step 30).map { Color(ColorUtils.HSLToColor(floatArrayOf(it.toFloat(), 0.85f, 0.55f))) },
         )
     }
-    val currentHue by rememberUpdatedState(hue)
-    // Which marker the finger took hold of: the accent, or the background opposite it.
-    var grabbedBackground by remember { mutableStateOf(false) }
+    val currentAccent by rememberUpdatedState(accentHue)
+    val currentSecondary by rememberUpdatedState(secondaryHue)
+    val currentFree by rememberUpdatedState(free)
+    // True while the finger holds the secondary marker rather than the accent's.
+    var grabbedSecondary by remember { mutableStateOf(false) }
 
     fun angleAt(offset: Offset, size: Float): Float {
         val c = size / 2f
@@ -133,12 +234,21 @@ private fun Wheel(hue: Float, pair: ComplementaryColors.Pair, onHue: (Float) -> 
 
     fun grab(offset: Offset, size: Float) {
         val angle = angleAt(offset, size)
-        grabbedBackground = gap(angle, (currentHue + 180f) % 360f) < gap(angle, currentHue)
+        grabbedSecondary = currentSecondary?.let { gap(angle, it) < gap(angle, currentAccent) } == true
     }
 
     fun move(offset: Offset, size: Float) {
         val angle = angleAt(offset, size)
-        onHue(if (grabbedBackground) (angle + 180f) % 360f else angle)
+        val secondary = currentSecondary
+        when {
+            !grabbedSecondary || secondary == null -> onAccent(angle)
+
+            // Free: the secondary color moves alone.
+            currentFree -> onSecondary(angle)
+
+            // A fixed harmony: the accent follows, the same angle away.
+            else -> onAccent((angle - (secondary - currentAccent) + 720f) % 360f)
+        }
     }
 
     Canvas(
@@ -169,14 +279,17 @@ private fun Wheel(hue: Float, pair: ComplementaryColors.Pair, onHue: (Float) -> 
             size = Size(radius * 2, radius * 2),
             style = Stroke(width = stroke),
         )
-        // The accent's marker and, opposite it, the background's, each filled with the color it applies.
-        listOf(
-            Triple(hue, pair.accent, true),
-            Triple((hue + 180f) % 360f, pair.background, false),
-        ).forEach { (h, color, isAccent) ->
+        fun pointAt(h: Float): Offset {
             val a = Math.toRadians(h.toDouble())
-            val at = Offset(center.x + radius * cos(a).toFloat(), center.y + radius * sin(a).toFloat())
-            val size = if (isAccent) 15.dp.toPx() else 13.dp.toPx()
+            return Offset(center.x + radius * cos(a).toFloat(), center.y + radius * sin(a).toFloat())
+        }
+        val accentAt = pointAt(accentHue)
+        // The two colors joined, so the angle between them reads at a glance.
+        secondaryHue?.let { drawLine(Color.White, accentAt, pointAt(it), strokeWidth = 2.dp.toPx()) }
+        listOfNotNull(
+            Triple(accentAt, pair.accent, 15.dp.toPx()),
+            secondaryHue?.let { Triple(pointAt(it), pair.secondary ?: pair.accent, 12.dp.toPx()) },
+        ).forEach { (at, color, size) ->
             drawCircle(Color(color), radius = size, center = at)
             drawCircle(Color.White, radius = size, center = at, style = Stroke(3.dp.toPx()))
         }
@@ -184,13 +297,13 @@ private fun Wheel(hue: Float, pair: ComplementaryColors.Pair, onHue: (Float) -> 
 }
 
 /**
- * A vertical bar for the intensity of the background: the track paints the background of the chosen
- * hue from its darkest (bottom) to its brightest (top), and the thumb sits where the pair is now.
+ * A vertical bar for the intensity of the background: the track paints the background from its
+ * darkest (bottom) to its brightest (top), and the thumb sits where it is now.
  */
 @Composable
-private fun IntensityBar(hue: Float, intensity: Float, onIntensity: (Float) -> Unit) {
-    val darkest = Color(ComplementaryColors.backgroundFor(hue, 0f))
-    val brightest = Color(ComplementaryColors.backgroundFor(hue, 1f))
+private fun IntensityBar(intensity: Float, backgroundAt: (Float) -> Int, onIntensity: (Float) -> Unit) {
+    val darkest = Color(backgroundAt(0f))
+    val brightest = Color(backgroundAt(1f))
     val outline = MaterialTheme.colorScheme.outlineVariant
     fun at(y: Float, height: Float) = (1f - y / height).coerceIn(0f, 1f)
     Canvas(
@@ -212,7 +325,7 @@ private fun IntensityBar(hue: Float, intensity: Float, onIntensity: (Float) -> U
         drawRoundRect(color = outline, cornerRadius = radius, style = Stroke(1.dp.toPx()))
         val thumbY = (1f - intensity) * size.height
         val thumb = Offset(size.width / 2f, thumbY.coerceIn(14.dp.toPx(), size.height - 14.dp.toPx()))
-        drawCircle(Color(ComplementaryColors.backgroundFor(hue, intensity)), radius = 13.dp.toPx(), center = thumb)
+        drawCircle(Color(backgroundAt(intensity)), radius = 13.dp.toPx(), center = thumb)
         drawCircle(Color.White, radius = 13.dp.toPx(), center = thumb, style = Stroke(3.dp.toPx()))
     }
 }

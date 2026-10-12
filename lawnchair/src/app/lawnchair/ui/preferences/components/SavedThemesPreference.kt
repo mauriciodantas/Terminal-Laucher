@@ -183,7 +183,7 @@ private fun Action(icon: ImageVector, label: String, onClick: () -> Unit) {
     }
 }
 
-/** The theme's accent drawn over its background, as a small ">_" on a tile. */
+/** The theme's accent (and secondary color, when it has one) drawn over its background, as a small ">_" on a tile. */
 @Composable
 private fun ThemeChip(theme: ThemeSpec) {
     val accent = (theme.accent as? ThemeColor.Custom)?.argb
@@ -196,6 +196,10 @@ private fun ThemeChip(theme: ThemeSpec) {
             .background(Color(ground), RoundedCornerShape(6.dp))
             .border(1.dp, accent?.let { Color(it) } ?: MaterialTheme.colorScheme.outline, RoundedCornerShape(6.dp)),
     ) {
-        Text(">_", color = accent?.let { Color(it) } ?: MaterialTheme.colorScheme.primary, fontFamily = FontFamily.Monospace, fontSize = 13.sp)
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(">_", color = accent?.let { Color(it) } ?: MaterialTheme.colorScheme.primary, fontFamily = FontFamily.Monospace, fontSize = 13.sp)
+            // A three-color theme shows its secondary color beside the prompt.
+            (theme.secondary as? ThemeColor.Custom)?.let { Text("~", color = Color(it.argb), fontFamily = FontFamily.Monospace, fontSize = 13.sp) }
+        }
     }
 }

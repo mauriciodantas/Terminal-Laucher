@@ -22,6 +22,7 @@ enum class ThemeElement(
 ) {
     ACCENT(R.string.cmd_theme_el_accent, "destaque", "accent", R.string.cmd_theme_el_accent_desc, ThemeValue.COLOR),
     BACKGROUND(R.string.cmd_theme_el_background, "fundo", "background", R.string.cmd_theme_el_background_desc, ThemeValue.COLOR),
+    SECONDARY(R.string.cmd_theme_el_secondary, "secundaria", "secondary", R.string.cmd_theme_el_secondary_desc, ThemeValue.COLOR),
     OUTLINE(R.string.cmd_theme_el_outline, "contorno", "outline", R.string.cmd_theme_el_outline_desc, ThemeValue.COLOR),
     DOCK(R.string.cmd_theme_el_dock, "dock", "dock", R.string.cmd_theme_el_dock_desc, ThemeValue.COLOR),
     FOLDER(R.string.cmd_theme_el_folder, "pasta", "folder", R.string.cmd_theme_el_folder_desc, ThemeValue.COLOR),
@@ -46,6 +47,7 @@ enum class ThemeElement(
     fun valueIn(spec: ThemeSpec): String? = when (this) {
         ACCENT -> spec.accent?.let(ThemeCommand::colorText)
         BACKGROUND -> spec.background?.let(ThemeCommand::colorText)
+        SECONDARY -> spec.secondary?.let(ThemeCommand::colorText)
         OUTLINE -> spec.outline?.let(ThemeCommand::colorText)
         DOCK -> spec.dock?.let(ThemeCommand::colorText)
         FOLDER -> spec.folder?.let(ThemeCommand::colorText)
@@ -191,6 +193,7 @@ object ThemeCommand {
         val spec = when (element) {
             ThemeElement.ACCENT -> ThemeSpec(accent = color)
             ThemeElement.BACKGROUND -> ThemeSpec(background = color)
+            ThemeElement.SECONDARY -> ThemeSpec(secondary = color)
             ThemeElement.OUTLINE -> ThemeSpec(outline = color)
             ThemeElement.DOCK -> ThemeSpec(dock = color)
             else -> ThemeSpec(folder = color)

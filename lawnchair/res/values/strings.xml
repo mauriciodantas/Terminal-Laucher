@@ -1393,7 +1393,7 @@
     <string name="appearance_follow_system_mode_now_light">Now in light mode. Swaps the two colors when the phone switches modes</string>
     <string name="complementary_custom">Custom</string>
     <string name="complementary_wheel_title">Color wheel</string>
-    <string name="complementary_wheel_hint">Drag one of the two dots: one is the accent and the other, in the opposite color, is the background. The bar beside it adjusts the background\'s intensity.</string>
+    <string name="complementary_wheel_hint">Drag a dot on the wheel: the accent and the secondary color turn together in the chosen harmony (in Free, each moves on its own). The bar sets how bright the background is.</string>
     <string name="complementary_apply">Apply</string>
     <string name="complementary_cancel">Cancel</string>
     <string name="complementary_red">Red</string>
@@ -1417,6 +1417,17 @@
     <string name="theme_pastel_lilac">Lilac</string>
     <string name="theme_pastel_peach">Peach</string>
     <string name="theme_pastel_mint">Mint</string>
+    <string name="theme_trio_synthwave" translatable="false">Synthwave</string>
+    <string name="theme_trio_outrun" translatable="false">Outrun</string>
+    <string name="theme_trio_tron" translatable="false">Tron</string>
+    <string name="theme_trio_matrix" translatable="false">Matrix</string>
+    <string name="theme_trio_hanami" translatable="false">Hanami</string>
+    <string name="theme_trio_dracula" translatable="false">Dracula</string>
+    <string name="theme_trio_nord" translatable="false">Nord</string>
+    <string name="theme_trio_gruvbox" translatable="false">Gruvbox</string>
+    <string name="theme_trio_monokai" translatable="false">Monokai</string>
+    <string name="theme_trio_solarized" translatable="false">Solarized</string>
+    <string name="theme_trio_deep_sea">Deep sea</string>
     <string name="theme_game_boy" translatable="false">Game Boy</string>
     <string name="theme_cyberpunk" translatable="false">Cyberpunk</string>
     <string name="theme_cyberpunk_night">Cyberpunk night</string>
@@ -1633,6 +1644,21 @@
     <string name="cmd_theme_delete_desc">DELETE A SAVED THEME</string>
     <string name="cmd_theme_el_accent">accent</string>
     <string name="cmd_theme_el_background">background</string>
+    <string name="cmd_theme_el_secondary">secondary</string>
+    <string name="cmd_theme_el_secondary_desc">SECONDARY · HINTS, LABELS AND LINES</string>
+    <string name="appearance_color_secondary">Secondary color</string>
+    <string name="appearance_color_secondary_default">Accent, dimmed</string>
+    <string name="color_conflict_secondary">This color is almost the same as the background color: hints and labels would be unreadable. Choose another one.</string>
+    <string name="complementary_harmony_mono">One color</string>
+    <string name="complementary_harmony_analogous">Analogous</string>
+    <string name="complementary_harmony_split">Split</string>
+    <string name="complementary_harmony_free">Free</string>
+    <string name="complementary_tint">Background tint</string>
+    <string name="complementary_tint_neutral">Neutral</string>
+    <string name="complementary_tint_accent">From the accent</string>
+    <string name="complementary_tint_opposite">Opposite</string>
+    <string name="complementary_triad">Triad</string>
+    <string name="complementary_mode_pair">Complementary</string>
     <string name="cmd_theme_el_outline">outline</string>
     <string name="cmd_theme_el_dock">dock</string>
     <string name="cmd_theme_el_folder">folder</string>
@@ -1880,7 +1906,7 @@
     <string name="cmd_help_call">Calls a contact found by the start of any of their names. name? shows the number and the e-mail.\n› call ana\n› ana?</string>
     <string name="cmd_help_route">Opens directions to a place in the maps app.\n› route airport\n› route 5th avenue 100</string>
     <string name="cmd_help_split">Opens two apps side by side in split screen. Separate them with /.\n› split chrome / notes</string>
-    <string name="cmd_help_theme">invert swaps the accent and the background, light and dark set the mode, system follows the system mode and default puts everything back. Each element changes on its own: accent, background, outline, dock and folder take a color (#rrggbb or default); font takes a Google Fonts or system font; clock, icons, wallpaper and paint take on or off; widgets and crt take on, off or an intensity; dim takes a percentage. A theme name applies a saved or ready-made theme; save keeps the one on screen, share sends it as a .tthm file and delete removes a saved one. ai theme designs a new one.\n› theme dark\n› theme accent #ffb000\n› theme font Space Mono\n› theme crt 40%\n› theme save night\n› theme share night</string>
+    <string name="cmd_help_theme">invert swaps the accent and the background, light and dark set the mode, system follows the system mode and default puts everything back. Each element changes on its own: accent, background, secondary, outline, dock and folder take a color (#rrggbb or default); font takes a Google Fonts or system font; clock, icons, wallpaper and paint take on or off; widgets and crt take on, off or an intensity; dim takes a percentage. A theme name applies a saved or ready-made theme; save keeps the one on screen, share sends it as a .tthm file and delete removes a saved one. ai theme designs a new one.\n› theme dark\n› theme accent #ffb000\n› theme font Space Mono\n› theme crt 40%\n› theme save night\n› theme share night</string>
     <string name="cmd_help_timer">Starts a timer in the clock app, up to 7 days.\n› timer 10m\n› timer 1h30\n› timer 90s</string>
     <string name="cmd_help_remind">Notifies you at a time. A bare time is the next time the clock shows it; in counts from now.\n› remind in 30m take out the trash\n› remind 18h call mom\n› remind tomorrow 9h meeting</string>
     <string name="cmd_help_wifi">Opens the Wi-Fi panel of the system: Android does not let apps switch it directly.\n› wifi</string>

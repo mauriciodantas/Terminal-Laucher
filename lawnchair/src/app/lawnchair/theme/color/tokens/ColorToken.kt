@@ -122,7 +122,8 @@ data class PhosphorColorToken(
 
     override fun resolve(context: Context, scheme: ColorScheme, uiColorMode: UiColorMode): Color {
         val phosphor = ThemeProvider.INSTANCE.get(context).phosphorColor
-        return AndroidColor(ColorUtils.blendARGB(LauncherGround.get(context), phosphor, mix))
+        val ground = LauncherGround.get(context)
+        return AndroidColor(LauncherGround.shade(ground, phosphor, LauncherGround.secondary(context, ground), mix))
     }
 
     companion object {

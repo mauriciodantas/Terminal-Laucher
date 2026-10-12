@@ -57,6 +57,7 @@ fun AppearancePreferences(modifier: Modifier = Modifier) {
         ) {
             ColorPreference(preference = prefs2.accentColor)
             ColorPreference(preference = prefs2.launcherBackgroundColor)
+            ColorPreference(preference = prefs2.secondaryColor)
             FollowSystemColorModePreference()
             ColorPreference(preference = prefs2.strokeColorStyle)
             ColorPreference(preference = prefs2.hotseatBackgroundColor)
