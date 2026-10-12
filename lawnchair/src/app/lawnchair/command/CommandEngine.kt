@@ -75,6 +75,9 @@ sealed interface CommandAction {
     /** Runs and shows its output in the bar instead of closing it. */
     data class Ping(val host: String) : CommandAction
 
+    /** "fast": latency, download and upload, shown in the bar as they are measured. */
+    data object SpeedTest : CommandAction
+
     /**
      * "ia ...": talks to the AI the user set up; the bar shows the answer or fills in the command.
      * [force] is for "ia pastas --force" only: apps already in folders may move too.
@@ -158,6 +161,7 @@ object CommandEngine {
                 BuiltInCommand.IP to R.string.cmd_usage_info,
                 BuiltInCommand.UPTIME to R.string.cmd_usage_info,
                 BuiltInCommand.NETWORK to R.string.cmd_usage_info,
+                BuiltInCommand.FAST to R.string.cmd_usage_info,
                 BuiltInCommand.PING to R.string.cmd_usage_ping,
                 BuiltInCommand.AI to R.string.cmd_usage_ai,
             ).map { (command, usage) -> command.word to command.word + " " + Texts.get(usage) } +
@@ -401,6 +405,8 @@ object CommandEngine {
 
             BuiltInCommand.NETWORK -> MoreCommands.network(extras)
 
+            BuiltInCommand.FAST -> MoreCommands.fast(extras)
+
             BuiltInCommand.AI -> MoreCommands.ai(arg, extras)
         }
     }
@@ -529,6 +535,8 @@ object CommandEngine {
         is CommandAction.ShareNotes -> "ACTION_SEND text/plain"
 
         is CommandAction.Ping -> "ping -c 3 " + action.host
+
+        is CommandAction.SpeedTest -> "GET/POST speed.cloudflare.com · ≤ ${Speed.MAX_MB} MB"
 
         is CommandAction.Ai -> when (action.mode) {
             AiMode.SETUP -> "launcher settings · " + Texts.get(R.string.cmd_ai_title).lowercase()

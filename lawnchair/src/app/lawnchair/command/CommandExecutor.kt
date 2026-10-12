@@ -141,7 +141,7 @@ object CommandExecutor {
             )
 
             // The command bar puts the text on its line and shows the ping output itself.
-            is CommandAction.FillLine, is CommandAction.Ping -> return false
+            is CommandAction.FillLine, is CommandAction.Ping, is CommandAction.SpeedTest -> return false
 
             // Only the setup opens a screen; the bar talks to the AI itself.
             is CommandAction.Ai -> {

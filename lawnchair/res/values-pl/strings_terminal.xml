@@ -581,6 +581,16 @@
     <string name="cmd_net_carrier">operator %1$s</string>
     <string name="cmd_net_estimate">szacunek ↓ %1$s ↑ %2$s Mb/s</string>
     <string name="cmd_net_private_dns">prywatny %1$s</string>
+    <string name="cmd_fast_title">TEST PRĘDKOŚCI</string>
+    <string name="cmd_fast_ready">ENTER MIERZY OPÓŹNIENIE, POBIERANIE I WYSYŁANIE · OK. 15 S</string>
+    <string name="cmd_fast_metered">SIEĆ TARYFOWA: TEST MOŻE ZUŻYĆ DO %1$d MB · ENTER, BY URUCHOMIĆ</string>
+    <string name="cmd_fast_latency">opóźnienie %1$d ms · jitter %2$d ms</string>
+    <string name="cmd_fast_latency_measuring">opóźnienie · pomiar…</string>
+    <string name="cmd_fast_down">↓ pobieranie %1$s Mb/s</string>
+    <string name="cmd_fast_up">↑ wysyłanie %1$s Mb/s</string>
+    <string name="cmd_fast_measuring">pomiar…</string>
+    <string name="cmd_fast_server">Cloudflare %1$s · zużyto %2$d MB</string>
+    <string name="cmd_fast_failed">TEST NIEUDANY: %1$s</string>
     <string name="cmd_word_ping">ping</string>
     <string name="cmd_word_tomorrow">jutro</string>
     <string name="cmd_word_in">za</string>

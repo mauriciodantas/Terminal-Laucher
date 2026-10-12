@@ -50,6 +50,7 @@ enum class BuiltInCommand(
     UPTIME(R.string.cmd_word_uptime, "uptime", "uptime"),
     PING(R.string.cmd_word_ping, "ping", "ping"),
     NETWORK(R.string.cmd_word_network, "rede", "network", short = "net"),
+    FAST(R.string.cmd_word_fast, "fast", "fast", short = "speedtest"),
     AI(R.string.cmd_word_ai, "ia", "ai"),
     ;
 
@@ -72,7 +73,7 @@ enum class BuiltInCommand(
 
         private val BARE = setOf(
             TORCH, DND, ROTATION, WIFI, BLUETOOTH, PLAY, PAUSE, NEXT, PREVIOUS, PASTE, SETTINGS, AGENDA, NOTE, SCHEDULED,
-            BATTERY, STORAGE, IP, UPTIME, NETWORK, BRIGHTNESS, THEME, AI,
+            BATTERY, STORAGE, IP, UPTIME, NETWORK, FAST, BRIGHTNESS, THEME, AI,
         )
 
         /** The command an accent-folded [token] names, or null. "c" is calc. */

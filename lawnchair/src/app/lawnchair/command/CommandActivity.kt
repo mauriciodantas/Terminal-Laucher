@@ -294,6 +294,8 @@ private fun CommandScreen(onClose: () -> Unit) {
     var folderPlan by remember { mutableStateOf<FolderPlan?>(null) }
     var aiNote by remember { mutableStateOf<Pair<String, String>?>(null) }
 
+    // The speed test running in the bar, so a second Enter does not start another.
+    var speedJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
     var pendingAction by remember { mutableStateOf<CommandAction?>(null) }
     var pendingCommand by remember { mutableStateOf("") }
 
@@ -329,6 +331,7 @@ private fun CommandScreen(onClose: () -> Unit) {
     val ghost = if (done == null) CommandEngine.ghost(text, top) else ""
 
     fun setText(value: String, cursor: Int = value.length) {
+        speedJob?.cancel()
         field = TextFieldValue(value, TextRange(cursor))
         selected = 0
         done = null
@@ -482,6 +485,19 @@ private fun CommandScreen(onClose: () -> Unit) {
             // Puts the text on the line instead of running anything.
             is CommandAction.FillLine -> {
                 setText(action.text)
+                return
+            }
+
+            // Measured in the bar, the figures updating as they come; closing the bar stops it.
+            is CommandAction.SpeedTest -> {
+                if (speedJob?.isActive == true) return
+                record(action, command)
+                speedJob = scope.launch {
+                    val result = runCatching { SpeedTestRunner.run { r -> done = Speed.text(r) } }
+                    result.exceptionOrNull()?.takeIf { it !is kotlinx.coroutines.CancellationException }?.let {
+                        done = context.getString(R.string.cmd_fast_failed, it.message ?: it.javaClass.simpleName)
+                    }
+                }
                 return
             }
 
@@ -724,6 +740,8 @@ private fun CommandScreen(onClose: () -> Unit) {
                                 if (it.text != field.text) {
                                     selected = 0
                                     done = null
+                                    // Typing something else stops a speed test, which would keep writing over the preview.
+                                    speedJob?.cancel()
                                 }
                                 field = it
                             },

@@ -581,6 +581,16 @@
     <string name="cmd_net_carrier">operatör %1$s</string>
     <string name="cmd_net_estimate">tahmini ↓ %1$s ↑ %2$s Mbps</string>
     <string name="cmd_net_private_dns">özel %1$s</string>
+    <string name="cmd_fast_title">HIZ TESTİ</string>
+    <string name="cmd_fast_ready">ENTER GECİKME, İNDİRME VE YÜKLEMEYİ ÖLÇER · YAKLAŞIK 15 SN</string>
+    <string name="cmd_fast_metered">ÖLÇÜLÜ AĞ: TEST %1$d MB KADAR VERİ KULLANABİLİR · BAŞLATMAK İÇİN ENTER</string>
+    <string name="cmd_fast_latency">gecikme %1$d ms · jitter %2$d ms</string>
+    <string name="cmd_fast_latency_measuring">gecikme · ölçülüyor…</string>
+    <string name="cmd_fast_down">↓ indirme %1$s Mbps</string>
+    <string name="cmd_fast_up">↑ yükleme %1$s Mbps</string>
+    <string name="cmd_fast_measuring">ölçülüyor…</string>
+    <string name="cmd_fast_server">Cloudflare %1$s · %2$d MB kullanıldı</string>
+    <string name="cmd_fast_failed">TEST BAŞARISIZ: %1$s</string>
     <string name="cmd_word_ping">ping</string>
     <string name="cmd_word_tomorrow">yarın</string>
     <string name="cmd_word_in">sonra</string>

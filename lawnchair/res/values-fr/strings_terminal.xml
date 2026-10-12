@@ -581,6 +581,16 @@
     <string name="cmd_net_carrier">opérateur %1$s</string>
     <string name="cmd_net_estimate">estimation ↓ %1$s ↑ %2$s Mbit/s</string>
     <string name="cmd_net_private_dns">privé %1$s</string>
+    <string name="cmd_fast_title">TEST DE DÉBIT</string>
+    <string name="cmd_fast_ready">ENTRÉE MESURE LATENCE, DESCENTE ET MONTÉE · ENVIRON 15 S</string>
+    <string name="cmd_fast_metered">RÉSEAU LIMITÉ : LE TEST PEUT UTILISER JUSQU\'À %1$d MO · ENTRÉE POUR LANCER</string>
+    <string name="cmd_fast_latency">latence %1$d ms · gigue %2$d ms</string>
+    <string name="cmd_fast_latency_measuring">latence · mesure…</string>
+    <string name="cmd_fast_down">↓ descente %1$s Mbit/s</string>
+    <string name="cmd_fast_up">↑ montée %1$s Mbit/s</string>
+    <string name="cmd_fast_measuring">mesure…</string>
+    <string name="cmd_fast_server">Cloudflare %1$s · %2$d Mo utilisés</string>
+    <string name="cmd_fast_failed">ÉCHEC DU TEST : %1$s</string>
     <string name="cmd_word_ping">ping</string>
     <string name="cmd_word_tomorrow">demain</string>
     <string name="cmd_word_in">dans</string>

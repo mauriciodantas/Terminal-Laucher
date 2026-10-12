@@ -581,6 +581,16 @@
     <string name="cmd_net_carrier">電信業者 %1$s</string>
     <string name="cmd_net_estimate">估計 ↓ %1$s ↑ %2$s Mbps</string>
     <string name="cmd_net_private_dns">私人 %1$s</string>
+    <string name="cmd_fast_title">網速測試</string>
+    <string name="cmd_fast_ready">按 ENTER 測量延遲、下載和上傳 · 約 15 秒</string>
+    <string name="cmd_fast_metered">計量付費網路：測試最多可能使用 %1$d MB · 按 ENTER 開始</string>
+    <string name="cmd_fast_latency">延遲 %1$d ms · 抖動 %2$d ms</string>
+    <string name="cmd_fast_latency_measuring">延遲 · 測量中…</string>
+    <string name="cmd_fast_down">↓ 下載 %1$s Mbps</string>
+    <string name="cmd_fast_up">↑ 上傳 %1$s Mbps</string>
+    <string name="cmd_fast_measuring">測量中…</string>
+    <string name="cmd_fast_server">Cloudflare %1$s · 已用 %2$d MB</string>
+    <string name="cmd_fast_failed">測試失敗：%1$s</string>
     <string name="cmd_word_ping">ping</string>
     <string name="cmd_word_tomorrow">明天</string>
     <string name="cmd_word_in">過</string>

@@ -581,6 +581,16 @@
     <string name="cmd_net_carrier">Anbieter %1$s</string>
     <string name="cmd_net_estimate">Schätzung ↓ %1$s ↑ %2$s Mbit/s</string>
     <string name="cmd_net_private_dns">privat %1$s</string>
+    <string name="cmd_fast_title">GESCHWINDIGKEITSTEST</string>
+    <string name="cmd_fast_ready">ENTER MISST LATENZ, DOWNLOAD UND UPLOAD · ETWA 15 S</string>
+    <string name="cmd_fast_metered">GETAKTETES NETZ: DER TEST KANN BIS ZU %1$d MB NUTZEN · ENTER ZUM STARTEN</string>
+    <string name="cmd_fast_latency">Latenz %1$d ms · Jitter %2$d ms</string>
+    <string name="cmd_fast_latency_measuring">Latenz · wird gemessen…</string>
+    <string name="cmd_fast_down">↓ Download %1$s Mbit/s</string>
+    <string name="cmd_fast_up">↑ Upload %1$s Mbit/s</string>
+    <string name="cmd_fast_measuring">wird gemessen…</string>
+    <string name="cmd_fast_server">Cloudflare %1$s · %2$d MB verbraucht</string>
+    <string name="cmd_fast_failed">TEST FEHLGESCHLAGEN: %1$s</string>
     <string name="cmd_word_ping">ping</string>
     <string name="cmd_word_tomorrow">morgen</string>
     <string name="cmd_word_in">in</string>

@@ -581,6 +581,16 @@
     <string name="cmd_net_carrier">оператор %1$s</string>
     <string name="cmd_net_estimate">оценка ↓ %1$s ↑ %2$s Мбит/с</string>
     <string name="cmd_net_private_dns">частный %1$s</string>
+    <string name="cmd_fast_title">ТЕСТ СКОРОСТИ</string>
+    <string name="cmd_fast_ready">ENTER ИЗМЕРЯЕТ ЗАДЕРЖКУ, ЗАГРУЗКУ И ОТДАЧУ · ОКОЛО 15 С</string>
+    <string name="cmd_fast_metered">ЛИМИТНАЯ СЕТЬ: ТЕСТ МОЖЕТ ИЗРАСХОДОВАТЬ ДО %1$d МБ · ENTER — ЗАПУСТИТЬ</string>
+    <string name="cmd_fast_latency">задержка %1$d мс · джиттер %2$d мс</string>
+    <string name="cmd_fast_latency_measuring">задержка · измерение…</string>
+    <string name="cmd_fast_down">↓ загрузка %1$s Мбит/с</string>
+    <string name="cmd_fast_up">↑ отдача %1$s Мбит/с</string>
+    <string name="cmd_fast_measuring">измерение…</string>
+    <string name="cmd_fast_server">Cloudflare %1$s · использовано %2$d МБ</string>
+    <string name="cmd_fast_failed">ТЕСТ НЕ УДАЛСЯ: %1$s</string>
     <string name="cmd_word_ping">пинг</string>
     <string name="cmd_word_tomorrow">завтра</string>
     <string name="cmd_word_in">через</string>

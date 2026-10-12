@@ -1772,6 +1772,18 @@
     <string name="cmd_net_estimate">estimate ↓ %1$s ↑ %2$s Mbps</string>
     <string name="cmd_net_private_dns">private %1$s</string>
     <string name="cmd_help_network">The connection in use: Wi-Fi, mobile data or Ethernet, whether it reaches the internet, the signal, the band and speed of the Wi-Fi, the IP, the gateway and the DNS. Enter copies it all.\n› network\n› net</string>
+    <string name="cmd_word_fast" translatable="false">fast</string>
+    <string name="cmd_fast_title">SPEED TEST</string>
+    <string name="cmd_fast_ready">ENTER MEASURES LATENCY, DOWNLOAD AND UPLOAD · ABOUT 15 S</string>
+    <string name="cmd_fast_metered">METERED NETWORK: THE TEST MAY USE UP TO %1$d MB · ENTER TO RUN IT</string>
+    <string name="cmd_fast_latency">latency %1$d ms · jitter %2$d ms</string>
+    <string name="cmd_fast_latency_measuring">latency · measuring…</string>
+    <string name="cmd_fast_down">↓ download %1$s Mbps</string>
+    <string name="cmd_fast_up">↑ upload %1$s Mbps</string>
+    <string name="cmd_fast_measuring">measuring…</string>
+    <string name="cmd_fast_server">Cloudflare %1$s · %2$d MB used</string>
+    <string name="cmd_fast_failed">TEST FAILED: %1$s</string>
+    <string name="cmd_help_fast">Measures the connection: latency and jitter, then download and upload, against Cloudflare\'s servers. The figures show as they are measured; typing something else or closing the bar stops it. It uses up to 150 MB, and on mobile data it says so before running.\n› fast</string>
     <string name="cmd_word_ping">ping</string>
     <string name="cmd_word_tomorrow">tomorrow</string>
     <string name="cmd_word_in">in</string>

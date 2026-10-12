@@ -417,6 +417,21 @@ internal object MoreCommands {
         NetKind.NONE -> ""
     }
 
+    /**
+     * "fast": a speed test. Enter starts it; on mobile data or another metered network the preview
+     * warns how much data it may use first, and Enter is the go-ahead.
+     */
+    fun fast(extras: CommandExtras): Analysis {
+        val title = Texts.get(R.string.cmd_fast_title)
+        val net = extras.network
+        if (net?.kind == NetKind.NONE) return result(title, Texts.get(R.string.cmd_net_offline), Tone.ERROR, null)
+        return if (net?.metered == true) {
+            result(title, Texts.get(R.string.cmd_fast_metered, Speed.MAX_MB), Tone.WARN, CommandAction.SpeedTest)
+        } else {
+            result(title, Texts.get(R.string.cmd_fast_ready), Tone.OK, CommandAction.SpeedTest)
+        }
+    }
+
     /** The lines of "rede", in the order they matter: the state, the link, then the addresses. */
     fun networkText(net: NetworkSnapshot): String = buildList {
         add(

@@ -581,6 +581,16 @@
     <string name="cmd_net_carrier">ऑपरेटर %1$s</string>
     <string name="cmd_net_estimate">अनुमान ↓ %1$s ↑ %2$s Mbps</string>
     <string name="cmd_net_private_dns">निजी %1$s</string>
+    <string name="cmd_fast_title">स्पीड टेस्ट</string>
+    <string name="cmd_fast_ready">ENTER लेटेंसी, डाउनलोड और अपलोड मापता है · लगभग 15 से</string>
+    <string name="cmd_fast_metered">मीटर्ड नेटवर्क: टेस्ट %1$d MB तक इस्तेमाल कर सकता है · चलाने के लिए ENTER</string>
+    <string name="cmd_fast_latency">लेटेंसी %1$d ms · जिटर %2$d ms</string>
+    <string name="cmd_fast_latency_measuring">लेटेंसी · माप रहे हैं…</string>
+    <string name="cmd_fast_down">↓ डाउनलोड %1$s Mbps</string>
+    <string name="cmd_fast_up">↑ अपलोड %1$s Mbps</string>
+    <string name="cmd_fast_measuring">माप रहे हैं…</string>
+    <string name="cmd_fast_server">Cloudflare %1$s · %2$d MB इस्तेमाल</string>
+    <string name="cmd_fast_failed">टेस्ट विफल: %1$s</string>
     <string name="cmd_word_ping">पिंग</string>
     <string name="cmd_word_tomorrow">कल</string>
     <string name="cmd_word_in">में,बाद</string>
