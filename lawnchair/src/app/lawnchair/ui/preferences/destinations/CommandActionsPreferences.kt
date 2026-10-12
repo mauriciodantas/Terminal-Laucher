@@ -60,6 +60,11 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import app.lawnchair.command.ACTION_VIEW
 import app.lawnchair.command.ActionKind
+import app.lawnchair.command.AiClient
+import app.lawnchair.command.AiConfig
+import app.lawnchair.command.AiProvider
+import app.lawnchair.command.AiStore
+import app.lawnchair.command.AiTurn
 import app.lawnchair.command.AliasStore
 import app.lawnchair.command.Aliases
 import app.lawnchair.command.Analysis
@@ -124,6 +129,8 @@ fun CommandActionsPreferences() {
     var history by remember { mutableStateOf(CommandActivity.loadHistory(context)) }
     var taskApp by remember { mutableStateOf(TaskApp.label(context)) }
     var taskPicker by remember { mutableStateOf(false) }
+    var aiConfig by remember { mutableStateOf(AiStore.load(context)) }
+    var aiOpen by remember { mutableStateOf(false) }
 
     // Contacts and apps feed the live previews of the editors; they load off the main thread.
     val contacts by produceState(emptyList<ContactEntry>()) {
@@ -288,6 +295,13 @@ fun CommandActionsPreferences() {
                     onClick = { taskPicker = true },
                 )
             }
+            PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_ai)) {
+                ClickablePreference(
+                    label = stringResource(R.string.cmd_pref_ai),
+                    subtitle = aiConfig?.label ?: stringResource(R.string.cmd_pref_ai_none),
+                    onClick = { aiOpen = true },
+                )
+            }
             PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_backup)) {
                 ClickablePreference(
                     label = stringResource(R.string.cmd_pref_backup),
@@ -408,6 +422,28 @@ fun CommandActionsPreferences() {
                 }
             },
             onDismiss = { aliasDraft = null },
+        )
+    }
+
+    if (aiOpen) {
+        AiDialog(
+            current = aiConfig,
+            onSave = { saved ->
+                AiStore.save(context, saved)
+                aiConfig = saved
+                aiOpen = false
+            },
+            onRemove = {
+                val before = aiConfig
+                AiStore.save(context, null)
+                aiConfig = null
+                aiOpen = false
+                undoable(context.getString(R.string.cmd_pref_ai_removed)) {
+                    AiStore.save(context, before)
+                    aiConfig = before
+                }
+            },
+            onDismiss = { aiOpen = false },
         )
     }
 
@@ -1193,4 +1229,139 @@ private fun suggestLetter(label: String, existing: List<CustomAction>): String {
         if (CustomActions.validateLetter(candidate, existing) == null) return candidate
     }
     return ""
+}
+
+/**
+ * The AI "ia" talks to: the service, the key the user created there and, optionally, a model. The
+ * service is picked from the key when its prefix tells. Test sends a short message with what is typed.
+ */
+@Composable
+private fun AiDialog(
+    current: AiConfig?,
+    onSave: (AiConfig) -> Unit,
+    onRemove: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var provider by remember { mutableStateOf(current?.provider ?: AiProvider.OPENAI) }
+    var key by remember { mutableStateOf(current?.key.orEmpty()) }
+    var model by remember { mutableStateOf(current?.model.orEmpty()) }
+    var timeout by remember { mutableStateOf((current?.timeoutSeconds ?: AiConfig.DEFAULT_TIMEOUT).toString()) }
+    var testing by remember { mutableStateOf(false) }
+    var result by remember { mutableStateOf<String?>(null) }
+    val okLabel = stringResource(R.string.cmd_pref_ai_test_ok)
+    // Blank or out of range falls back to the default, so the field can be cleared while typing.
+    val seconds = timeout.toIntOrNull()?.takeIf { it in AiConfig.TIMEOUT_RANGE }
+    val config = AiConfig(provider, key.trim(), model.trim(), seconds ?: AiConfig.DEFAULT_TIMEOUT)
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.cmd_pref_ai)) },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                Text(
+                    stringResource(R.string.cmd_pref_ai_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                AiProvider.entries.forEach { option ->
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 44.dp)
+                            .clickable { provider = option },
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        RadioButton(selected = provider == option, onClick = { provider = option })
+                        Text(option.label, style = MaterialTheme.typography.bodyLarge)
+                    }
+                }
+                OutlinedTextField(
+                    value = key,
+                    onValueChange = { typed ->
+                        key = typed
+                        result = null
+                        // A pasted key names its service.
+                        AiProvider.guess(typed)?.let { provider = it }
+                    },
+                    label = { Text(stringResource(R.string.cmd_pref_ai_key)) },
+                    placeholder = { Text(provider.keyHint) },
+                    singleLine = true,
+                    visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Password,
+                        autoCorrectEnabled = false,
+                    ),
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                )
+                OutlinedTextField(
+                    value = model,
+                    onValueChange = {
+                        model = it
+                        result = null
+                    },
+                    label = { Text(stringResource(R.string.cmd_pref_ai_model)) },
+                    placeholder = { Text(provider.defaultModel) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                )
+                OutlinedTextField(
+                    value = timeout,
+                    onValueChange = { typed ->
+                        timeout = typed.filter { it.isDigit() }.take(3)
+                        result = null
+                    },
+                    label = { Text(stringResource(R.string.cmd_pref_ai_timeout)) },
+                    supportingText = {
+                        Text(stringResource(R.string.cmd_pref_ai_timeout_hint, AiConfig.TIMEOUT_RANGE.first, AiConfig.TIMEOUT_RANGE.last))
+                    },
+                    isError = timeout.isNotEmpty() && seconds == null,
+                    singleLine = true,
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Number,
+                    ),
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                )
+                Text(
+                    stringResource(R.string.cmd_pref_ai_privacy),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 10.dp),
+                )
+                val shown = if (testing) stringResource(R.string.command_running) else result
+                if (shown != null) {
+                    Text(
+                        shown,
+                        style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                        color = when {
+                            testing -> MaterialTheme.colorScheme.onSurfaceVariant
+                            shown == okLabel -> MaterialTheme.colorScheme.primary
+                            else -> MaterialTheme.colorScheme.error
+                        },
+                        modifier = Modifier.padding(top = 8.dp),
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            DialogButtons(
+                saveEnabled = key.isNotBlank() && (timeout.isEmpty() || seconds != null),
+                testEnabled = key.isNotBlank() && !testing,
+                canRemove = current != null,
+                onSave = { onSave(config) },
+                onTest = {
+                    testing = true
+                    scope.launch {
+                        result = runCatching {
+                            AiClient.send(config, "Reply with the single word OK.", listOf(AiTurn(fromUser = true, text = "ping")))
+                        }.fold({ okLabel }, { AiClient.describe(context, it) })
+                        testing = false
+                    }
+                },
+                onRemove = onRemove,
+                onCancel = onDismiss,
+            )
+        },
+    )
 }

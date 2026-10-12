@@ -42,6 +42,7 @@ object CommandSources {
             jobs = JobStore.load(context),
             info = snapshot(context),
             taskApp = TaskApp.label(context),
+            ai = AiStore.load(context)?.label,
         )
     }
 

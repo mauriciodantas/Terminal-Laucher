@@ -31,6 +31,8 @@ data class CommandExtras(
     val info: SystemSnapshot? = null,
     /** Name of the app "t" sends tasks to; null until one is picked. */
     val taskApp: String? = null,
+    /** "Claude · claude-opus-5-5" once an AI key is saved; null keeps "ia" locked. */
+    val ai: String? = null,
     val now: LocalDateTime? = null,
     val zone: ZoneId? = null,
 ) {

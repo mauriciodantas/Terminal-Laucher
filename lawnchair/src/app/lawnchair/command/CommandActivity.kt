@@ -283,6 +283,11 @@ private fun CommandScreen(onClose: () -> Unit) {
         scope.launch { reloadExtras() }
     }
 
+    // The conversation with the AI while the bar is open, and the note of a command it filled in.
+    var aiTurns by remember { mutableStateOf<List<AiTurn>>(emptyList()) }
+    var aiBusy by remember { mutableStateOf(false) }
+    var aiNote by remember { mutableStateOf<Pair<String, String>?>(null) }
+
     var pendingAction by remember { mutableStateOf<CommandAction?>(null) }
     var pendingCommand by remember { mutableStateOf("") }
 
@@ -335,8 +340,85 @@ private fun CommandScreen(onClose: () -> Unit) {
         StatsStore.record(context, command.trim())
     }
 
+    /**
+     * Sends [action] to the AI. Only the request, the commands of the bar, the user's letters and
+     * alias names and the app names go out: no contacts, notes, calendar, clipboard or location.
+     */
+    fun askAi(action: CommandAction.Ai, command: String) {
+        val config = AiStore.load(context) ?: return
+        if (aiBusy) return
+        record(action, command)
+        val now = java.time.ZonedDateTime.now()
+        val aiContext = AiContext(
+            custom = custom,
+            aliases = aliases,
+            apps = apps.map { it.label },
+            now = now.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm, EEEE", java.util.Locale.getDefault())) + " (" + now.zone + ")",
+        )
+        val system = AiPrompts.system(action.mode, aiContext)
+        // A conversation goes on across questions; a command request starts fresh each time.
+        val turns = (if (action.mode == AiMode.CHAT) aiTurns else emptyList()) + AiTurn(fromUser = true, text = action.prompt)
+        if (action.mode == AiMode.CHAT) aiTurns = turns
+        aiBusy = true
+        done = context.getString(R.string.command_running)
+        scope.launch {
+            val result = runCatching { AiClient.send(config, system, turns) }
+            aiBusy = false
+            val reply = result.getOrElse { error ->
+                if (action.mode == AiMode.CHAT) aiTurns = turns.dropLast(1)
+                done = AiClient.describe(context, error)
+                return@launch
+            }
+            when (action.mode) {
+                AiMode.RUN -> {
+                    val proposal = AiPrompts.command(reply.text)
+                    val line = proposal.command
+                    if (line == null) {
+                        done = proposal.note.ifEmpty { context.getString(R.string.cmd_ai_no_command) }
+                    } else {
+                        // The command waits on the line with its preview; Enter runs it.
+                        setText(line)
+                        aiNote = line to proposal.note
+                    }
+                }
+
+                AiMode.CREATE -> {
+                    val pack = AiPrompts.pack(reply.text)
+                    if (pack == null) {
+                        done = context.getString(R.string.cmd_ai_create_failed)
+                    } else {
+                        // The same import screen as a pack received from somebody: nothing is added unseen.
+                        val opened = runCatching {
+                            val dir = java.io.File(context.cacheDir, "commands").apply { mkdirs() }
+                            val file = java.io.File(dir, "ia." + CommandPacks.EXTENSION).apply { writeText(pack.first) }
+                            val uri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+                            context.startActivity(
+                                Intent(context, ImportCommandsActivity::class.java)
+                                    .setAction(Intent.ACTION_VIEW)
+                                    .setData(uri)
+                                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION),
+                            )
+                        }.isSuccess
+                        if (opened) onClose() else done = failedLabel
+                    }
+                }
+
+                else -> {
+                    aiTurns = turns + reply.turn
+                    // Ready for the next question.
+                    setText(BuiltInCommand.AI.word + " ")
+                }
+            }
+        }
+    }
+
     fun commit(action: CommandAction, command: String) {
         when (action) {
+            is CommandAction.Ai -> if (action.mode != AiMode.SETUP) {
+                askAi(action, command)
+                return
+            }
+
             // Puts the text on the line instead of running anything.
             is CommandAction.FillLine -> {
                 setText(action.text)
@@ -839,6 +921,63 @@ private fun CommandScreen(onClose: () -> Unit) {
                 }
             }
 
+            // The conversation with the AI takes the place of the suggestions while "ia" is typed.
+            val aiLine = BuiltInCommand.of(resolved.trim().substringBefore(' ').foldAccents()) == BuiltInCommand.AI
+            val showConversation = aiTurns.isNotEmpty() && (aiLine || text.isBlank())
+            val conversation: @Composable (Modifier) -> Unit = { modifier ->
+                Column(
+                    modifier
+                        .padding(top = 8.dp)
+                        .fillMaxWidth()
+                        .heightIn(min = 100.dp)
+                        .border(1.dp, line),
+                ) {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Label(
+                            stringResource(R.string.cmd_ai_title) + " · " + extras.ai?.substringBefore(" · ")?.uppercase().orEmpty(),
+                            dim,
+                            10.sp,
+                            Modifier.weight(1f).padding(horizontal = 8.dp, vertical = 5.dp),
+                        )
+                        Box(
+                            Modifier
+                                .heightIn(min = 32.dp)
+                                .clickable(enabled = !aiBusy) { aiTurns = emptyList() }
+                                .padding(horizontal = 8.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Label(stringResource(R.string.cmd_ai_clear), dim, 10.sp)
+                        }
+                    }
+                    val chatScroll = rememberScrollState()
+                    // The newest message comes into view as it arrives.
+                    LaunchedEffect(aiTurns.size) { chatScroll.animateScrollTo(chatScroll.maxValue) }
+                    Column(
+                        Modifier
+                            .weight(1f, fill = false)
+                            .scrollHint(chatScroll, phosphor.copy(alpha = 0.6f), ground)
+                            .verticalScroll(chatScroll)
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        aiTurns.forEach { turn ->
+                            Text(
+                                if (turn.fromUser) "> " + turn.text else turn.text,
+                                color = if (turn.fromUser) dim else phosphor,
+                                fontFamily = mono(),
+                                fontSize = 12.5.sp,
+                                lineHeight = 18.sp,
+                                // A tap on an answer copies it.
+                                modifier = Modifier.fillMaxWidth().clickable(enabled = !turn.fromUser) {
+                                    CommandExecutor.execute(context, CommandAction.Copy(turn.text))
+                                    done = context.getString(R.string.command_copied, turn.text.lineSequence().first())
+                                },
+                            )
+                        }
+                    }
+                }
+            }
+
             // Preview.
             val preview: @Composable () -> Unit = {
                 val previewTitle = if (done != null) stringResource(R.string.command_executed) else analysis.previewTitle
@@ -868,6 +1007,16 @@ private fun CommandScreen(onClose: () -> Unit) {
                         letterSpacing = 0.9.sp,
                         modifier = Modifier.padding(top = 3.dp),
                     )
+                    val note = aiNote?.takeIf { it.first == text.trim() && it.second.isNotEmpty() }?.second
+                    if (done == null && note != null) {
+                        Text(
+                            stringResource(R.string.cmd_ai_title) + " › " + note,
+                            color = dim,
+                            fontFamily = mono(),
+                            fontSize = 11.sp,
+                            modifier = Modifier.padding(top = 5.dp),
+                        )
+                    }
                     if (done == null && analysis.intent.isNotEmpty()) {
                         Text(
                             "⇢ " + analysis.intent,
@@ -918,7 +1067,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                     Column(Modifier.weight(1.4f)) {
                         commandLine()
                         quickStarts()
-                        suggestions(Modifier.weight(1f, fill = false))
+                        if (showConversation) conversation(Modifier.weight(1f, fill = false)) else suggestions(Modifier.weight(1f, fill = false))
                     }
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
@@ -932,7 +1081,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                 quickStarts()
                 // The preview stays right under the list, and the keys at the bottom.
                 Column(Modifier.weight(1f)) {
-                    suggestions(Modifier.weight(1f, fill = false))
+                    if (showConversation) conversation(Modifier.weight(1f, fill = false)) else suggestions(Modifier.weight(1f, fill = false))
                     preview()
                 }
                 keys()

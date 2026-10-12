@@ -49,6 +49,7 @@ enum class BuiltInCommand(
     IP(R.string.cmd_word_ip, "ip", "ip"),
     UPTIME(R.string.cmd_word_uptime, "uptime", "uptime"),
     PING(R.string.cmd_word_ping, "ping", "ping"),
+    AI(R.string.cmd_word_ai, "ia", "ai"),
     ;
 
     /** The word shown and suggested: "abrir" in Portuguese, "open" in English. */
@@ -70,7 +71,7 @@ enum class BuiltInCommand(
 
         private val BARE = setOf(
             TORCH, DND, ROTATION, WIFI, BLUETOOTH, PLAY, PAUSE, NEXT, PREVIOUS, PASTE, SETTINGS, AGENDA, NOTE, SCHEDULED,
-            BATTERY, STORAGE, IP, UPTIME, BRIGHTNESS, THEME,
+            BATTERY, STORAGE, IP, UPTIME, BRIGHTNESS, THEME, AI,
         )
 
         /** The command an accent-folded [token] names, or null. "c" is calc. */

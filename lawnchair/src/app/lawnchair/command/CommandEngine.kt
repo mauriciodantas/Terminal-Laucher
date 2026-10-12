@@ -62,6 +62,9 @@ sealed interface CommandAction {
     /** Runs and shows its output in the bar instead of closing it. */
     data class Ping(val host: String) : CommandAction
 
+    /** "ia ...": talks to the AI the user set up; the bar shows the answer or fills in the command. */
+    data class Ai(val mode: AiMode, val prompt: String) : CommandAction
+
     /** "tema escuro; silencio on; abrir kindle": [steps] run in order. */
     data class Chain(val steps: List<CommandAction>, val lines: List<String>) : CommandAction
 }
@@ -139,6 +142,7 @@ object CommandEngine {
                 BuiltInCommand.IP to R.string.cmd_usage_info,
                 BuiltInCommand.UPTIME to R.string.cmd_usage_info,
                 BuiltInCommand.PING to R.string.cmd_usage_ping,
+                BuiltInCommand.AI to R.string.cmd_usage_ai,
             ).map { (command, usage) -> command.word to command.word + " " + Texts.get(usage) } +
             listOf(
                 BuiltInCommand.REPEAT to BuiltInCommand.REPEAT + " " + Texts.get(R.string.cmd_usage_repeat),
@@ -249,7 +253,7 @@ object CommandEngine {
         val arg = if (hasArg) m?.groups?.get(3)?.value.orEmpty() else ""
 
         if (!hasArg) {
-            if (token == "?") return analyzeHelp(custom, aliases)
+            if (token == "?") return analyzeHelp(custom, aliases, extras)
             if (token.length > 1 && token.endsWith("?")) {
                 MoreCommands.contactInfo(text.trim().dropLast(1), contacts, contactsGranted)?.let { return it }
                 if (!contactsGranted) return needsContactsAnalysis()
@@ -365,6 +369,8 @@ object CommandEngine {
             BuiltInCommand.BATTERY, BuiltInCommand.STORAGE, BuiltInCommand.IP, BuiltInCommand.UPTIME -> MoreCommands.info(command, extras)
 
             BuiltInCommand.PING -> MoreCommands.ping(arg)
+
+            BuiltInCommand.AI -> MoreCommands.ai(arg, extras)
         }
     }
 
@@ -384,7 +390,7 @@ object CommandEngine {
             extras.history.filter { it.foldAccents().startsWith(token) && it.trim().foldAccents() != token && it.trim() != BuiltInCommand.REPEAT }
                 .map { Suggestion(it, it, Texts.get(R.string.cmd_kind_recent)) }
         }
-        val all = COMMANDS + custom.map { it.letter to it.usage }
+        val all = commands(extras) + custom.map { it.letter to it.usage }
         val commands = all.filter { it.first.foldAccents().startsWith(token) }.map {
             Suggestion(it.first + " ", it.second, commandKind(it.first))
         }
@@ -417,9 +423,12 @@ object CommandEngine {
         )
     }
 
+    /** [COMMANDS] without "ia" while no AI is set up: it only shows up once a key is saved. */
+    private fun commands(extras: CommandExtras): List<Pair<String, String>> = if (extras.ai != null) COMMANDS else COMMANDS.filter { it.first != BuiltInCommand.AI.word }
+
     /** "?" lists everything the bar understands, without the usual cut. */
-    private fun analyzeHelp(custom: List<CustomAction>, aliases: List<CommandAlias>): Analysis {
-        val items = COMMANDS.map {
+    private fun analyzeHelp(custom: List<CustomAction>, aliases: List<CommandAlias>, extras: CommandExtras): Analysis {
+        val items = commands(extras).map {
             Suggestion(it.first + " ", it.second, commandKind(it.first))
         } + custom.map { Suggestion(it.letter + " ", it.usage, Texts.get(R.string.cmd_kind_action)) } +
             aliases.map { Suggestion(it.name, it.name + " → " + it.expansion, Texts.get(R.string.cmd_kind_alias)) }
@@ -489,6 +498,11 @@ object CommandEngine {
         is CommandAction.ShareNotes -> "ACTION_SEND text/plain"
 
         is CommandAction.Ping -> "ping -c 3 " + action.host
+
+        is CommandAction.Ai -> when (action.mode) {
+            AiMode.SETUP -> "launcher settings · " + Texts.get(R.string.cmd_ai_title).lowercase()
+            else -> "POST · " + action.mode.name.lowercase()
+        }
 
         is CommandAction.Chain -> action.steps.joinToString(" ; ") { describe(it).substringBefore(" · ") }
 

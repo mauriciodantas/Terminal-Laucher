@@ -368,6 +368,8 @@ addFrameworkJar('framework-16.jar')
 
 dependencies {
     testImplementation libs.junit
+    // The JVM tests run outside Android, whose org.json is only a stub there.
+    testImplementation 'org.json:json:20240303'
 
     implementation projects.iconloaderlib
     implementation projects.searchuilib

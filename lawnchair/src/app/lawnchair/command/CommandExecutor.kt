@@ -143,6 +143,18 @@ object CommandExecutor {
             // The command bar puts the text on its line and shows the ping output itself.
             is CommandAction.FillLine, is CommandAction.Ping -> return false
 
+            // Only the setup opens a screen; the bar talks to the AI itself.
+            is CommandAction.Ai -> {
+                if (action.mode != AiMode.SETUP) return false
+                start(
+                    context,
+                    app.lawnchair.ui.preferences.PreferenceActivity.createIntent(
+                        context,
+                        app.lawnchair.ui.preferences.navigation.CommandActions,
+                    ),
+                )
+            }
+
             is CommandAction.Chain -> return action.steps.map { execute(context, it) }.all { it }
 
             is CommandAction.Call -> {

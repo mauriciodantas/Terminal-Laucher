@@ -34,8 +34,8 @@ object CommandPacks {
     const val EXTENSION = "tcmd"
     const val FILE_NAME = "comandos.$EXTENSION"
 
-    private const val FORMAT = "terminal-commands"
-    private const val VERSION = 1
+    const val FORMAT = "terminal-commands"
+    const val VERSION = 1
     private const val MAX_BYTES = 256 * 1024
     private const val MAX_ITEMS = 200
 

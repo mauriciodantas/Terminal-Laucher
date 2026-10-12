@@ -12,6 +12,10 @@ import org.junit.Test
 
 class CommandEngineTest {
 
+    /** The commands listed without an AI key: "ia" stays out until one is saved. */
+    private val shownCommands get() = CommandEngine.COMMANDS.size - 1
+
+
     @Before
     fun installTexts() = ResourceTexts.install()
 
@@ -37,13 +41,13 @@ class CommandEngineTest {
         )
         assertNull(a.action)
         // Every command plus the "w" action; the rest does not fit.
-        assertEquals(CommandEngine.COMMANDS.size + 1, a.total)
+        assertEquals(shownCommands + 1, a.total)
     }
 
     @Test fun emptyTextShowsAliasesAndLettersWhenThereIsRoom() {
         val a = CommandEngine.analyze("", apps, contacts, true, emptyList(), listOf(CommandAlias("mae", "ligar maria")))
         assertEquals(CommandEngine.EMPTY_SUGGESTIONS, a.suggestions.size)
-        assertEquals(CommandEngine.COMMANDS.size + 1, a.total)
+        assertEquals(shownCommands + 1, a.total)
         // Nothing was cut when everything fits.
         assertEquals(0, CommandEngine.analyze("ca", apps, contacts, true).total)
     }
@@ -51,7 +55,7 @@ class CommandEngineTest {
     @Test fun questionMarkListsEverythingWithoutTheCut() {
         val aliases = listOf(CommandAlias("mae", "ligar maria"), CommandAlias("zap", "w ana"))
         val a = CommandEngine.analyze("?", apps, contacts, true, CustomActions.DEFAULTS, aliases)
-        assertEquals(CommandEngine.COMMANDS.size + 1 + 2, a.suggestions.size)
+        assertEquals(shownCommands + 1 + 2, a.suggestions.size)
         assertEquals("TODOS OS COMANDOS", a.listTitle)
         assertTrue(a.suggestions.any { it.kind == "APELIDO" && it.label == "mae → ligar maria" })
         assertTrue(a.suggestions.any { it.kind == "AÇÃO" })

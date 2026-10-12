@@ -410,6 +410,49 @@ internal object MoreCommands {
         }
     }
 
+    // ---- AI ----
+
+    /**
+     * "ia [pergunta]" talks, "ia fazer [pedido]" turns the request into a command and "ia criar
+     * [descrição]" writes a new one. Until a key is saved Enter opens the settings where it goes.
+     */
+    fun ai(arg: String, extras: CommandExtras): Analysis {
+        val title = Texts.get(R.string.cmd_ai_title)
+        val service = extras.ai ?: return result(title, Texts.get(R.string.cmd_ai_locked), Tone.WARN, CommandAction.Ai(AiMode.SETUP, ""))
+        val text = arg.trim()
+        val first = text.takeWhile { !it.isWhitespace() }
+        val mode = AiMode.of(first)
+        val prompt = if (mode != null) text.substring(first.length).trim() else text
+        val chosen = mode ?: AiMode.CHAT
+        val word = BuiltInCommand.AI.word
+        // While nothing or only part of a mode word is typed, the modes are offered.
+        val offers = if (mode == null && ' ' !in text) {
+            listOf(AiMode.RUN, AiMode.CREATE).filter { it.word.foldAccents().startsWith(first.foldAccents()) }
+                .map { Suggestion("$word ${it.word} ", modeLabel(it), Texts.get(R.string.cmd_kind_option)) }
+        } else {
+            emptyList()
+        }
+        val heading = title + " · " + modeLabel(chosen) + " · " + service.substringBefore(" · ").uppercase()
+        return when {
+            prompt.isEmpty() -> result(heading, Texts.get(emptyHint(chosen)), Tone.IDLE, null, suggestions = offers)
+            else -> result(heading, prompt, Tone.OK, CommandAction.Ai(chosen, prompt), suggestions = offers)
+        }
+    }
+
+    private fun modeLabel(mode: AiMode): String = Texts.get(
+        when (mode) {
+            AiMode.RUN -> R.string.cmd_ai_mode_run
+            AiMode.CREATE -> R.string.cmd_ai_mode_create
+            else -> R.string.cmd_ai_mode_chat
+        },
+    )
+
+    private fun emptyHint(mode: AiMode): Int = when (mode) {
+        AiMode.RUN -> R.string.cmd_ai_run_empty
+        AiMode.CREATE -> R.string.cmd_ai_create_empty
+        else -> R.string.cmd_ai_chat_empty
+    }
+
     private const val PREVIEW_CHARS = 120
     const val EXTRA_SUGGESTIONS = 6
 }
