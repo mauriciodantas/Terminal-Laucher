@@ -79,6 +79,7 @@ import app.lawnchair.command.CustomActionStore
 import app.lawnchair.command.CustomActions
 import app.lawnchair.command.ImportCommandsActivity
 import app.lawnchair.command.StatsStore
+import app.lawnchair.command.TaskApp
 import app.lawnchair.command.Tone
 import app.lawnchair.ui.preferences.components.controls.ClickablePreference
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
@@ -121,6 +122,8 @@ fun CommandActionsPreferences() {
     var confirmRestore by remember { mutableStateOf(false) }
     val usage = remember { CommandUsage.load(context) }
     var history by remember { mutableStateOf(CommandActivity.loadHistory(context)) }
+    var taskApp by remember { mutableStateOf(TaskApp.label(context)) }
+    var taskPicker by remember { mutableStateOf(false) }
 
     // Contacts and apps feed the live previews of the editors; they load off the main thread.
     val contacts by produceState(emptyList<ContactEntry>()) {
@@ -278,6 +281,13 @@ fun CommandActionsPreferences() {
                     onClick = { step = Step.Advanced },
                 )
             }
+            PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_default_apps)) {
+                ClickablePreference(
+                    label = stringResource(R.string.cmd_pref_task_app),
+                    subtitle = taskApp ?: stringResource(R.string.cmd_pref_task_app_none),
+                    onClick = { taskPicker = true },
+                )
+            }
             PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_backup)) {
                 ClickablePreference(
                     label = stringResource(R.string.cmd_pref_backup),
@@ -399,6 +409,39 @@ fun CommandActionsPreferences() {
             },
             onDismiss = { aliasDraft = null },
         )
+    }
+
+    if (taskPicker) {
+        val candidates by produceState<List<AppEntry>?>(initialValue = null) {
+            value = withContext(Dispatchers.Default) { TaskApp.candidates(context) }
+        }
+        val list = candidates
+        if (list == null || list.isEmpty()) {
+            AlertDialog(
+                onDismissRequest = { taskPicker = false },
+                confirmButton = {
+                    TextButton(onClick = { taskPicker = false }) { Text(stringResource(R.string.cmd_pref_close)) }
+                },
+                title = { Text(stringResource(R.string.cmd_pref_task_app)) },
+                text = {
+                    Text(stringResource(if (list == null) R.string.cmd_pref_searching_apps else R.string.cmd_pref_task_app_empty))
+                },
+            )
+        } else {
+            val askLabel = stringResource(R.string.cmd_pref_task_app_ask)
+            // null first: forget the app, so the system list asks again the next time.
+            PickerDialog(
+                title = stringResource(R.string.cmd_pref_task_app),
+                items = listOf<AppEntry?>(null) + list,
+                label = { it?.label ?: askLabel },
+                onPick = { picked ->
+                    TaskApp.save(context, picked?.let { ComponentName.unflattenFromString(it.id) })
+                    taskApp = picked?.label
+                    taskPicker = false
+                },
+                onDismiss = { taskPicker = false },
+            )
+        }
     }
 
     when (val s = step) {

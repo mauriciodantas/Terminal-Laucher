@@ -115,6 +115,11 @@
     <string name="cmd_pref_restore_text">已儲存的動作只會保留 w（WhatsApp）。別名不會變更。之後可以立即復原。</string>
     <string name="cmd_pref_restore_ok">還原</string>
     <string name="cmd_pref_restored">已還原預設值</string>
+    <string name="cmd_pref_group_default_apps">預設應用程式</string>
+    <string name="cmd_pref_task_app">工作應用程式</string>
+    <string name="cmd_pref_task_app_none">第一次執行 \"t [工作]\" 時選擇</string>
+    <string name="cmd_pref_task_app_ask">下次詢問</string>
+    <string name="cmd_pref_task_app_empty">沒有已安裝的應用程式接受分享的文字</string>
     <string name="cmd_pref_group_history">記錄</string>
     <string name="cmd_pref_clear_history">清除指令記錄</string>
     <string name="cmd_pref_clear_history_count">已儲存 %1$d 個最近的指令</string>
@@ -475,6 +480,7 @@
     <string name="cmd_calc_incomplete">算式不完整</string>
     <string name="cmd_task_list">新工作</string>
     <string name="cmd_task_title">傳送到工作應用程式</string>
+    <string name="cmd_task_title_app">傳送到 %1$s</string>
     <string name="cmd_task_empty">請輸入工作標題</string>
     <string name="cmd_list_destination">目的地</string>
     <string name="cmd_route_title">規劃路線</string>

@@ -167,13 +167,7 @@ object CommandExecutor {
                 Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=" + Uri.encode(action.query))),
             )
 
-            is CommandAction.NewTask -> start(
-                context,
-                Intent.createChooser(
-                    Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, action.title),
-                    null,
-                ),
-            )
+            is CommandAction.NewTask -> start(context, TaskApp.intent(context, action.title))
 
             is CommandAction.WebSearch -> start(
                 context,

@@ -115,6 +115,11 @@
     <string name="cmd_pref_restore_text">Kayıtlı işlemler yalnızca w (WhatsApp) ile değiştirilecek. Takma adlar değişmez. Hemen ardından geri alabilirsiniz.</string>
     <string name="cmd_pref_restore_ok">Döndür</string>
     <string name="cmd_pref_restored">Varsayılana döndürüldü</string>
+    <string name="cmd_pref_group_default_apps">Varsayılan uygulamalar</string>
+    <string name="cmd_pref_task_app">Görev uygulaması</string>
+    <string name="cmd_pref_task_app_none">İlk \"t [görev]\" çalıştığında seçilir</string>
+    <string name="cmd_pref_task_app_ask">Bir dahaki sefere sor</string>
+    <string name="cmd_pref_task_app_empty">Paylaşılan metni kabul eden yüklü uygulama yok</string>
     <string name="cmd_pref_group_history">Geçmiş</string>
     <string name="cmd_pref_clear_history">Komut geçmişini temizle</string>
     <string name="cmd_pref_clear_history_count">%1$d son komut kayıtlı</string>
@@ -475,6 +480,7 @@
     <string name="cmd_calc_incomplete">EKSİK İFADE</string>
     <string name="cmd_task_list">YENİ GÖREV</string>
     <string name="cmd_task_title">GÖREV UYGULAMANIZA GÖNDER</string>
+    <string name="cmd_task_title_app">%1$s UYGULAMASINA GÖNDER</string>
     <string name="cmd_task_empty">GÖREV BAŞLIĞINI YAZIN</string>
     <string name="cmd_list_destination">VARIŞ YERİ</string>
     <string name="cmd_route_title">ROTA OLUŞTUR</string>

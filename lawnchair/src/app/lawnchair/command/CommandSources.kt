@@ -41,6 +41,7 @@ object CommandSources {
             notes = NoteStore.load(context),
             jobs = JobStore.load(context),
             info = snapshot(context),
+            taskApp = TaskApp.label(context),
         )
     }
 

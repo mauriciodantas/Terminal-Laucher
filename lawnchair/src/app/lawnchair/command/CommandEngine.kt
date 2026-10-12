@@ -260,7 +260,7 @@ object CommandEngine {
             return analyzeCommandName(text, token, apps, custom, aliases, extras)
         }
 
-        if (token == BuiltInCommand.TASK) return analyzeTask(arg)
+        if (token == BuiltInCommand.TASK) return analyzeTask(arg, ctx.extras.taskApp)
         val command = BuiltInCommand.of(token)
         if (command != null) return analyzeBuiltIn(command, arg, ctx)
         return custom.firstOrNull { it.letter == token }
@@ -918,13 +918,14 @@ object CommandEngine {
         )
     }
 
-    private fun analyzeTask(arg: String): Analysis {
+    /** [app] is the tasks app picked before; with none, the system list asks once. */
+    private fun analyzeTask(arg: String, app: String?): Analysis {
         val title = arg.trim()
         return Analysis(
             suggestions = emptyList(),
             listTitle = Texts.get(R.string.cmd_task_list),
             needsContacts = false,
-            previewTitle = Texts.get(R.string.cmd_task_title),
+            previewTitle = if (app == null) Texts.get(R.string.cmd_task_title) else Texts.get(R.string.cmd_task_title_app, app.uppercase()),
             preview = if (title.isEmpty()) Texts.get(R.string.cmd_task_empty) else title.uppercase(),
             tone = if (title.isEmpty()) Tone.IDLE else Tone.OK,
             action = title.takeIf { it.isNotEmpty() }?.let { CommandAction.NewTask(it) },

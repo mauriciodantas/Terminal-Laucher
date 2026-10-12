@@ -208,6 +208,11 @@
             </intent-filter>
         </receiver>
 
+        <!-- Remembers the tasks app picked the first time "t [task]" runs. -->
+        <receiver
+            android:name="app.lawnchair.command.TaskAppChosenReceiver"
+            android:exported="false" />
+
         <activity
             android:name="app.lawnchair.command.ImportCommandsActivity"
             android:exported="true"

@@ -1,6 +1,8 @@
 package app.lawnchair.command
 
 import app.lawnchair.util.ResourceTexts
+import app.lawnchair.util.Texts
+import com.android.launcher3.R
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -230,6 +232,12 @@ class CommandEngineTest {
         assertNull(run("t ").action)
         assertEquals(CommandAction.NewTask("comprar pão"), run("t comprar pão").action)
         assertEquals("COMPRAR PÃO", run("t comprar pão").preview)
+    }
+
+    @Test fun taskNamesTheChosenApp() {
+        val withApp = CommandEngine.analyze("t comprar pão", apps, contacts, true, extras = CommandExtras(taskApp = "Todoist"))
+        assertEquals(Texts.get(R.string.cmd_task_title_app, "TODOIST"), withApp.previewTitle)
+        assertEquals(Texts.get(R.string.cmd_task_title), run("t comprar pão").previewTitle)
     }
 
     @Test fun routeNeedsADestination() {

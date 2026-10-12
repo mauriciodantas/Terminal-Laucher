@@ -115,6 +115,11 @@
     <string name="cmd_pref_restore_text">保存済みの操作は w (WhatsApp) のみに置き換えられます。エイリアスは変わりません。直後なら元に戻せます。</string>
     <string name="cmd_pref_restore_ok">戻す</string>
     <string name="cmd_pref_restored">デフォルトに戻しました</string>
+    <string name="cmd_pref_group_default_apps">デフォルトのアプリ</string>
+    <string name="cmd_pref_task_app">タスクアプリ</string>
+    <string name="cmd_pref_task_app_none">初めて \"t [タスク]\" を実行したときに選択</string>
+    <string name="cmd_pref_task_app_ask">次回に確認する</string>
+    <string name="cmd_pref_task_app_empty">共有テキストを受け取れるアプリがありません</string>
     <string name="cmd_pref_group_history">履歴</string>
     <string name="cmd_pref_clear_history">コマンド履歴を消去</string>
     <string name="cmd_pref_clear_history_count">最近のコマンドを %1$d 件保存中</string>
@@ -475,6 +480,7 @@
     <string name="cmd_calc_incomplete">式が不完全です</string>
     <string name="cmd_task_list">新しいタスク</string>
     <string name="cmd_task_title">タスクアプリに送信</string>
+    <string name="cmd_task_title_app">%1$s に送信</string>
     <string name="cmd_task_empty">タスクのタイトルを入力</string>
     <string name="cmd_list_destination">目的地</string>
     <string name="cmd_route_title">経路を表示</string>

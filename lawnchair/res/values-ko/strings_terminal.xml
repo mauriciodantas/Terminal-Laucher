@@ -115,6 +115,11 @@
     <string name="cmd_pref_restore_text">저장된 작업이 w (WhatsApp)로만 바뀝니다. 별칭은 바뀌지 않습니다. 바로 실행취소할 수 있습니다.</string>
     <string name="cmd_pref_restore_ok">복원</string>
     <string name="cmd_pref_restored">기본값 복원됨</string>
+    <string name="cmd_pref_group_default_apps">기본 앱</string>
+    <string name="cmd_pref_task_app">할 일 앱</string>
+    <string name="cmd_pref_task_app_none">처음 \"t [할 일]\"을 실행할 때 선택</string>
+    <string name="cmd_pref_task_app_ask">다음에 묻기</string>
+    <string name="cmd_pref_task_app_empty">공유 텍스트를 받는 앱이 설치되어 있지 않음</string>
     <string name="cmd_pref_group_history">기록</string>
     <string name="cmd_pref_clear_history">명령어 기록 지우기</string>
     <string name="cmd_pref_clear_history_count">최근 명령어 %1$d개 저장됨</string>
@@ -475,6 +480,7 @@
     <string name="cmd_calc_incomplete">수식이 완성되지 않음</string>
     <string name="cmd_task_list">새 할 일</string>
     <string name="cmd_task_title">할 일 앱으로 보내기</string>
+    <string name="cmd_task_title_app">%1$s(으)로 보내기</string>
     <string name="cmd_task_empty">할 일 제목을 입력하세요</string>
     <string name="cmd_list_destination">목적지</string>
     <string name="cmd_route_title">경로 찾기</string>

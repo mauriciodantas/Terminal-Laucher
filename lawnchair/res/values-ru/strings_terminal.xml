@@ -115,6 +115,11 @@
     <string name="cmd_pref_restore_text">Сохранённые действия будут заменены только на w (WhatsApp). Псевдонимы не изменятся. Это можно сразу отменить.</string>
     <string name="cmd_pref_restore_ok">Восстановить</string>
     <string name="cmd_pref_restored">Настройки по умолчанию восстановлены</string>
+    <string name="cmd_pref_group_default_apps">Приложения по умолчанию</string>
+    <string name="cmd_pref_task_app">Приложение задач</string>
+    <string name="cmd_pref_task_app_none">Выбирается при первом \"t [задача]\"</string>
+    <string name="cmd_pref_task_app_ask">Спросить в следующий раз</string>
+    <string name="cmd_pref_task_app_empty">Нет приложений, принимающих общий текст</string>
     <string name="cmd_pref_group_history">История</string>
     <string name="cmd_pref_clear_history">Очистить историю команд</string>
     <string name="cmd_pref_clear_history_count">Сохранено недавних команд: %1$d</string>
@@ -475,6 +480,7 @@
     <string name="cmd_calc_incomplete">НЕПОЛНОЕ ВЫРАЖЕНИЕ</string>
     <string name="cmd_task_list">НОВАЯ ЗАДАЧА</string>
     <string name="cmd_task_title">ОТПРАВИТЬ В ПРИЛОЖЕНИЕ ЗАДАЧ</string>
+    <string name="cmd_task_title_app">ОТПРАВИТЬ В %1$s</string>
     <string name="cmd_task_empty">ВВЕДИТЕ НАЗВАНИЕ ЗАДАЧИ</string>
     <string name="cmd_list_destination">ПУНКТ НАЗНАЧЕНИЯ</string>
     <string name="cmd_route_title">ПРОЛОЖИТЬ МАРШРУТ</string>

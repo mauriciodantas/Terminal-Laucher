@@ -29,6 +29,8 @@ data class CommandExtras(
     val notes: List<NoteEntry> = emptyList(),
     val jobs: List<ScheduledJob> = emptyList(),
     val info: SystemSnapshot? = null,
+    /** Name of the app "t" sends tasks to; null until one is picked. */
+    val taskApp: String? = null,
     val now: LocalDateTime? = null,
     val zone: ZoneId? = null,
 ) {

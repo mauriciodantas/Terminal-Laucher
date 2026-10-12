@@ -115,6 +115,11 @@
     <string name="cmd_pref_restore_text">Die gespeicherten Aktionen werden durch w (WhatsApp) ersetzt. Aliasse bleiben unverändert. Du kannst es direkt danach rückgängig machen.</string>
     <string name="cmd_pref_restore_ok">Wiederherstellen</string>
     <string name="cmd_pref_restored">Standard wiederhergestellt</string>
+    <string name="cmd_pref_group_default_apps">Standard-Apps</string>
+    <string name="cmd_pref_task_app">Aufgaben-App</string>
+    <string name="cmd_pref_task_app_none">Wird beim ersten \"t [Aufgabe]\" gewählt</string>
+    <string name="cmd_pref_task_app_ask">Nächstes Mal fragen</string>
+    <string name="cmd_pref_task_app_empty">Keine installierte App nimmt geteilten Text an</string>
     <string name="cmd_pref_group_history">Verlauf</string>
     <string name="cmd_pref_clear_history">Befehlsverlauf löschen</string>
     <string name="cmd_pref_clear_history_count">%1$d letzte Befehle gespeichert</string>
@@ -475,6 +480,7 @@
     <string name="cmd_calc_incomplete">UNVOLLSTÄNDIGER AUSDRUCK</string>
     <string name="cmd_task_list">NEUE AUFGABE</string>
     <string name="cmd_task_title">AN DEINE AUFGABEN-APP SENDEN</string>
+    <string name="cmd_task_title_app">AN %1$s SENDEN</string>
     <string name="cmd_task_empty">TITEL DER AUFGABE EINGEBEN</string>
     <string name="cmd_list_destination">ZIEL</string>
     <string name="cmd_route_title">ROUTE PLANEN</string>

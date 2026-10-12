@@ -115,6 +115,11 @@
     <string name="cmd_pref_restore_text">सेव की गई कार्रवाइयों की जगह सिर्फ़ w (WhatsApp) रहेगा। उपनाम नहीं बदलेंगे। ठीक बाद में इसे पहले जैसा किया जा सकता है।</string>
     <string name="cmd_pref_restore_ok">लौटें</string>
     <string name="cmd_pref_restored">डिफ़ॉल्ट वापस आ गया</string>
+    <string name="cmd_pref_group_default_apps">डिफ़ॉल्ट ऐप</string>
+    <string name="cmd_pref_task_app">टास्क ऐप</string>
+    <string name="cmd_pref_task_app_none">पहली बार \"t [टास्क]\" चलाने पर चुना जाएगा</string>
+    <string name="cmd_pref_task_app_ask">अगली बार पूछें</string>
+    <string name="cmd_pref_task_app_empty">कोई इंस्टॉल ऐप शेयर किया गया टेक्स्ट स्वीकार नहीं करता</string>
     <string name="cmd_pref_group_history">इतिहास</string>
     <string name="cmd_pref_clear_history">कमांड इतिहास मिटाएँ</string>
     <string name="cmd_pref_clear_history_count">%1$d हाल की कमांड सेव हैं</string>
@@ -475,6 +480,7 @@
     <string name="cmd_calc_incomplete">अधूरा व्यंजक</string>
     <string name="cmd_task_list">नया टास्क</string>
     <string name="cmd_task_title">अपने टास्क ऐप में भेजें</string>
+    <string name="cmd_task_title_app">%1$s को भेजें</string>
     <string name="cmd_task_empty">टास्क का शीर्षक लिखें</string>
     <string name="cmd_list_destination">मंज़िल</string>
     <string name="cmd_route_title">रास्ता देखें</string>

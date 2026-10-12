@@ -115,6 +115,11 @@
     <string name="cmd_pref_restore_text">已保存的操作将仅替换为 w（WhatsApp）。别名不变。之后可以立即撤消。</string>
     <string name="cmd_pref_restore_ok">恢复</string>
     <string name="cmd_pref_restored">已恢复默认设置</string>
+    <string name="cmd_pref_group_default_apps">默认应用</string>
+    <string name="cmd_pref_task_app">任务应用</string>
+    <string name="cmd_pref_task_app_none">首次运行 \"t [任务]\" 时选择</string>
+    <string name="cmd_pref_task_app_ask">下次询问</string>
+    <string name="cmd_pref_task_app_empty">没有已安装的应用接受分享的文本</string>
     <string name="cmd_pref_group_history">历史记录</string>
     <string name="cmd_pref_clear_history">清除命令历史记录</string>
     <string name="cmd_pref_clear_history_count">已保存 %1$d 条最近的命令</string>
@@ -475,6 +480,7 @@
     <string name="cmd_calc_incomplete">算式不完整</string>
     <string name="cmd_task_list">新任务</string>
     <string name="cmd_task_title">发送到任务应用</string>
+    <string name="cmd_task_title_app">发送到 %1$s</string>
     <string name="cmd_task_empty">请输入任务标题</string>
     <string name="cmd_list_destination">目的地</string>
     <string name="cmd_route_title">规划路线</string>

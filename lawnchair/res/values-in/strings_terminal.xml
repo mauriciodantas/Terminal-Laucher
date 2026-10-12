@@ -115,6 +115,11 @@
     <string name="cmd_pref_restore_text">Tindakan tersimpan akan diganti hanya dengan w (WhatsApp). Alias tidak berubah. Anda dapat mengurungkannya segera setelahnya.</string>
     <string name="cmd_pref_restore_ok">Pulihkan</string>
     <string name="cmd_pref_restored">Default dipulihkan</string>
+    <string name="cmd_pref_group_default_apps">Aplikasi default</string>
+    <string name="cmd_pref_task_app">Aplikasi tugas</string>
+    <string name="cmd_pref_task_app_none">Dipilih saat pertama kali \"t [tugas]\" dijalankan</string>
+    <string name="cmd_pref_task_app_ask">Tanya lain kali</string>
+    <string name="cmd_pref_task_app_empty">Tidak ada aplikasi terpasang yang menerima teks bagikan</string>
     <string name="cmd_pref_group_history">Riwayat</string>
     <string name="cmd_pref_clear_history">Hapus riwayat perintah</string>
     <string name="cmd_pref_clear_history_count">%1$d perintah terbaru tersimpan</string>
@@ -475,6 +480,7 @@
     <string name="cmd_calc_incomplete">EKSPRESI TIDAK LENGKAP</string>
     <string name="cmd_task_list">TUGAS BARU</string>
     <string name="cmd_task_title">KIRIM KE APLIKASI TUGAS ANDA</string>
+    <string name="cmd_task_title_app">KIRIM KE %1$s</string>
     <string name="cmd_task_empty">KETIK JUDUL TUGAS</string>
     <string name="cmd_list_destination">TUJUAN</string>
     <string name="cmd_route_title">BUAT RUTE</string>

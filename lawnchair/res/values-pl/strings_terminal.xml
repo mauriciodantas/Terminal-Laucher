@@ -115,6 +115,11 @@
     <string name="cmd_pref_restore_text">Zapisane działania zostaną zastąpione tylko przez w (WhatsApp). Aliasy się nie zmienią. Można to od razu cofnąć.</string>
     <string name="cmd_pref_restore_ok">Przywróć</string>
     <string name="cmd_pref_restored">Przywrócono domyślne</string>
+    <string name="cmd_pref_group_default_apps">Aplikacje domyślne</string>
+    <string name="cmd_pref_task_app">Aplikacja zadań</string>
+    <string name="cmd_pref_task_app_none">Wybierana przy pierwszym \"t [zadanie]\"</string>
+    <string name="cmd_pref_task_app_ask">Zapytaj następnym razem</string>
+    <string name="cmd_pref_task_app_empty">Żadna zainstalowana aplikacja nie przyjmuje udostępnianego tekstu</string>
     <string name="cmd_pref_group_history">Historia</string>
     <string name="cmd_pref_clear_history">Wyczyść historię poleceń</string>
     <string name="cmd_pref_clear_history_count">Zapisane ostatnie polecenia: %1$d</string>
@@ -475,6 +480,7 @@
     <string name="cmd_calc_incomplete">NIEPEŁNE WYRAŻENIE</string>
     <string name="cmd_task_list">NOWE ZADANIE</string>
     <string name="cmd_task_title">WYŚLIJ DO APLIKACJI ZADAŃ</string>
+    <string name="cmd_task_title_app">WYŚLIJ DO %1$s</string>
     <string name="cmd_task_empty">WPISZ TYTUŁ ZADANIA</string>
     <string name="cmd_list_destination">CEL</string>
     <string name="cmd_route_title">WYZNACZ TRASĘ</string>
