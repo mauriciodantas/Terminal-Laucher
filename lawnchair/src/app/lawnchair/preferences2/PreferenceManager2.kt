@@ -790,8 +790,10 @@ class PreferenceManager2 @Inject constructor(
         onSet = { reloadHelper.recreate() },
     )
 
+    // The old key could be turned off for good by an error in the widget reader, with no switch in
+    // the settings to turn it back on. The new key starts everyone on again.
     val smartspaceAagWidget = preference(
-        key = booleanPreferencesKey("enable_smartspace_aag_widget"),
+        key = booleanPreferencesKey("enable_smartspace_aag_widget_v2"),
         defaultValue = true,
     )
 

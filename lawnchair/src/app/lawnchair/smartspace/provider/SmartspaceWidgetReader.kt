@@ -8,11 +8,13 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.graphics.drawable.Icon
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.graphics.drawable.toBitmap
 import androidx.core.view.descendants
 import app.lawnchair.BlankActivity
 import app.lawnchair.HeadlessWidgetsManager
@@ -60,7 +62,9 @@ class SmartspaceWidgetReader(context: Context) :
     private fun extractWidgetLayout(appWidgetHostView: ViewGroup): List<SmartspaceTarget> {
         val descendants = appWidgetHostView.descendants
         val texts = descendants.filterIsInstance<TextView>().filter { !it.text.isNullOrEmpty() }.toList()
-        val images = descendants.filterIsInstance<ImageView>().toList().filter { it.drawable != null && it.drawable is BitmapDrawable }
+        // Newer versions of the Google app set the icons as vectors or adaptive icons, not only as
+        // bitmaps, so any drawable with a size counts.
+        val images = descendants.filterIsInstance<ImageView>().toList().filter { it.drawable.hasSize() }
         var weatherIconView: ImageView? = null
         var cardIconView: ImageView? = null
         var title: TextView? = null
@@ -70,7 +74,8 @@ class SmartspaceWidgetReader(context: Context) :
         if (texts.isEmpty()) return listOf(dummyTarget)
         if (images.isNotEmpty()) {
             weatherIconView = images.firstOrNull()
-            temperatureText = texts.last()
+            // The temperature is usually the last text, but not in every layout of the widget.
+            temperatureText = texts.lastOrNull { WeatherText.parse(it.text.toString()) != null } ?: texts.last()
         }
         if (images.size > 1 && texts.size > 2) {
             cardIconView = images.first()
@@ -141,8 +146,11 @@ class SmartspaceWidgetReader(context: Context) :
         )
     }
 
+    private fun Drawable?.hasSize() = this != null && intrinsicWidth > 0 && intrinsicHeight > 0
+
     private fun extractBitmap(imageView: ImageView?): Bitmap? {
-        return (imageView?.drawable as? BitmapDrawable)?.bitmap
+        val drawable = imageView?.drawable?.takeIf { it.hasSize() } ?: return null
+        return (drawable as? BitmapDrawable)?.bitmap ?: runCatching { drawable.toBitmap() }.getOrNull()
     }
 
     data class WeatherData(
@@ -170,30 +178,9 @@ class SmartspaceWidgetReader(context: Context) :
         )
 
         fun parseWeatherData(weatherIcon: Bitmap?, temperature: String?, intent: PendingIntent? = null): WeatherData? {
-            return if (weatherIcon != null && temperature != null) {
-                try {
-                    val value = temperature.substring(0, temperature.indexOfFirst { (it < '0' || it > '9') && it != '-' }).toInt()
-                    WeatherData(
-                        weatherIcon,
-                        Temperature(
-                            value,
-                            when {
-                                temperature.contains("C") -> Temperature.Unit.Celsius
-                                temperature.contains("F") -> Temperature.Unit.Fahrenheit
-                                temperature.contains("K") -> Temperature.Unit.Kelvin
-                                else -> throw IllegalArgumentException("only supports C, F and K")
-                            },
-                        ),
-                        pendingIntent = intent,
-                    )
-                } catch (_: NumberFormatException) {
-                    null
-                } catch (_: IllegalArgumentException) {
-                    null
-                }
-            } else {
-                null
-            }
+            if (weatherIcon == null) return null
+            val parsed = WeatherText.parse(temperature) ?: return null
+            return WeatherData(weatherIcon, parsed, pendingIntent = intent)
         }
     }
 }

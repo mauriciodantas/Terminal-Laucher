@@ -42,8 +42,10 @@ sealed class SmartspaceDataSource(
                     ),
                 )
             } else {
+                // Some sources have no switch in the settings, so turning the preference off here
+                // would hide them for good. The source stays on and comes back on the next restart.
                 Log.d("SmartspaceDataSource", "data source errored", it)
-                enabledPref.set(false)
+                emit(State(targets = disabledTargets))
             }
         }
 
