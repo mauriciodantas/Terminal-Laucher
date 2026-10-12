@@ -436,6 +436,7 @@
     <string name="cmd_usage_task">[tugas] · tugas baru</string>
     <string name="cmd_usage_calc_short">[hitungan] · singkatan calc</string>
     <string name="cmd_list_suggestions">SARAN</string>
+    <string name="cmd_url_title">BUKA SITUS</string>
     <string name="cmd_unknown_title">PERINTAH TIDAK DIKENAL</string>
     <string name="cmd_unknown_preview">ENTER UNTUK MENCARI DI WEB</string>
     <string name="cmd_kind_alias">ALIAS</string>

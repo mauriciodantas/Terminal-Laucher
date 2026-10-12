@@ -436,6 +436,7 @@
     <string name="cmd_usage_task">[Aufgabe] · neue Aufgabe</string>
     <string name="cmd_usage_calc_short">[Rechnung] · Kurzform von calc</string>
     <string name="cmd_list_suggestions">VORSCHLÄGE</string>
+    <string name="cmd_url_title">WEBSITE ÖFFNEN</string>
     <string name="cmd_unknown_title">UNBEKANNTER BEFEHL</string>
     <string name="cmd_unknown_preview">ENTER FÜR WEBSUCHE</string>
     <string name="cmd_kind_alias">ALIAS</string>

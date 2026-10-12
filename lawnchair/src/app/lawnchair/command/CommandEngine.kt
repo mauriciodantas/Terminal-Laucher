@@ -49,6 +49,9 @@ sealed interface CommandAction {
     data class ThemeDelete(val name: String) : CommandAction
     data class WebSearch(val query: String) : CommandAction
 
+    /** A web address typed on its own: it opens in the browser instead of being searched. */
+    data class OpenUrl(val url: String) : CommandAction
+
     /** A reminder, a command at a time or a rule; the id is given when it is saved. */
     data class Schedule(val job: ScheduledJob) : CommandAction
     data class CancelJob(val job: ScheduledJob) : CommandAction
@@ -265,6 +268,8 @@ object CommandEngine {
         val hasArg = m != null && m.groups[2] != null
         val arg = if (hasArg) m?.groups?.get(3)?.value.orEmpty() else ""
 
+        // A web address on its own opens the site; anything else the bar does not know is still searched.
+        WebAddress.of(text)?.let { return analyzeUrl(it) }
         if (!hasArg) {
             if (token == "?") return analyzeHelp(custom, aliases, extras)
             if (token.length > 1 && token.endsWith("?")) {
@@ -285,6 +290,16 @@ object CommandEngine {
             ?: analyzeOpen(text.trim(), apps).takeIf { it.action != null }
             ?: unknown(text)
     }
+
+    private fun analyzeUrl(url: String): Analysis = Analysis(
+        suggestions = emptyList(),
+        listTitle = Texts.get(R.string.cmd_list_suggestions),
+        needsContacts = false,
+        previewTitle = Texts.get(R.string.cmd_url_title),
+        preview = url.substringAfter("://").removeSuffix("/"),
+        tone = Tone.OK,
+        action = CommandAction.OpenUrl(url),
+    )
 
     /** A line the bar does not understand: Enter searches it on the web. */
     private fun unknown(text: String): Analysis = Analysis(
@@ -548,6 +563,8 @@ object CommandEngine {
         is CommandAction.ThemeDelete -> "themes -= \"${action.name}\""
 
         is CommandAction.WebSearch -> "ACTION_WEB_SEARCH · \"${action.query}\""
+
+        is CommandAction.OpenUrl -> "ACTION_VIEW · " + action.url
 
         is CommandAction.Custom -> describeCustom(action)
     }

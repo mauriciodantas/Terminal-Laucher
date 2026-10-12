@@ -436,6 +436,7 @@
     <string name="cmd_usage_task">[attività] · nuova attività</string>
     <string name="cmd_usage_calc_short">[conto] · scorciatoia di calc</string>
     <string name="cmd_list_suggestions">SUGGERIMENTI</string>
+    <string name="cmd_url_title">APRI SITO</string>
     <string name="cmd_unknown_title">COMANDO SCONOSCIUTO</string>
     <string name="cmd_unknown_preview">INVIO PER CERCARE SUL WEB</string>
     <string name="cmd_kind_alias">ALIAS</string>

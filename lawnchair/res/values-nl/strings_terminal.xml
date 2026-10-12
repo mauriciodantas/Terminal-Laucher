@@ -436,6 +436,7 @@
     <string name="cmd_usage_task">[taak] · nieuwe taak</string>
     <string name="cmd_usage_calc_short">[som] · afkorting van calc</string>
     <string name="cmd_list_suggestions">SUGGESTIES</string>
+    <string name="cmd_url_title">WEBSITE OPENEN</string>
     <string name="cmd_unknown_title">ONBEKENDE OPDRACHT</string>
     <string name="cmd_unknown_preview">ENTER OM OP HET WEB TE ZOEKEN</string>
     <string name="cmd_kind_alias">ALIAS</string>

@@ -436,6 +436,7 @@
     <string name="cmd_usage_task">[工作] · 新工作</string>
     <string name="cmd_usage_calc_short">[算式] · calc 的縮寫</string>
     <string name="cmd_list_suggestions">建議</string>
+    <string name="cmd_url_title">開啟網站</string>
     <string name="cmd_unknown_title">不明的指令</string>
     <string name="cmd_unknown_preview">按 ENTER 在網路上搜尋</string>
     <string name="cmd_kind_alias">別名</string>

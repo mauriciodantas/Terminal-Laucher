@@ -436,6 +436,7 @@
     <string name="cmd_usage_task">[задача] · новая задача</string>
     <string name="cmd_usage_calc_short">[пример] · сокращение calc</string>
     <string name="cmd_list_suggestions">ПОДСКАЗКИ</string>
+    <string name="cmd_url_title">ОТКРЫТЬ САЙТ</string>
     <string name="cmd_unknown_title">НЕИЗВЕСТНАЯ КОМАНДА</string>
     <string name="cmd_unknown_preview">ENTER — ПОИСК В ИНТЕРНЕТЕ</string>
     <string name="cmd_kind_alias">ПСЕВДОНИМ</string>

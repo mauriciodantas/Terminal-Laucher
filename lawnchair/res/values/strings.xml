@@ -1528,6 +1528,7 @@
     <string name="cmd_usage_task">[task] · new task</string>
     <string name="cmd_usage_calc_short">[sum] · calc shortcut</string>
     <string name="cmd_list_suggestions">SUGGESTIONS</string>
+    <string name="cmd_url_title">OPEN WEBSITE</string>
     <string name="cmd_unknown_title">UNKNOWN COMMAND</string>
     <string name="cmd_unknown_preview">ENTER TO SEARCH THE WEB</string>
     <string name="cmd_kind_alias">ALIAS</string>
@@ -1894,7 +1895,7 @@
     <string name="cmd_run_permission_label">run command bar commands</string>
     <string name="cmd_run_permission_description">Lets the app run commands of the command bar, such as opening apps, calling contacts or changing settings.</string>
     <string name="cmd_run_failed">Could not run \"%1$s\"</string>
-    <string name="cmd_help_general">Chain commands with ; · schedule with in 30m: or when charging: · {clip} {sel} {date} {time} {location} {maps} are filled in · name? shows a contact · !! repeats the last one\n› theme dark; dnd on\n› in 30m: torch off\n› note {clip}</string>
+    <string name="cmd_help_general">Chain commands with ; · schedule with in 30m: or when charging: · {clip} {sel} {date} {time} {location} {maps} are filled in · name? shows a contact · an address (site.com) opens the site · !! repeats the last one\n› theme dark; dnd on\n› in 30m: torch off\n› note {clip}</string>
     <string name="cmd_help_repeat">Runs the last command again.\n› !!</string>
     <string name="cmd_help_schedule">Runs a command later, or every time something happens. Write when, a colon and the command. scheduled lists them.\nEvents: %1$s\n› in 30m: theme dark\n› at 22h: dnd on\n› tomorrow 7h: wifi\n› when charging: rotation off</string>
     <string name="cmd_help_alias">Alias of: %1$s</string>

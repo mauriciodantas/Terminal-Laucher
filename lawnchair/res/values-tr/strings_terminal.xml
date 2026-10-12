@@ -436,6 +436,7 @@
     <string name="cmd_usage_task">[görev] · yeni görev</string>
     <string name="cmd_usage_calc_short">[işlem] · calc kısayolu</string>
     <string name="cmd_list_suggestions">ÖNERİLER</string>
+    <string name="cmd_url_title">SİTEYİ AÇ</string>
     <string name="cmd_unknown_title">BİLİNMEYEN KOMUT</string>
     <string name="cmd_unknown_preview">WEB\'DE ARAMAK İÇİN ENTER</string>
     <string name="cmd_kind_alias">TAKMA AD</string>

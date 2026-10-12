@@ -436,6 +436,7 @@
     <string name="cmd_usage_task">[タスク] · 新しいタスク</string>
     <string name="cmd_usage_calc_short">[計算] · calc の短縮</string>
     <string name="cmd_list_suggestions">候補</string>
+    <string name="cmd_url_title">サイトを開く</string>
     <string name="cmd_unknown_title">不明なコマンド</string>
     <string name="cmd_unknown_preview">ENTER でウェブを検索</string>
     <string name="cmd_kind_alias">エイリアス</string>

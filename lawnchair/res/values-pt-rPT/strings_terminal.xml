@@ -436,6 +436,7 @@
     <string name="cmd_usage_task">[tarefa] · nova tarefa</string>
     <string name="cmd_usage_calc_short">[conta] · atalho de calc</string>
     <string name="cmd_list_suggestions">SUGESTÕES</string>
+    <string name="cmd_url_title">ABRIR SITE</string>
     <string name="cmd_unknown_title">COMANDO DESCONHECIDO</string>
     <string name="cmd_unknown_preview">ENTER PARA PESQUISAR NA WEB</string>
     <string name="cmd_kind_alias">ALCUNHA</string>

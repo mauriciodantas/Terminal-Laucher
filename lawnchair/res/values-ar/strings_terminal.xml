@@ -436,6 +436,7 @@
     <string name="cmd_usage_task">[مهمة] · مهمة جديدة</string>
     <string name="cmd_usage_calc_short">[عملية] · اختصار calc</string>
     <string name="cmd_list_suggestions">اقتراحات</string>
+    <string name="cmd_url_title">فتح الموقع</string>
     <string name="cmd_unknown_title">أمر غير معروف</string>
     <string name="cmd_unknown_preview">ENTER للبحث على الويب</string>
     <string name="cmd_kind_alias">اسم مستعار</string>

@@ -436,6 +436,7 @@
     <string name="cmd_usage_task">[할 일] · 새 할 일</string>
     <string name="cmd_usage_calc_short">[계산] · calc 줄임</string>
     <string name="cmd_list_suggestions">추천</string>
+    <string name="cmd_url_title">사이트 열기</string>
     <string name="cmd_unknown_title">알 수 없는 명령어</string>
     <string name="cmd_unknown_preview">ENTER를 누르면 웹 검색</string>
     <string name="cmd_kind_alias">별칭</string>

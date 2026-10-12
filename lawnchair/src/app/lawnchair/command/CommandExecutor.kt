@@ -193,6 +193,11 @@ object CommandExecutor {
 
             is CommandAction.NewTask -> start(context, TaskApp.intent(context, action.title))
 
+            is CommandAction.OpenUrl -> start(
+                context,
+                Intent(Intent.ACTION_VIEW, Uri.parse(action.url)).addCategory(Intent.CATEGORY_BROWSABLE),
+            )
+
             is CommandAction.WebSearch -> start(
                 context,
                 Intent(Intent.ACTION_WEB_SEARCH).putExtra(SearchManager.QUERY, action.query),

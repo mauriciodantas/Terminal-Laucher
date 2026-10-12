@@ -470,6 +470,29 @@ class CommandEngineTest {
         assertEquals(Tone.ERROR, split("dividir xyz").tone)
     }
 
+    // ---- web addresses ----
+
+    @Test fun webAddressOpensTheSite() {
+        assertEquals(CommandAction.OpenUrl("https://github.com"), run("github.com").action)
+        assertEquals(CommandAction.OpenUrl("https://www.g1.com.br/tecnologia"), run("www.g1.com.br/tecnologia").action)
+        assertEquals(CommandAction.OpenUrl("https://x.com/a?b=1"), run("https://x.com/a?b=1").action)
+        assertEquals(CommandAction.OpenUrl("http://example.com"), run(" http://example.com ").action)
+        assertEquals(CommandAction.OpenUrl("http://192.168.0.1:8080"), run("192.168.0.1:8080").action)
+        assertEquals(Tone.OK, run("github.com").tone)
+        assertEquals("github.com", run("github.com").preview)
+    }
+
+    @Test fun anythingElseIsStillSearched() {
+        assertEquals(CommandAction.WebSearch("como fazer pão"), run("como fazer pão").action)
+        assertEquals(CommandAction.WebSearch("xyzzy"), run("xyzzy").action)
+        // Numbers, e-mails, impossible addresses and words with dots are not sites.
+        listOf("1.5", "3.14", "ana@gmail.com", "999.1.1.1", "fim.", ".com", "github.c0m").forEach {
+            assertNull(it, WebAddress.of(it))
+        }
+        // A command with a link in it stays that command.
+        assertTrue(run("rota google.com").action is CommandAction.Route)
+    }
+
     // ---- theme ----
 
     @Test fun themeListsItsOptions() {

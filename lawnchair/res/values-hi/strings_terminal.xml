@@ -436,6 +436,7 @@
     <string name="cmd_usage_task">[टास्क] · नया टास्क</string>
     <string name="cmd_usage_calc_short">[हिसाब] · calc का शॉर्टकट</string>
     <string name="cmd_list_suggestions">सुझाव</string>
+    <string name="cmd_url_title">साइट खोलें</string>
     <string name="cmd_unknown_title">अनजान कमांड</string>
     <string name="cmd_unknown_preview">वेब पर खोजने के लिए ENTER</string>
     <string name="cmd_kind_alias">उपनाम</string>
