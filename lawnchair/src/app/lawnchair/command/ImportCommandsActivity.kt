@@ -46,10 +46,16 @@ class ImportCommandsActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val uri = incomingUri(intent)
         val pack = uri?.let { CommandPacks.read(this, it) }
-        // Chats hand any file over as octet-stream, so a widget file may land here first.
-        if (pack == null && uri != null && LottieWidgetPacks.looksLikePack(this, uri)) {
+        // Chats hand any file over as octet-stream, so a theme or a widget file may land here first.
+        val other = when {
+            pack != null || uri == null -> null
+            ThemeStore.read(this, uri) != null -> ImportThemeActivity::class.java
+            LottieWidgetPacks.looksLikePack(this, uri) -> ImportWidgetActivity::class.java
+            else -> null
+        }
+        if (other != null) {
             startActivity(
-                Intent(this, ImportWidgetActivity::class.java)
+                Intent(this, other)
                     .setAction(Intent.ACTION_VIEW)
                     .setData(uri)
                     .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION),

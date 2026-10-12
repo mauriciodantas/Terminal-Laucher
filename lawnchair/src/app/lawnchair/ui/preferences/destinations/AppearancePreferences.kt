@@ -19,6 +19,7 @@ import app.lawnchair.preferences.preferenceManager
 import app.lawnchair.preferences2.preferenceManager2
 import app.lawnchair.ui.preferences.LocalIsExpandedScreen
 import app.lawnchair.ui.preferences.components.FontPreference
+import app.lawnchair.ui.preferences.components.SavedThemesPreference
 import app.lawnchair.ui.preferences.components.colorpreference.ColorPreference
 import app.lawnchair.ui.preferences.components.colorpreference.ComplementaryColorsPreference
 import app.lawnchair.ui.preferences.components.colorpreference.FollowSystemColorModePreference
@@ -43,23 +44,20 @@ fun AppearancePreferences(modifier: Modifier = Modifier) {
         label = stringResource(id = R.string.appearance_label),
         modifier = modifier,
     ) {
-        PreferenceGroup(heading = stringResource(id = R.string.appearance_group_presets)) {
+        // Whole looks first: the ready-made ones, the user's own and what can be done with them.
+        PreferenceGroup(heading = stringResource(id = R.string.appearance_group_themes)) {
             ComplementaryColorsPreference()
-            FollowSystemColorModePreference()
+            SavedThemesPreference()
         }
 
+        // Then each color on its own, with how the pair follows the system mode.
         PreferenceGroup(
             heading = stringResource(id = R.string.appearance_group_colors),
             modifier = Modifier.padding(top = 8.dp),
         ) {
             ColorPreference(preference = prefs2.accentColor)
             ColorPreference(preference = prefs2.launcherBackgroundColor)
-        }
-
-        PreferenceGroup(
-            heading = stringResource(id = R.string.appearance_group_details),
-            modifier = Modifier.padding(top = 8.dp),
-        ) {
+            FollowSystemColorModePreference()
             ColorPreference(preference = prefs2.strokeColorStyle)
             ColorPreference(preference = prefs2.hotseatBackgroundColor)
             ColorPreference(preference = prefs2.folderColor)

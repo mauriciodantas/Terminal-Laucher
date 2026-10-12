@@ -43,7 +43,7 @@ class AiTest {
     }
 
     @Test fun offersTheModes() {
-        assertEquals(3, run("ia").suggestions.size)
+        assertEquals(4, run("ia").suggestions.size)
         assertEquals(1, run("ia fa").suggestions.size)
     }
 

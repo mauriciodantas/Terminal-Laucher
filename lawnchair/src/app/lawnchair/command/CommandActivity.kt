@@ -356,7 +356,13 @@ private fun CommandScreen(onClose: () -> Unit) {
         if (aiBusy) return
         record(action, command)
         // "ia pastas" alone still needs a request in the user's language, which the folder names follow.
-        val prompt = action.prompt.ifEmpty { if (action.mode == AiMode.FOLDERS) context.getString(R.string.cmd_ai_folders_request) else "" }
+        val prompt = action.prompt.ifEmpty {
+            when (action.mode) {
+                AiMode.FOLDERS -> context.getString(R.string.cmd_ai_folders_request)
+                AiMode.THEME -> context.getString(R.string.cmd_ai_theme_request)
+                else -> ""
+            }
+        }
         // A conversation goes on across questions; a command request starts fresh each time.
         val turns = (if (action.mode == AiMode.CHAT) aiTurns else emptyList()) + AiTurn(fromUser = true, text = prompt)
         if (action.mode == AiMode.CHAT) aiTurns = turns
@@ -373,6 +379,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                 now = now.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm, EEEE", java.util.Locale.getDefault())) + " (" + now.zone + ")",
                 folders = FolderOrganizer.describe(folders, apps),
                 forceFolders = action.force,
+                theme = if (action.mode == AiMode.THEME) extras.theme else null,
             )
             val system = AiPrompts.system(action.mode, aiContext)
             // Only the conversation is shown as it comes: a command or a pack is read once complete.
@@ -405,7 +412,11 @@ private fun CommandScreen(onClose: () -> Unit) {
 
                 AiMode.CREATE -> {
                     val pack = AiPrompts.pack(reply.text)
-                    if (pack == null) {
+                    // Asked for a theme in other words ("ia create theme for halloween"), the AI sends one: it is reviewed as a theme.
+                    val theme = AiPrompts.createdTheme(reply.text)
+                    if (theme != null) {
+                        if (ThemeStore.review(context, theme.first)) onClose() else done = failedLabel
+                    } else if (pack == null) {
                         done = context.getString(R.string.cmd_ai_create_failed)
                     } else {
                         // The same import screen as a pack received from somebody: nothing is added unseen.
@@ -421,6 +432,18 @@ private fun CommandScreen(onClose: () -> Unit) {
                             )
                         }.isSuccess
                         if (opened) onClose() else done = failedLabel
+                    }
+                }
+
+                AiMode.THEME -> {
+                    val theme = AiPrompts.theme(reply.text)
+                    when {
+                        theme == null -> done = context.getString(R.string.cmd_ai_theme_failed)
+
+                        // The same screen as a theme received from somebody: nothing changes unseen.
+                        ThemeStore.review(context, theme.first) -> onClose()
+
+                        else -> done = failedLabel
                     }
                 }
 

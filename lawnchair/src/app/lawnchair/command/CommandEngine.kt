@@ -37,6 +37,16 @@ sealed interface CommandAction {
 
     /** Inverts the theme colors, lays them light or dark, or makes them follow the system mode. */
     data class Theme(val change: ThemeChange) : CommandAction
+
+    /** Sets what [spec] has: one element ("tema fundo #000"), a saved theme or a ready-made look. */
+    data class ThemeApply(val spec: ThemeSpec) : CommandAction
+
+    /** Keeps the theme on screen now under [name]. */
+    data class ThemeSave(val name: String) : CommandAction
+
+    /** Sends the theme called [name] as a file; an empty name sends the one on screen. */
+    data class ThemeShare(val name: String) : CommandAction
+    data class ThemeDelete(val name: String) : CommandAction
     data class WebSearch(val query: String) : CommandAction
 
     /** A reminder, a command at a time or a rule; the id is given when it is saved. */
@@ -327,7 +337,7 @@ object CommandEngine {
 
             BuiltInCommand.SPLIT -> analyzeSplit(arg, apps)
 
-            BuiltInCommand.THEME -> analyzeTheme(arg)
+            BuiltInCommand.THEME -> ThemeCommand.analyze(arg, extras)
 
             BuiltInCommand.TIMER -> MoreCommands.timer(arg)
 
@@ -526,7 +536,16 @@ object CommandEngine {
             ThemeChange.LIGHT -> "background = lighter"
             ThemeChange.DARK -> "background = darker"
             ThemeChange.SYSTEM -> "follow_system_color_mode = true"
+            ThemeChange.RESET -> "appearance = default"
         }
+
+        is CommandAction.ThemeApply -> ThemeCommand.describe(action.spec)
+
+        is CommandAction.ThemeSave -> "themes += \"${action.name}\""
+
+        is CommandAction.ThemeShare -> "ACTION_SEND " + ThemeSpecs.MIME
+
+        is CommandAction.ThemeDelete -> "themes -= \"${action.name}\""
 
         is CommandAction.WebSearch -> "ACTION_WEB_SEARCH · \"${action.query}\""
 
@@ -643,27 +662,6 @@ object CommandEngine {
                 else -> Tone.ERROR
             },
             action = if (first != null && second != null) CommandAction.SplitScreen(first, second) else null,
-        )
-    }
-
-    /** "tema inverter": the options start out listed and narrow down as the word is typed. */
-    private fun analyzeTheme(arg: String): Analysis {
-        val typed = arg.trim().foldAccents()
-        val chosen = ThemeChange.of(typed)
-        val matches = ThemeChange.entries.filter { change -> change.words().any { it.startsWith(typed) } }
-        val word = BuiltInCommand.THEME.word
-        return Analysis(
-            suggestions = matches.map { Suggestion("$word ${it.word}", it.preview, Texts.get(R.string.cmd_kind_option)) },
-            listTitle = Texts.get(R.string.cmd_list_suggestions),
-            needsContacts = false,
-            previewTitle = Texts.get(R.string.cmd_theme_title),
-            preview = chosen?.preview ?: Texts.get(R.string.cmd_theme_empty),
-            tone = when {
-                chosen != null -> Tone.OK
-                matches.isEmpty() -> Tone.ERROR
-                else -> Tone.IDLE
-            },
-            action = chosen?.let { CommandAction.Theme(it) },
         )
     }
 

@@ -9,13 +9,15 @@ import org.json.JSONObject
 /**
  * What "ia" does with the text after it: talk ("ia quanto é um pé em metros"), turn a request into a
  * command of the bar ("ia fazer silêncio até as 8"), write a new command ("ia criar busca no imdb")
- * or sort the apps into drawer folders ("ia pastas", "ia pastas só jogos e trabalho").
+ * sort the apps into drawer folders ("ia pastas", "ia pastas só jogos e trabalho") or design a
+ * theme ("ia tema noite de neon com fonte de máquina de escrever").
  */
 enum class AiMode(@StringRes private val wordRes: Int, val portuguese: String, val english: String) {
     CHAT(0, "", ""),
     RUN(R.string.cmd_ai_word_run, "fazer", "do"),
     CREATE(R.string.cmd_ai_word_create, "criar", "create"),
     FOLDERS(R.string.cmd_ai_word_folders, "pastas", "folders"),
+    THEME(R.string.cmd_ai_word_theme, "tema", "theme"),
 
     /** No key saved yet: Enter opens the settings where it goes. */
     SETUP(0, "", ""),
@@ -27,7 +29,7 @@ enum class AiMode(@StringRes private val wordRes: Int, val portuguese: String, v
 
     companion object {
         /** The modes chosen by a word after "ia". */
-        val OFFERED get() = listOf(RUN, CREATE, FOLDERS)
+        val OFFERED get() = listOf(RUN, CREATE, FOLDERS, THEME)
 
         /** The mode an accent-folded first word names; null when it is part of a question. */
         fun of(word: String): AiMode? = word.foldAccents().let { w -> OFFERED.firstOrNull { w in it.words() } }
@@ -48,6 +50,8 @@ data class AiContext(
     val folders: List<Pair<String, List<String>>> = emptyList(),
     /** "ia pastas --force": apps already in folders may be moved too. */
     val forceFolders: Boolean = false,
+    /** The theme on screen now, for [AiMode.THEME] to start from. */
+    val theme: ThemeSpec? = null,
 )
 
 /** A command the AI proposed for a request, or why it found none. */
@@ -62,6 +66,7 @@ object AiPrompts {
         AiMode.RUN -> base(context) + "\n\n" + catalog(context) + "\n\n" + RUN_RULES
         AiMode.CREATE -> base(context) + "\n\n" + catalog(context) + "\n\n" + CREATE_RULES
         AiMode.FOLDERS -> base(context) + "\n\n" + drawer(context) + "\n\n" + if (context.forceFolders) FOLDERS_FORCE_RULES else FOLDERS_RULES
+        AiMode.THEME -> base(context) + "\n\n" + currentTheme(context) + THEME_RULES
         else -> base(context) + "\n\n" + CHAT_RULES
     }
 
@@ -140,6 +145,44 @@ object AiPrompts {
             "Reply with JSON only, no other text: " +
             "{\"folders\": [{\"name\": \"<folder>\", \"apps\": [\"<app>\", \"<app>\"]}], \"note\": \"<one short sentence>\"}"
 
+    private fun currentTheme(context: AiContext): String = context.theme?.let { "CURRENT THEME (start from it when the request asks for changes to it): " + ThemeSpecs.encode(it.copy(name = ""), pretty = false) + "\n\n" }.orEmpty()
+
+    /** The fields of a theme and how to fill them, for [AiMode.THEME] and for a theme asked of [AiMode.CREATE]. */
+    private const val THEME_SHAPE =
+        "{\"name\": \"<short name, 1 to 3 words, in the user's language>\", \"accent\": \"#rrggbb\", \"background\": \"#rrggbb\", " +
+            "\"outline\": \"#rrggbb\", \"dock\": \"#rrggbb\", \"folder\": \"#rrggbb\", \"followSystem\": false, " +
+            "\"font\": {\"kind\": \"google\", \"family\": \"<Google Fonts family>\"}, \"pixelClock\": true, \"iconEffect\": true, " +
+            "\"widgetEffect\": true, \"widgetIntensity\": 0.6, \"crtEffect\": true, \"crtIntensity\": 0.4, " +
+            "\"showWallpaper\": false, \"wallpaperDim\": 0.5, \"colorAsWallpaper\": false, \"note\": \"<one short sentence>\"}\n" +
+            "Rules: the accent over the background must read well, a contrast ratio of at least 4.5 (WCAG). " +
+            "outline is the search bar border, dock the dock background, folder the folder background; " +
+            "any color may be \"default\" to follow the accent. The font is an exact Google Fonts family name " +
+            "(monospaced ones such as JetBrains Mono, Space Mono, IBM Plex Mono, VT323 or Share Tech Mono suit the look best), " +
+            "or {\"kind\": \"default\"} for the terminal font. pixelClock keeps the pixel font for the clock. " +
+            "iconEffect draws app icons in the accent color; widgetEffect tints widgets; crtEffect adds scanlines; " +
+            "intensities go from 0.05 to 1. showWallpaper shows the system wallpaper behind the home screen, dimmed by wallpaperDim (0 to 1); " +
+            "colorAsWallpaper sets the background color as the system wallpaper. Set followSystem only when asked to follow the light and dark mode. " +
+            "The launcher looks like a terminal: the accent color draws all the text, lines and icons over the background color."
+
+    private const val THEME_RULES =
+        "Design a theme for the launcher from the user's description. " +
+            "Reply with JSON only, no other text, in this shape (leave out a field to keep it as it is):\n" + THEME_SHAPE
+
+    /**
+     * The theme of a reply and its note, or null when the reply holds none or it could not be read.
+     * [AiMode.THEME] replies with the theme itself; [AiMode.CREATE] wraps it in "theme" when it was asked for one.
+     */
+    fun theme(reply: String): Pair<ThemeSpec, String>? {
+        val o = json(reply) ?: return null
+        val t = o.optJSONObject("theme") ?: o
+        val spec = ThemeSpecs.fromJson(t)
+        if (spec.isEmpty || ThemeSpecs.unreadable(spec, null)) return null
+        return spec to (o.optString("note").ifBlank { t.optString("note") }).trim()
+    }
+
+    /** The theme an [AiMode.CREATE] reply holds instead of commands ("ia criar um tema de halloween"), or null. */
+    fun createdTheme(reply: String): Pair<ThemeSpec, String>? = if (json(reply)?.optJSONObject("theme") != null) theme(reply) else null
+
     private const val RUN_RULES =
         "Turn the user's request into ONE line the bar can run, using only the commands above. " +
             "Chain several commands with \";\" and schedule with the forms above when the request asks for it. " +
@@ -160,7 +203,10 @@ object AiPrompts {
             "\"packages\" lists the apps that should open the link, best first; leave it empty to let the system choose. " +
             "Prefer https links that apps also open; never use file:, content: or intent: schemes. " +
             "Letters and alias names are lower case, one word, and must not be a command word above or one the user already has. " +
-            "Leave out what is not needed: an empty list is fine."
+            "Leave out what is not needed: an empty list is fine.\n" +
+            "When the user asks for a theme, a look, colors, a font or effects for the launcher instead of a command, " +
+            "write no actions or aliases: reply with JSON only, {\"theme\": <theme>, \"note\": \"<one short sentence>\"}, " +
+            "where <theme> has this shape:\n" + THEME_SHAPE
 
     /** The JSON object in a reply, without the code fences or words some models wrap it in. */
     fun json(reply: String): JSONObject? {

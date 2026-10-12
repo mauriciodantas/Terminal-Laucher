@@ -422,8 +422,15 @@ internal object MoreCommands {
         val text = arg.trim()
         val first = text.takeWhile { !it.isWhitespace() }
         val mode = AiMode.of(first)
-        val prompt = if (mode != null) text.substring(first.length).trim() else text
-        val chosen = mode ?: AiMode.CHAT
+        var prompt = if (mode != null) text.substring(first.length).trim() else text
+        var chosen = mode ?: AiMode.CHAT
+        // "ia criar tema de halloween" asks for a theme, not for a command.
+        val next = prompt.takeWhile { !it.isWhitespace() }
+        val nextWord = next.foldAccents()
+        if (chosen == AiMode.CREATE && nextWord.isNotEmpty() && (nextWord in AiMode.THEME.words() || nextWord in BuiltInCommand.THEME.words())) {
+            chosen = AiMode.THEME
+            prompt = prompt.substring(next.length).trim()
+        }
         val word = BuiltInCommand.AI.word
         // While nothing or only part of a mode word is typed, the modes are offered.
         val offers = if (mode == null && ' ' !in text) {
@@ -433,6 +440,10 @@ internal object MoreCommands {
             emptyList()
         }
         val heading = title + " · " + modeLabel(chosen) + " · " + service.substringBefore(" · ").uppercase()
+        if (chosen == AiMode.THEME) {
+            // A theme needs no request either: Enter alone asks for a surprise.
+            return result(heading, prompt.ifEmpty { Texts.get(R.string.cmd_ai_theme_empty) }, Tone.OK, CommandAction.Ai(chosen, prompt), suggestions = offers)
+        }
         if (chosen == AiMode.FOLDERS) {
             // Folders need no request: Enter alone sorts the apps the AI's way.
             val (request, force) = AiFolders.splitForce(prompt)
@@ -451,6 +462,7 @@ internal object MoreCommands {
             AiMode.RUN -> R.string.cmd_ai_mode_run
             AiMode.CREATE -> R.string.cmd_ai_mode_create
             AiMode.FOLDERS -> R.string.cmd_ai_mode_folders
+            AiMode.THEME -> R.string.cmd_ai_mode_theme
             else -> R.string.cmd_ai_mode_chat
         },
     )

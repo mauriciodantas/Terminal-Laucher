@@ -172,6 +172,18 @@ object CommandExecutor {
                 ThemeChange.LIGHT -> SystemColorMode.pin(context, SystemColorMode.Pin.LIGHT)
                 ThemeChange.DARK -> SystemColorMode.pin(context, SystemColorMode.Pin.DARK)
                 ThemeChange.SYSTEM -> SystemColorMode.follow(context)
+                ThemeChange.RESET -> ThemeStore.reset(context)
+            }
+
+            is CommandAction.ThemeApply -> return ThemeStore.apply(context, action.spec)
+
+            is CommandAction.ThemeSave -> ThemeStore.saveCurrent(context, action.name)
+
+            is CommandAction.ThemeDelete -> ThemeStore.remove(context, action.name)
+
+            is CommandAction.ThemeShare -> {
+                val spec = ThemeStore.named(context, action.name) ?: return false
+                start(context, ThemeStore.shareIntent(context, spec) ?: return false)
             }
 
             is CommandAction.Route -> start(
@@ -194,7 +206,7 @@ object CommandExecutor {
      * something instead of opening a screen, which Android blocks from the background.
      */
     fun runsInBackground(context: Context, action: CommandAction): Boolean = when (action) {
-        is CommandAction.Theme, is CommandAction.Calc, is CommandAction.Copy, is CommandAction.Schedule,
+        is CommandAction.Theme, is CommandAction.ThemeApply, is CommandAction.ThemeSave, is CommandAction.ThemeDelete, is CommandAction.Calc, is CommandAction.Copy, is CommandAction.Schedule,
         is CommandAction.CancelJob, is CommandAction.Volume, is CommandAction.Media, is CommandAction.AddNote,
         -> true
 

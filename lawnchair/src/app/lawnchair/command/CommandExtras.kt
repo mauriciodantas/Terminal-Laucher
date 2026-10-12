@@ -33,6 +33,14 @@ data class CommandExtras(
     val taskApp: String? = null,
     /** "Claude · claude-opus-5-5" once an AI key is saved; null keeps "ia" locked. */
     val ai: String? = null,
+    /** The theme on screen now, every element set; null when unknown. */
+    val theme: ThemeSpec? = null,
+    /** The themes the user saved, by name. */
+    val themes: List<ThemeSpec> = emptyList(),
+    /** The ready-made looks of Appearance, by name. */
+    val themePresets: List<ThemeSpec> = emptyList(),
+    /** Google Fonts families "tema fonte" can pick; empty until the list loads. */
+    val fonts: List<String> = emptyList(),
     val now: LocalDateTime? = null,
     val zone: ZoneId? = null,
 ) {

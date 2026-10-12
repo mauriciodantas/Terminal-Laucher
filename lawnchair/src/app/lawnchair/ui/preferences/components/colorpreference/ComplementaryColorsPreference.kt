@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -33,12 +34,11 @@ import app.lawnchair.preferences.getAdapter
 import app.lawnchair.preferences2.preferenceManager2
 import app.lawnchair.theme.ComplementaryColors
 import app.lawnchair.theme.color.ColorOption
-import app.lawnchair.ui.preferences.components.layout.PreferenceTemplate
 import com.android.launcher3.R
 
 /**
  * The ready-made looks, the pastel ones, then the twelve hues of the color wheel, each shown as its accent over the
- * complement it brings along. Tapping one sets the accent and the background together.
+ * complement it brings along, in one row with no text around it. Tapping one sets the accent and the background together.
  */
 @Composable
 fun ComplementaryColorsPreference(modifier: Modifier = Modifier) {
@@ -66,11 +66,11 @@ fun ComplementaryColorsPreference(modifier: Modifier = Modifier) {
         )
     }
 
-    Column(modifier = modifier) {
-        PreferenceTemplate(
-            title = { Text(text = stringResource(id = R.string.appearance_complementary)) },
-            description = { Text(text = stringResource(id = R.string.appearance_complementary_desc)) },
-        )
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceContainer),
+    ) {
         Row(
             modifier = Modifier
                 .horizontalScroll(rememberScrollState())

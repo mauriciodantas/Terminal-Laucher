@@ -43,6 +43,11 @@ object CommandSources {
             info = snapshot(context),
             taskApp = TaskApp.label(context),
             ai = AiStore.load(context)?.label,
+            theme = runCatching { ThemeStore.current(context) }.getOrNull(),
+            themes = ThemeStore.load(context),
+            themePresets = ThemeStore.presets(context),
+            // Read once from the app's assets and kept by the listing afterwards.
+            fonts = kotlinx.coroutines.runBlocking { ThemeStore.fonts(context) },
         )
     }
 
