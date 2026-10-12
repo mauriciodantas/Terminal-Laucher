@@ -708,7 +708,7 @@
     <string name="cmd_ai_word_run">执行</string>
     <string name="cmd_ai_word_create">创建</string>
     <string name="cmd_usage_ai">[问题] · 执行 [请求] · 创建 [命令]</string>
-    <string name="cmd_help_ai">与设置中配置的 AI 对话，并在这里显示回答；继续提问即可延续对话。执行会把请求变成命令栏的命令，放在输入行上等你按 Enter。创建会编写新命令并打开导入界面。只发送请求、命令和应用名称。\n› ai 一升是几杯\n› ai 执行 dnd on; in 1h: dnd off\n› ai 创建 在 imdb 搜索\n› ai 总结 {clip}</string>
+    <string name="cmd_help_ai">与设置中配置的 AI 对话，并在这里显示回答；继续提问即可延续对话。执行会把请求变成命令栏的命令，放在输入行上等你按 Enter。创建会编写新命令并打开导入界面。只发送请求、命令和应用名称。 文件夹会把应用整理进抽屉文件夹，并在更改前显示方案。\n› ai 一升是几杯\n› ai 执行 dnd on; in 1h: dnd off\n› ai 创建 在 imdb 搜索\n› ai 总结 {clip}\n› ai 文件夹\n› ai 文件夹 --force</string>
     <string name="cmd_ai_title">AI</string>
     <string name="cmd_ai_locked">请在设置中添加 AI 密钥 · ENTER 打开设置</string>
     <string name="cmd_ai_mode_chat">对话</string>
@@ -724,6 +724,18 @@
     <string name="cmd_ai_empty_reply">AI 没有回答</string>
     <string name="cmd_ai_no_command">没有命令符合此请求</string>
     <string name="cmd_ai_create_failed">AI 没有发送可导入的命令</string>
+    <string name="cmd_ai_word_folders">文件夹</string>
+    <string name="cmd_ai_mode_folders">文件夹</string>
+    <string name="cmd_ai_folders_empty">ENTER 把应用整理进抽屉文件夹 · 也可说明方式</string>
+    <string name="cmd_ai_folders_request">把我的应用整理到文件夹</string>
+    <string name="cmd_ai_folders_title">文件夹方案 · %1$d 个文件夹 · %2$d 个应用</string>
+    <string name="cmd_ai_folders_apply">[应用]</string>
+    <string name="cmd_ai_folders_cancel">[取消]</string>
+    <string name="cmd_ai_folders_failed">AI 没有发来文件夹方案</string>
+    <string name="cmd_ai_folders_none">没有新文件夹：所有应用都已在文件夹中</string>
+    <string name="cmd_ai_folders_done">应用抽屉中已有 %1$d 个文件夹就绪</string>
+    <string name="cmd_ai_folders_force">--FORCE：已在文件夹中的应用也可能移动 · 空文件夹会被删除</string>
+    <string name="cmd_ai_folders_deleted">已删除（空）</string>
     <string name="cmd_pref_group_ai">AI</string>
     <string name="cmd_pref_ai">AI 密钥</string>
     <string name="cmd_pref_ai_none">无密钥 · AI 命令保持锁定</string>

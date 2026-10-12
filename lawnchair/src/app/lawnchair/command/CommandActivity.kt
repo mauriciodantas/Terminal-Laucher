@@ -286,6 +286,12 @@ private fun CommandScreen(onClose: () -> Unit) {
     // The conversation with the AI while the bar is open, and the note of a command it filled in.
     var aiTurns by remember { mutableStateOf<List<AiTurn>>(emptyList()) }
     var aiBusy by remember { mutableStateOf(false) }
+
+    // The answer of the conversation while it is still coming in.
+    var aiPartial by remember { mutableStateOf<String?>(null) }
+
+    // The folders "ia pastas" proposed, waiting for APPLY or CANCEL.
+    var folderPlan by remember { mutableStateOf<FolderPlan?>(null) }
     var aiNote by remember { mutableStateOf<Pair<String, String>?>(null) }
 
     var pendingAction by remember { mutableStateOf<CommandAction?>(null) }
@@ -342,28 +348,43 @@ private fun CommandScreen(onClose: () -> Unit) {
 
     /**
      * Sends [action] to the AI. Only the request, the commands of the bar, the user's letters and
-     * alias names and the app names go out: no contacts, notes, calendar, clipboard or location.
+     * alias names, the app names and the drawer folder names go out: no contacts, notes, calendar,
+     * clipboard or location.
      */
     fun askAi(action: CommandAction.Ai, command: String) {
         val config = AiStore.load(context) ?: return
         if (aiBusy) return
         record(action, command)
-        val now = java.time.ZonedDateTime.now()
-        val aiContext = AiContext(
-            custom = custom,
-            aliases = aliases,
-            apps = apps.map { it.label },
-            now = now.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm, EEEE", java.util.Locale.getDefault())) + " (" + now.zone + ")",
-        )
-        val system = AiPrompts.system(action.mode, aiContext)
+        // "ia pastas" alone still needs a request in the user's language, which the folder names follow.
+        val prompt = action.prompt.ifEmpty { if (action.mode == AiMode.FOLDERS) context.getString(R.string.cmd_ai_folders_request) else "" }
         // A conversation goes on across questions; a command request starts fresh each time.
-        val turns = (if (action.mode == AiMode.CHAT) aiTurns else emptyList()) + AiTurn(fromUser = true, text = action.prompt)
+        val turns = (if (action.mode == AiMode.CHAT) aiTurns else emptyList()) + AiTurn(fromUser = true, text = prompt)
         if (action.mode == AiMode.CHAT) aiTurns = turns
+        folderPlan = null
         aiBusy = true
         done = context.getString(R.string.command_running)
         scope.launch {
-            val result = runCatching { AiClient.send(config, system, turns) }
+            val folders = if (action.mode == AiMode.FOLDERS) runCatching { FolderOrganizer.existing(context) }.getOrDefault(emptyList()) else emptyList()
+            val now = java.time.ZonedDateTime.now()
+            val aiContext = AiContext(
+                custom = custom,
+                aliases = aliases,
+                apps = apps.map { it.label },
+                now = now.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm, EEEE", java.util.Locale.getDefault())) + " (" + now.zone + ")",
+                folders = FolderOrganizer.describe(folders, apps),
+                forceFolders = action.force,
+            )
+            val system = AiPrompts.system(action.mode, aiContext)
+            // Only the conversation is shown as it comes: a command or a pack is read once complete.
+            val result = runCatching {
+                if (action.mode == AiMode.CHAT) {
+                    AiClient.stream(config, system, turns) { aiPartial = it }
+                } else {
+                    AiClient.send(config, system, turns)
+                }
+            }
             aiBusy = false
+            aiPartial = null
             val reply = result.getOrElse { error ->
                 if (action.mode == AiMode.CHAT) aiTurns = turns.dropLast(1)
                 done = AiClient.describe(context, error)
@@ -400,6 +421,22 @@ private fun CommandScreen(onClose: () -> Unit) {
                             )
                         }.isSuccess
                         if (opened) onClose() else done = failedLabel
+                    }
+                }
+
+                AiMode.FOLDERS -> {
+                    val plan = AiFolders.plan(reply.text, apps, folders, action.force)
+                    when {
+                        plan == null -> done = context.getString(R.string.cmd_ai_folders_failed)
+
+                        plan.isEmpty -> done = plan.note.ifEmpty { context.getString(R.string.cmd_ai_folders_none) }
+
+                        // The plan waits on screen: nothing changes until APPLY.
+                        else -> {
+                            folderPlan = plan
+                            done = null
+                            setText("")
+                        }
                     }
                 }
 
@@ -952,6 +989,8 @@ private fun CommandScreen(onClose: () -> Unit) {
                     val chatScroll = rememberScrollState()
                     // The newest message comes into view as it arrives.
                     LaunchedEffect(aiTurns.size) { chatScroll.animateScrollTo(chatScroll.maxValue) }
+                    // An answer still coming in stays in view without an animation for each piece.
+                    LaunchedEffect(aiPartial?.length) { chatScroll.scrollTo(chatScroll.maxValue) }
                     Column(
                         Modifier
                             .weight(1f, fill = false)
@@ -974,7 +1013,114 @@ private fun CommandScreen(onClose: () -> Unit) {
                                 },
                             )
                         }
+                        aiPartial?.let { partial ->
+                            Text(
+                                partial.trimStart() + "▌",
+                                color = phosphor,
+                                fontFamily = mono(),
+                                fontSize = 12.5.sp,
+                                lineHeight = 18.sp,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
                     }
+                }
+            }
+
+            // The folders "ia pastas" proposed: nothing changes in the drawer until APPLY.
+            val folderBox: @Composable (Modifier, FolderPlan) -> Unit = { modifier, plan ->
+                Column(
+                    modifier
+                        .padding(top = 8.dp)
+                        .fillMaxWidth()
+                        .heightIn(min = 100.dp)
+                        .border(1.dp, line),
+                ) {
+                    Label(
+                        stringResource(R.string.cmd_ai_folders_title, plan.folders.size, plan.appCount),
+                        dim,
+                        10.sp,
+                        Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 5.dp),
+                    )
+                    val planScroll = rememberScrollState()
+                    Column(
+                        Modifier
+                            .weight(1f, fill = false)
+                            .scrollHint(planScroll, phosphor.copy(alpha = 0.6f), ground)
+                            .verticalScroll(planScroll)
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        if (plan.note.isNotEmpty()) {
+                            Text(plan.note, color = dim, fontFamily = mono(), fontSize = 11.sp, lineHeight = 16.sp)
+                        }
+                        plan.folders.forEach { folder ->
+                            Text(
+                                buildAnnotatedString {
+                                    withStyle(SpanStyle(color = phosphor)) {
+                                        // "+" adds to a folder that exists, "=" rewrites it (--force).
+                                        val mark = when {
+                                            folder.existingId == null -> ""
+                                            folder.replace -> "= "
+                                            else -> "+ "
+                                        }
+                                        append(mark + folder.name.uppercase())
+                                    }
+                                    withStyle(SpanStyle(color = dim)) { append("  " + folder.apps.joinToString(", ") { it.label }) }
+                                },
+                                fontFamily = mono(),
+                                fontSize = 12.5.sp,
+                                lineHeight = 18.sp,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
+                        // --force: the folders that lose apps, with what stays, and the ones deleted.
+                        val labels = apps.associate { it.id.substringBefore('/') to it.label }
+                        plan.trimmed.forEach { folder ->
+                            Text(
+                                "~ " + folder.title.uppercase() + "  " + folder.packages.mapNotNull { labels[it] }.joinToString(", "),
+                                color = dim,
+                                fontFamily = mono(),
+                                fontSize = 12.5.sp,
+                                lineHeight = 18.sp,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
+                        plan.removed.forEach { folder ->
+                            Text(
+                                "× " + folder.title.uppercase() + "  " + stringResource(R.string.cmd_ai_folders_deleted),
+                                color = Danger,
+                                fontFamily = mono(),
+                                fontSize = 12.5.sp,
+                                lineHeight = 18.sp,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
+                    }
+                    Row(Modifier.fillMaxWidth().border(1.dp, line)) {
+                        FKey(stringResource(R.string.cmd_ai_folders_cancel), dim, Modifier.weight(1f)) {
+                            folderPlan = null
+                        }
+                        FKey(stringResource(R.string.cmd_ai_folders_apply), phosphor, Modifier.weight(1f)) {
+                            folderPlan = null
+                            done = context.getString(R.string.command_running)
+                            scope.launch {
+                                val changed = runCatching { FolderOrganizer.apply(context, plan) }
+                                done = changed.fold(
+                                    { context.getString(R.string.cmd_ai_folders_done, it) },
+                                    { failedLabel },
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            val listArea: @Composable (Modifier) -> Unit = { modifier ->
+                val plan = folderPlan
+                when {
+                    plan != null -> folderBox(modifier, plan)
+                    showConversation -> conversation(modifier)
+                    else -> suggestions(modifier)
                 }
             }
 
@@ -1067,7 +1213,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                     Column(Modifier.weight(1.4f)) {
                         commandLine()
                         quickStarts()
-                        if (showConversation) conversation(Modifier.weight(1f, fill = false)) else suggestions(Modifier.weight(1f, fill = false))
+                        listArea(Modifier.weight(1f, fill = false))
                     }
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
@@ -1081,7 +1227,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                 quickStarts()
                 // The preview stays right under the list, and the keys at the bottom.
                 Column(Modifier.weight(1f)) {
-                    if (showConversation) conversation(Modifier.weight(1f, fill = false)) else suggestions(Modifier.weight(1f, fill = false))
+                    listArea(Modifier.weight(1f, fill = false))
                     preview()
                 }
                 keys()

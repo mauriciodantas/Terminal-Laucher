@@ -427,12 +427,19 @@ internal object MoreCommands {
         val word = BuiltInCommand.AI.word
         // While nothing or only part of a mode word is typed, the modes are offered.
         val offers = if (mode == null && ' ' !in text) {
-            listOf(AiMode.RUN, AiMode.CREATE).filter { it.word.foldAccents().startsWith(first.foldAccents()) }
+            AiMode.OFFERED.filter { it.word.foldAccents().startsWith(first.foldAccents()) }
                 .map { Suggestion("$word ${it.word} ", modeLabel(it), Texts.get(R.string.cmd_kind_option)) }
         } else {
             emptyList()
         }
         val heading = title + " · " + modeLabel(chosen) + " · " + service.substringBefore(" · ").uppercase()
+        if (chosen == AiMode.FOLDERS) {
+            // Folders need no request: Enter alone sorts the apps the AI's way.
+            val (request, force) = AiFolders.splitForce(prompt)
+            val hint = request.ifEmpty { Texts.get(R.string.cmd_ai_folders_empty) }
+            val text = if (force) hint + " · " + Texts.get(R.string.cmd_ai_folders_force) else hint
+            return result(heading, text, if (force) Tone.WARN else Tone.OK, CommandAction.Ai(chosen, request, force), suggestions = offers)
+        }
         return when {
             prompt.isEmpty() -> result(heading, Texts.get(emptyHint(chosen)), Tone.IDLE, null, suggestions = offers)
             else -> result(heading, prompt, Tone.OK, CommandAction.Ai(chosen, prompt), suggestions = offers)
@@ -443,6 +450,7 @@ internal object MoreCommands {
         when (mode) {
             AiMode.RUN -> R.string.cmd_ai_mode_run
             AiMode.CREATE -> R.string.cmd_ai_mode_create
+            AiMode.FOLDERS -> R.string.cmd_ai_mode_folders
             else -> R.string.cmd_ai_mode_chat
         },
     )

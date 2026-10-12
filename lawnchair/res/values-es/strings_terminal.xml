@@ -708,7 +708,7 @@
     <string name="cmd_ai_word_run">hacer</string>
     <string name="cmd_ai_word_create">crear</string>
     <string name="cmd_usage_ai">[pregunta] · hacer [pedido] · crear [comando]</string>
-    <string name="cmd_help_ai">Habla con la IA configurada en los ajustes y muestra la respuesta aquí; sigue preguntando para continuar la conversación. hacer convierte un pedido en un comando de la barra, que espera en la línea al Enter. crear escribe un comando nuevo y abre la pantalla de importación. Solo se envían el pedido, los comandos y los nombres de las apps.\n› ia cuántas tazas tiene un litro\n› ia hacer silencio on; en 1h: silencio off\n› ia crear búsqueda en imdb\n› ia resume {clip}</string>
+    <string name="cmd_help_ai">Habla con la IA configurada en los ajustes y muestra la respuesta aquí; sigue preguntando para continuar la conversación. hacer convierte un pedido en un comando de la barra, que espera en la línea al Enter. crear escribe un comando nuevo y abre la pantalla de importación. Solo se envían el pedido, los comandos y los nombres de las apps. carpetas ordena las apps en carpetas del cajón y muestra el plan antes de cambiar nada.\n› ia cuántas tazas tiene un litro\n› ia hacer silencio on; en 1h: silencio off\n› ia crear búsqueda en imdb\n› ia resume {clip}\n› ia carpetas\n› ia carpetas --force</string>
     <string name="cmd_ai_title">IA</string>
     <string name="cmd_ai_locked">AÑADE UNA CLAVE DE IA EN AJUSTES · ENTER LOS ABRE</string>
     <string name="cmd_ai_mode_chat">CHAT</string>
@@ -724,6 +724,18 @@
     <string name="cmd_ai_empty_reply">LA IA NO RESPONDIÓ</string>
     <string name="cmd_ai_no_command">NINGÚN COMANDO SIRVE PARA ESTE PEDIDO</string>
     <string name="cmd_ai_create_failed">LA IA NO ENVIÓ UN COMANDO QUE SE PUEDA IMPORTAR</string>
+    <string name="cmd_ai_word_folders">carpetas</string>
+    <string name="cmd_ai_mode_folders">CARPETAS</string>
+    <string name="cmd_ai_folders_empty">ENTER ORDENA LAS APPS EN CARPETAS DEL CAJÓN · O DI CÓMO</string>
+    <string name="cmd_ai_folders_request">Ordena mis apps en carpetas</string>
+    <string name="cmd_ai_folders_title">PLAN DE CARPETAS · %1$d CARPETAS · %2$d APPS</string>
+    <string name="cmd_ai_folders_apply">[APLICAR]</string>
+    <string name="cmd_ai_folders_cancel">[CANCELAR]</string>
+    <string name="cmd_ai_folders_failed">LA IA NO ENVIÓ UN PLAN DE CARPETAS</string>
+    <string name="cmd_ai_folders_none">NINGUNA CARPETA NUEVA: TODAS LAS APPS YA ESTÁN EN UNA</string>
+    <string name="cmd_ai_folders_done">%1$d CARPETAS LISTAS EN EL CAJÓN DE APPS</string>
+    <string name="cmd_ai_folders_force">--FORCE: LAS APPS QUE YA ESTÁN EN CARPETAS PUEDEN MOVERSE · LAS CARPETAS VACÍAS SE BORRAN</string>
+    <string name="cmd_ai_folders_deleted">BORRADA (VACÍA)</string>
     <string name="cmd_pref_group_ai">IA</string>
     <string name="cmd_pref_ai">Clave de IA</string>
     <string name="cmd_pref_ai_none">Sin clave · el comando de IA queda bloqueado</string>

@@ -62,8 +62,11 @@ sealed interface CommandAction {
     /** Runs and shows its output in the bar instead of closing it. */
     data class Ping(val host: String) : CommandAction
 
-    /** "ia ...": talks to the AI the user set up; the bar shows the answer or fills in the command. */
-    data class Ai(val mode: AiMode, val prompt: String) : CommandAction
+    /**
+     * "ia ...": talks to the AI the user set up; the bar shows the answer or fills in the command.
+     * [force] is for "ia pastas --force" only: apps already in folders may move too.
+     */
+    data class Ai(val mode: AiMode, val prompt: String, val force: Boolean = false) : CommandAction
 
     /** "tema escuro; silencio on; abrir kindle": [steps] run in order. */
     data class Chain(val steps: List<CommandAction>, val lines: List<String>) : CommandAction

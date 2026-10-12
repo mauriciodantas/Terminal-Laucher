@@ -708,7 +708,7 @@
     <string name="cmd_ai_word_run">faire</string>
     <string name="cmd_ai_word_create">créer</string>
     <string name="cmd_usage_ai">[question] · faire [demande] · créer [commande]</string>
-    <string name="cmd_help_ai">Discute avec l\'IA configurée dans les réglages et affiche la réponse ici ; continuez à poser des questions pour poursuivre la conversation. faire transforme une demande en commande de la barre, qui attend Entrée sur la ligne. créer écrit une nouvelle commande et ouvre l\'écran d\'import. Seuls la demande, les commandes et les noms des apps sont envoyés.\n› ia combien de tasses dans un litre\n› ia faire silence on; dans 1h: silence off\n› ia créer recherche sur imdb\n› ia résume {clip}</string>
+    <string name="cmd_help_ai">Discute avec l\'IA configurée dans les réglages et affiche la réponse ici ; continuez à poser des questions pour poursuivre la conversation. faire transforme une demande en commande de la barre, qui attend Entrée sur la ligne. créer écrit une nouvelle commande et ouvre l\'écran d\'import. Seuls la demande, les commandes et les noms des apps sont envoyés. dossiers range les apps dans des dossiers du tiroir et montre le plan avant tout changement.\n› ia combien de tasses dans un litre\n› ia faire silence on; dans 1h: silence off\n› ia créer recherche sur imdb\n› ia résume {clip}\n› ia dossiers\n› ia dossiers --force</string>
     <string name="cmd_ai_title">IA</string>
     <string name="cmd_ai_locked">AJOUTEZ UNE CLÉ D\'IA DANS LES RÉGLAGES · ENTRÉE LES OUVRE</string>
     <string name="cmd_ai_mode_chat">DISCUSSION</string>
@@ -724,6 +724,18 @@
     <string name="cmd_ai_empty_reply">L\'IA N\'A RIEN RÉPONDU</string>
     <string name="cmd_ai_no_command">AUCUNE COMMANDE NE CORRESPOND À CETTE DEMANDE</string>
     <string name="cmd_ai_create_failed">L\'IA N\'A ENVOYÉ AUCUNE COMMANDE IMPORTABLE</string>
+    <string name="cmd_ai_word_folders">dossiers</string>
+    <string name="cmd_ai_mode_folders">DOSSIERS</string>
+    <string name="cmd_ai_folders_empty">ENTRÉE RANGE LES APPS DANS DES DOSSIERS DU TIROIR · OU DITES COMMENT</string>
+    <string name="cmd_ai_folders_request">Range mes apps dans des dossiers</string>
+    <string name="cmd_ai_folders_title">PLAN DE DOSSIERS · %1$d DOSSIERS · %2$d APPS</string>
+    <string name="cmd_ai_folders_apply">[APPLIQUER]</string>
+    <string name="cmd_ai_folders_cancel">[ANNULER]</string>
+    <string name="cmd_ai_folders_failed">L’IA N’A ENVOYÉ AUCUN PLAN DE DOSSIERS</string>
+    <string name="cmd_ai_folders_none">AUCUN NOUVEAU DOSSIER : TOUTES LES APPS SONT DÉJÀ DANS UN DOSSIER</string>
+    <string name="cmd_ai_folders_done">%1$d DOSSIERS PRÊTS DANS LE TIROIR D’APPS</string>
+    <string name="cmd_ai_folders_force">--FORCE : LES APPS DÉJÀ DANS DES DOSSIERS PEUVENT BOUGER · LES DOSSIERS VIDES SONT SUPPRIMÉS</string>
+    <string name="cmd_ai_folders_deleted">SUPPRIMÉ (VIDE)</string>
     <string name="cmd_pref_group_ai">IA</string>
     <string name="cmd_pref_ai">Clé d\'IA</string>
     <string name="cmd_pref_ai_none">Pas de clé · la commande IA reste verrouillée</string>

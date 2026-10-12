@@ -708,7 +708,7 @@
     <string name="cmd_ai_word_run">실행</string>
     <string name="cmd_ai_word_create">만들기</string>
     <string name="cmd_usage_ai">[질문] · 실행 [요청] · 만들기 [명령]</string>
-    <string name="cmd_help_ai">설정에서 등록한 AI와 대화하고 여기에 답을 보여 줍니다. 계속 질문하면 대화가 이어집니다. 실행은 요청을 바의 명령으로 바꿔 줄에 넣고 Enter를 기다립니다. 만들기는 새 명령을 작성하고 가져오기 화면을 엽니다. 요청, 명령, 앱 이름만 전송됩니다.\n› ai 1리터는 몇 컵\n› ai 실행 dnd on; in 1h: dnd off\n› ai 만들기 imdb 검색\n› ai 요약 {clip}</string>
+    <string name="cmd_help_ai">설정에서 등록한 AI와 대화하고 여기에 답을 보여 줍니다. 계속 질문하면 대화가 이어집니다. 실행은 요청을 바의 명령으로 바꿔 줄에 넣고 Enter를 기다립니다. 만들기는 새 명령을 작성하고 가져오기 화면을 엽니다. 요청, 명령, 앱 이름만 전송됩니다. 폴더는 앱을 서랍 폴더로 정리하고 바꾸기 전에 계획을 보여 줍니다.\n› ai 1리터는 몇 컵\n› ai 실행 dnd on; in 1h: dnd off\n› ai 만들기 imdb 검색\n› ai 요약 {clip}\n› ai 폴더\n› ai 폴더 --force</string>
     <string name="cmd_ai_title">AI</string>
     <string name="cmd_ai_locked">설정에서 AI 키를 추가하세요 · ENTER로 열기</string>
     <string name="cmd_ai_mode_chat">대화</string>
@@ -724,6 +724,18 @@
     <string name="cmd_ai_empty_reply">AI가 답하지 않았습니다</string>
     <string name="cmd_ai_no_command">이 요청에 맞는 명령이 없습니다</string>
     <string name="cmd_ai_create_failed">AI가 가져올 수 있는 명령을 보내지 않았습니다</string>
+    <string name="cmd_ai_word_folders">폴더</string>
+    <string name="cmd_ai_mode_folders">폴더</string>
+    <string name="cmd_ai_folders_empty">ENTER로 앱을 서랍 폴더로 정리 · 또는 방법을 말하세요</string>
+    <string name="cmd_ai_folders_request">내 앱을 폴더로 정리해 줘</string>
+    <string name="cmd_ai_folders_title">폴더 계획 · 폴더 %1$d개 · 앱 %2$d개</string>
+    <string name="cmd_ai_folders_apply">[적용]</string>
+    <string name="cmd_ai_folders_cancel">[취소]</string>
+    <string name="cmd_ai_folders_failed">AI가 폴더 계획을 보내지 않았습니다</string>
+    <string name="cmd_ai_folders_none">새 폴더 없음: 모든 앱이 이미 폴더에 있습니다</string>
+    <string name="cmd_ai_folders_done">앱 서랍에 폴더 %1$d개 준비됨</string>
+    <string name="cmd_ai_folders_force">--FORCE: 폴더에 있는 앱도 옮겨질 수 있습니다 · 빈 폴더는 삭제됩니다</string>
+    <string name="cmd_ai_folders_deleted">삭제됨 (비어 있음)</string>
     <string name="cmd_pref_group_ai">AI</string>
     <string name="cmd_pref_ai">AI 키</string>
     <string name="cmd_pref_ai_none">키 없음 · AI 명령이 잠겨 있습니다</string>

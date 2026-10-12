@@ -1,6 +1,7 @@
 package app.lawnchair.command
 
 import app.lawnchair.util.ResourceTexts
+import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -42,7 +43,7 @@ class AiTest {
     }
 
     @Test fun offersTheModes() {
-        assertEquals(2, run("ia").suggestions.size)
+        assertEquals(3, run("ia").suggestions.size)
         assertEquals(1, run("ia fa").suggestions.size)
     }
 
@@ -103,6 +104,106 @@ class AiTest {
     @Test(expected = AiException::class)
     fun refusalIsAnError() {
         AiProtocol.parse(AiProvider.ANTHROPIC, """{"stop_reason":"refusal","content":[]}""")
+    }
+
+    // ---- the conversation in pieces ----
+
+    private fun streamed(provider: AiProvider, events: List<String>, seen: MutableList<String> = mutableListOf()): AiReply {
+        val stream = AiStream(provider)
+        events.forEach { event ->
+            ("$event\n\n").lines().forEach { if (stream.feed(it)) seen += stream.text }
+        }
+        return stream.finish()
+    }
+
+    @Test fun streamRequests() {
+        assertTrue(JSONObject(AiProtocol.request(AiConfig(AiProvider.OPENAI, "sk-x"), "s", turns, stream = true).body).getBoolean("stream"))
+        assertTrue(JSONObject(AiProtocol.request(AiConfig(AiProvider.ANTHROPIC, "sk-ant-x"), "s", turns, stream = true).body).getBoolean("stream"))
+        assertTrue(AiProtocol.request(AiConfig(AiProvider.GEMINI, "AIza", "gemini-x"), "s", turns, stream = true).url.endsWith(":streamGenerateContent?alt=sse"))
+        assertFalse(JSONObject(AiProtocol.request(AiConfig(AiProvider.OPENAI, "sk-x"), "s", turns).body).has("stream"))
+    }
+
+    @Test fun openAiStreamEndsLikeTheWholeReply() {
+        val seen = mutableListOf<String>()
+        val reply = streamed(
+            AiProvider.OPENAI,
+            listOf(
+                """data: {"choices":[{"delta":{"role":"assistant","content":""}}]}""",
+                """data: {"choices":[{"delta":{"content":" o"}}]}""",
+                """data: {"choices":[{"delta":{"content":"i "}}]}""",
+                """data: {"choices":[{"delta":{},"finish_reason":"stop"}]}""",
+                "data: [DONE]",
+            ),
+            seen,
+        )
+        assertEquals(listOf(" o", " oi "), seen)
+        assertEquals(AiProtocol.parse(AiProvider.OPENAI, """{"choices":[{"message":{"content":" oi "}}]}"""), reply)
+    }
+
+    @Test fun claudeStreamKeepsThinkingAndSignatureForTheNextQuestion() {
+        val seen = mutableListOf<String>()
+        val reply = streamed(
+            AiProvider.ANTHROPIC,
+            listOf(
+                "event: message_start\ndata: {\"type\":\"message_start\",\"message\":{\"content\":[]}}",
+                """data: {"type":"content_block_start","index":0,"content_block":{"type":"thinking","thinking":"","signature":""}}""",
+                """data: {"type":"content_block_delta","index":0,"delta":{"type":"thinking_delta","thinking":"pensa"}}""",
+                """data: {"type":"content_block_delta","index":0,"delta":{"type":"thinking_delta","thinking":"ndo"}}""",
+                """data: {"type":"content_block_delta","index":0,"delta":{"type":"signature_delta","signature":"sig=="}}""",
+                """data: {"type":"content_block_stop","index":0}""",
+                "event: ping\ndata: {\"type\":\"ping\"}",
+                """data: {"type":"content_block_start","index":1,"content_block":{"type":"text","text":""}}""",
+                """data: {"type":"content_block_delta","index":1,"delta":{"type":"text_delta","text":"o"}}""",
+                """data: {"type":"content_block_delta","index":1,"delta":{"type":"text_delta","text":"i"}}""",
+                """data: {"type":"content_block_stop","index":1}""",
+                """data: {"type":"message_delta","delta":{"stop_reason":"end_turn"}}""",
+                """data: {"type":"message_stop"}""",
+            ),
+            seen,
+        )
+        assertEquals(listOf("o", "oi"), seen)
+        val whole = AiProtocol.parse(
+            AiProvider.ANTHROPIC,
+            """{"stop_reason":"end_turn","content":[{"type":"thinking","thinking":"pensando","signature":"sig=="},{"type":"text","text":"oi"}]}""",
+        )
+        assertEquals(whole.text, reply.text)
+        assertEquals(JSONArray(whole.turn.raw).toString(), JSONArray(reply.turn.raw).toString())
+        // And it goes back on the next request as it came.
+        val next = AiProtocol.request(AiConfig(AiProvider.ANTHROPIC, "k"), "s", listOf(AiTurn(true, "a"), reply.turn, AiTurn(true, "b")))
+        val block = JSONObject(next.body).getJSONArray("messages").getJSONObject(1).getJSONArray("content").getJSONObject(0)
+        assertEquals("sig==", block.getString("signature"))
+        assertEquals("pensando", block.getString("thinking"))
+    }
+
+    @Test(expected = AiException::class)
+    fun claudeStreamRefusalIsAnError() {
+        streamed(
+            AiProvider.ANTHROPIC,
+            listOf(
+                """data: {"type":"content_block_start","index":0,"content_block":{"type":"text","text":""}}""",
+                """data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"Eu"}}""",
+                """data: {"type":"message_delta","delta":{"stop_reason":"refusal"}}""",
+            ),
+        )
+    }
+
+    @Test fun errorInTheMiddleOfTheStream() {
+        val error = runCatching {
+            streamed(AiProvider.ANTHROPIC, listOf("""data: {"type":"error","error":{"type":"overloaded_error","message":"Overloaded"}}"""))
+        }.exceptionOrNull()
+        assertEquals("Overloaded", error?.message)
+    }
+
+    @Test fun geminiStreamLeavesThoughtsOut() {
+        val reply = streamed(
+            AiProvider.GEMINI,
+            listOf(
+                """data: {"candidates":[{"content":{"role":"model","parts":[{"text":"hmm","thought":true}]}}]}""",
+                """data: {"candidates":[{"content":{"role":"model","parts":[{"text":"o"}]}}]}""",
+                """data: {"candidates":[{"content":{"role":"model","parts":[{"text":"i"}]},"finishReason":"STOP"}]}""",
+            ),
+        )
+        assertEquals(AiProtocol.parse(AiProvider.GEMINI, """{"candidates":[{"content":{"parts":[{"text":"oi"}]}}]}"""), reply)
     }
 
     @Test fun errorMessages() {

@@ -708,7 +708,7 @@
     <string name="cmd_ai_word_run">lakukan</string>
     <string name="cmd_ai_word_create">buat</string>
     <string name="cmd_usage_ai">[pertanyaan] · lakukan [permintaan] · buat [perintah]</string>
-    <string name="cmd_help_ai">Berbicara dengan AI yang diatur di setelan dan menampilkan jawabannya di sini; terus bertanya untuk melanjutkan percakapan. lakukan mengubah permintaan menjadi perintah bilah, yang menunggu Enter di baris. buat menulis perintah baru dan membuka layar impor. Hanya permintaan, perintah, dan nama aplikasi yang dikirim.\n› ai berapa cangkir dalam satu liter\n› ai lakukan dnd on; in 1h: dnd off\n› ai buat cari di imdb\n› ai ringkas {clip}</string>
+    <string name="cmd_help_ai">Berbicara dengan AI yang diatur di setelan dan menampilkan jawabannya di sini; terus bertanya untuk melanjutkan percakapan. lakukan mengubah permintaan menjadi perintah bilah, yang menunggu Enter di baris. buat menulis perintah baru dan membuka layar impor. Hanya permintaan, perintah, dan nama aplikasi yang dikirim. folder menata aplikasi ke folder laci dan menampilkan rencananya sebelum ada yang berubah.\n› ai berapa cangkir dalam satu liter\n› ai lakukan dnd on; in 1h: dnd off\n› ai buat cari di imdb\n› ai ringkas {clip}\n› ai folder\n› ai folder --force</string>
     <string name="cmd_ai_title">AI</string>
     <string name="cmd_ai_locked">TAMBAHKAN KUNCI AI DI SETELAN · ENTER MEMBUKANYA</string>
     <string name="cmd_ai_mode_chat">OBROLAN</string>
@@ -724,6 +724,18 @@
     <string name="cmd_ai_empty_reply">AI TIDAK MENJAWAB</string>
     <string name="cmd_ai_no_command">TIDAK ADA PERINTAH YANG COCOK</string>
     <string name="cmd_ai_create_failed">AI TIDAK MENGIRIM PERINTAH YANG BISA DIIMPOR</string>
+    <string name="cmd_ai_word_folders">folder</string>
+    <string name="cmd_ai_mode_folders">FOLDER</string>
+    <string name="cmd_ai_folders_empty">ENTER MENATA APLIKASI KE FOLDER LACI · ATAU SEBUTKAN CARANYA</string>
+    <string name="cmd_ai_folders_request">Tata aplikasiku ke dalam folder</string>
+    <string name="cmd_ai_folders_title">RENCANA FOLDER · %1$d FOLDER · %2$d APLIKASI</string>
+    <string name="cmd_ai_folders_apply">[TERAPKAN]</string>
+    <string name="cmd_ai_folders_cancel">[BATAL]</string>
+    <string name="cmd_ai_folders_failed">AI TIDAK MENGIRIM RENCANA FOLDER</string>
+    <string name="cmd_ai_folders_none">TIDAK ADA FOLDER BARU: SEMUA APLIKASI SUDAH ADA DI FOLDER</string>
+    <string name="cmd_ai_folders_done">%1$d FOLDER SIAP DI LACI APLIKASI</string>
+    <string name="cmd_ai_folders_force">--FORCE: APLIKASI YANG SUDAH DI FOLDER BISA PINDAH · FOLDER KOSONG DIHAPUS</string>
+    <string name="cmd_ai_folders_deleted">DIHAPUS (KOSONG)</string>
     <string name="cmd_pref_group_ai">AI</string>
     <string name="cmd_pref_ai">Kunci AI</string>
     <string name="cmd_pref_ai_none">Tanpa kunci · perintah AI tetap terkunci</string>

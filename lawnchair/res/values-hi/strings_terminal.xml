@@ -708,7 +708,7 @@
     <string name="cmd_ai_word_run">करो</string>
     <string name="cmd_ai_word_create">बनाओ</string>
     <string name="cmd_usage_ai">[सवाल] · करो [अनुरोध] · बनाओ [कमांड]</string>
-    <string name="cmd_help_ai">सेटिंग में सेट किए गए AI से बात करता है और जवाब यहीं दिखाता है; बातचीत जारी रखने के लिए पूछते रहें। करो किसी अनुरोध को बार की कमांड में बदलता है, जो लाइन पर Enter का इंतज़ार करती है। बनाओ नई कमांड लिखता है और इंपोर्ट स्क्रीन खोलता है। सिर्फ़ अनुरोध, कमांड और ऐप के नाम भेजे जाते हैं।\n› एआई एक लीटर में कितने कप\n› एआई करो dnd on; in 1h: dnd off\n› एआई बनाओ imdb पर खोज\n› एआई सारांश {clip}</string>
+    <string name="cmd_help_ai">सेटिंग में सेट किए गए AI से बात करता है और जवाब यहीं दिखाता है; बातचीत जारी रखने के लिए पूछते रहें। करो किसी अनुरोध को बार की कमांड में बदलता है, जो लाइन पर Enter का इंतज़ार करती है। बनाओ नई कमांड लिखता है और इंपोर्ट स्क्रीन खोलता है। सिर्फ़ अनुरोध, कमांड और ऐप के नाम भेजे जाते हैं। फ़ोल्डर ऐप्स को ड्रॉअर फ़ोल्डरों में बाँटता है और कुछ बदलने से पहले योजना दिखाता है।\n› एआई एक लीटर में कितने कप\n› एआई करो dnd on; in 1h: dnd off\n› एआई बनाओ imdb पर खोज\n› एआई सारांश {clip}\n› एआई फ़ोल्डर\n› एआई फ़ोल्डर --force</string>
     <string name="cmd_ai_title">AI</string>
     <string name="cmd_ai_locked">सेटिंग में AI कुंजी जोड़ें · ENTER से खुलेगी</string>
     <string name="cmd_ai_mode_chat">बातचीत</string>
@@ -724,6 +724,18 @@
     <string name="cmd_ai_empty_reply">AI ने कोई जवाब नहीं दिया</string>
     <string name="cmd_ai_no_command">इस अनुरोध के लिए कोई कमांड नहीं</string>
     <string name="cmd_ai_create_failed">AI ने इंपोर्ट करने लायक कोई कमांड नहीं भेजी</string>
+    <string name="cmd_ai_word_folders">फ़ोल्डर</string>
+    <string name="cmd_ai_mode_folders">फ़ोल्डर</string>
+    <string name="cmd_ai_folders_empty">ENTER ऐप्स को ड्रॉअर फ़ोल्डरों में बाँटता है · या बताएँ कैसे</string>
+    <string name="cmd_ai_folders_request">मेरे ऐप्स को फ़ोल्डरों में बाँटो</string>
+    <string name="cmd_ai_folders_title">फ़ोल्डर योजना · %1$d फ़ोल्डर · %2$d ऐप</string>
+    <string name="cmd_ai_folders_apply">[लागू करें]</string>
+    <string name="cmd_ai_folders_cancel">[रद्द करें]</string>
+    <string name="cmd_ai_folders_failed">एआई ने फ़ोल्डर योजना नहीं भेजी</string>
+    <string name="cmd_ai_folders_none">कोई नया फ़ोल्डर नहीं: सभी ऐप पहले से किसी फ़ोल्डर में हैं</string>
+    <string name="cmd_ai_folders_done">ऐप ड्रॉअर में %1$d फ़ोल्डर तैयार</string>
+    <string name="cmd_ai_folders_force">--FORCE: फ़ोल्डरों में मौजूद ऐप भी हट सकते हैं · खाली फ़ोल्डर हटा दिए जाते हैं</string>
+    <string name="cmd_ai_folders_deleted">हटाया गया (खाली)</string>
     <string name="cmd_pref_group_ai">AI</string>
     <string name="cmd_pref_ai">AI कुंजी</string>
     <string name="cmd_pref_ai_none">कोई कुंजी नहीं · AI कमांड बंद है</string>

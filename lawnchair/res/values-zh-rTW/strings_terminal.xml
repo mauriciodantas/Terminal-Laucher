@@ -708,7 +708,7 @@
     <string name="cmd_ai_word_run">執行</string>
     <string name="cmd_ai_word_create">建立</string>
     <string name="cmd_usage_ai">[問題] · 執行 [要求] · 建立 [指令]</string>
-    <string name="cmd_help_ai">與設定中設定的 AI 對話，並在這裡顯示回答；繼續提問即可延續對話。執行會把要求變成指令列的指令，放在輸入列上等你按 Enter。建立會撰寫新指令並開啟匯入畫面。只傳送要求、指令和應用程式名稱。\n› ai 一公升是幾杯\n› ai 執行 dnd on; in 1h: dnd off\n› ai 建立 在 imdb 搜尋\n› ai 摘要 {clip}</string>
+    <string name="cmd_help_ai">與設定中設定的 AI 對話，並在這裡顯示回答；繼續提問即可延續對話。執行會把要求變成指令列的指令，放在輸入列上等你按 Enter。建立會撰寫新指令並開啟匯入畫面。只傳送要求、指令和應用程式名稱。 資料夾會把應用程式整理進抽屜資料夾，並在變更前顯示方案。\n› ai 一公升是幾杯\n› ai 執行 dnd on; in 1h: dnd off\n› ai 建立 在 imdb 搜尋\n› ai 摘要 {clip}\n› ai 資料夾\n› ai 資料夾 --force</string>
     <string name="cmd_ai_title">AI</string>
     <string name="cmd_ai_locked">請在設定中新增 AI 金鑰 · ENTER 開啟設定</string>
     <string name="cmd_ai_mode_chat">對話</string>
@@ -724,6 +724,18 @@
     <string name="cmd_ai_empty_reply">AI 沒有回答</string>
     <string name="cmd_ai_no_command">沒有指令符合這個要求</string>
     <string name="cmd_ai_create_failed">AI 沒有傳送可匯入的指令</string>
+    <string name="cmd_ai_word_folders">資料夾</string>
+    <string name="cmd_ai_mode_folders">資料夾</string>
+    <string name="cmd_ai_folders_empty">ENTER 把應用程式整理進抽屜資料夾 · 也可說明方式</string>
+    <string name="cmd_ai_folders_request">把我的應用程式整理到資料夾</string>
+    <string name="cmd_ai_folders_title">資料夾方案 · %1$d 個資料夾 · %2$d 個應用程式</string>
+    <string name="cmd_ai_folders_apply">[套用]</string>
+    <string name="cmd_ai_folders_cancel">[取消]</string>
+    <string name="cmd_ai_folders_failed">AI 沒有傳來資料夾方案</string>
+    <string name="cmd_ai_folders_none">沒有新資料夾：所有應用程式都已在資料夾中</string>
+    <string name="cmd_ai_folders_done">應用程式抽屜中已有 %1$d 個資料夾就緒</string>
+    <string name="cmd_ai_folders_force">--FORCE：已在資料夾中的應用程式也可能移動 · 空資料夾會被刪除</string>
+    <string name="cmd_ai_folders_deleted">已刪除（空）</string>
     <string name="cmd_pref_group_ai">AI</string>
     <string name="cmd_pref_ai">AI 金鑰</string>
     <string name="cmd_pref_ai_none">無金鑰 · AI 指令保持鎖定</string>

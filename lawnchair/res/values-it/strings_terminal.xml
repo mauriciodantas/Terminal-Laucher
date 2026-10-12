@@ -708,7 +708,7 @@
     <string name="cmd_ai_word_run">fare</string>
     <string name="cmd_ai_word_create">crea</string>
     <string name="cmd_usage_ai">[domanda] · fare [richiesta] · crea [comando]</string>
-    <string name="cmd_help_ai">Parla con l\'IA configurata nelle impostazioni e mostra qui la risposta; continua a chiedere per proseguire la conversazione. fare trasforma una richiesta in un comando della barra, che attende Invio sulla riga. crea scrive un nuovo comando e apre la schermata di importazione. Vengono inviati solo la richiesta, i comandi e i nomi delle app.\n› ia quante tazze in un litro\n› ia fare silenzio on; tra 1h: silenzio off\n› ia crea ricerca su imdb\n› ia riassumi {clip}</string>
+    <string name="cmd_help_ai">Parla con l\'IA configurata nelle impostazioni e mostra qui la risposta; continua a chiedere per proseguire la conversazione. fare trasforma una richiesta in un comando della barra, che attende Invio sulla riga. crea scrive un nuovo comando e apre la schermata di importazione. Vengono inviati solo la richiesta, i comandi e i nomi delle app. cartelle ordina le app in cartelle del cassetto e mostra il piano prima di cambiare qualcosa.\n› ia quante tazze in un litro\n› ia fare silenzio on; tra 1h: silenzio off\n› ia crea ricerca su imdb\n› ia riassumi {clip}\n› ia cartelle\n› ia cartelle --force</string>
     <string name="cmd_ai_title">IA</string>
     <string name="cmd_ai_locked">AGGIUNGI UNA CHIAVE IA NELLE IMPOSTAZIONI · INVIO LE APRE</string>
     <string name="cmd_ai_mode_chat">CHAT</string>
@@ -724,6 +724,18 @@
     <string name="cmd_ai_empty_reply">L\'IA NON HA RISPOSTO</string>
     <string name="cmd_ai_no_command">NESSUN COMANDO ADATTO A QUESTA RICHIESTA</string>
     <string name="cmd_ai_create_failed">L\'IA NON HA INVIATO UN COMANDO IMPORTABILE</string>
+    <string name="cmd_ai_word_folders">cartelle</string>
+    <string name="cmd_ai_mode_folders">CARTELLE</string>
+    <string name="cmd_ai_folders_empty">INVIO ORDINA LE APP IN CARTELLE DEL CASSETTO · O DI’ COME</string>
+    <string name="cmd_ai_folders_request">Ordina le mie app in cartelle</string>
+    <string name="cmd_ai_folders_title">PIANO CARTELLE · %1$d CARTELLE · %2$d APP</string>
+    <string name="cmd_ai_folders_apply">[APPLICA]</string>
+    <string name="cmd_ai_folders_cancel">[ANNULLA]</string>
+    <string name="cmd_ai_folders_failed">L’IA NON HA INVIATO UN PIANO DI CARTELLE</string>
+    <string name="cmd_ai_folders_none">NESSUNA CARTELLA NUOVA: TUTTE LE APP SONO GIÀ IN UNA</string>
+    <string name="cmd_ai_folders_done">%1$d CARTELLE PRONTE NEL CASSETTO APP</string>
+    <string name="cmd_ai_folders_force">--FORCE: LE APP GIÀ IN CARTELLE POSSONO SPOSTARSI · LE CARTELLE VUOTE VENGONO ELIMINATE</string>
+    <string name="cmd_ai_folders_deleted">ELIMINATA (VUOTA)</string>
     <string name="cmd_pref_group_ai">IA</string>
     <string name="cmd_pref_ai">Chiave IA</string>
     <string name="cmd_pref_ai_none">Nessuna chiave · il comando IA resta bloccato</string>

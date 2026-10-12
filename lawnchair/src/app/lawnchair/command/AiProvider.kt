@@ -78,7 +78,8 @@ object AiProtocol {
     private const val ANTHROPIC_VERSION = "2023-06-01"
     private const val ANTHROPIC_FALLBACK_BETA = "server-side-fallback-2026-07-01"
 
-    fun request(config: AiConfig, system: String, turns: List<AiTurn>): AiHttpRequest = when (config.provider) {
+    /** With [stream], the service sends the reply in pieces as server-sent events, read by [AiStream]. */
+    fun request(config: AiConfig, system: String, turns: List<AiTurn>, stream: Boolean = false): AiHttpRequest = when (config.provider) {
         AiProvider.OPENAI -> AiHttpRequest(
             "https://api.openai.com/v1/chat/completions",
             mapOf("Authorization" to "Bearer " + config.key.trim()),
@@ -91,6 +92,7 @@ object AiProtocol {
                         turns.forEach { put(JSONObject().put("role", if (it.fromUser) "user" else "assistant").put("content", it.text)) }
                     },
                 )
+                .apply { if (stream) put("stream", true) }
                 .toString(),
         )
 
@@ -119,12 +121,14 @@ object AiProtocol {
                         },
                     )
                     .apply { if (hasServerFallback(model)) put("fallbacks", "default") }
+                    .apply { if (stream) put("stream", true) }
                     .toString(),
             )
         }
 
         AiProvider.GEMINI -> AiHttpRequest(
-            "https://generativelanguage.googleapis.com/v1beta/models/" + config.modelName + ":generateContent",
+            "https://generativelanguage.googleapis.com/v1beta/models/" + config.modelName +
+                if (stream) ":streamGenerateContent?alt=sse" else ":generateContent",
             mapOf("x-goog-api-key" to config.key.trim()),
             JSONObject()
                 .put("systemInstruction", JSONObject().put("parts", JSONArray().put(JSONObject().put("text", system))))
@@ -199,11 +203,166 @@ object AiProtocol {
     }
 }
 
+/**
+ * Reads a reply sent as server-sent events. The pieces are put back together into the body the
+ * service would have sent in one go, and [finish] hands that to [AiProtocol.parse], so a streamed
+ * reply ends exactly like one that was not: same text, same refusals, and for Claude the same
+ * blocks (thinking and signatures included) to send back on the next question. Pure, so it can be
+ * unit tested.
+ */
+class AiStream(private val provider: AiProvider) {
+
+    private var data = StringBuilder()
+
+    // OpenAI: the text so far.
+    private val openAiText = StringBuilder()
+
+    // Claude: the content blocks by index, and why the reply stopped.
+    private val blocks = sortedMapOf<Int, JSONObject>()
+    private var stopReason = ""
+
+    // Gemini: the parts in the order they came, and why the reply stopped.
+    private val parts = mutableListOf<JSONObject>()
+    private var finishReason = ""
+
+    /** The text shown so far. */
+    val text: String
+        get() = when (provider) {
+            AiProvider.OPENAI -> openAiText.toString()
+            AiProvider.ANTHROPIC -> blocks.values.filter { it.optString("type") == "text" }.joinToString("") { it.optString("text") }
+            AiProvider.GEMINI -> parts.filter { !it.optBoolean("thought") }.joinToString("") { it.optString("text") }
+        }
+
+    /**
+     * Takes one line of the stream. Returns true when the text changed. Throws [AiException] when
+     * the service reports an error in the middle of the reply.
+     */
+    fun feed(line: String): Boolean = when {
+        line.startsWith("data:") -> {
+            if (data.isNotEmpty()) data.append('\n')
+            data.append(line.removePrefix("data:").removePrefix(" "))
+            false
+        }
+
+        line.isEmpty() -> dispatch()
+
+        // "event:", "id:" and ":" comments: the data says all that is needed.
+        else -> false
+    }
+
+    /** The whole reply, once the stream is over. */
+    fun finish(): AiReply {
+        dispatch()
+        val body = when (provider) {
+            AiProvider.OPENAI -> JSONObject().put(
+                "choices",
+                JSONArray().put(JSONObject().put("message", JSONObject().put("content", openAiText.toString()))),
+            )
+
+            AiProvider.ANTHROPIC -> JSONObject()
+                .put("stop_reason", stopReason)
+                .put("content", JSONArray(blocks.values.toList()))
+
+            AiProvider.GEMINI -> JSONObject().put(
+                "candidates",
+                JSONArray().put(
+                    JSONObject()
+                        .put("content", JSONObject().put("parts", JSONArray(parts)))
+                        .put("finishReason", finishReason),
+                ),
+            )
+        }
+        return AiProtocol.parse(provider, body.toString())
+    }
+
+    private fun dispatch(): Boolean {
+        val payload = data.toString().trim()
+        data = StringBuilder()
+        if (payload.isEmpty() || payload == "[DONE]") return false
+        val event = runCatching { JSONObject(payload) }.getOrNull() ?: return false
+        event.opt("error")?.let { error ->
+            val message = (error as? JSONObject)?.let { it.optString("message").ifBlank { it.optString("type") } } ?: error.toString()
+            throw AiException(message.ifBlank { "error" })
+        }
+        val before = text.length
+        when (provider) {
+            AiProvider.OPENAI -> event.optJSONArray("choices")?.optJSONObject(0)?.optJSONObject("delta")
+                ?.takeIf { it.has("content") && !it.isNull("content") }
+                ?.let { openAiText.append(it.optString("content")) }
+
+            AiProvider.ANTHROPIC -> anthropic(event)
+
+            AiProvider.GEMINI -> {
+                val candidate = event.optJSONArray("candidates")?.optJSONObject(0) ?: return false
+                candidate.optString("finishReason").takeIf { it.isNotEmpty() }?.let { finishReason = it }
+                val list = candidate.optJSONObject("content")?.optJSONArray("parts") ?: JSONArray()
+                (0 until list.length()).forEach { parts += list.getJSONObject(it) }
+            }
+        }
+        return text.length != before
+    }
+
+    private fun anthropic(event: JSONObject) {
+        when (event.optString("type")) {
+            // Some replies (a fallback) may already carry blocks when they start.
+            "message_start" -> event.optJSONObject("message")?.optJSONArray("content")?.let { content ->
+                (0 until content.length()).forEach { blocks[it] = content.getJSONObject(it) }
+            }
+
+            "content_block_start" -> blocks[event.optInt("index")] = event.getJSONObject("content_block")
+
+            "content_block_delta" -> {
+                val block = blocks.getOrPut(event.optInt("index")) { JSONObject() }
+                val delta = event.optJSONObject("delta") ?: return
+                when (delta.optString("type")) {
+                    "text_delta" -> block.concat("text", delta.optString("text"))
+
+                    "thinking_delta" -> block.concat("thinking", delta.optString("thinking"))
+
+                    "signature_delta" -> block.concat("signature", delta.optString("signature"))
+
+                    "citations_delta" -> {
+                        val citations = block.optJSONArray("citations") ?: JSONArray().also { block.put("citations", it) }
+                        delta.optJSONObject("citation")?.let { citations.put(it) }
+                    }
+                }
+            }
+
+            "message_delta" -> event.optJSONObject("delta")?.optString("stop_reason")
+                ?.takeIf { it.isNotEmpty() && it != "null" }
+                ?.let { stopReason = it }
+        }
+    }
+
+    private fun JSONObject.concat(key: String, piece: String) {
+        put(key, optString(key) + piece)
+    }
+}
+
 /** Sends conversations to the service the user set up. */
 object AiClient {
 
-    suspend fun send(config: AiConfig, system: String, turns: List<AiTurn>): AiReply = withContext(Dispatchers.IO) {
-        val request = AiProtocol.request(config, system, turns)
+    suspend fun send(config: AiConfig, system: String, turns: List<AiTurn>): AiReply = call(config, AiProtocol.request(config, system, turns)) { body ->
+        AiProtocol.parse(config.provider, body.readText())
+    }
+
+    /**
+     * Like [send], with the reply in pieces: [onText] gets the whole text so far each time it grows,
+     * on the main thread. Only for the conversation: a command or a pack is read once it is complete.
+     * The time limit then counts between two pieces, so a long answer that keeps coming is not cut off.
+     */
+    suspend fun stream(config: AiConfig, system: String, turns: List<AiTurn>, onText: (String) -> Unit): AiReply = call(config, AiProtocol.request(config, system, turns, stream = true)) { body ->
+        val reader = AiStream(config.provider)
+        body.lineSequence().forEach { line ->
+            if (reader.feed(line)) {
+                val text = reader.text
+                withContext(Dispatchers.Main) { onText(text) }
+            }
+        }
+        reader.finish()
+    }
+
+    private suspend fun call(config: AiConfig, request: AiHttpRequest, read: suspend (java.io.BufferedReader) -> AiReply): AiReply = withContext(Dispatchers.IO) {
         val connection = URL(request.url).openConnection() as HttpURLConnection
         try {
             connection.requestMethod = "POST"
@@ -215,10 +374,11 @@ object AiClient {
             request.headers.forEach { (name, value) -> connection.setRequestProperty(name, value) }
             connection.outputStream.use { it.write(request.body.toByteArray()) }
             val code = connection.responseCode
-            val stream = if (code in 200..299) connection.inputStream else connection.errorStream
-            val body = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
-            if (code !in 200..299) throw AiException(AiProtocol.errorMessage(code, body))
-            AiProtocol.parse(config.provider, body)
+            if (code !in 200..299) {
+                val body = connection.errorStream?.bufferedReader()?.use { it.readText() }.orEmpty()
+                throw AiException(AiProtocol.errorMessage(code, body))
+            }
+            connection.inputStream.bufferedReader().use { read(it) }
         } catch (e: java.net.SocketTimeoutException) {
             throw AiException(TIMEOUT, config.timeoutSeconds)
         } finally {

@@ -708,7 +708,7 @@
     <string name="cmd_ai_word_run">yap</string>
     <string name="cmd_ai_word_create">oluştur</string>
     <string name="cmd_usage_ai">[soru] · yap [istek] · oluştur [komut]</string>
-    <string name="cmd_help_ai">Ayarlarda kurulan yapay zekâ ile konuşur ve yanıtı burada gösterir; sohbete devam etmek için sormayı sürdürün. yap bir isteği çubuğun bir komutuna çevirir, komut satırda Enter\'ı bekler. oluştur yeni bir komut yazar ve içe aktarma ekranını açar. Yalnızca istek, komutlar ve uygulama adları gönderilir.\n› yz bir litre kaç bardak\n› yz yap dnd on; 1s sonra: dnd off\n› yz oluştur imdb araması\n› yz özetle {clip}</string>
+    <string name="cmd_help_ai">Ayarlarda kurulan yapay zekâ ile konuşur ve yanıtı burada gösterir; sohbete devam etmek için sormayı sürdürün. yap bir isteği çubuğun bir komutuna çevirir, komut satırda Enter\'ı bekler. oluştur yeni bir komut yazar ve içe aktarma ekranını açar. Yalnızca istek, komutlar ve uygulama adları gönderilir. klasörler uygulamaları çekmece klasörlerine ayırır ve bir şey değişmeden önce planı gösterir.\n› yz bir litre kaç bardak\n› yz yap dnd on; 1s sonra: dnd off\n› yz oluştur imdb araması\n› yz özetle {clip}\n› yz klasörler\n› yz klasörler --force</string>
     <string name="cmd_ai_title">YZ</string>
     <string name="cmd_ai_locked">AYARLARA BİR YAPAY ZEKÂ ANAHTARI EKLEYİN · ENTER AÇAR</string>
     <string name="cmd_ai_mode_chat">SOHBET</string>
@@ -724,6 +724,18 @@
     <string name="cmd_ai_empty_reply">YAPAY ZEKÂ YANIT VERMEDİ</string>
     <string name="cmd_ai_no_command">BU İSTEĞE UYAN KOMUT YOK</string>
     <string name="cmd_ai_create_failed">YAPAY ZEKÂ İÇE AKTARILABİLİR BİR KOMUT GÖNDERMEDİ</string>
+    <string name="cmd_ai_word_folders">klasörler</string>
+    <string name="cmd_ai_mode_folders">KLASÖRLER</string>
+    <string name="cmd_ai_folders_empty">ENTER UYGULAMALARI ÇEKMECE KLASÖRLERİNE AYIRIR · YA DA NASIL OLACAĞINI SÖYLE</string>
+    <string name="cmd_ai_folders_request">Uygulamalarımı klasörlere ayır</string>
+    <string name="cmd_ai_folders_title">KLASÖR PLANI · %1$d KLASÖR · %2$d UYGULAMA</string>
+    <string name="cmd_ai_folders_apply">[UYGULA]</string>
+    <string name="cmd_ai_folders_cancel">[İPTAL]</string>
+    <string name="cmd_ai_folders_failed">YZ KLASÖR PLANI GÖNDERMEDİ</string>
+    <string name="cmd_ai_folders_none">YENİ KLASÖR YOK: TÜM UYGULAMALAR ZATEN BİR KLASÖRDE</string>
+    <string name="cmd_ai_folders_done">ÇEKMECEDE %1$d KLASÖR HAZIR</string>
+    <string name="cmd_ai_folders_force">--FORCE: KLASÖRDEKİ UYGULAMALAR TAŞINABİLİR · BOŞ KLASÖRLER SİLİNİR</string>
+    <string name="cmd_ai_folders_deleted">SİLİNDİ (BOŞ)</string>
     <string name="cmd_pref_group_ai">Yapay zekâ</string>
     <string name="cmd_pref_ai">Yapay zekâ anahtarı</string>
     <string name="cmd_pref_ai_none">Anahtar yok · yapay zekâ komutu kilitli</string>

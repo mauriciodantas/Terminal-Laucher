@@ -708,7 +708,7 @@
     <string name="cmd_ai_word_run">fazer</string>
     <string name="cmd_ai_word_create">criar</string>
     <string name="cmd_usage_ai">[pergunta] · fazer [pedido] · criar [comando]</string>
-    <string name="cmd_help_ai">Conversa com a IA configurada nas definições e mostra a resposta aqui; continue a perguntar para seguir a conversa. fazer transforma um pedido num comando da barra, que fica na linha à espera do Enter. criar escreve um comando novo e abre o ecrã de importação. Só seguem o pedido, os comandos e os nomes das apps.\n› ia quantas chávenas tem um litro\n› ia fazer silencio on; em 1h: silencio off\n› ia criar pesquisa no imdb\n› ia resume {clip}</string>
+    <string name="cmd_help_ai">Conversa com a IA configurada nas definições e mostra a resposta aqui; continue a perguntar para seguir a conversa. fazer transforma um pedido num comando da barra, que fica na linha à espera do Enter. criar escreve um comando novo e abre o ecrã de importação. Só seguem o pedido, os comandos e os nomes das apps. pastas organiza as apps em pastas da gaveta e mostra o plano antes de mudar alguma coisa.\n› ia quantas chávenas tem um litro\n› ia fazer silencio on; em 1h: silencio off\n› ia criar pesquisa no imdb\n› ia resume {clip}\n› ia pastas\n› ia pastas --force</string>
     <string name="cmd_ai_title">IA</string>
     <string name="cmd_ai_locked">ADICIONE UMA CHAVE DE IA NAS DEFINIÇÕES · ENTER ABRE</string>
     <string name="cmd_ai_mode_chat">CONVERSA</string>
@@ -724,6 +724,18 @@
     <string name="cmd_ai_empty_reply">A IA NÃO RESPONDEU</string>
     <string name="cmd_ai_no_command">NENHUM COMANDO SERVE PARA ESTE PEDIDO</string>
     <string name="cmd_ai_create_failed">A IA NÃO ENVIOU UM COMANDO QUE POSSA SER IMPORTADO</string>
+    <string name="cmd_ai_word_folders">pastas</string>
+    <string name="cmd_ai_mode_folders">PASTAS</string>
+    <string name="cmd_ai_folders_empty">ENTER ORGANIZA AS APPS EM PASTAS DA GAVETA · OU DIGA COMO</string>
+    <string name="cmd_ai_folders_request">Organiza as minhas apps em pastas</string>
+    <string name="cmd_ai_folders_title">PLANO DE PASTAS · %1$d PASTAS · %2$d APPS</string>
+    <string name="cmd_ai_folders_apply">[APLICAR]</string>
+    <string name="cmd_ai_folders_cancel">[CANCELAR]</string>
+    <string name="cmd_ai_folders_failed">A IA NÃO ENVIOU UM PLANO DE PASTAS</string>
+    <string name="cmd_ai_folders_none">NENHUMA PASTA NOVA: TODAS AS APPS JÁ ESTÃO NUMA</string>
+    <string name="cmd_ai_folders_done">%1$d PASTAS PRONTAS NA GAVETA DE APPS</string>
+    <string name="cmd_ai_folders_force">--FORCE: APPS QUE JÁ ESTÃO EM PASTAS PODEM MUDAR · PASTAS VAZIAS SÃO APAGADAS</string>
+    <string name="cmd_ai_folders_deleted">APAGADA (VAZIA)</string>
     <string name="cmd_pref_group_ai">IA</string>
     <string name="cmd_pref_ai">Chave de IA</string>
     <string name="cmd_pref_ai_none">Sem chave · o comando ia fica bloqueado</string>

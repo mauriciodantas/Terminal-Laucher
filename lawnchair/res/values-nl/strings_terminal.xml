@@ -708,7 +708,7 @@
     <string name="cmd_ai_word_run">doe</string>
     <string name="cmd_ai_word_create">maak</string>
     <string name="cmd_usage_ai">[vraag] · doe [verzoek] · maak [opdracht]</string>
-    <string name="cmd_help_ai">Praat met de AI die in de instellingen is ingesteld en toont het antwoord hier; blijf vragen om het gesprek voort te zetten. doe zet een verzoek om in een opdracht van de balk, die op de regel op Enter wacht. maak schrijft een nieuwe opdracht en opent het importscherm. Alleen het verzoek, de opdrachten en de app-namen worden verstuurd.\n› ai hoeveel kopjes gaan in een liter\n› ai doe dnd on; over 1u: dnd off\n› ai maak zoeken op imdb\n› ai vat samen {clip}</string>
+    <string name="cmd_help_ai">Praat met de AI die in de instellingen is ingesteld en toont het antwoord hier; blijf vragen om het gesprek voort te zetten. doe zet een verzoek om in een opdracht van de balk, die op de regel op Enter wacht. maak schrijft een nieuwe opdracht en opent het importscherm. Alleen het verzoek, de opdrachten en de app-namen worden verstuurd. mappen deelt de apps in mappen van de applade in en toont het plan voordat er iets verandert.\n› ai hoeveel kopjes gaan in een liter\n› ai doe dnd on; over 1u: dnd off\n› ai maak zoeken op imdb\n› ai vat samen {clip}\n› ai mappen\n› ai mappen --force</string>
     <string name="cmd_ai_title">AI</string>
     <string name="cmd_ai_locked">VOEG EEN AI-SLEUTEL TOE IN DE INSTELLINGEN · ENTER OPENT ZE</string>
     <string name="cmd_ai_mode_chat">GESPREK</string>
@@ -724,6 +724,18 @@
     <string name="cmd_ai_empty_reply">DE AI GAF GEEN ANTWOORD</string>
     <string name="cmd_ai_no_command">GEEN OPDRACHT PAST BIJ DIT VERZOEK</string>
     <string name="cmd_ai_create_failed">DE AI STUURDE GEEN OPDRACHT DIE KAN WORDEN GEÏMPORTEERD</string>
+    <string name="cmd_ai_word_folders">mappen</string>
+    <string name="cmd_ai_mode_folders">MAPPEN</string>
+    <string name="cmd_ai_folders_empty">ENTER DEELT DE APPS IN MAPPEN VAN DE APPLADE IN · OF ZEG HOE</string>
+    <string name="cmd_ai_folders_request">Deel mijn apps in mappen in</string>
+    <string name="cmd_ai_folders_title">MAPPENPLAN · %1$d MAPPEN · %2$d APPS</string>
+    <string name="cmd_ai_folders_apply">[TOEPASSEN]</string>
+    <string name="cmd_ai_folders_cancel">[ANNULEREN]</string>
+    <string name="cmd_ai_folders_failed">DE AI STUURDE GEEN MAPPENPLAN</string>
+    <string name="cmd_ai_folders_none">GEEN NIEUWE MAP: ALLE APPS ZITTEN AL IN EEN MAP</string>
+    <string name="cmd_ai_folders_done">%1$d MAPPEN KLAAR IN DE APPLADE</string>
+    <string name="cmd_ai_folders_force">--FORCE: APPS DIE AL IN MAPPEN ZITTEN KUNNEN VERHUIZEN · LEGE MAPPEN WORDEN VERWIJDERD</string>
+    <string name="cmd_ai_folders_deleted">VERWIJDERD (LEEG)</string>
     <string name="cmd_pref_group_ai">AI</string>
     <string name="cmd_pref_ai">AI-sleutel</string>
     <string name="cmd_pref_ai_none">Geen sleutel · de AI-opdracht blijft vergrendeld</string>

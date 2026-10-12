@@ -708,7 +708,7 @@
     <string name="cmd_ai_word_run">machen</string>
     <string name="cmd_ai_word_create">erstellen</string>
     <string name="cmd_usage_ai">[Frage] · machen [Wunsch] · erstellen [Befehl]</string>
-    <string name="cmd_help_ai">Spricht mit der in den Einstellungen eingerichteten KI und zeigt die Antwort hier; frag weiter, um das Gespräch fortzusetzen. machen wandelt einen Wunsch in einen Befehl der Leiste um, der auf der Zeile auf Enter wartet. erstellen schreibt einen neuen Befehl und öffnet den Import. Gesendet werden nur der Wunsch, die Befehle und die App-Namen.\n› ki wie viele Tassen hat ein Liter\n› ki machen dnd on; in 1h: dnd off\n› ki erstellen Suche auf imdb\n› ki fasse zusammen {clip}</string>
+    <string name="cmd_help_ai">Spricht mit der in den Einstellungen eingerichteten KI und zeigt die Antwort hier; frag weiter, um das Gespräch fortzusetzen. machen wandelt einen Wunsch in einen Befehl der Leiste um, der auf der Zeile auf Enter wartet. erstellen schreibt einen neuen Befehl und öffnet den Import. Gesendet werden nur der Wunsch, die Befehle und die App-Namen. ordner sortiert die Apps in Ordner der App-Übersicht und zeigt den Plan, bevor sich etwas ändert.\n› ki wie viele Tassen hat ein Liter\n› ki machen dnd on; in 1h: dnd off\n› ki erstellen Suche auf imdb\n› ki fasse zusammen {clip}\n› ki ordner\n› ki ordner --force</string>
     <string name="cmd_ai_title">KI</string>
     <string name="cmd_ai_locked">KI-SCHLÜSSEL IN DEN EINSTELLUNGEN HINZUFÜGEN · ENTER ÖFFNET SIE</string>
     <string name="cmd_ai_mode_chat">CHAT</string>
@@ -724,6 +724,18 @@
     <string name="cmd_ai_empty_reply">DIE KI HAT NICHT GEANTWORTET</string>
     <string name="cmd_ai_no_command">KEIN BEFEHL PASST ZU DIESER ANFRAGE</string>
     <string name="cmd_ai_create_failed">DIE KI HAT KEINEN IMPORTIERBAREN BEFEHL GESENDET</string>
+    <string name="cmd_ai_word_folders">ordner</string>
+    <string name="cmd_ai_mode_folders">ORDNER</string>
+    <string name="cmd_ai_folders_empty">ENTER SORTIERT DIE APPS IN ORDNER DER APP-ÜBERSICHT · ODER SAG WIE</string>
+    <string name="cmd_ai_folders_request">Sortiere meine Apps in Ordner</string>
+    <string name="cmd_ai_folders_title">ORDNERPLAN · %1$d ORDNER · %2$d APPS</string>
+    <string name="cmd_ai_folders_apply">[ANWENDEN]</string>
+    <string name="cmd_ai_folders_cancel">[ABBRECHEN]</string>
+    <string name="cmd_ai_folders_failed">DIE KI HAT KEINEN ORDNERPLAN GESENDET</string>
+    <string name="cmd_ai_folders_none">KEIN NEUER ORDNER: ALLE APPS SIND SCHON IN EINEM</string>
+    <string name="cmd_ai_folders_done">%1$d ORDNER IN DER APP-ÜBERSICHT BEREIT</string>
+    <string name="cmd_ai_folders_force">--FORCE: APPS IN ORDNERN KÖNNEN VERSCHOBEN WERDEN · LEERE ORDNER WERDEN GELÖSCHT</string>
+    <string name="cmd_ai_folders_deleted">GELÖSCHT (LEER)</string>
     <string name="cmd_pref_group_ai">KI</string>
     <string name="cmd_pref_ai">KI-Schlüssel</string>
     <string name="cmd_pref_ai_none">Kein Schlüssel · der KI-Befehl bleibt gesperrt</string>

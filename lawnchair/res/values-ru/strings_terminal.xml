@@ -708,7 +708,7 @@
     <string name="cmd_ai_word_run">сделай</string>
     <string name="cmd_ai_word_create">создай</string>
     <string name="cmd_usage_ai">[вопрос] · сделай [просьба] · создай [команда]</string>
-    <string name="cmd_help_ai">Общается с ИИ, настроенным в параметрах, и показывает ответ здесь; продолжайте спрашивать, чтобы вести разговор. сделай превращает просьбу в команду панели, которая ждёт Enter в строке. создай пишет новую команду и открывает экран импорта. Отправляются только просьба, команды и названия приложений.\n› ии сколько чашек в литре\n› ии сделай dnd on; через 1ч: dnd off\n› ии создай поиск в imdb\n› ии кратко {clip}</string>
+    <string name="cmd_help_ai">Общается с ИИ, настроенным в параметрах, и показывает ответ здесь; продолжайте спрашивать, чтобы вести разговор. сделай превращает просьбу в команду панели, которая ждёт Enter в строке. создай пишет новую команду и открывает экран импорта. Отправляются только просьба, команды и названия приложений. папки раскладывает приложения по папкам меню и показывает план до любых изменений.\n› ии сколько чашек в литре\n› ии сделай dnd on; через 1ч: dnd off\n› ии создай поиск в imdb\n› ии кратко {clip}\n› ии папки\n› ии папки --force</string>
     <string name="cmd_ai_title">ИИ</string>
     <string name="cmd_ai_locked">ДОБАВЬТЕ КЛЮЧ ИИ В НАСТРОЙКАХ · ENTER ОТКРОЕТ ИХ</string>
     <string name="cmd_ai_mode_chat">ЧАТ</string>
@@ -724,6 +724,18 @@
     <string name="cmd_ai_empty_reply">ИИ НИЧЕГО НЕ ОТВЕТИЛ</string>
     <string name="cmd_ai_no_command">НИ ОДНА КОМАНДА НЕ ПОДХОДИТ</string>
     <string name="cmd_ai_create_failed">ИИ НЕ ПРИСЛАЛ КОМАНДУ ДЛЯ ИМПОРТА</string>
+    <string name="cmd_ai_word_folders">папки</string>
+    <string name="cmd_ai_mode_folders">ПАПКИ</string>
+    <string name="cmd_ai_folders_empty">ENTER РАЗЛОЖИТ ПРИЛОЖЕНИЯ ПО ПАПКАМ МЕНЮ · ИЛИ СКАЖИТЕ КАК</string>
+    <string name="cmd_ai_folders_request">Разложи мои приложения по папкам</string>
+    <string name="cmd_ai_folders_title">ПЛАН ПАПОК · ПАПОК: %1$d · ПРИЛОЖЕНИЙ: %2$d</string>
+    <string name="cmd_ai_folders_apply">[ПРИМЕНИТЬ]</string>
+    <string name="cmd_ai_folders_cancel">[ОТМЕНА]</string>
+    <string name="cmd_ai_folders_failed">ИИ НЕ ПРИСЛАЛ ПЛАН ПАПОК</string>
+    <string name="cmd_ai_folders_none">НОВЫХ ПАПОК НЕТ: ВСЕ ПРИЛОЖЕНИЯ УЖЕ В ПАПКАХ</string>
+    <string name="cmd_ai_folders_done">ГОТОВО ПАПОК В МЕНЮ ПРИЛОЖЕНИЙ: %1$d</string>
+    <string name="cmd_ai_folders_force">--FORCE: ПРИЛОЖЕНИЯ ИЗ ПАПОК МОГУТ ПЕРЕМЕСТИТЬСЯ · ПУСТЫЕ ПАПКИ УДАЛЯЮТСЯ</string>
+    <string name="cmd_ai_folders_deleted">УДАЛЕНА (ПУСТАЯ)</string>
     <string name="cmd_pref_group_ai">ИИ</string>
     <string name="cmd_pref_ai">Ключ ИИ</string>
     <string name="cmd_pref_ai_none">Нет ключа · команда ИИ заблокирована</string>

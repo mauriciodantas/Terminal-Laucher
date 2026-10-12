@@ -1827,7 +1827,7 @@
     <string name="cmd_ai_word_run">do</string>
     <string name="cmd_ai_word_create">create</string>
     <string name="cmd_usage_ai">[question] · do [request] · create [command]</string>
-    <string name="cmd_help_ai">Talks to the AI set up in settings and shows the answer here; keep asking to go on with the conversation. do turns a request into a command of the bar, which waits on the line for Enter. create writes a new command and opens the import screen. Only the request, the commands and the app names are sent.\n› ai how many cups in a liter\n› ai do dnd on; in 1h: dnd off\n› ai create search on imdb\n› ai summarize {clip}</string>
+    <string name="cmd_help_ai">Talks to the AI set up in settings and shows the answer here; keep asking to go on with the conversation. do turns a request into a command of the bar, which waits on the line for Enter. create writes a new command and opens the import screen. Only the request, the commands and the app names are sent. folders sorts the apps into app drawer folders and shows the plan before anything changes.\n› ai how many cups in a liter\n› ai do dnd on; in 1h: dnd off\n› ai create search on imdb\n› ai summarize {clip}\n› ai folders\n› ai folders --force</string>
     <string name="cmd_ai_title">AI</string>
     <string name="cmd_ai_locked">ADD AN AI KEY IN SETTINGS · ENTER OPENS THEM</string>
     <string name="cmd_ai_mode_chat">CHAT</string>
@@ -1843,6 +1843,18 @@
     <string name="cmd_ai_empty_reply">THE AI SENT NO ANSWER</string>
     <string name="cmd_ai_no_command">NO COMMAND FITS THIS REQUEST</string>
     <string name="cmd_ai_create_failed">THE AI SENT NO COMMAND THAT CAN BE IMPORTED</string>
+    <string name="cmd_ai_word_folders">folders</string>
+    <string name="cmd_ai_mode_folders">FOLDERS</string>
+    <string name="cmd_ai_folders_empty">ENTER SORTS THE APPS INTO DRAWER FOLDERS · OR SAY HOW</string>
+    <string name="cmd_ai_folders_request">Sort my apps into folders</string>
+    <string name="cmd_ai_folders_title">FOLDER PLAN · %1$d FOLDERS · %2$d APPS</string>
+    <string name="cmd_ai_folders_apply">[APPLY]</string>
+    <string name="cmd_ai_folders_cancel">[CANCEL]</string>
+    <string name="cmd_ai_folders_failed">THE AI SENT NO FOLDER PLAN</string>
+    <string name="cmd_ai_folders_none">NO NEW FOLDER: EVERY APP IS ALREADY IN ONE</string>
+    <string name="cmd_ai_folders_done">%1$d FOLDERS READY IN THE APP DRAWER</string>
+    <string name="cmd_ai_folders_force">--FORCE: APPS ALREADY IN FOLDERS MAY MOVE · EMPTY FOLDERS ARE DELETED</string>
+    <string name="cmd_ai_folders_deleted">DELETED (EMPTY)</string>
     <string name="cmd_pref_group_ai">AI</string>
     <string name="cmd_pref_ai">AI key</string>
     <string name="cmd_pref_ai_none">No key · the AI command stays locked</string>
