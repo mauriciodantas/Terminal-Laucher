@@ -8,6 +8,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import app.lawnchair.data.folder.FolderEntry
 import app.lawnchair.data.folder.model.FolderViewModel
+import app.lawnchair.data.folder.resolveFolderItems
 import app.lawnchair.launcher
 import app.lawnchair.preferences.PreferenceManager
 import app.lawnchair.preferences2.PreferenceManager2
@@ -22,7 +23,6 @@ import com.android.launcher3.allapps.WorkProfileManager
 import com.android.launcher3.model.data.AppInfo
 import com.android.launcher3.model.data.FolderInfo
 import com.android.launcher3.model.data.ItemInfo
-import com.android.launcher3.util.ComponentKey
 import com.android.launcher3.views.ActivityContext
 import com.patrykmichalik.opto.core.onEach
 import java.util.function.Predicate
@@ -115,10 +115,10 @@ class LawnchairAlphabeticalAppsList<T>(
                 position++
             }
         } else {
+            val installedApps = appsStore.apps.toList()
             folderList.forEach { folderEntry ->
-                val resolvedApps = folderEntry.itemComponentKeys.mapNotNull { keyString ->
-                    val componentKey = ComponentKey.fromString(keyString) ?: return@mapNotNull null
-                    appsStore.getApp(componentKey) as? AppInfo
+                val resolvedApps = resolveFolderItems(folderEntry.itemComponentKeys, installedApps) {
+                    it.toComponentKey()
                 }
 
                 if (resolvedApps.size > 1) {

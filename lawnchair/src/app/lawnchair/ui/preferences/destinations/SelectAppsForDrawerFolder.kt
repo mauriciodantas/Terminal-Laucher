@@ -24,6 +24,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.lawnchair.data.folder.FolderEntry
 import app.lawnchair.data.folder.model.FolderViewModel
+import app.lawnchair.data.folder.resolveFolderItems
 import app.lawnchair.ui.preferences.LocalIsExpandedScreen
 import app.lawnchair.ui.preferences.components.AppItem
 import app.lawnchair.ui.preferences.components.AppItemPlaceholder
@@ -75,8 +76,10 @@ fun SelectAppsForDrawerFolder(
 ) {
     var filterNonUniqueItems by remember { mutableStateOf(true) }
 
-    val activeIds = remember(folderEntry) {
-        folderEntry?.itemComponentKeys ?: emptyList()
+    // Map saved keys to the current ones, so an app whose activity changed in an update stays active
+    val activeIds = remember(folderEntry, apps) {
+        resolveFolderItems(folderEntry?.itemComponentKeys ?: emptyList(), apps) { it.key }
+            .map { it.key.toString() }
     }
 
     val (positionalItems, activeCount) = remember(apps, activeIds, filterNonUniqueItems, allFolderPackages) {
