@@ -158,7 +158,11 @@ object CommandExecutor {
 
             is CommandAction.InstallPack -> return installPack(context, action.id) != null
 
-            is CommandAction.RemovePack -> CustomActionStore.save(context, BundledPacks.remove(CustomActionStore.load(context), action.id))
+            is CommandAction.RemovePack -> {
+                val left = BundledPacks.remove(CustomActionStore.load(context), ProviderStore.load(context), action.id)
+                CustomActionStore.save(context, left.actions)
+                ProviderStore.save(context, left.providers)
+            }
 
             // Only the setup opens a screen; the bar talks to the AI itself.
             is CommandAction.Ai -> {
@@ -279,14 +283,15 @@ object CommandExecutor {
     }
 
     /**
-     * Adds the [BundledPack] [id] to the saved actions. Returns how many of its actions were left
-     * out because the user already has their names, or null when there is no such pack.
+     * Adds the [BundledPack] [id] to the saved actions and providers. Returns how many of its
+     * actions were left out because the user already has their names, or null when there is no such pack.
      */
     fun installPack(context: Context, id: String): Int? {
         val pack = BundledPacks.of(id) ?: return null
-        val (actions, skipped) = BundledPacks.install(CustomActionStore.load(context), AliasStore.load(context), pack)
-        CustomActionStore.save(context, actions)
-        return skipped
+        val result = BundledPacks.install(CustomActionStore.load(context), AliasStore.load(context), ProviderStore.load(context), pack)
+        CustomActionStore.save(context, result.actions)
+        ProviderStore.save(context, result.providers)
+        return result.skipped
     }
 
     fun hasCallPermission(context: Context): Boolean = context.checkSelfPermission(android.Manifest.permission.CALL_PHONE) ==

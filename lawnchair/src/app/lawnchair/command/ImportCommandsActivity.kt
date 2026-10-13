@@ -13,10 +13,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -28,6 +30,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import app.lawnchair.ui.theme.LawnchairTheme
 import app.lawnchair.widgets.lottie.ImportWidgetActivity
@@ -69,25 +73,41 @@ class ImportCommandsActivity : ComponentActivity() {
             return
         }
         val current = CustomActionStore.load(this) to AliasStore.load(this)
+        val providers = ProviderStore.load(this)
         setContent {
             LawnchairTheme {
                 ImportDialog(
                     pack = pack,
-                    preview = PackRules.preview(current.first, current.second, pack),
-                    onImport = { chosen -> importPack(chosen) },
+                    preview = PackRules.preview(current.first, current.second, pack, providers),
+                    onImport = { chosen, secrets -> importPack(chosen, secrets) },
                     onDismiss = { finish() },
                 )
             }
         }
     }
 
-    /** Adds what was ticked. An entry that clashes comes in under its free suggested name. */
-    private fun importPack(chosen: CommandPack) {
-        val merge = CommandPacks.merge(CustomActionStore.load(this), AliasStore.load(this), chosen, rename = true)
+    /**
+     * Adds what was ticked. An entry that clashes comes in under its free suggested name; a provider
+     * the user already has stays theirs. [secrets] are the keys typed for the providers that came in.
+     */
+    private fun importPack(chosen: CommandPack, secrets: Map<String, String>) {
+        val merge = CommandPacks.merge(CustomActionStore.load(this), AliasStore.load(this), chosen, rename = true, providers = ProviderStore.load(this))
         CustomActionStore.save(this, merge.actions)
         AliasStore.save(this, merge.aliases)
+        ProviderStore.save(this, merge.providers)
+        var pending = 0
+        merge.addedProviders.forEach { id ->
+            val provider = merge.providers.first { it.id == id }
+            val secret = secrets[id]?.trim().orEmpty()
+            when {
+                !provider.auth.needsSecret -> {}
+                secret.isNotEmpty() -> SecretStore.put(this, id, secret)
+                else -> pending++
+            }
+        }
         val text = getString(R.string.cmd_imp_done, merge.addedActions, merge.addedAliases) +
-            if (merge.skipped > 0) getString(R.string.cmd_imp_skipped, merge.skipped) else ""
+            (if (merge.skipped > 0) getString(R.string.cmd_imp_skipped, merge.skipped) else "") +
+            (if (pending > 0) getString(R.string.cmd_imp_keys_pending, pending) else "")
         Toast.makeText(this, text, Toast.LENGTH_LONG).show()
         finish()
     }
@@ -107,13 +127,24 @@ class ImportCommandsActivity : ComponentActivity() {
 private fun ImportDialog(
     pack: CommandPack,
     preview: PackPreview,
-    onImport: (CommandPack) -> Unit,
+    onImport: (CommandPack, Map<String, String>) -> Unit,
     onDismiss: () -> Unit,
 ) {
     // What fits starts ticked; a clash starts unticked and, when ticked, comes in under another name.
-    var actionsOn by remember { mutableStateOf(preview.actions.indices.filter { preview.actions[it].conflict == null }.toSet()) }
+    // An action that sends the location or the clipboard out is never ticked for the user.
+    var actionsOn by remember {
+        mutableStateOf(preview.actions.indices.filter { preview.actions[it].conflict == null && preview.sends.getOrNull(it)?.isSensitive != true }.toSet())
+    }
     var aliasesOn by remember { mutableStateOf(preview.aliases.indices.filter { preview.aliases[it].conflict == null }.toSet()) }
     val count = actionsOn.size + aliasesOn.size
+    // A provider comes in with the ticked actions that use it, never on its own. The preview's
+    // actions already point at the id each provider comes in as.
+    val chosenActions = pack.actions.filterIndexed { i, _ -> i in actionsOn }
+    val chosenIds = preview.actions.filterIndexed { i, _ -> i in actionsOn }.map { it.item.provider }.toSet()
+    val providers = preview.providers.filter { it.item.id in chosenIds }
+    // Where the ticked actions send things, one line per host.
+    val destinations = actionsOn.mapNotNull { preview.sends.getOrNull(it) }.groupBy { it.host }
+    var secrets by remember { mutableStateOf(emptyMap<String, String>()) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -168,6 +199,63 @@ private fun ImportDialog(
                         onChange = { aliasesOn = if (it) aliasesOn + index else aliasesOn - index },
                     )
                 }
+                if (destinations.isNotEmpty()) {
+                    Text(
+                        stringResource(R.string.cmd_imp_destinations),
+                        style = MaterialTheme.typography.titleSmall,
+                        modifier = Modifier.padding(top = 12.dp),
+                    )
+                    destinations.forEach { (host, all) ->
+                        val merged = PackSends(host, all.any { it.typed }, all.flatMap { it.variables }.toSet())
+                        Text(
+                            stringResource(R.string.cmd_imp_destination, host, merged.label().ifEmpty { stringResource(R.string.cmd_imp_sends_nothing) }),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (merged.isSensitive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 4.dp),
+                        )
+                    }
+                }
+                if (providers.isNotEmpty()) {
+                    Text(
+                        stringResource(R.string.cmd_imp_providers),
+                        style = MaterialTheme.typography.titleSmall,
+                        modifier = Modifier.padding(top = 12.dp),
+                    )
+                }
+                providers.forEach { entry ->
+                    val provider = entry.item
+                    Column(Modifier.padding(top = 6.dp)) {
+                        Text("${provider.id} · ${provider.name}")
+                        Text(
+                            entry.detail,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontFamily = FontFamily.Monospace,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        entry.caution?.let {
+                            Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary)
+                        }
+                        // Only a provider that comes in asks for its key; the user's own keeps its own.
+                        if (provider.id !in preview.reused && provider.auth.needsSecret) {
+                            OutlinedTextField(
+                                value = secrets[provider.id].orEmpty(),
+                                onValueChange = { secrets = secrets + (provider.id to it) },
+                                label = { Text(stringResource(R.string.cmd_imp_provider_key)) },
+                                supportingText = { Text(stringResource(R.string.cmd_imp_provider_key_hint)) },
+                                singleLine = true,
+                                visualTransformation = PasswordVisualTransformation(),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, autoCorrectEnabled = false),
+                                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                            )
+                            if (provider.keyHelp.isNotEmpty()) {
+                                val context = androidx.compose.ui.platform.LocalContext.current
+                                TextButton(onClick = {
+                                    runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(provider.keyHelp)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+                                }) { Text(stringResource(R.string.cmd_providers_get_key)) }
+                            }
+                        }
+                    }
+                }
             }
         },
         confirmButton = {
@@ -176,9 +264,12 @@ private fun ImportDialog(
                 onClick = {
                     onImport(
                         CommandPack(
-                            pack.actions.filterIndexed { i, _ -> i in actionsOn },
+                            chosenActions,
                             pack.aliases.filterIndexed { i, _ -> i in aliasesOn },
+                            // The pack's own providers: the merge renames them the same way again.
+                            providers = pack.providers.filter { p -> chosenActions.any { it.provider == p.id } },
                         ),
+                        secrets,
                     )
                 },
             ) {

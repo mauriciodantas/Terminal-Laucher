@@ -84,13 +84,16 @@ import app.lawnchair.command.CustomAction
 import app.lawnchair.command.CustomActionStore
 import app.lawnchair.command.CustomActions
 import app.lawnchair.command.ImportCommandsActivity
+import app.lawnchair.command.ProviderStore
 import app.lawnchair.command.R as CommandR
 import app.lawnchair.command.StatsStore
 import app.lawnchair.command.TaskApp
 import app.lawnchair.command.Tone
+import app.lawnchair.ui.preferences.components.NavigationActionPreference
 import app.lawnchair.ui.preferences.components.controls.ClickablePreference
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
+import app.lawnchair.ui.preferences.navigation.CommandProviders
 import app.lawnchair.util.foldAccents
 import com.android.launcher3.R
 import kotlinx.coroutines.Dispatchers
@@ -195,7 +198,8 @@ fun CommandActionsPreferences() {
         val ok = runCatching {
             context.contentResolver.openOutputStream(uri)?.use {
                 val pack = selection ?: CommandPack(actions, aliases)
-                it.write(CommandPacks.encode(pack.actions, pack.aliases).toByteArray())
+                val providers = CommandPacks.providersFor(pack.actions, ProviderStore.load(context))
+                it.write(CommandPacks.encode(pack.actions, pack.aliases, providers).toByteArray())
             } != null
         }.getOrDefault(false)
         val message = if (ok) R.string.cmd_pref_exported else R.string.cmd_pref_export_failed
@@ -295,6 +299,14 @@ fun CommandActionsPreferences() {
                         stringResource(R.string.cmd_pref_clear_history_count, history.size)
                     },
                     onClick = { if (history.isNotEmpty()) clearHistory() },
+                )
+            }
+            // Rarely needed, so kept apart: what API commands go through and their keys.
+            PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_advanced)) {
+                NavigationActionPreference(
+                    label = stringResource(R.string.cmd_providers_title),
+                    destination = CommandProviders(),
+                    subtitle = stringResource(R.string.cmd_providers_entry),
                 )
             }
         }
@@ -575,7 +587,7 @@ internal fun PreviewBox(analysis: Analysis?, intro: String? = null, note: String
 
 /** Remove (when editing) on the left, then Test, Cancel and Save on one row. */
 @Composable
-private fun DialogButtons(
+internal fun DialogButtons(
     saveEnabled: Boolean,
     testEnabled: Boolean,
     canRemove: Boolean,

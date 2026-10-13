@@ -103,16 +103,19 @@ object Weather {
     )
 
     /** Looks the place up when needed and fetches the forecast; what the bar shows either way. Blocking. */
-    fun run(action: CommandAction.Weather, language: String = Locale.getDefault().language): String = runCatching {
+    fun run(action: CommandAction.Weather, language: String = Locale.getDefault().language): String {
+        val provider = Providers.OPEN_METEO
         val place = if (action.place.isNotEmpty()) {
-            val (code, body) = ApiCall.get(geocodeUrl(action.place, language))
-            if (code !in 200..299) return Texts.get(R.string.cmd_api_failed, "open-meteo.com", "HTTP $code")
-            place(body) ?: return Texts.get(R.string.cmd_weather_not_found, action.place.uppercase())
+            when (val found = HttpRunner.get(provider, geocodeUrl(action.place, language), null)) {
+                is HttpResult.Answer -> place(found.body) ?: return Texts.get(R.string.cmd_weather_not_found, action.place.uppercase())
+                else -> return HttpRunner.describe(found, provider)
+            }
         } else {
             action.location?.let { here(it) } ?: return Texts.get(R.string.cmd_weather_no_location)
         }
-        val (code, body) = ApiCall.get(forecastUrl(place.latitude, place.longitude))
-        if (code !in 200..299) return Texts.get(R.string.cmd_api_failed, "open-meteo.com", "HTTP $code")
-        text(body, place.name) ?: Texts.get(R.string.cmd_api_empty)
-    }.getOrElse { Texts.get(R.string.cmd_api_failed, "open-meteo.com", it.message ?: it.javaClass.simpleName) }
+        return when (val forecast = HttpRunner.get(provider, forecastUrl(place.latitude, place.longitude), null)) {
+            is HttpResult.Answer -> text(forecast.body, place.name) ?: Texts.get(R.string.cmd_api_empty)
+            else -> HttpRunner.describe(forecast, provider)
+        }
+    }
 }

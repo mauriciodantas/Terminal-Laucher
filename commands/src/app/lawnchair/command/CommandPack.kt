@@ -14,8 +14,13 @@ data class CommandPack(
     val aliases: List<CommandAlias>,
     /** Actions left out on reading because they use a scheme that can reach files or components. */
     val blocked: Int = 0,
+    /** The API providers the actions use, without their secrets, which never travel in a pack. */
+    val providers: List<ApiProvider> = emptyList(),
 ) {
     val isEmpty: Boolean get() = actions.isEmpty() && aliases.isEmpty() && blocked == 0
+
+    /** The providers the [actions] of this pack use. */
+    fun providersUsed(): List<ApiProvider> = providers.filter { p -> actions.any { it.provider == p.id } }
 }
 
 /** What an import did: the lists to save and how many entries each side added or skipped. */
@@ -25,6 +30,9 @@ data class PackMerge(
     val addedActions: Int,
     val addedAliases: Int,
     val skipped: Int,
+    val providers: List<ApiProvider> = emptyList(),
+    /** Ids of the providers the import added; one the user already had stays theirs. */
+    val addedProviders: List<String> = emptyList(),
 )
 
 object CommandPacks {
@@ -38,12 +46,16 @@ object CommandPacks {
     private const val MAX_BYTES = 256 * 1024
     private const val MAX_ITEMS = 200
 
-    fun encode(actions: List<CustomAction>, aliases: List<CommandAlias>): String = JSONObject()
+    fun encode(actions: List<CustomAction>, aliases: List<CommandAlias>, providers: List<ApiProvider> = emptyList()): String = JSONObject()
         .put("format", FORMAT)
         .put("version", VERSION)
         .put("actions", CustomActionStore.toJson(actions))
         .put("aliases", AliasStore.toJson(aliases))
+        .apply { if (providers.isNotEmpty()) put("providers", ProviderCodec.toJson(providers)) }
         .toString(2)
+
+    /** The saved providers [actions] use, to go along in a pack; the built-in ones need not. */
+    fun providersFor(actions: List<CustomAction>, saved: List<ApiProvider>): List<ApiProvider> = saved.filter { p -> !Providers.isBuiltIn(p.id) && actions.any { it.provider == p.id } }
 
     /** Reads a pack. Throws when [raw] is not one, so a stray JSON file is never taken for a pack. */
     fun decode(raw: String): CommandPack {
@@ -54,10 +66,16 @@ object CommandPacks {
         val (blocked, allowed) = CustomActionStore.fromJson(o.optJSONArray("actions") ?: JSONArray())
             .take(MAX_ITEMS)
             .partition { PackRules.isBlocked(it) }
+        // A provider that is not https or tries to slip credentials in a header is not read at all.
+        val providers = ProviderCodec.fromJson(o.optJSONArray("providers") ?: JSONArray())
+            .take(MAX_ITEMS)
+            .filter { Providers.validate(it) == null && !Providers.isBuiltIn(it.id) }
+            .map { it.copy(pack = "") }
         return CommandPack(
             allowed,
             AliasStore.fromJson(o.optJSONArray("aliases") ?: JSONArray()).take(MAX_ITEMS),
             blocked.size,
+            providers,
         )
     }
 
@@ -78,12 +96,19 @@ object CommandPacks {
     }.onFailure { android.util.Log.w("CommandPacks", "could not read $uri", it) }.getOrNull()
 
     /** See [PackRules.merge]. */
-    fun merge(actions: List<CustomAction>, aliases: List<CommandAlias>, pack: CommandPack, rename: Boolean = false): PackMerge = PackRules.merge(actions, aliases, pack, rename)
+    fun merge(
+        actions: List<CustomAction>,
+        aliases: List<CommandAlias>,
+        pack: CommandPack,
+        rename: Boolean = false,
+        providers: List<ApiProvider> = emptyList(),
+    ): PackMerge = PackRules.merge(actions, aliases, pack, rename, providers)
 
     /** Writes the pack to the cache and returns a share sheet for it, or null when that fails. */
     fun shareIntent(context: Context, actions: List<CustomAction>, aliases: List<CommandAlias>): Intent? = runCatching {
         val dir = File(context.cacheDir, "commands").apply { mkdirs() }
-        val file = File(dir, FILE_NAME).apply { writeText(encode(actions, aliases)) }
+        val providers = providersFor(actions, ProviderStore.load(context))
+        val file = File(dir, FILE_NAME).apply { writeText(encode(actions, aliases, providers)) }
         val uri = androidx.core.content.FileProvider.getUriForFile(
             context,
             "${context.packageName}.fileprovider",

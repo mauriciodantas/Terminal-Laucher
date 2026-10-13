@@ -125,6 +125,8 @@ data class Analysis(
     val help: CommandHelpText? = null,
     /** With no [action] of its own, Enter picks the highlighted suggestion: the options several commands offer. */
     val picksOnEnter: Boolean = false,
+    /** With [Need.SECRET], the provider whose secret is missing. */
+    val needProvider: String? = null,
 )
 
 /** A one-tap start for the empty command line: a recent command, an alias or a custom letter. */
@@ -159,7 +161,7 @@ object CommandEngine {
     ): Analysis {
         val ctx = CommandContext(apps, contacts, contactsGranted, custom, aliases, extras)
         val analysis = analyzeLine(typed, ctx, 0).copy(help = CommandHelp.of(typed, custom, aliases))
-        return analysis.action?.let { analysis.copy(intent = describe(it)) } ?: analysis
+        return analysis.action?.let { analysis.copy(intent = describe(it, extras.providers)) } ?: analysis
     }
 
     /** How deep aliases that hold chains may nest before the bar stops expanding them. */
@@ -396,7 +398,7 @@ object CommandEngine {
     }
 
     /** What [action] asks the system to do, as a short technical line shown under the preview. */
-    fun describe(action: CommandAction): String = when (action) {
+    fun describe(action: CommandAction, providers: List<ApiProvider> = Providers.BUILT_IN): String = when (action) {
         is CommandAction.OpenApp -> "launcher · " + action.app.id.substringBefore('/')
 
         is CommandAction.SetAlarm -> "ACTION_SET_ALARM · %02d:%02d".format(action.hour, action.minute) +
@@ -454,7 +456,7 @@ object CommandEngine {
             else -> "POST · " + action.mode.name.lowercase()
         }
 
-        is CommandAction.Chain -> action.steps.joinToString(" ; ") { describe(it).substringBefore(" · ") }
+        is CommandAction.Chain -> action.steps.joinToString(" ; ") { describe(it, providers).substringBefore(" · ") }
 
         is CommandAction.Calc -> Texts.get(R.string.cmd_desc_calc, action.result)
 
@@ -488,13 +490,13 @@ object CommandEngine {
 
         is CommandAction.OpenUrl -> "ACTION_VIEW · " + action.url
 
-        is CommandAction.Custom -> describeCustom(action)
+        is CommandAction.Custom -> describeCustom(action, providers)
     }
 
-    private fun describeCustom(action: CommandAction.Custom): String {
+    private fun describeCustom(action: CommandAction.Custom, providers: List<ApiProvider>): String {
         val spec = action.action
         if (spec.kind == ActionKind.SHORTCUT) return Texts.get(R.string.cmd_desc_shortcut, spec.packages.firstOrNull().orEmpty())
-        if (spec.kind == ActionKind.API) return "GET " + (ApiCall.url(spec, action.text, java.time.LocalDate.now()) ?: spec.template)
+        if (spec.kind == ActionKind.API) return "GET " + (ApiCall.url(spec, action.text, java.time.LocalDate.now(), providers) ?: spec.template)
         if (spec.template.isEmpty()) {
             return (spec.intentAction.substringAfterLast('.') + " " + spec.mimeType.orEmpty() + " · " + action.text).trim()
         }
@@ -641,13 +643,29 @@ object CommandEngine {
         contacts: List<ContactEntry>,
         granted: Boolean,
         extras: CommandExtras = CommandExtras(),
-    ): Analysis = withVariables(unfilled, extras).let { action -> analyzeCustomFilled(action, arg, contacts, granted) }
+    ): Analysis = providerProblem(unfilled, extras)
+        ?: withVariables(unfilled, extras).let { action -> analyzeCustomFilled(action, arg, contacts, granted, extras.providers) }
+
+    /**
+     * Why an API action cannot run yet: its provider is gone, or waits for a secret. The bar then
+     * offers to set it up instead of running a request bound to fail.
+     */
+    private fun providerProblem(action: CustomAction, extras: CommandExtras): Analysis? {
+        if (action.kind != ActionKind.API || action.provider.isEmpty()) return null
+        val title = action.label.uppercase()
+        val provider = Providers.of(action.provider, extras.providers)
+            ?: return commandResult(title, Texts.get(R.string.cmd_provider_missing, action.provider), Tone.ERROR, null)
+        if (!provider.auth.needsSecret || provider.id in extras.configuredProviders) return null
+        return commandResult(title, Texts.get(R.string.cmd_provider_no_key, provider.name.uppercase()), Tone.WARN, null, need = Need.SECRET)
+            .copy(needProvider = provider.id)
+    }
 
     private fun analyzeCustomFilled(
         action: CustomAction,
         arg: String,
         contacts: List<ContactEntry>,
         granted: Boolean,
+        providers: List<ApiProvider>,
     ): Analysis = when (action.arg) {
         ArgKind.CONTACT_AND_TEXT -> analyzeContactAndText(action, arg, contacts, granted)
 
@@ -668,7 +686,7 @@ object CommandEngine {
                 previewTitle = action.label.uppercase(),
                 preview = when {
                     text.isEmpty() -> Texts.get(R.string.cmd_text_empty)
-                    action.kind == ActionKind.API -> text.uppercase() + " · " + Texts.get(R.string.cmd_api_ready, ApiCall.host(action))
+                    action.kind == ActionKind.API -> text.uppercase() + " · " + Texts.get(R.string.cmd_api_ready, ApiCall.host(action, providers))
                     else -> text.uppercase()
                 },
                 tone = if (text.isEmpty()) Tone.IDLE else Tone.OK,
@@ -681,7 +699,7 @@ object CommandEngine {
             listTitle = action.label.uppercase(),
             needsContacts = false,
             previewTitle = action.label.uppercase(),
-            preview = if (action.kind == ActionKind.API) Texts.get(R.string.cmd_api_ready, ApiCall.host(action)) else Texts.get(R.string.cmd_enter_to_run),
+            preview = if (action.kind == ActionKind.API) Texts.get(R.string.cmd_api_ready, ApiCall.host(action, providers)) else Texts.get(R.string.cmd_enter_to_run),
             tone = Tone.OK,
             action = CommandAction.Custom(action),
         )

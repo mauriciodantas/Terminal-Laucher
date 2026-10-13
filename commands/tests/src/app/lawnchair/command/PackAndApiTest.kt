@@ -21,11 +21,12 @@ class PackAndApiTest {
     private val today = LocalDate.of(2026, 10, 13)
     private val pt = Locale.forLanguageTag("pt-BR")
 
-    private fun run(text: String, custom: List<CustomAction> = CustomActions.DEFAULTS, extras: CommandExtras = CommandExtras()) =
+    private fun run(text: String, custom: List<CustomAction> = CustomActions.DEFAULTS, extras: CommandExtras = CommandExtras(providers = providers)) =
         CommandEngine.analyze(text, apps, emptyList(), true, custom, emptyList(), extras)
 
     private val brazil get() = BundledPacks.of("brasil")!!
-    private fun installed() = BundledPacks.install(CustomActions.DEFAULTS, emptyList(), brazil).first
+    private fun installed() = BundledPacks.install(CustomActions.DEFAULTS, emptyList(), emptyList(), brazil).actions
+    private val providers get() = Providers.all(brazil.providers)
     private fun action(letter: String) = brazil.actions.single { it.letter == letter }
 
     // ---- API answers ----
@@ -64,13 +65,16 @@ class PackAndApiTest {
     }
 
     @Test fun addressFillsTextAndYear() {
-        assertEquals("https://viacep.com.br/ws/01310-100/json/", ApiCall.url(action("cep"), " 01310-100 ", today))
-        assertEquals("https://brasilapi.com.br/api/feriados/v1/2026", ApiCall.url(action("feriados"), "", today))
-        assertEquals("viacep.com.br", ApiCall.host(action("cep")))
+        assertEquals("https://viacep.com.br/ws/01310-100/json/", ApiCall.url(action("cep"), " 01310-100 ", today, providers))
+        assertEquals("https://brasilapi.com.br/api/feriados/v1/2026", ApiCall.url(action("feriados"), "", today, providers))
+        assertEquals("viacep.com.br", ApiCall.host(action("cep"), providers))
+        // An action saved before providers existed still runs on its own address.
+        val legacy = action("cep").copy(provider = "", template = "https://viacep.com.br/ws/{text}/json/")
+        assertEquals("https://viacep.com.br/ws/1/json/", ApiCall.url(legacy, "1", today))
     }
 
     @Test fun onlyHttpsApiActionsAreImported() {
-        val plain = action("cep").copy(template = "http://example.com/{text}")
+        val plain = action("cep").copy(provider = "", template = "http://example.com/{text}")
         assertTrue(PackRules.isBlocked(plain))
         assertTrue(PackRules.isBlocked(action("cep").copy(api = null)))
         assertFalse(PackRules.isBlocked(action("cep")))
@@ -103,14 +107,19 @@ class PackAndApiTest {
     @Test fun installingKeepsTheUsersOwnLetter() {
         val mine = CustomActions.DEFAULTS + CustomAction("cep", "Meu CEP", ActionKind.INTENT, "https://x.com/{text}", emptyList(), ArgKind.TEXT)
         assertEquals(listOf("cep"), BundledPacks.conflicts(mine, emptyList(), brazil))
-        val (after, skipped) = BundledPacks.install(mine, emptyList(), brazil)
-        assertEquals(1, skipped)
-        assertEquals("Meu CEP", after.single { it.letter == "cep" }.label)
+        val result = BundledPacks.install(mine, emptyList(), emptyList(), brazil)
+        assertEquals(1, result.skipped)
+        assertEquals("Meu CEP", result.actions.single { it.letter == "cep" }.label)
     }
 
     @Test fun installingTwiceDoesNotDuplicate() {
-        val twice = BundledPacks.install(installed(), emptyList(), brazil).first
-        assertEquals(installed(), twice)
+        val once = BundledPacks.install(CustomActions.DEFAULTS, emptyList(), emptyList(), brazil)
+        val twice = BundledPacks.install(once.actions, emptyList(), once.providers, brazil)
+        assertEquals(once, twice)
+        assertEquals(listOf("viacep", "brasilapi"), once.providers.map { it.id })
+        val removed = BundledPacks.remove(once.actions, once.providers, "brasil")
+        assertEquals(CustomActions.DEFAULTS, removed.actions)
+        assertTrue(removed.providers.isEmpty())
     }
 
     @Test fun packCommandsAnswerTextTypedAlone() {

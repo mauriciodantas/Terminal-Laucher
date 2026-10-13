@@ -40,7 +40,8 @@ object CustomActionStore {
                     .put("extra", it.textExtra ?: JSONObject.NULL)
                     .put("pattern", it.pattern)
                     .put("api", it.api?.let { api -> apiJson(api) } ?: JSONObject.NULL)
-                    .put("pack", it.pack),
+                    .put("pack", it.pack)
+                    .put("provider", it.provider),
             )
         }
     }
@@ -79,6 +80,7 @@ object CustomActionStore {
                         )
                     },
                     pack = o.optString("pack", ""),
+                    provider = o.optString("provider", ""),
                 )
             }.getOrNull()
         }

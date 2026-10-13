@@ -506,4 +506,26 @@
     <string name="cmd_update_title">ATUALIZAR</string>
     <string name="cmd_update_store">ENTER ABRE A PLAY STORE · PERFIL › GERENCIAR APPS</string>
     <string name="cmd_update_open">%1$s · ENTER ABRE NA PLAY STORE</string>
+    <string name="cmd_provider_err_id">Use letras minúsculas, dígitos, - e _ (até 40)</string>
+    <string name="cmd_provider_err_name">Dê um nome</string>
+    <string name="cmd_provider_err_url">O endereço precisa começar com https://</string>
+    <string name="cmd_provider_err_hosts">Hosts são nomes como api.exemplo.com, separados por vírgula</string>
+    <string name="cmd_provider_err_key_name">Diga onde vai a chave (nome do cabeçalho ou do parâmetro)</string>
+    <string name="cmd_provider_err_user">Preencha o usuário</string>
+    <string name="cmd_provider_err_headers">Credenciais vão na autenticação, não em cabeçalhos fixos</string>
+    <string name="cmd_provider_auth_none">sem autenticação</string>
+    <string name="cmd_provider_auth_key">chave de API</string>
+    <string name="cmd_provider_host_blocked">%1$s NÃO É HOST DE %2$s · NÃO ENVIADO</string>
+    <string name="cmd_provider_missing">PROVEDOR %1$s NÃO CADASTRADO</string>
+    <string name="cmd_provider_refused">%1$s RECUSOU AS CREDENCIAIS (HTTP %2$d) · CONFIRA A CHAVE</string>
+    <string name="cmd_provider_no_key">%1$s AINDA SEM CHAVE</string>
+    <string name="cmd_provider_redirects">redirecionamentos demais</string>
+    <string name="cmd_caution_provider">usa o provedor %1$s: o que você digitar vai para ele</string>
+    <string name="cmd_sends_text">o que você digitar</string>
+    <string name="cmd_sends_location">sua localização</string>
+    <string name="cmd_sends_clip">o que você copiou</string>
+    <string name="cmd_sends_selection">o texto selecionado</string>
+    <string name="cmd_caution_sends">⚠ envia %1$s para %2$s a cada uso · marque só se confia em quem mandou</string>
+    <string name="cmd_provider_reused">você já tem %1$s com o mesmo endereço: estes comandos usam o seu</string>
+    <string name="cmd_provider_renamed">você tem outro %1$s (outro endereço ou autenticação): este entra como %2$s</string>
 </resources>

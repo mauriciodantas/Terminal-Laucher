@@ -43,6 +43,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -279,6 +280,17 @@ private fun CommandScreen(onClose: () -> Unit) {
         }
         reloadExtras()
         RatesStore.refresh(context)?.let { rates -> extras = extras.copy(rates = rates) }
+    }
+    // Back from the advanced settings with a key saved, the command waiting for it can run.
+    val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
+    DisposableEffect(lifecycle) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                scope.launch { extras = withContext(Dispatchers.IO) { with(CommandSources) { extras.withProviders(context) } } }
+            }
+        }
+        lifecycle.addObserver(observer)
+        onDispose { lifecycle.removeObserver(observer) }
     }
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
         granted = CommandExecutor.hasContactsPermission(context)
@@ -535,7 +547,8 @@ private fun CommandScreen(onClose: () -> Unit) {
             is CommandAction.Custom -> if (action.action.kind == ActionKind.API) {
                 record(action, command)
                 done = context.getString(R.string.command_running)
-                scope.launch { done = withContext(Dispatchers.IO) { ApiCall.run(action.action, action.text) } }
+                val providers = extras.providers
+                scope.launch { done = withContext(Dispatchers.IO) { ApiCall.run(action.action, action.text, providers, SecretStore.lookup(context)) } }
                 return
             }
 
@@ -549,6 +562,8 @@ private fun CommandScreen(onClose: () -> Unit) {
                 }
                 record(action, command)
                 custom = CustomActionStore.load(context)
+                // A pack brings its providers too: the commands that use them work right away.
+                extras = with(CommandSources) { extras.withProviders(context) }
                 val letters = custom.filter { it.pack == pack.id }.joinToString(" · ") { it.letter }
                 done = if (skipped == 0) {
                     context.getString(CommandR.string.cmd_pack_done, pack.name.uppercase(), letters)
@@ -565,6 +580,8 @@ private fun CommandScreen(onClose: () -> Unit) {
                 }
                 record(action, command)
                 custom = CustomActionStore.load(context)
+                // A pack brings its providers too: the commands that use them work right away.
+                extras = with(CommandSources) { extras.withProviders(context) }
                 done = context.getString(CommandR.string.cmd_pack_removed, BundledPacks.of(action.id)?.name?.uppercase() ?: action.id)
                 return
             }
@@ -1004,7 +1021,13 @@ private fun CommandScreen(onClose: () -> Unit) {
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Text(
-                                    stringResource(if (need == Need.CALENDAR) R.string.command_calendar_needed else R.string.command_location_needed),
+                                    stringResource(
+                                        when (need) {
+                                            Need.CALENDAR -> R.string.command_calendar_needed
+                                            Need.LOCATION -> R.string.command_location_needed
+                                            Need.SECRET -> R.string.command_secret_needed
+                                        },
+                                    ),
                                     color = Amber,
                                     fontFamily = mono(),
                                     fontSize = 11.5.sp,
@@ -1016,14 +1039,24 @@ private fun CommandScreen(onClose: () -> Unit) {
                                         .height(44.dp)
                                         .background(Amber)
                                         .clickable {
-                                            needPermission.launch(
-                                                if (need == Need.CALENDAR) android.Manifest.permission.READ_CALENDAR else android.Manifest.permission.ACCESS_COARSE_LOCATION,
-                                            )
+                                            if (need == Need.SECRET) {
+                                                // The key is typed in the advanced settings, never in the bar.
+                                                context.startActivity(
+                                                    app.lawnchair.ui.preferences.PreferenceActivity.createIntent(
+                                                        context,
+                                                        app.lawnchair.ui.preferences.navigation.CommandProviders(analysis.needProvider.orEmpty()),
+                                                    ),
+                                                )
+                                            } else {
+                                                needPermission.launch(
+                                                    if (need == Need.CALENDAR) android.Manifest.permission.READ_CALENDAR else android.Manifest.permission.ACCESS_COARSE_LOCATION,
+                                                )
+                                            }
                                         },
                                     contentAlignment = Alignment.Center,
                                 ) {
                                     Text(
-                                        stringResource(R.string.command_grant),
+                                        stringResource(if (need == Need.SECRET) R.string.command_configure else R.string.command_grant),
                                         color = Color(0xFF1A1202),
                                         fontFamily = mono(),
                                         fontWeight = FontWeight.SemiBold,

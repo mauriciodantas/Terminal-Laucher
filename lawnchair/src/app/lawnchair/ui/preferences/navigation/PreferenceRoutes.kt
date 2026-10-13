@@ -162,6 +162,10 @@ data object CommandActions : PreferenceRootRoute, PreferenceDeepLink {
     override val deepLink = "$URI/command-actions"
 }
 
+/** Advanced: the API providers of the command bar; [open] opens one of them right away. */
+@Serializable
+data class CommandProviders(val open: String = "") : PreferenceRoute
+
 // App Drawer section routes
 @Serializable
 data object AppDrawerHiddenApps : PreferenceRoute, PreferenceDeepLink {

@@ -54,7 +54,13 @@ object CommandSources {
             themePresets = ThemeStore.presets(context),
             // Read once from the app's assets and kept by the listing afterwards.
             fonts = kotlinx.coroutines.runBlocking { ThemeStore.fonts(context) },
-        )
+        ).withProviders(context)
+    }
+
+    /** [this] with the API providers and which of them have their secret saved. */
+    fun CommandExtras.withProviders(context: Context): CommandExtras {
+        val providers = ProviderStore.all(context)
+        return copy(providers = providers, configuredProviders = SecretStore.configured(context, providers.filter { it.auth.needsSecret }.map { it.id }))
     }
 
     /** The copied text, or null. Android only lets the app in front read it. */

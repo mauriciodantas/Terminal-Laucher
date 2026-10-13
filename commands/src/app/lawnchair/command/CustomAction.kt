@@ -40,6 +40,11 @@ data class CustomAction(
     val pattern: String = "",
     /** For [ActionKind.API]: which parts of the answer are shown, and how. */
     val api: ApiSpec? = null,
+    /**
+     * For [ActionKind.API]: the [ApiProvider] the action goes through, and then [template] is a path
+     * on it ("/ws/{text}/json/"). Empty for an action with a full https address of its own.
+     */
+    val provider: String = "",
     /** The built-in pack the action came with ("brasil"), so the pack can be removed; empty for the user's own. */
     val pack: String = "",
 ) {

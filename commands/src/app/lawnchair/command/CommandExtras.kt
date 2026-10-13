@@ -44,6 +44,10 @@ data class CommandExtras(
     val fonts: List<String> = emptyList(),
     val now: LocalDateTime? = null,
     val zone: ZoneId? = null,
+    /** The API providers: the built-in ones and the user's. */
+    val providers: List<ApiProvider> = Providers.BUILT_IN,
+    /** Ids of the providers whose secret is saved. */
+    val configuredProviders: Set<String> = emptySet(),
 ) {
     fun clock(): LocalDateTime = now ?: LocalDateTime.now(zone())
 
@@ -55,7 +59,7 @@ data class CommandExtras(
 }
 
 /** Something the command needs before it can run. The screen offers to grant it. */
-enum class Need { CALENDAR, LOCATION }
+enum class Need { CALENDAR, LOCATION, SECRET }
 
 data class CalendarEntry(val title: String, val begin: Long, val end: Long, val allDay: Boolean)
 

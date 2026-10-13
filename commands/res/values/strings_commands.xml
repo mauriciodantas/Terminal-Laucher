@@ -517,4 +517,27 @@
     <string name="cmd_update_title">UPDATE</string>
     <string name="cmd_update_store">ENTER OPENS THE PLAY STORE · PROFILE › MANAGE APPS</string>
     <string name="cmd_update_open">%1$s · ENTER OPENS IT IN THE PLAY STORE</string>
+    <!-- API providers. -->
+    <string name="cmd_provider_err_id">Use lower-case letters, digits, - and _ (up to 40)</string>
+    <string name="cmd_provider_err_name">Give it a name</string>
+    <string name="cmd_provider_err_url">The address must start with https://</string>
+    <string name="cmd_provider_err_hosts">Hosts are names like api.example.com, separated by commas</string>
+    <string name="cmd_provider_err_key_name">Say where the key goes (header or parameter name)</string>
+    <string name="cmd_provider_err_user">Fill in the user</string>
+    <string name="cmd_provider_err_headers">Credentials go in the authentication, not in fixed headers</string>
+    <string name="cmd_provider_auth_none">no authentication</string>
+    <string name="cmd_provider_auth_key">API key</string>
+    <string name="cmd_provider_host_blocked">%1$s IS NOT A HOST OF %2$s · NOT SENT</string>
+    <string name="cmd_provider_missing">PROVIDER %1$s IS NOT SET UP</string>
+    <string name="cmd_provider_refused">%1$s REFUSED THE CREDENTIALS (HTTP %2$d) · CHECK THE KEY</string>
+    <string name="cmd_provider_no_key">%1$s HAS NO KEY YET</string>
+    <string name="cmd_provider_redirects">too many redirects</string>
+    <string name="cmd_caution_provider">uses the provider %1$s: what you type goes to it</string>
+    <string name="cmd_sends_text">what you type</string>
+    <string name="cmd_sends_location">your location</string>
+    <string name="cmd_sends_clip">what you copied</string>
+    <string name="cmd_sends_selection">the selected text</string>
+    <string name="cmd_caution_sends">⚠ sends %1$s to %2$s each time it runs · tick it only if you trust who sent it</string>
+    <string name="cmd_provider_reused">you already have %1$s with the same address: these commands use yours</string>
+    <string name="cmd_provider_renamed">you have another %1$s (other address or authentication): this one comes in as %2$s</string>
 </resources>

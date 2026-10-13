@@ -30,6 +30,7 @@ import app.lawnchair.ui.preferences.destinations.AppDrawerPreferences
 import app.lawnchair.ui.preferences.destinations.AppearancePreferences
 import app.lawnchair.ui.preferences.destinations.BackupAndRestorePreference
 import app.lawnchair.ui.preferences.destinations.CommandActionsPreferences
+import app.lawnchair.ui.preferences.destinations.CommandProvidersPreferences
 import app.lawnchair.ui.preferences.destinations.CustomIconShapePreference
 import app.lawnchair.ui.preferences.destinations.DebugMenuPreferences
 import app.lawnchair.ui.preferences.destinations.DismissedPredictionAppsPreferences
@@ -156,6 +157,9 @@ fun PreferenceNavigation(
         composable<CommandActions>(
             deepLinks = getDeepLink(CommandActions),
         ) { CommandActionsPreferences() }
+        composable<CommandProviders> { backStackEntry ->
+            CommandProvidersPreferences(open = backStackEntry.toRoute<CommandProviders>().open)
+        }
 
         composable<Smartspace>(
             deepLinks = getDeepLink(Smartspace),

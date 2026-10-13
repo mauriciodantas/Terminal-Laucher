@@ -13,7 +13,12 @@ data class BundledPack(
     val name: String,
     val description: String,
     val actions: List<CustomAction>,
+    /** The API providers its actions go through, marked with the pack id like the actions. */
+    val providers: List<ApiProvider> = emptyList(),
 )
+
+/** What installing or removing a pack leaves: the actions, the providers and how many letters were taken. */
+data class PackInstall(val actions: List<CustomAction>, val providers: List<ApiProvider>, val skipped: Int = 0)
 
 object BundledPacks {
 
@@ -28,15 +33,23 @@ object BundledPacks {
     fun isInstalled(pack: BundledPack, actions: List<CustomAction>): Boolean = actions.any { it.pack == pack.id }
 
     /**
-     * [actions] with [pack] added. A letter the user already has stays theirs: the pack's action is
-     * left out and counted in the second value.
+     * [actions] and [providers] with [pack] added, replacing what an earlier install of it left. A
+     * letter or a provider id the user already has stays theirs: the pack's action is left out and
+     * counted, and the pack's actions use the user's provider.
      */
-    fun install(actions: List<CustomAction>, aliases: List<CommandAlias>, pack: BundledPack): Pair<List<CustomAction>, Int> {
-        val merge = PackRules.merge(remove(actions, pack.id), aliases, CommandPack(pack.actions, emptyList()))
-        return merge.actions to merge.skipped
+    fun install(actions: List<CustomAction>, aliases: List<CommandAlias>, providers: List<ApiProvider>, pack: BundledPack): PackInstall {
+        val clean = remove(actions, providers, pack.id)
+        val merge = PackRules.merge(clean.actions, aliases, CommandPack(pack.actions, emptyList(), providers = pack.providers), providers = clean.providers)
+        return PackInstall(merge.actions, merge.providers, merge.skipped)
     }
 
     fun remove(actions: List<CustomAction>, id: String): List<CustomAction> = actions.filter { it.pack != id }
+
+    /** Takes the pack [id] away; one of its providers that another action still uses stays. */
+    fun remove(actions: List<CustomAction>, providers: List<ApiProvider>, id: String): PackInstall {
+        val left = remove(actions, id)
+        return PackInstall(left, providers.filter { p -> p.pack != id || left.any { it.provider == p.id } })
+    }
 
     /** The letters of [pack] another command already uses, which an install leaves out. */
     fun conflicts(actions: List<CustomAction>, aliases: List<CommandAlias>, pack: BundledPack): List<String> = PackRules.preview(remove(actions, pack.id), aliases, CommandPack(pack.actions, emptyList())).actions
@@ -63,7 +76,8 @@ object BundledPacks {
                 letter = "cep",
                 label = "CEP",
                 kind = ActionKind.API,
-                template = "https://viacep.com.br/ws/{text}/json/",
+                template = "/ws/{text}/json/",
+                provider = "viacep",
                 packages = emptyList(),
                 arg = ArgKind.TEXT,
                 // "01310-100" typed alone; without the dash it could be a phone number.
@@ -75,12 +89,17 @@ object BundledPacks {
                 letter = "feriados",
                 label = Texts.get(R.string.cmd_pack_holidays),
                 kind = ActionKind.API,
-                template = "https://brasilapi.com.br/api/feriados/v1/{year}",
+                template = "/api/feriados/v1/{year}",
+                provider = "brasilapi",
                 packages = emptyList(),
                 arg = ArgKind.NONE,
                 api = ApiSpec("{date|date} · {name}", max = 6, upcoming = "date"),
                 pack = BRAZIL,
             ),
+        ),
+        providers = listOf(
+            ApiProvider(id = "viacep", name = "ViaCEP", baseUrl = "https://viacep.com.br", testPath = "/ws/01001000/json/", pack = BRAZIL),
+            ApiProvider(id = "brasilapi", name = "BrasilAPI", baseUrl = "https://brasilapi.com.br", testPath = "/api/feriados/v1/2026", pack = BRAZIL),
         ),
     )
 }

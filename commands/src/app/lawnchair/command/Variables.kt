@@ -44,6 +44,12 @@ object Variables {
         return Expansion(result, missing)
     }
 
+    /** Every variable [text] uses. */
+    fun used(text: String): Set<Var> = pattern.findAll(text).mapNotNull { NAMES[it.groupValues[1].foldAccents()] }.toSet()
+
+    /** What says something about the user: where they are and what they copied or selected. */
+    val SENSITIVE: Set<Var> = setOf(Var.CLIP, Var.SELECTION, Var.LOCATION, Var.MAPS)
+
     /** True when [text] uses [v]. */
     fun uses(text: String, v: Var): Boolean = pattern.findAll(text).any { NAMES[it.groupValues[1].foldAccents()] == v }
 
