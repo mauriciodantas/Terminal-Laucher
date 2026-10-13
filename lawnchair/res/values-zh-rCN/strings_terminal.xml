@@ -495,6 +495,13 @@
     <string name="theme_import_font_download">字体将从 Google Fonts 下载。</string>
     <string name="theme_import_keep">保存</string>
     <string name="theme_import_apply">应用</string>
+    <string name="theme_import_wallpaper">壁纸</string>
+    <string name="theme_import_lock">锁屏</string>
+    <string name="theme_import_lock_same">同一张图片</string>
+    <string name="theme_import_lock_apply">同时更改锁屏（当前图片将被替换）</string>
+    <string name="theme_import_image_link">从 %1$s 下载</string>
+    <string name="theme_import_image_data">文件内的图片（%1$s）</string>
+    <string name="theme_wallpaper_failed">无法设置主题壁纸</string>
     <string name="cmd_ai_theme_request">为我创建一个原创主题</string>
     <string name="cmd_ai_theme_failed">AI 没有发送可读的主题</string>
     <string name="appearance_group_themes">主题</string>

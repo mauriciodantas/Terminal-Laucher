@@ -495,6 +495,13 @@
     <string name="theme_import_font_download">Het lettertype wordt van Google Fonts gedownload.</string>
     <string name="theme_import_keep">Opslaan</string>
     <string name="theme_import_apply">Toepassen</string>
+    <string name="theme_import_wallpaper">Achtergrond</string>
+    <string name="theme_import_lock">Vergrendelscherm</string>
+    <string name="theme_import_lock_same">dezelfde afbeelding</string>
+    <string name="theme_import_lock_apply">Ook het vergrendelscherm wijzigen (de huidige afbeelding wordt vervangen)</string>
+    <string name="theme_import_image_link">gedownload van %1$s</string>
+    <string name="theme_import_image_data">afbeelding in het bestand (%1$s)</string>
+    <string name="theme_wallpaper_failed">Kan de achtergrond van het thema niet instellen</string>
     <string name="cmd_ai_theme_request">Maak een origineel thema voor mij</string>
     <string name="cmd_ai_theme_failed">DE AI STUURDE GEEN LEESBAAR THEMA</string>
     <string name="appearance_group_themes">Thema\'s</string>

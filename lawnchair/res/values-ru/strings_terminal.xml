@@ -495,6 +495,13 @@
     <string name="theme_import_font_download">Шрифт загружается из Google Fonts.</string>
     <string name="theme_import_keep">Сохранить</string>
     <string name="theme_import_apply">Применить</string>
+    <string name="theme_import_wallpaper">Обои</string>
+    <string name="theme_import_lock">Экран блокировки</string>
+    <string name="theme_import_lock_same">то же изображение</string>
+    <string name="theme_import_lock_apply">Сменить и экран блокировки (текущее изображение будет заменено)</string>
+    <string name="theme_import_image_link">загружено с %1$s</string>
+    <string name="theme_import_image_data">изображение в файле (%1$s)</string>
+    <string name="theme_wallpaper_failed">Не удалось установить обои темы</string>
     <string name="cmd_ai_theme_request">Создай для меня оригинальную тему</string>
     <string name="cmd_ai_theme_failed">ИИ НЕ ПРИСЛАЛ ЧИТАЕМУЮ ТЕМУ</string>
     <string name="appearance_group_themes">Темы</string>

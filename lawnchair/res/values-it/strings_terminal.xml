@@ -495,6 +495,13 @@
     <string name="theme_import_font_download">Il carattere viene scaricato da Google Fonts.</string>
     <string name="theme_import_keep">Salva</string>
     <string name="theme_import_apply">Applica</string>
+    <string name="theme_import_wallpaper">Sfondo</string>
+    <string name="theme_import_lock">Schermata di blocco</string>
+    <string name="theme_import_lock_same">la stessa immagine</string>
+    <string name="theme_import_lock_apply">Cambia anche la schermata di blocco (la sua immagine attuale viene sostituita)</string>
+    <string name="theme_import_image_link">scaricato da %1$s</string>
+    <string name="theme_import_image_data">immagine nel file (%1$s)</string>
+    <string name="theme_wallpaper_failed">Impossibile applicare lo sfondo del tema</string>
     <string name="cmd_ai_theme_request">Crea un tema originale per me</string>
     <string name="cmd_ai_theme_failed">L\'IA NON HA INVIATO UN TEMA LEGGIBILE</string>
     <string name="appearance_group_themes">Temi</string>

@@ -387,6 +387,8 @@ object ThemeCommand : BuiltIn(BuiltInCommand.THEME, null, R.string.cmd_help_them
         o.remove("format")
         o.remove("version")
         o.remove("name")
+        // An image in base64 would fill the screen: its size stands for it.
+        listOf("wallpaper", "lockWallpaper").forEach { key -> o.optJSONObject(key)?.optString("base64")?.takeIf { it.isNotEmpty() }?.let { o.optJSONObject(key).put("base64", "${it.length / 1024}KB") } }
         o.keys().asSequence().joinToString(" ") { key -> key + "=" + o.get(key).toString() }
     }
 

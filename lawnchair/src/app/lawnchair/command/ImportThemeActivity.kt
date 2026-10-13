@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +21,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -27,22 +29,29 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import app.lawnchair.ui.theme.LawnchairTheme
 import com.android.launcher3.R
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * Opens a theme file (received from somebody, or written by "ia tema") and shows what it changes
  * before anything does: the colors as they will look, each element it sets and whether the text
- * will read. Applying it also keeps it under its name, so "tema [nome]" brings it back.
+ * will read. Applying it also keeps it under its name, so "tema [nome]" brings it back. A theme that
+ * brings an image for the lock screen asks first, since the image there now is replaced for good.
  */
 class ImportThemeActivity : ComponentActivity() {
 
@@ -98,7 +107,9 @@ private fun ImportDialog(
 ) {
     val fallbackName = stringResource(R.string.theme_default_name)
     var name by remember { mutableStateOf(spec.name.ifBlank { fallbackName }) }
-    val named = spec.copy(name = ThemeSpecs.cleanName(name).ifEmpty { fallbackName })
+    var toLock by remember { mutableStateOf(true) }
+    val chosen = if (toLock) spec else spec.copy(wallpaper = spec.wallpaper?.copy(lockScreen = false), lockWallpaper = null)
+    val named = chosen.copy(name = ThemeSpecs.cleanName(name).ifEmpty { fallbackName })
     val unreadable = ThemeSpecs.unreadable(spec, current)
     val weak = ThemeSpecs.weak(spec, current)
     val dim = MaterialTheme.colorScheme.onSurfaceVariant
@@ -130,6 +141,18 @@ private fun ImportDialog(
                             Text(element.desc.lowercase() + ": ", style = MaterialTheme.typography.bodySmall, color = dim)
                             Text(value, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
                         }
+                    }
+                }
+                spec.wallpaper?.let { ImageLine(stringResource(R.string.theme_import_wallpaper), it.image) }
+                val lockWallpaper = spec.lockWallpaper
+                when {
+                    lockWallpaper != null -> ImageLine(stringResource(R.string.theme_import_lock), lockWallpaper)
+                    spec.wallpaper?.lockScreen == true -> Text(stringResource(R.string.theme_import_lock).lowercase() + ": " + stringResource(R.string.theme_import_lock_same), style = MaterialTheme.typography.bodySmall, color = dim, modifier = Modifier.padding(top = 4.dp))
+                }
+                if (spec.lockImage != null) {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
+                        Checkbox(checked = toLock, onCheckedChange = { toLock = it })
+                        Text(stringResource(R.string.theme_import_lock_apply), style = MaterialTheme.typography.bodySmall)
                     }
                 }
                 if (spec.followSystem == true) {
@@ -173,6 +196,43 @@ private fun ThemeSample(spec: ThemeSpec, current: ThemeSpec) {
         }
     }
 }
+
+/** "papel de parede: baixado de site.com" or "imagem no arquivo (1,2 MB)", with the image itself when the file carries it. */
+@Composable
+private fun ImageLine(label: String, image: ThemeImage) {
+    val context = LocalContext.current
+    val dim = MaterialTheme.colorScheme.onSurfaceVariant
+    val text = when (image) {
+        is ThemeImage.Url -> stringResource(R.string.theme_import_image_link, runCatching { java.net.URI(image.url).host }.getOrNull() ?: image.url)
+        is ThemeImage.Data -> stringResource(R.string.theme_import_image_data, android.text.format.Formatter.formatShortFileSize(context, image.size.toLong()))
+        is ThemeImage.Stored -> "…"
+    }
+    Column(modifier = Modifier.padding(top = 4.dp)) {
+        Row {
+            Text(label.lowercase() + ": ", style = MaterialTheme.typography.bodySmall, color = dim)
+            Text(text, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
+        }
+        if (image is ThemeImage.Data) {
+            // Decoded small and off the main thread: the preview never holds the full image.
+            val thumbnail by produceState<android.graphics.Bitmap?>(null, image) {
+                value = withContext(Dispatchers.IO) { ThemeImages.decode(context, image.bytes(), maxSide = THUMBNAIL_PX) }
+            }
+            thumbnail?.let {
+                Image(
+                    bitmap = it.asImageBitmap(),
+                    contentDescription = label,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .padding(top = 4.dp)
+                        .size(width = 54.dp, height = 96.dp)
+                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(4.dp)),
+                )
+            }
+        }
+    }
+}
+
+private const val THUMBNAIL_PX = 256
 
 @Composable
 private fun Swatch(argb: Int) {

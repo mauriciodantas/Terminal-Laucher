@@ -495,6 +495,13 @@
     <string name="theme_import_font_download">글꼴은 Google Fonts에서 내려받습니다.</string>
     <string name="theme_import_keep">저장</string>
     <string name="theme_import_apply">적용</string>
+    <string name="theme_import_wallpaper">배경화면</string>
+    <string name="theme_import_lock">잠금 화면</string>
+    <string name="theme_import_lock_same">같은 이미지</string>
+    <string name="theme_import_lock_apply">잠금 화면도 변경 (현재 이미지는 교체됩니다)</string>
+    <string name="theme_import_image_link">%1$s에서 다운로드</string>
+    <string name="theme_import_image_data">파일 안의 이미지(%1$s)</string>
+    <string name="theme_wallpaper_failed">테마 배경화면을 설정할 수 없습니다</string>
     <string name="cmd_ai_theme_request">나만의 독창적인 테마를 만들어 줘</string>
     <string name="cmd_ai_theme_failed">AI가 읽을 수 있는 테마를 보내지 않았습니다</string>
     <string name="appearance_group_themes">테마</string>

@@ -495,6 +495,13 @@
     <string name="theme_import_font_download">Czcionka jest pobierana z Google Fonts.</string>
     <string name="theme_import_keep">Zapisz</string>
     <string name="theme_import_apply">Zastosuj</string>
+    <string name="theme_import_wallpaper">Tapeta</string>
+    <string name="theme_import_lock">Ekran blokady</string>
+    <string name="theme_import_lock_same">ten sam obraz</string>
+    <string name="theme_import_lock_apply">Zmień też ekran blokady (obecny obraz zostanie zastąpiony)</string>
+    <string name="theme_import_image_link">pobrana z %1$s</string>
+    <string name="theme_import_image_data">obraz w pliku (%1$s)</string>
+    <string name="theme_wallpaper_failed">Nie udało się ustawić tapety motywu</string>
     <string name="cmd_ai_theme_request">Stwórz dla mnie oryginalny motyw</string>
     <string name="cmd_ai_theme_failed">AI NIE WYSŁAŁA CZYTELNEGO MOTYWU</string>
     <string name="appearance_group_themes">Motywy</string>

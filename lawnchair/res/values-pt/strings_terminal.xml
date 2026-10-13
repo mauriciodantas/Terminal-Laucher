@@ -495,6 +495,13 @@
     <string name="theme_import_font_download">A fonte é baixada do Google Fonts.</string>
     <string name="theme_import_keep">Salvar</string>
     <string name="theme_import_apply">Aplicar</string>
+    <string name="theme_import_wallpaper">Papel de parede</string>
+    <string name="theme_import_lock">Tela de bloqueio</string>
+    <string name="theme_import_lock_same">a mesma imagem</string>
+    <string name="theme_import_lock_apply">Trocar também a tela de bloqueio (a imagem atual dela é substituída)</string>
+    <string name="theme_import_image_link">baixado de %1$s</string>
+    <string name="theme_import_image_data">imagem no arquivo (%1$s)</string>
+    <string name="theme_wallpaper_failed">Não foi possível aplicar o papel de parede do tema</string>
     <string name="cmd_ai_theme_request">Crie um tema original para mim</string>
     <string name="cmd_ai_theme_failed">A IA NÃO ENVIOU UM TEMA LEGÍVEL</string>
     <string name="appearance_group_themes">Temas</string>

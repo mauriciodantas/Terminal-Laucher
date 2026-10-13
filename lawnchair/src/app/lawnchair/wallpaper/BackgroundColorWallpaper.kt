@@ -51,5 +51,13 @@ object BackgroundColorWallpaper {
         }
     }
 
+    /** Forgets the color written to the screens that got another image, so the color is written again when asked. */
+    fun forget(context: Context, system: Boolean, lock: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit {
+            if (system) remove(KEY_SYSTEM)
+            if (lock) remove(KEY_LOCK)
+        }
+    }
+
     private fun android.content.SharedPreferences.isColor(key: String, color: Int) = contains(key) && getInt(key, 0) == color
 }

@@ -37,10 +37,34 @@ sealed interface ThemeFont {
 }
 
 /**
+ * An image a theme carries as wallpaper: a link the phone downloads when the theme is applied, or
+ * the image itself in base64 inside the file. [Stored] is the base64 image of a saved theme, kept in
+ * a file of the app so the saved themes stay small; it is never read from a theme file.
+ */
+sealed interface ThemeImage {
+    data class Url(val url: String) : ThemeImage
+
+    /** The image in base64, already checked: it decodes, is a known image format and fits [ThemeSpecs.MAX_IMAGE_BYTES]. */
+    data class Data(val base64: String) : ThemeImage {
+        fun bytes(): ByteArray = java.util.Base64.getDecoder().decode(base64)
+
+        /** The size of the image, for the import screen. */
+        val size: Int get() = base64.length / 4 * 3 - base64.takeLast(2).count { it == '=' }
+
+        override fun toString() = "Data(${size}B)"
+    }
+
+    data class Stored(val file: String) : ThemeImage
+}
+
+/** The wallpaper of a theme; [lockScreen] puts the same image on the lock screen too. */
+data class ThemeWallpaper(val image: ThemeImage, val lockScreen: Boolean = false)
+
+/**
  * Everything under Appearance that makes up how the launcher looks. A null field is left as it is
  * when the theme is applied, so a theme may change only a few things ("tema fundo #000000", a theme
- * the AI wrote that only picks colors). The lock screen is never part of it: changing it replaces
- * the user's own image for good, and only the settings screen does that, after asking.
+ * the AI wrote that only picks colors). The lock screen only changes when the theme brings an image
+ * for it ([ThemeWallpaper.lockScreen] or [lockWallpaper]), and the import screen says so first.
  */
 data class ThemeSpec(
     val name: String = "",
@@ -64,7 +88,14 @@ data class ThemeSpec(
     val wallpaperDim: Float? = null,
     /** The background color also set as the system wallpaper of the home screen. */
     val colorAsWallpaper: Boolean? = null,
+    /** An image as the wallpaper of the home screen, and of the lock screen when it says so. */
+    val wallpaper: ThemeWallpaper? = null,
+    /** An image of its own for the lock screen; it wins over [ThemeWallpaper.lockScreen]. */
+    val lockWallpaper: ThemeImage? = null,
 ) {
+    /** The image each screen gets: the home screen's and the lock screen's. */
+    val lockImage: ThemeImage? get() = lockWallpaper ?: wallpaper?.takeIf { it.lockScreen }?.image
+
     /** True when the theme changes nothing at all. */
     val isEmpty: Boolean get() = copy(name = "") == ThemeSpec()
 
@@ -88,6 +119,8 @@ data class ThemeSpec(
         showWallpaper = other.showWallpaper ?: showWallpaper,
         wallpaperDim = other.wallpaperDim ?: wallpaperDim,
         colorAsWallpaper = other.colorAsWallpaper ?: colorAsWallpaper,
+        wallpaper = other.wallpaper ?: wallpaper,
+        lockWallpaper = other.lockWallpaper ?: lockWallpaper,
     )
 }
 
@@ -99,7 +132,20 @@ object ThemeSpecs {
     const val FORMAT = "terminal-theme"
     const val VERSION = 1
     const val MAX_NAME = 32
-    const val MAX_BYTES = 64 * 1024
+
+    /**
+     * The biggest image a theme may carry in base64, decoded. A phone wallpaper in JPEG or WebP fits
+     * well under it; more would only cost memory, since the whole file is read and parsed at once.
+     */
+    const val MAX_IMAGE_BYTES = 3 * 1024 * 1024
+
+    /** The base64 text of the biggest image. */
+    const val MAX_IMAGE_BASE64 = (MAX_IMAGE_BYTES + 2) / 3 * 4
+
+    /** The settings take little; the rest is room for two images in base64 (home and lock screen). */
+    const val MAX_BYTES = 64 * 1024 + 2 * MAX_IMAGE_BASE64
+
+    const val MAX_URL = 2048
 
     /** The terminal near-black, the background of a theme that keeps the default. */
     const val DEFAULT_BACKGROUND = 0xFF07090A.toInt()
@@ -142,7 +188,15 @@ object ThemeSpecs {
         spec.showWallpaper?.let { o.put("showWallpaper", it) }
         spec.wallpaperDim?.let { o.put("wallpaperDim", it.toDouble()) }
         spec.colorAsWallpaper?.let { o.put("colorAsWallpaper", it) }
+        spec.wallpaper?.let { w -> o.put("wallpaper", image(w.image).apply { if (w.lockScreen) put("lockScreen", true) }) }
+        spec.lockWallpaper?.let { o.put("lockWallpaper", image(it)) }
         return if (pretty) o.toString(2) else o.toString()
+    }
+
+    private fun image(image: ThemeImage): JSONObject = when (image) {
+        is ThemeImage.Url -> JSONObject().put("url", image.url)
+        is ThemeImage.Data -> JSONObject().put("base64", image.base64)
+        is ThemeImage.Stored -> JSONObject().put("file", image.file)
     }
 
     /** Reads a theme file. Throws when [raw] is not one, so a stray JSON file is never taken for a theme. */
@@ -155,9 +209,10 @@ object ThemeSpecs {
 
     /**
      * The fields of [o] as a theme, without asking for the format: the AI's reply is read this way.
-     * Unknown or broken values are left out instead of failing the whole theme.
+     * Unknown or broken values are left out instead of failing the whole theme. [stored] lets an image
+     * point at a file of the app, which only the saved themes may do.
      */
-    fun fromJson(o: JSONObject): ThemeSpec = ThemeSpec(
+    fun fromJson(o: JSONObject, stored: Boolean = false): ThemeSpec = ThemeSpec(
         name = cleanName(o.optString("name")),
         accent = color(o, "accent"),
         background = color(o, "background"),
@@ -176,7 +231,67 @@ object ThemeSpecs {
         showWallpaper = bool(o, "showWallpaper"),
         wallpaperDim = fraction(o, "wallpaperDim"),
         colorAsWallpaper = bool(o, "colorAsWallpaper"),
+        wallpaper = o.opt("wallpaper")?.let { w ->
+            image(w, stored)?.let { ThemeWallpaper(it, lockScreen = (w as? JSONObject)?.let { bool(it, "lockScreen") } == true) }
+        },
+        lockWallpaper = o.opt("lockWallpaper")?.let { image(it, stored) },
     )
+
+    /**
+     * The image of `{"url": …}`, `{"base64": …}` or of a bare string, a link or a data URI
+     * ("data:image/png;base64,…"); null when it is neither or breaks the limits.
+     */
+    private fun image(value: Any, stored: Boolean): ThemeImage? {
+        val o = value as? JSONObject
+        val text = when {
+            o == null -> value as? String ?: return null
+            o.has("url") -> return urlImage(o.optString("url"))
+            o.has("base64") -> return dataImage(o.optString("base64"))
+            o.has("file") && stored -> return o.optString("file").takeIf { STORED_FILE.matches(it) }?.let { ThemeImage.Stored(it) }
+            else -> return null
+        }
+        return if (text.trimStart().startsWith("data:", ignoreCase = true)) dataImage(text) else urlImage(text)
+    }
+
+    /** A link the phone may download: http or https, with a host, one line and not too long. */
+    fun urlImage(text: String): ThemeImage.Url? {
+        val url = text.trim()
+        if (url.length > MAX_URL || url.any { it.isWhitespace() || it.isISOControl() }) return null
+        val uri = runCatching { java.net.URI(url) }.getOrNull() ?: return null
+        if (uri.scheme?.lowercase() !in setOf("http", "https") || uri.host.isNullOrEmpty()) return null
+        return ThemeImage.Url(url)
+    }
+
+    /**
+     * The image of a base64 text (a data URI prefix and line breaks are allowed); null when it is
+     * bigger than [MAX_IMAGE_BYTES], does not decode or is not a PNG, JPEG, WebP or GIF. The length
+     * is checked before decoding, so an oversized text is never decoded.
+     */
+    fun dataImage(text: String): ThemeImage.Data? {
+        val body = text.trim().let { if (it.startsWith("data:", ignoreCase = true)) it.substringAfter(',', "") else it }
+        // Room for a line break every 60 characters, as base64 tools write it.
+        if (body.length > MAX_IMAGE_BASE64 + MAX_IMAGE_BASE64 / 60 + 4) return null
+        val base64 = body.filterNot { it.isWhitespace() }
+        if (base64.isEmpty() || base64.length > MAX_IMAGE_BASE64) return null
+        val bytes = runCatching { java.util.Base64.getDecoder().decode(base64) }.getOrNull() ?: return null
+        if (bytes.size > MAX_IMAGE_BYTES || imageType(bytes) == null) return null
+        return ThemeImage.Data(base64)
+    }
+
+    /** "png", "jpeg", "webp" or "gif" from the first bytes of an image; null for anything else. */
+    fun imageType(bytes: ByteArray): String? {
+        fun at(i: Int, vararg b: Int) = bytes.size >= i + b.size && b.indices.all { bytes[i + it] == b[it].toByte() }
+        return when {
+            at(0, 0x89, 0x50, 0x4E, 0x47) -> "png"
+            at(0, 0xFF, 0xD8, 0xFF) -> "jpeg"
+            at(0, 0x52, 0x49, 0x46, 0x46) && at(8, 0x57, 0x45, 0x42, 0x50) -> "webp"
+            at(0, 0x47, 0x49, 0x46, 0x38) -> "gif"
+            else -> null
+        }
+    }
+
+    /** The name of an image a saved theme keeps in the app: its hash and nothing that walks out of the folder. */
+    private val STORED_FILE = Regex("[0-9a-f]{16,64}")
 
     /** A name fit for a file and a command: one line, no control characters, not too long. */
     fun cleanName(name: String): String = name.lineSequence().firstOrNull().orEmpty()
@@ -266,7 +381,7 @@ object ThemeSpecs {
 
     fun decodeList(raw: String): List<ThemeSpec> = runCatching {
         val array = org.json.JSONArray(raw)
-        (0 until array.length()).mapNotNull { i -> array.optJSONObject(i)?.let { fromJson(it) }?.takeIf { it.name.isNotEmpty() } }
+        (0 until array.length()).mapNotNull { i -> array.optJSONObject(i)?.let { fromJson(it, stored = true) }?.takeIf { it.name.isNotEmpty() } }
     }.getOrDefault(emptyList())
 
     /** [themes] with [theme] in place of the one of the same name, or first when it is new. */

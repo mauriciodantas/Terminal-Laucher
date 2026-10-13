@@ -1558,6 +1558,13 @@
     <string name="theme_import_font_download">The font is downloaded from Google Fonts.</string>
     <string name="theme_import_keep">Save</string>
     <string name="theme_import_apply">Apply</string>
+    <string name="theme_import_wallpaper">Wallpaper</string>
+    <string name="theme_import_lock">Lock screen</string>
+    <string name="theme_import_lock_same">the same image</string>
+    <string name="theme_import_lock_apply">Also change the lock screen (its current image is replaced)</string>
+    <string name="theme_import_image_link">downloaded from %1$s</string>
+    <string name="theme_import_image_data">image in the file (%1$s)</string>
+    <string name="theme_wallpaper_failed">Could not set the theme wallpaper</string>
     <string name="cmd_ai_theme_request">Create an original theme for me</string>
     <string name="cmd_ai_theme_failed">THE AI SENT NO READABLE THEME</string>
     <string name="cmd_fast_failed">TEST FAILED: %1$s</string>

@@ -495,6 +495,13 @@
     <string name="theme_import_font_download">La police est téléchargée depuis Google Fonts.</string>
     <string name="theme_import_keep">Enregistrer</string>
     <string name="theme_import_apply">Appliquer</string>
+    <string name="theme_import_wallpaper">Fond d\'écran</string>
+    <string name="theme_import_lock">Écran de verrouillage</string>
+    <string name="theme_import_lock_same">la même image</string>
+    <string name="theme_import_lock_apply">Changer aussi l\'écran de verrouillage (son image actuelle est remplacée)</string>
+    <string name="theme_import_image_link">téléchargé depuis %1$s</string>
+    <string name="theme_import_image_data">image dans le fichier (%1$s)</string>
+    <string name="theme_wallpaper_failed">Impossible d\'appliquer le fond d\'écran du thème</string>
     <string name="cmd_ai_theme_request">Crée un thème original pour moi</string>
     <string name="cmd_ai_theme_failed">L\'IA N\'A ENVOYÉ AUCUN THÈME LISIBLE</string>
     <string name="appearance_group_themes">Thèmes</string>

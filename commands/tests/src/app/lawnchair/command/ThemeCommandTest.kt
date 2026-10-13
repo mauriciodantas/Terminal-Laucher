@@ -189,4 +189,66 @@ class ThemeCommandTest {
         assertEquals("Abóbora.", created.second)
         assertNull(AiPrompts.createdTheme("{\"aliases\": [{\"name\": \"halloween\", \"expansion\": \"theme dark\"}]}"))
     }
+
+    // ---- wallpapers ----
+
+    /** A PNG header and padding up to [size] bytes, in base64. */
+    private fun png(size: Int = 64): String = java.util.Base64.getEncoder().encodeToString(
+        byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A) + ByteArray(size - 8),
+    )
+
+    private fun theme(fields: String) = ThemeSpecs.decode("""{"format":"terminal-theme",$fields}""")
+
+    @Test fun wallpaperByLinkOrBase64() {
+        val link = theme(""""wallpaper":{"url":"https://example.com/a.jpg","lockScreen":true}""")
+        assertEquals(ThemeWallpaper(ThemeImage.Url("https://example.com/a.jpg"), lockScreen = true), link.wallpaper)
+        assertEquals(ThemeImage.Url("https://example.com/a.jpg"), link.lockImage)
+
+        val data = png()
+        val embedded = theme(""""wallpaper":{"base64":"$data"},"lockWallpaper":"https://example.com/lock.png"""")
+        assertEquals(ThemeImage.Data(data), embedded.wallpaper?.image)
+        assertEquals(64, (embedded.wallpaper?.image as ThemeImage.Data).size)
+        // The lock screen's own image wins, and the home screen's is not put there.
+        assertEquals(ThemeImage.Url("https://example.com/lock.png"), embedded.lockImage)
+        assertFalse(embedded.wallpaper!!.lockScreen)
+
+        // A bare string: a data URI, with line breaks as base64 tools write it, or a link.
+        val uri = theme(""""wallpaper":"data:image/png;base64,${data.chunked(20).joinToString("\\n")}"""")
+        assertEquals(ThemeImage.Data(data), uri.wallpaper?.image)
+        assertNull(theme(""""accent":"#fff"""").lockImage)
+    }
+
+    @Test fun wallpaperRoundTrip() {
+        val spec = night.copy(wallpaper = ThemeWallpaper(ThemeImage.Data(png()), lockScreen = true), lockWallpaper = ThemeImage.Url("https://example.com/l.webp"))
+        assertEquals(spec, ThemeSpecs.decode(ThemeSpecs.encode(spec)))
+        val saved = night.copy(wallpaper = ThemeWallpaper(ThemeImage.Stored("0123456789abcdef0123456789abcdef")))
+        assertEquals(listOf(saved), ThemeSpecs.decodeList(ThemeSpecs.encodeList(listOf(saved))))
+        // The base64 stands as its size in the technical line.
+        assertFalse(ThemeCommand.describe(spec).contains(png()))
+    }
+
+    @Test fun brokenWallpapersAreLeftOut() {
+        // Only http and https: a theme file never reads a file of the phone.
+        listOf("file:///sdcard/a.png", "content://media/1", "javascript:alert(1)", "https://", "https://a.com/a b.png").forEach {
+            assertNull(it, theme(""""wallpaper":{"url":"$it"}""").wallpaper)
+        }
+        // Not base64, not an image, or a stored file named in a file received.
+        assertNull(theme(""""wallpaper":{"base64":"%%%"}""").wallpaper)
+        assertNull(theme(""""wallpaper":{"base64":"${java.util.Base64.getEncoder().encodeToString("hello world".toByteArray())}"}""").wallpaper)
+        assertNull(theme(""""wallpaper":{"file":"0123456789abcdef0123456789abcdef"}""").wallpaper)
+        assertNull(ThemeSpecs.decodeList("""[{"name":"x","wallpaper":{"file":"../../databases/app.db"}}]""").single().wallpaper)
+    }
+
+    @Test fun base64IsCapped() {
+        assertNotNull(ThemeSpecs.dataImage(png(ThemeSpecs.MAX_IMAGE_BYTES)))
+        assertNull(ThemeSpecs.dataImage(png(ThemeSpecs.MAX_IMAGE_BYTES + 1)))
+        // Two images at the limit still fit in a file.
+        val both = night.copy(wallpaper = ThemeWallpaper(ThemeImage.Data(png(ThemeSpecs.MAX_IMAGE_BYTES))), lockWallpaper = ThemeImage.Data(png(ThemeSpecs.MAX_IMAGE_BYTES)))
+        assertTrue(ThemeSpecs.encode(both).length <= ThemeSpecs.MAX_BYTES)
+    }
+
+    @Test fun aiThemesCarryNoWallpaper() {
+        val reply = """{"accent":"#33ff66","background":"#000000","wallpaper":"https://example.com/made-up.jpg"}"""
+        assertNull(AiPrompts.theme(reply)?.first?.wallpaper)
+    }
 }

@@ -495,6 +495,13 @@
     <string name="theme_import_font_download">O tipo de letra é transferido do Google Fonts.</string>
     <string name="theme_import_keep">Guardar</string>
     <string name="theme_import_apply">Aplicar</string>
+    <string name="theme_import_wallpaper">Imagem de fundo</string>
+    <string name="theme_import_lock">Ecrã de bloqueio</string>
+    <string name="theme_import_lock_same">a mesma imagem</string>
+    <string name="theme_import_lock_apply">Mudar também o ecrã de bloqueio (a imagem atual é substituída)</string>
+    <string name="theme_import_image_link">transferida de %1$s</string>
+    <string name="theme_import_image_data">imagem no ficheiro (%1$s)</string>
+    <string name="theme_wallpaper_failed">Não foi possível aplicar a imagem de fundo do tema</string>
     <string name="cmd_ai_theme_request">Cria um tema original para mim</string>
     <string name="cmd_ai_theme_failed">A IA NÃO ENVIOU UM TEMA LEGÍVEL</string>
     <string name="appearance_group_themes">Temas</string>

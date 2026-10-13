@@ -176,7 +176,8 @@ object AiPrompts {
     fun theme(reply: String): Pair<ThemeSpec, String>? {
         val o = json(reply) ?: return null
         val t = o.optJSONObject("theme") ?: o
-        val spec = ThemeSpecs.fromJson(t)
+        // The AI cannot see images: a link it writes would be made up.
+        val spec = ThemeSpecs.fromJson(t).copy(wallpaper = null, lockWallpaper = null)
         if (spec.isEmpty || ThemeSpecs.unreadable(spec, null)) return null
         return spec to (o.optString("note").ifBlank { t.optString("note") }).trim()
     }

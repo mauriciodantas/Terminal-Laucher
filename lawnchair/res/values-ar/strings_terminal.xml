@@ -495,6 +495,13 @@
     <string name="theme_import_font_download">يتم تنزيل الخط من Google Fonts.</string>
     <string name="theme_import_keep">حفظ</string>
     <string name="theme_import_apply">تطبيق</string>
+    <string name="theme_import_wallpaper">الخلفية</string>
+    <string name="theme_import_lock">شاشة القفل</string>
+    <string name="theme_import_lock_same">الصورة نفسها</string>
+    <string name="theme_import_lock_apply">تغيير شاشة القفل أيضًا (ستُستبدل صورتها الحالية)</string>
+    <string name="theme_import_image_link">تُنزَّل من %1$s</string>
+    <string name="theme_import_image_data">صورة داخل الملف (%1$s)</string>
+    <string name="theme_wallpaper_failed">تعذّر تعيين خلفية السمة</string>
     <string name="cmd_ai_theme_request">أنشئ لي سمة أصلية</string>
     <string name="cmd_ai_theme_failed">لم يرسل الذكاء الاصطناعي سمة مقروءة</string>
     <string name="appearance_group_themes">السمات</string>

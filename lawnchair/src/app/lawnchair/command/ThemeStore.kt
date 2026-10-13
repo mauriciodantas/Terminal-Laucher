@@ -38,11 +38,15 @@ object ThemeStore {
     /** Keeps [theme] under its name, in place of a saved one of the same name. */
     fun keep(context: Context, theme: ThemeSpec) {
         if (theme.name.isBlank()) return
-        save(context, ThemeSpecs.upsert(load(context), theme))
+        val themes = ThemeSpecs.upsert(load(context), ThemeImages.store(context, theme))
+        save(context, themes)
+        ThemeImages.prune(context, themes)
     }
 
     fun remove(context: Context, name: String) {
-        save(context, ThemeSpecs.remove(load(context), name))
+        val themes = ThemeSpecs.remove(load(context), name)
+        save(context, themes)
+        ThemeImages.prune(context, themes)
     }
 
     /** Keeps the theme on screen now as [name]. */
@@ -121,7 +125,8 @@ object ThemeStore {
     /**
      * Writes what [spec] sets. Only what differs is written, since some settings rebuild the home
      * screen (the outline restarts it). The background goes before the accent, as when a pair is
-     * picked in Appearance. A pair that could not be read is refused as a whole.
+     * picked in Appearance. A pair that could not be read is refused as a whole. The images are set
+     * afterwards, in the background, since a link has to be downloaded.
      */
     fun apply(context: Context, spec: ThemeSpec): Boolean {
         val now = current(context)
@@ -141,9 +146,12 @@ object ThemeStore {
         spec.widgetIntensity?.let { p.widgetEffectIntensity.update(p, it) }
         spec.crtEffect?.let { p.crtEffect.update(p, it) }
         spec.crtIntensity?.let { p.crtEffectIntensity.update(p, it) }
-        spec.showWallpaper?.let { p.showSystemWallpaper.update(p, it) }
+        // An image as wallpaper is shown behind the home screen, and the color no longer painted over it.
+        (spec.showWallpaper ?: spec.wallpaper?.let { true })?.let { p.showSystemWallpaper.update(p, it) }
         spec.wallpaperDim?.let { p.wallpaperDim.update(p, it) }
-        spec.colorAsWallpaper?.let { p.backgroundColorAsWallpaper.update(p, it) }
+        (if (spec.wallpaper != null) false else spec.colorAsWallpaper)?.let { p.backgroundColorAsWallpaper.update(p, it) }
+        if (spec.lockImage != null) p.backgroundColorOnLockScreen.update(p, false)
+        ThemeImages.applyLater(context, spec)
         spec.font?.let { setFont(context, it) }
         // Last: a new outline restarts the home screen.
         spec.outline?.let { p.strokeColorStyle.update(p, optionOf(it)) }
@@ -202,7 +210,7 @@ object ThemeStore {
 
     /** A share sheet for [spec], or null when the file cannot be written. */
     fun shareIntent(context: Context, spec: ThemeSpec): Intent? = runCatching {
-        val named = spec.copy(name = spec.name.ifBlank { context.getString(R.string.theme_default_name) })
+        val named = ThemeImages.inline(context, spec).copy(name = spec.name.ifBlank { context.getString(R.string.theme_default_name) })
         val uri = file(context, named)
         val send = Intent(Intent.ACTION_SEND)
             .setType(ThemeSpecs.MIME)

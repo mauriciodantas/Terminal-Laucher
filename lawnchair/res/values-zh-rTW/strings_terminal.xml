@@ -495,6 +495,13 @@
     <string name="theme_import_font_download">字型會從 Google Fonts 下載。</string>
     <string name="theme_import_keep">儲存</string>
     <string name="theme_import_apply">套用</string>
+    <string name="theme_import_wallpaper">桌布</string>
+    <string name="theme_import_lock">螢幕鎖定畫面</string>
+    <string name="theme_import_lock_same">同一張圖片</string>
+    <string name="theme_import_lock_apply">同時變更螢幕鎖定畫面（目前的圖片會被取代）</string>
+    <string name="theme_import_image_link">從 %1$s 下載</string>
+    <string name="theme_import_image_data">檔案內的圖片（%1$s）</string>
+    <string name="theme_wallpaper_failed">無法設定主題桌布</string>
     <string name="cmd_ai_theme_request">幫我建立一個原創主題</string>
     <string name="cmd_ai_theme_failed">AI 沒有傳送可讀的主題</string>
     <string name="appearance_group_themes">主題</string>

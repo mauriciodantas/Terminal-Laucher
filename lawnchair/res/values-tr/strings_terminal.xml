@@ -495,6 +495,13 @@
     <string name="theme_import_font_download">Yazı tipi Google Fonts\'tan indirilir.</string>
     <string name="theme_import_keep">Kaydet</string>
     <string name="theme_import_apply">Uygula</string>
+    <string name="theme_import_wallpaper">Duvar kâğıdı</string>
+    <string name="theme_import_lock">Kilit ekranı</string>
+    <string name="theme_import_lock_same">aynı görsel</string>
+    <string name="theme_import_lock_apply">Kilit ekranını da değiştir (mevcut görseli değiştirilir)</string>
+    <string name="theme_import_image_link">%1$s adresinden indirilir</string>
+    <string name="theme_import_image_data">dosyadaki görsel (%1$s)</string>
+    <string name="theme_wallpaper_failed">Temanın duvar kâğıdı ayarlanamadı</string>
     <string name="cmd_ai_theme_request">Benim için özgün bir tema oluştur</string>
     <string name="cmd_ai_theme_failed">YAPAY ZEKA OKUNABİLİR BİR TEMA GÖNDERMEDİ</string>
     <string name="appearance_group_themes">Temalar</string>

@@ -495,6 +495,13 @@
     <string name="theme_import_font_download">Font diunduh dari Google Fonts.</string>
     <string name="theme_import_keep">Simpan</string>
     <string name="theme_import_apply">Terapkan</string>
+    <string name="theme_import_wallpaper">Wallpaper</string>
+    <string name="theme_import_lock">Layar kunci</string>
+    <string name="theme_import_lock_same">gambar yang sama</string>
+    <string name="theme_import_lock_apply">Ubah juga layar kunci (gambarnya saat ini akan diganti)</string>
+    <string name="theme_import_image_link">diunduh dari %1$s</string>
+    <string name="theme_import_image_data">gambar di dalam file (%1$s)</string>
+    <string name="theme_wallpaper_failed">Tidak dapat memasang wallpaper tema</string>
     <string name="cmd_ai_theme_request">Buatkan tema orisinal untukku</string>
     <string name="cmd_ai_theme_failed">AI TIDAK MENGIRIM TEMA YANG TERBACA</string>
     <string name="appearance_group_themes">Tema</string>
