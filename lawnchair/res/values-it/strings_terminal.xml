@@ -501,6 +501,8 @@
     <string name="theme_import_lock_apply">Cambia anche la schermata di blocco (la sua immagine attuale viene sostituita)</string>
     <string name="theme_import_image_link">scaricato da %1$s</string>
     <string name="theme_import_image_data">immagine nel file (%1$s)</string>
+    <string name="theme_import_image_art">disegnato sul telefono: %1$s</string>
+    <string name="theme_import_image_svg">disegno vettoriale nel file</string>
     <string name="theme_wallpaper_failed">Impossibile applicare lo sfondo del tema</string>
     <string name="cmd_ai_theme_request">Crea un tema originale per me</string>
     <string name="cmd_ai_theme_failed">L\'IA NON HA INVIATO UN TEMA LEGGIBILE</string>

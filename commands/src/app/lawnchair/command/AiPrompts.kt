@@ -152,7 +152,9 @@ object AiPrompts {
             "\"outline\": \"#rrggbb\", \"dock\": \"#rrggbb\", \"folder\": \"#rrggbb\", \"followSystem\": false, " +
             "\"font\": {\"kind\": \"google\", \"family\": \"<Google Fonts family>\"}, \"pixelClock\": true, \"iconEffect\": true, " +
             "\"widgetEffect\": true, \"widgetIntensity\": 0.6, \"crtEffect\": true, \"crtIntensity\": 0.4, " +
-            "\"showWallpaper\": false, \"wallpaperDim\": 0.5, \"colorAsWallpaper\": false, \"note\": \"<one short sentence>\"}\n" +
+            "\"showWallpaper\": false, \"wallpaperDim\": 0.5, \"colorAsWallpaper\": false, " +
+            "\"wallpaper\": {\"svg\": \"<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1080 2400'>...</svg>\", \"lockScreen\": false}, " +
+            "\"lockWallpaper\": {\"svg\": \"<svg ...>...</svg>\"}, \"note\": \"<one short sentence>\"}\n" +
             "Rules: the accent over the background must read well, a contrast ratio of at least 4.5 (WCAG). " +
             "secondary is a third color for secondary text, hints and lines (default keeps the accent dimmed); " +
             "it must read over the background too, at least 3.0, and works best a third of the color wheel away from the accent. " +
@@ -163,6 +165,16 @@ object AiPrompts {
             "iconEffect draws app icons in the accent color; widgetEffect tints widgets; crtEffect adds scanlines; " +
             "intensities go from 0.05 to 1. showWallpaper shows the system wallpaper behind the home screen, dimmed by wallpaperDim (0 to 1); " +
             "colorAsWallpaper sets the background color as the system wallpaper. Set followSystem only when asked to follow the light and dark mode. " +
+            "wallpaper and lockWallpaper: include them ONLY when the user explicitly asks for a wallpaper or a picture " +
+            "(wallpaper, papel de parede, fondo de pantalla, imagem de fundo, lock screen...); otherwise leave both out. " +
+            "You draw the picture yourself as ONE self-contained SVG in the same reply: xmlns set, viewBox='0 0 1080 2400' (a portrait phone screen), " +
+            "only shapes, paths, gradients, patterns and filters; no <image>, links, external fonts, <text>, scripts, CSS @import or <foreignObject>; " +
+            "at most 20000 characters. Make it a real illustration of what was asked (a scene or motifs with depth, not a flat color), " +
+            "built on the theme background as its dominant color and calm behind the top third and the middle, where the clock, icons and text are drawn over it. " +
+            "Write the attributes with single quotes so the SVG fits in the JSON string as it is. " +
+            "lockScreen true puts the same picture on the lock screen; lockWallpaper is a different picture just for it. " +
+            "Use them only when the user asks for the lock screen or for more than one wallpaper. " +
+            "With a wallpaper set showWallpaper true and wallpaperDim about 0.3. Never write image links or base64: only SVG. " +
             "The launcher looks like a terminal: the accent color draws all the text, lines and icons over the background color."
 
     private const val THEME_RULES =
@@ -174,10 +186,17 @@ object AiPrompts {
      * [AiMode.THEME] replies with the theme itself; [AiMode.CREATE] wraps it in "theme" when it was asked for one.
      */
     fun theme(reply: String): Pair<ThemeSpec, String>? {
-        val o = json(reply) ?: return null
+        val o = json(reply) ?: json(repairSvg(reply)) ?: return null
         val t = o.optJSONObject("theme") ?: o
-        // The AI cannot see images: a link it writes would be made up.
-        val spec = ThemeSpecs.fromJson(t).copy(wallpaper = null, lockWallpaper = null)
+        // A link or base64 the AI writes would be made up: only the SVG it draws stays, which the phone turns into
+        // a PNG embedded in the theme. A wallpaper it adds is shown even if it left showWallpaper off.
+        val read = ThemeSpecs.fromJson(t)
+        val wallpaper = read.wallpaper?.takeIf { it.image is ThemeImage.Svg }
+        val spec = read.copy(
+            wallpaper = wallpaper,
+            lockWallpaper = read.lockWallpaper as? ThemeImage.Svg,
+            showWallpaper = if (wallpaper != null) true else read.showWallpaper,
+        )
         if (spec.isEmpty || ThemeSpecs.unreadable(spec, null)) return null
         return spec to (o.optString("note").ifBlank { t.optString("note") }).trim()
     }
@@ -212,6 +231,35 @@ object AiPrompts {
             "When the user asks for a theme, a look, colors, a font or effects for the launcher instead of a command, " +
             "write no actions or aliases: reply with JSON only, {\"theme\": <theme>, \"note\": \"<one short sentence>\"}, " +
             "where <theme> has this shape:\n" + THEME_SHAPE
+
+    /**
+     * [reply] with each SVG made fit for a JSON string: a model that writes the drawing with double
+     * quotes or line breaks inside it breaks the whole JSON, so those become single quotes and spaces.
+     * Only the text between `"svg": "` and the `</svg>` that closes it is touched.
+     */
+    fun repairSvg(reply: String): String {
+        val out = StringBuilder()
+        var at = 0
+        val open = Regex("\"svg\"\\s*:\\s*\"")
+        while (true) {
+            val start = open.find(reply, at) ?: break
+            val body = start.range.last + 1
+            val close = reply.indexOf("</svg>", body, ignoreCase = true)
+            if (close < 0) break
+            val end = close + "</svg>".length
+            out.append(reply, at, body)
+            reply.substring(body, end).forEachIndexed { i, c ->
+                val escaped = i > 0 && reply[body + i - 1] == '\\'
+                when {
+                    c == '"' && !escaped -> out.append('\'')
+                    c == '\n' || c == '\r' || c == '\t' -> out.append(' ')
+                    else -> out.append(c)
+                }
+            }
+            at = end
+        }
+        return out.append(reply, at, reply.length).toString()
+    }
 
     /** The JSON object in a reply, without the code fences or words some models wrap it in. */
     fun json(reply: String): JSONObject? {

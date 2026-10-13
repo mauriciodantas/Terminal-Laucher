@@ -37,11 +37,25 @@ sealed interface ThemeFont {
 }
 
 /**
- * An image a theme carries as wallpaper: a link the phone downloads when the theme is applied, or
- * the image itself in base64 inside the file. [Stored] is the base64 image of a saved theme, kept in
- * a file of the app so the saved themes stay small; it is never read from a theme file.
+ * An image a theme carries as wallpaper: a link the phone downloads when the theme is applied, the
+ * image itself in base64 inside the file, or [Art] the phone draws. [Stored] is the base64 image of
+ * a saved theme, kept in a file of the app so the saved themes stay small; it is never read from a
+ * theme file.
  */
 sealed interface ThemeImage {
+    /**
+     * A wallpaper the phone draws: [symbols] (emoji or characters) scattered over [background], or
+     * the theme's background when null. Characters that are not emoji take [color], or the accent.
+     * [density] and [size] go from 0 to 1. The AI writes these, since it cannot make an image.
+     */
+    data class Art(
+        val symbols: List<String>,
+        val background: Int? = null,
+        val color: Int? = null,
+        val density: Float = 0.5f,
+        val size: Float = 0.5f,
+    ) : ThemeImage
+
     data class Url(val url: String) : ThemeImage
 
     /** The image in base64, already checked: it decodes, is a known image format and fits [ThemeSpecs.MAX_IMAGE_BYTES]. */
@@ -55,6 +69,14 @@ sealed interface ThemeImage {
     }
 
     data class Stored(val file: String) : ThemeImage
+
+    /**
+     * A vector drawing: the AI writes its wallpaper this way, in the same reply as the theme, and
+     * the phone turns it into a PNG embedded in base64 before the theme is shown.
+     */
+    data class Svg(val markup: String) : ThemeImage {
+        override fun toString() = "Svg(${markup.length} chars)"
+    }
 }
 
 /** The wallpaper of a theme; [lockScreen] puts the same image on the lock screen too. */
@@ -195,8 +217,22 @@ object ThemeSpecs {
 
     private fun image(image: ThemeImage): JSONObject = when (image) {
         is ThemeImage.Url -> JSONObject().put("url", image.url)
+
         is ThemeImage.Data -> JSONObject().put("base64", image.base64)
+
         is ThemeImage.Stored -> JSONObject().put("file", image.file)
+
+        is ThemeImage.Svg -> JSONObject().put("svg", image.markup)
+
+        is ThemeImage.Art -> JSONObject().put(
+            "art",
+            JSONObject().put("symbols", org.json.JSONArray(image.symbols)).apply {
+                image.background?.let { put("background", hex(it)) }
+                image.color?.let { put("color", hex(it)) }
+                put("density", image.density.toDouble())
+                put("size", image.size.toDouble())
+            },
+        )
     }
 
     /** Reads a theme file. Throws when [raw] is not one, so a stray JSON file is never taken for a theme. */
@@ -247,10 +283,51 @@ object ThemeSpecs {
             o == null -> value as? String ?: return null
             o.has("url") -> return urlImage(o.optString("url"))
             o.has("base64") -> return dataImage(o.optString("base64"))
+            o.has("art") -> return art(o.optJSONObject("art"))
+            o.has("svg") -> return svgImage(o.optString("svg"))
             o.has("file") && stored -> return o.optString("file").takeIf { STORED_FILE.matches(it) }?.let { ThemeImage.Stored(it) }
             else -> return null
         }
-        return if (text.trimStart().startsWith("data:", ignoreCase = true)) dataImage(text) else urlImage(text)
+        val start = text.trimStart()
+        return when {
+            start.startsWith("data:", ignoreCase = true) -> dataImage(text)
+            start.startsWith("<") -> svgImage(text)
+            else -> urlImage(text)
+        }
+    }
+
+    /** The most symbols an [ThemeImage.Art] scatters, and the longest one (an emoji with modifiers takes several chars). */
+    const val MAX_ART_SYMBOLS = 12
+    private const val MAX_SYMBOL_LENGTH = 16
+
+    /** The art of `{"symbols": [...], …}`; null without a symbol that can be drawn. */
+    fun art(o: JSONObject?): ThemeImage.Art? {
+        o ?: return null
+        val raw = o.optJSONArray("symbols")?.let { a -> (0 until a.length()).map { a.optString(it) } }
+            ?: o.optString("symbols").takeIf { it.isNotBlank() }?.split(' ', ',')
+            ?: return null
+        val symbols = raw.map { it.trim() }
+            .filter { it.isNotEmpty() && it.length <= MAX_SYMBOL_LENGTH && it.none { c -> c.isISOControl() } }
+            .distinct()
+            .take(MAX_ART_SYMBOLS)
+        if (symbols.isEmpty()) return null
+        return ThemeImage.Art(
+            symbols = symbols,
+            background = o.optString("background").let(::hexColor),
+            color = o.optString("color").let(::hexColor),
+            density = fraction(o, "density") ?: 0.5f,
+            size = fraction(o, "size") ?: 0.5f,
+        )
+    }
+
+    /** The longest SVG a theme may carry; a wallpaper the AI draws stays well under it. */
+    const val MAX_SVG = 100 * 1024
+
+    /** An SVG document: an `<svg` element, within [MAX_SVG], without code fences around it. */
+    fun svgImage(text: String): ThemeImage.Svg? {
+        val markup = text.trim().removePrefix("```svg").removePrefix("```xml").removePrefix("```").removeSuffix("```").trim()
+        if (markup.length > MAX_SVG || !markup.contains("<svg", ignoreCase = true) || !markup.contains("</svg>", ignoreCase = true)) return null
+        return ThemeImage.Svg(markup)
     }
 
     /** A link the phone may download: http or https, with a host, one line and not too long. */

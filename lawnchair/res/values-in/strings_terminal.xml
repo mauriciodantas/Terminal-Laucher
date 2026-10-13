@@ -501,6 +501,8 @@
     <string name="theme_import_lock_apply">Ubah juga layar kunci (gambarnya saat ini akan diganti)</string>
     <string name="theme_import_image_link">diunduh dari %1$s</string>
     <string name="theme_import_image_data">gambar di dalam file (%1$s)</string>
+    <string name="theme_import_image_art">digambar di ponsel: %1$s</string>
+    <string name="theme_import_image_svg">gambar vektor di dalam file</string>
     <string name="theme_wallpaper_failed">Tidak dapat memasang wallpaper tema</string>
     <string name="cmd_ai_theme_request">Buatkan tema orisinal untukku</string>
     <string name="cmd_ai_theme_failed">AI TIDAK MENGIRIM TEMA YANG TERBACA</string>

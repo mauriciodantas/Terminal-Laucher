@@ -501,6 +501,8 @@
     <string name="theme_import_lock_apply">تغيير شاشة القفل أيضًا (ستُستبدل صورتها الحالية)</string>
     <string name="theme_import_image_link">تُنزَّل من %1$s</string>
     <string name="theme_import_image_data">صورة داخل الملف (%1$s)</string>
+    <string name="theme_import_image_art">يُرسم على الهاتف: %1$s</string>
+    <string name="theme_import_image_svg">رسم متجهي داخل الملف</string>
     <string name="theme_wallpaper_failed">تعذّر تعيين خلفية السمة</string>
     <string name="cmd_ai_theme_request">أنشئ لي سمة أصلية</string>
     <string name="cmd_ai_theme_failed">لم يرسل الذكاء الاصطناعي سمة مقروءة</string>

@@ -247,8 +247,58 @@ class ThemeCommandTest {
         assertTrue(ThemeSpecs.encode(both).length <= ThemeSpecs.MAX_BYTES)
     }
 
-    @Test fun aiThemesCarryNoWallpaper() {
-        val reply = """{"accent":"#33ff66","background":"#000000","wallpaper":"https://example.com/made-up.jpg"}"""
-        assertNull(AiPrompts.theme(reply)?.first?.wallpaper)
+    private val drawing = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1080 2400'><rect width='1080' height='2400' fill='#120a1e'/></svg>"
+
+    @Test fun aiThemesDrawTheirWallpaperInSvg() {
+        // A link, base64 or symbols the AI writes are left out; the SVG it draws stays, and is shown.
+        val linked = """{"accent":"#33ff66","background":"#000000","wallpaper":"https://example.com/made-up.jpg"}"""
+        assertNull(AiPrompts.theme(linked)?.first?.wallpaper)
+        assertNull(AiPrompts.theme("""{"accent":"#33ff66","background":"#000000","wallpaper":{"art":{"symbols":["🎃"]}}}""")?.first?.wallpaper)
+        val drawn = AiPrompts.theme(
+            """{"accent":"#ff7518","background":"#120a1e","showWallpaper":false,
+               "wallpaper":{"svg":"$drawing","lockScreen":true},
+               "lockWallpaper":{"url":"https://example.com/lock.png"}}""",
+        )!!.first
+        assertEquals(ThemeWallpaper(ThemeImage.Svg(drawing), lockScreen = true), drawn.wallpaper)
+        assertEquals(ThemeImage.Svg(drawing), drawn.lockImage)
+        assertNull(drawn.lockWallpaper)
+        assertEquals(true, drawn.showWallpaper)
+        // A theme without a wallpaper asked for stays without one.
+        assertNull(AiPrompts.theme("""{"accent":"#ff7518","background":"#120a1e"}""")!!.first.wallpaper)
+    }
+
+    @Test fun svgWithDoubleQuotesAndLineBreaksIsRepaired() {
+        // Double quotes and line breaks inside the drawing break the JSON; the reply is repaired, not lost.
+        val reply = "```json\n{\"accent\":\"#ff7518\",\"background\":\"#120a1e\",\"wallpaper\":{\"svg\": \"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1080 2400\">\n" +
+            "<circle cx=\"540\" cy=\"1200\" r=\"300\" fill=\"#ff7518\"/>\n</svg>\"},\"note\":\"Abóboras.\"}\n```"
+        assertNull(AiPrompts.json(reply))
+        val (spec, note) = AiPrompts.theme(reply)!!
+        val svg = (spec.wallpaper!!.image as ThemeImage.Svg).markup
+        assertTrue(svg.startsWith("<svg xmlns='http://www.w3.org/2000/svg'"))
+        assertTrue(svg.contains("<circle cx='540'"))
+        assertEquals("Abóboras.", note)
+    }
+
+    @Test fun svgIsCheckedAndRoundTrips() {
+        assertEquals(ThemeImage.Svg(drawing), ThemeSpecs.svgImage("```svg\n$drawing\n```"))
+        assertNull(ThemeSpecs.svgImage("<html></html>"))
+        assertNull(ThemeSpecs.svgImage("<svg>" + "x".repeat(ThemeSpecs.MAX_SVG) + "</svg>"))
+        assertEquals(ThemeImage.Svg(drawing), theme(""""wallpaper":"$drawing"""").wallpaper?.image)
+        val spec = night.copy(wallpaper = ThemeWallpaper(ThemeImage.Svg(drawing)))
+        assertEquals(spec, ThemeSpecs.decode(ThemeSpecs.encode(spec)))
+    }
+
+    @Test fun artIsCheckedAndRoundTrips() {
+        val art = ThemeSpecs.art(org.json.JSONObject("""{"symbols":["🎃","🎃","","x\u0007","${"a".repeat(40)}","★"],"color":"#f80","density":250,"size":-1}"""))!!
+        // Repeated, empty, control characters and over-long symbols are left out; numbers are kept in range.
+        assertEquals(listOf("🎃", "★"), art.symbols)
+        assertEquals(0xFFFF8800.toInt(), art.color)
+        assertEquals(1f, art.density)
+        assertEquals(0f, art.size)
+        assertNull(ThemeSpecs.art(org.json.JSONObject("""{"symbols":[]}""")))
+        assertEquals(listOf("🎃", "🦇"), ThemeSpecs.art(org.json.JSONObject("""{"symbols":"🎃 🦇"}"""))!!.symbols)
+
+        val spec = night.copy(wallpaper = ThemeWallpaper(art, lockScreen = true), lockWallpaper = art.copy(background = 0xFF000000.toInt()))
+        assertEquals(spec, ThemeSpecs.decode(ThemeSpecs.encode(spec)))
     }
 }

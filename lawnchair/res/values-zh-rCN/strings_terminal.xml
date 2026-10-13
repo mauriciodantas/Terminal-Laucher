@@ -501,6 +501,8 @@
     <string name="theme_import_lock_apply">同时更改锁屏（当前图片将被替换）</string>
     <string name="theme_import_image_link">从 %1$s 下载</string>
     <string name="theme_import_image_data">文件内的图片（%1$s）</string>
+    <string name="theme_import_image_art">在手机上绘制：%1$s</string>
+    <string name="theme_import_image_svg">文件内的矢量图</string>
     <string name="theme_wallpaper_failed">无法设置主题壁纸</string>
     <string name="cmd_ai_theme_request">为我创建一个原创主题</string>
     <string name="cmd_ai_theme_failed">AI 没有发送可读的主题</string>

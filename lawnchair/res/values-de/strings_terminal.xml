@@ -501,6 +501,8 @@
     <string name="theme_import_lock_apply">Auch den Sperrbildschirm ändern (sein aktuelles Bild wird ersetzt)</string>
     <string name="theme_import_image_link">geladen von %1$s</string>
     <string name="theme_import_image_data">Bild in der Datei (%1$s)</string>
+    <string name="theme_import_image_art">auf dem Gerät gezeichnet: %1$s</string>
+    <string name="theme_import_image_svg">Vektorzeichnung in der Datei</string>
     <string name="theme_wallpaper_failed">Der Hintergrund des Designs konnte nicht gesetzt werden</string>
     <string name="cmd_ai_theme_request">Erstelle ein originelles Thema für mich</string>
     <string name="cmd_ai_theme_failed">DIE KI HAT KEIN LESBARES THEMA GESENDET</string>

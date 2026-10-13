@@ -501,6 +501,8 @@
     <string name="theme_import_lock_apply">लॉक स्क्रीन भी बदलें (उसकी मौजूदा इमेज बदल दी जाएगी)</string>
     <string name="theme_import_image_link">%1$s से डाउनलोड</string>
     <string name="theme_import_image_data">फ़ाइल में इमेज (%1$s)</string>
+    <string name="theme_import_image_art">फ़ोन पर बनाया गया: %1$s</string>
+    <string name="theme_import_image_svg">फ़ाइल में वेक्टर चित्र</string>
     <string name="theme_wallpaper_failed">थीम का वॉलपेपर सेट नहीं हो सका</string>
     <string name="cmd_ai_theme_request">मेरे लिए एक अनोखी थीम बनाओ</string>
     <string name="cmd_ai_theme_failed">AI ने पढ़ने योग्य थीम नहीं भेजी</string>

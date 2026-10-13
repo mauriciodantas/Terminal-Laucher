@@ -143,10 +143,10 @@ private fun ImportDialog(
                         }
                     }
                 }
-                spec.wallpaper?.let { ImageLine(stringResource(R.string.theme_import_wallpaper), it.image) }
+                spec.wallpaper?.let { ImageLine(stringResource(R.string.theme_import_wallpaper), it.image, spec) }
                 val lockWallpaper = spec.lockWallpaper
                 when {
-                    lockWallpaper != null -> ImageLine(stringResource(R.string.theme_import_lock), lockWallpaper)
+                    lockWallpaper != null -> ImageLine(stringResource(R.string.theme_import_lock), lockWallpaper, spec)
                     spec.wallpaper?.lockScreen == true -> Text(stringResource(R.string.theme_import_lock).lowercase() + ": " + stringResource(R.string.theme_import_lock_same), style = MaterialTheme.typography.bodySmall, color = dim, modifier = Modifier.padding(top = 4.dp))
                 }
                 if (spec.lockImage != null) {
@@ -197,25 +197,27 @@ private fun ThemeSample(spec: ThemeSpec, current: ThemeSpec) {
     }
 }
 
-/** "papel de parede: baixado de site.com" or "imagem no arquivo (1,2 MB)", with the image itself when the file carries it. */
+/** "papel de parede: baixado de site.com", "imagem no arquivo (1,2 MB)" or the art's symbols, with the image itself when the file carries it or the phone draws it. */
 @Composable
-private fun ImageLine(label: String, image: ThemeImage) {
+private fun ImageLine(label: String, image: ThemeImage, spec: ThemeSpec) {
     val context = LocalContext.current
     val dim = MaterialTheme.colorScheme.onSurfaceVariant
     val text = when (image) {
         is ThemeImage.Url -> stringResource(R.string.theme_import_image_link, runCatching { java.net.URI(image.url).host }.getOrNull() ?: image.url)
         is ThemeImage.Data -> stringResource(R.string.theme_import_image_data, android.text.format.Formatter.formatShortFileSize(context, image.size.toLong()))
         is ThemeImage.Stored -> "…"
+        is ThemeImage.Art -> stringResource(R.string.theme_import_image_art, image.symbols.joinToString(" "))
+        is ThemeImage.Svg -> stringResource(R.string.theme_import_image_svg)
     }
     Column(modifier = Modifier.padding(top = 4.dp)) {
         Row {
             Text(label.lowercase() + ": ", style = MaterialTheme.typography.bodySmall, color = dim)
             Text(text, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
         }
-        if (image is ThemeImage.Data) {
+        if (image is ThemeImage.Data || image is ThemeImage.Art || image is ThemeImage.Svg) {
             // Decoded small and off the main thread: the preview never holds the full image.
             val thumbnail by produceState<android.graphics.Bitmap?>(null, image) {
-                value = withContext(Dispatchers.IO) { ThemeImages.decode(context, image.bytes(), maxSide = THUMBNAIL_PX) }
+                value = withContext(Dispatchers.IO) { ThemeImages.bitmap(context, spec, image, maxSide = THUMBNAIL_PX) }
             }
             thumbnail?.let {
                 Image(

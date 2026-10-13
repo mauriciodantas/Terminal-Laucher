@@ -95,6 +95,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+/** How long "ia tema" waits at least, in seconds: drawing a wallpaper takes longer than the usual answer. */
+private const val THEME_TIMEOUT = 120
+
 /**
  * The terminal command bar: a command line with autocomplete, a list of suggestions, a preview of
  * what would happen and a history. All the rules live in [CommandEngine].
@@ -388,10 +391,14 @@ private fun CommandScreen(onClose: () -> Unit) {
             val system = AiPrompts.system(action.mode, aiContext)
             // Only the conversation is shown as it comes: a command or a pack is read once complete.
             val result = runCatching {
-                if (action.mode == AiMode.CHAT) {
-                    AiClient.stream(config, system, turns) { aiPartial = it }
-                } else {
-                    AiClient.send(config, system, turns)
+                when (action.mode) {
+                    AiMode.CHAT -> AiClient.stream(config, system, turns) { aiPartial = it }
+
+                    // A theme may carry a drawing: a long reply that a thinking model starts late. It comes in pieces,
+                    // the time limit counting between them, and never under THEME_TIMEOUT whatever the setting.
+                    AiMode.THEME, AiMode.CREATE -> AiClient.stream(config, system, turns, minTimeoutSeconds = THEME_TIMEOUT) {}
+
+                    else -> AiClient.send(config, system, turns)
                 }
             }
             aiBusy = false
@@ -419,7 +426,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                     // Asked for a theme in other words ("ia create theme for halloween"), the AI sends one: it is reviewed as a theme.
                     val theme = AiPrompts.createdTheme(reply.text)
                     if (theme != null) {
-                        if (ThemeStore.review(context, theme.first)) onClose() else done = failedLabel
+                        if (ThemeStore.review(context, ThemeImages.embed(context, theme.first))) onClose() else done = failedLabel
                     } else if (pack == null) {
                         done = context.getString(R.string.cmd_ai_create_failed)
                     } else {
@@ -445,7 +452,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                         theme == null -> done = context.getString(R.string.cmd_ai_theme_failed)
 
                         // The same screen as a theme received from somebody: nothing changes unseen.
-                        ThemeStore.review(context, theme.first) -> onClose()
+                        ThemeStore.review(context, ThemeImages.embed(context, theme.first)) -> onClose()
 
                         else -> done = failedLabel
                     }

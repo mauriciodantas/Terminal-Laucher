@@ -501,6 +501,8 @@
     <string name="theme_import_lock_apply">Сменить и экран блокировки (текущее изображение будет заменено)</string>
     <string name="theme_import_image_link">загружено с %1$s</string>
     <string name="theme_import_image_data">изображение в файле (%1$s)</string>
+    <string name="theme_import_image_art">рисуется на телефоне: %1$s</string>
+    <string name="theme_import_image_svg">векторный рисунок в файле</string>
     <string name="theme_wallpaper_failed">Не удалось установить обои темы</string>
     <string name="cmd_ai_theme_request">Создай для меня оригинальную тему</string>
     <string name="cmd_ai_theme_failed">ИИ НЕ ПРИСЛАЛ ЧИТАЕМУЮ ТЕМУ</string>

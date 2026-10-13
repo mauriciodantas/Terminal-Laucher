@@ -501,6 +501,8 @@
     <string name="theme_import_lock_apply">同時變更螢幕鎖定畫面（目前的圖片會被取代）</string>
     <string name="theme_import_image_link">從 %1$s 下載</string>
     <string name="theme_import_image_data">檔案內的圖片（%1$s）</string>
+    <string name="theme_import_image_art">在手機上繪製：%1$s</string>
+    <string name="theme_import_image_svg">檔案內的向量圖</string>
     <string name="theme_wallpaper_failed">無法設定主題桌布</string>
     <string name="cmd_ai_theme_request">幫我建立一個原創主題</string>
     <string name="cmd_ai_theme_failed">AI 沒有傳送可讀的主題</string>

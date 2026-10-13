@@ -350,7 +350,10 @@ object AiClient {
      * on the main thread. Only for the conversation: a command or a pack is read once it is complete.
      * The time limit then counts between two pieces, so a long answer that keeps coming is not cut off.
      */
-    suspend fun stream(config: AiConfig, system: String, turns: List<AiTurn>, onText: (String) -> Unit): AiReply = call(config, AiProtocol.request(config, system, turns, stream = true)) { body ->
+    suspend fun stream(config: AiConfig, system: String, turns: List<AiTurn>, minTimeoutSeconds: Int = 0, onText: (String) -> Unit): AiReply = call(
+        config.copy(timeoutSeconds = maxOf(config.timeoutSeconds, minTimeoutSeconds)),
+        AiProtocol.request(config, system, turns, stream = true),
+    ) { body ->
         val reader = AiStream(config.provider)
         body.lineSequence().forEach { line ->
             if (reader.feed(line)) {

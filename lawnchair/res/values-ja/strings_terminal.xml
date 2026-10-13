@@ -501,6 +501,8 @@
     <string name="theme_import_lock_apply">ロック画面も変更する（現在の画像は置き換えられます）</string>
     <string name="theme_import_image_link">%1$s からダウンロード</string>
     <string name="theme_import_image_data">ファイル内の画像（%1$s）</string>
+    <string name="theme_import_image_art">端末で描画: %1$s</string>
+    <string name="theme_import_image_svg">ファイル内のベクター画像</string>
     <string name="theme_wallpaper_failed">テーマの壁紙を設定できませんでした</string>
     <string name="cmd_ai_theme_request">オリジナルのテーマを作って</string>
     <string name="cmd_ai_theme_failed">AI から読めるテーマが届きませんでした</string>
