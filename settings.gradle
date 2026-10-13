@@ -117,4 +117,5 @@ include ':dagger'
 include ':concurrent'
 //include ':compose'
 include ':modules:widgetpicker'
+include ':commands'
 

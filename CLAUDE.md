@@ -31,6 +31,7 @@ Tests:
 
 - JVM unit tests live in `tests/unit/src`, which is wired to the Gradle `test` source set. Run them with `./gradlew testLawnWithQuickstepPlayDebugUnitTest` (check the exact name with `./gradlew tasks --all | grep -i unittest`).
 - Single test class: `./gradlew testLawnWithQuickstepPlayDebugUnitTest --tests "com.android.launcher3.pm.InstallSessionHelperTest"`.
+- The command bar engine tests live in the `:commands` module (`commands/tests/src`). Run them with `./gradlew :commands:testDebugUnitTest`.
 - `tests/src/` holds more Launcher3 Kotlin tests, and `tests/Android.bp`, `tests/multivalentTests` and `tests/tapl` are the AOSP/Soong-side test setup. I did not confirm that Gradle compiles `tests/src`, so check before relying on it.
 - Custom lint detectors live in `checks/` (`Launcher3IssueRegistry`) and have their own tests there.
 
@@ -51,7 +52,7 @@ Tests:
 **Lawnchair features** (`lawnchair/src/app/lawnchair/`):
 - `LawnchairApp` / `LawnchairLauncher` / `LawnchairProcessInitializer` are the entry points.
 - `preferences2/` wraps the preference store. `PreferenceManager2` and `PreferenceCollectorScope` are the API for reading and observing settings, and `SharedPreferencesMigration` handles older prefs. Settings screens are in `ui/preferences/destinations/`.
-- `command/` is the command bar: `CommandEngine` and `CommandExecutor` run commands, `CustomActionStore` persists user actions, and `VoiceCommand`, `CalcEvaluator` and `CommandActivity` handle speech, calculation and the UI. This was the active area of development on this branch.
+- `command/` is the command bar, split in two. The engine (`CommandEngine`, the rule objects such as `CalcEvaluator`, `TimeParse`, `ThemeCommand`, `VoiceCommand`, plus `CustomActionStore`, `Texts` and `foldAccents`) lives in the `:commands` Android library (`commands/`, namespace `app.lawnchair.command`), which must not depend on Launcher3. Its strings are in `commands/res/values*/strings_commands.xml`, and launcher code that needs one imports `app.lawnchair.command.R as CommandR`. What still touches the launcher (`CommandActivity`, `CommandExecutor`, `CommandSources`, `ThemeStore`, `FolderOrganizer`, the import activities) stays in `lawnchair/src/app/lawnchair/command/`, same package. This was the active area of development on this branch.
 - `data/` holds the Room `AppDatabase` (with `folder`, `iconoverride` and `wallpaper` subpackages).
 - `icons/`, `theme/`, `font/`, `search/`, `predictions/`, `smartspace/`, `backup/` and `root/` are feature packages. `root/` uses the `IRootHelper` AIDL service.
 - `aidl/` defines the `IBridge` service and `ILauncherOverlay` callbacks used for cross-process communication.

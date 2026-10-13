@@ -85,6 +85,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import app.lawnchair.command.R as CommandR
 import app.lawnchair.theme.LauncherGround
 import app.lawnchair.theme.color.tokens.PhosphorColorToken
 import app.lawnchair.ui.theme.LawnchairTheme
@@ -835,7 +836,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                                 .horizontalScroll(rememberScrollState()),
                             horizontalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
-                            val recentKind = stringResource(R.string.cmd_kind_recent)
+                            val recentKind = stringResource(CommandR.string.cmd_kind_recent)
                             chips.forEach { chip ->
                                 Row(
                                     Modifier
@@ -1012,7 +1013,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                 ) {
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Label(
-                            stringResource(R.string.cmd_ai_title) + " · " + extras.ai?.substringBefore(" · ")?.uppercase().orEmpty(),
+                            stringResource(CommandR.string.cmd_ai_title) + " · " + extras.ai?.substringBefore(" · ")?.uppercase().orEmpty(),
                             dim,
                             10.sp,
                             Modifier.weight(1f).padding(horizontal = 8.dp, vertical = 5.dp),
@@ -1197,7 +1198,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                     val note = aiNote?.takeIf { it.first == text.trim() && it.second.isNotEmpty() }?.second
                     if (done == null && note != null) {
                         Text(
-                            stringResource(R.string.cmd_ai_title) + " › " + note,
+                            stringResource(CommandR.string.cmd_ai_title) + " › " + note,
                             color = dim,
                             fontFamily = mono(),
                             fontSize = 11.sp,
@@ -1226,7 +1227,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                             .border(1.dp, line)
                             .padding(horizontal = 10.dp, vertical = 7.dp),
                     ) {
-                        Label(stringResource(R.string.cmd_help) + " · " + help.title, dim, 10.sp)
+                        Label(stringResource(CommandR.string.cmd_help) + " · " + help.title, dim, 10.sp)
                         Text(
                             help.text,
                             color = dim,

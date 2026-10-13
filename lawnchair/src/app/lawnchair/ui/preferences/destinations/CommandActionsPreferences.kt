@@ -83,6 +83,7 @@ import app.lawnchair.command.CustomAction
 import app.lawnchair.command.CustomActionStore
 import app.lawnchair.command.CustomActions
 import app.lawnchair.command.ImportCommandsActivity
+import app.lawnchair.command.R as CommandR
 import app.lawnchair.command.StatsStore
 import app.lawnchair.command.TaskApp
 import app.lawnchair.command.Tone
@@ -377,7 +378,7 @@ fun CommandActionsPreferences() {
     sharing?.let { mode ->
         SelectCommandsDialog(
             title = stringResource(
-                if (mode == ShareMode.Share) R.string.cmd_pref_share_title else R.string.cmd_pref_export_title,
+                if (mode == ShareMode.Share) CommandR.string.cmd_pref_share_title else R.string.cmd_pref_export_title,
             ),
             actions = actions,
             aliases = aliases,

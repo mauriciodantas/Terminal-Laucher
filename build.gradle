@@ -406,6 +406,7 @@ dependencies {
     withQuickstepImplementation projects.concurrent
 //    withQuickstepImplementation projects.compose
     withQuickstepImplementation projects.modules.widgetpicker
+    lawnImplementation projects.commands
     implementation libs.androidx.dynamicanimation
 
     implementation fileTree(dir: FRAMEWORK_PREBUILTS_DIR, include: 'SystemUI-statsd-16.jar')
@@ -512,7 +513,7 @@ spotless {
         removeUnusedImports()
     }
     kotlin {
-        target("lawnchair/src/**/*.kt")
+        target("lawnchair/src/**/*.kt", "commands/src/**/*.kt")
         ktlint(libs.ktlint.get().version).customRuleSets([
             libs.composeRules.get().toString()
         ]).editorConfigOverride([
