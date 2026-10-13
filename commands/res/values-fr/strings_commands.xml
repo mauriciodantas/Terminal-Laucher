@@ -366,4 +366,6 @@
     <string name="cmd_ai_theme_empty">DÉCRIVEZ LE THÈME · OU ENTRÉE POUR UNE SURPRISE</string>
     <string name="cmd_ai_word_theme">thème</string>
     <string name="cmd_ai_mode_theme">THÈME</string>
+    <string name="cmd_phone_title">NUMÉRO DE TÉLÉPHONE · CHOISISSEZ CI-DESSOUS</string>
+    <string name="cmd_list_options">OPTIONS</string>
 </resources>

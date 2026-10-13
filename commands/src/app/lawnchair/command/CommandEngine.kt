@@ -170,6 +170,23 @@ object CommandEngine {
 
     private val splitter = Regex("^(\\S*)(\\s+(.*))?$", RegexOption.DOT_MATCHES_ALL)
 
+    private val AMBIGUOUS_SUM = Regex("^\\d{4}-\\d{4}$")
+    private val numberStart = Regex("^[-+]?\\(*[\\d.,]")
+    private val mathOnly = Regex("^[\\d\\s.,()+\\-*/%]+$")
+    private val operator = Regex("[+\\-*/%]")
+
+    /**
+     * "12*3+4", "(2+3)/4", "50%" or "5 km em mi": starts with a number and is either made of math
+     * signs only, with an operator after the first character (a bare "42" or "-5" is not a sum), or
+     * a conversion. A sum still being typed ("12*") counts too, so the preview stays on calc.
+     */
+    fun looksLikeCalc(text: String, rates: CurrencyRates? = null): Boolean {
+        val t = text.trim()
+        if (!numberStart.containsMatchIn(t) || t.none { it.isDigit() }) return false
+        if (mathOnly.matches(t)) return operator.containsMatchIn(t.drop(1))
+        return Conversions.convert(t, rates) != null || (rates == null && Conversions.needsRates(t))
+    }
+
     fun analyze(
         typed: String,
         apps: List<AppEntry>,
@@ -274,6 +291,14 @@ object CommandEngine {
 
         // A web address on its own opens the site; anything else the bar does not know is still searched.
         WebAddress.of(text)?.let { return analyzeUrl(it) }
+        // A phone number typed bare offers a call and the messaging actions that take a contact.
+        if (custom.none { it.letter == token } && BuiltInCommand.of(token) == null) {
+            PhoneNumber.of(text)?.let { return analyzePhone(it, custom) }
+        }
+        // A sum or a conversion typed bare is calc, as if "calc " came before it.
+        if (custom.none { it.letter == token } && BuiltInCommand.of(token) == null && looksLikeCalc(text, extras.rates)) {
+            return analyzeCalc(text, extras.rates)
+        }
         if (!hasArg) {
             if (token == "?") return analyzeHelp(custom, aliases, extras)
             if (token.length > 1 && token.endsWith("?")) {
@@ -293,6 +318,26 @@ object CommandEngine {
             ?.let { analyzeCustom(it, arg, contacts, contactsGranted, extras) }
             ?: analyzeOpen(text.trim(), apps).takeIf { it.action != null }
             ?: unknown(text)
+    }
+
+    /** The ways to reach [number]: a call, each action that takes a contact and, for "2000-1500", the sum. */
+    private fun analyzePhone(number: String, custom: List<CustomAction>): Analysis {
+        val option = Texts.get(R.string.cmd_kind_option)
+        val call = Suggestion("${BuiltInCommand.CALL.word} $number", BuiltInCommand.CALL.word.uppercase(), option)
+        val messages = custom.filter { it.arg == ArgKind.CONTACT || it.arg == ArgKind.CONTACT_AND_TEXT }
+            .map { Suggestion("${it.letter} $number", it.label.uppercase(), option) }
+        // Only "2000-1500" reads as much like a sum as a phone; "99999-9999" or "(11) ..." do not.
+        val sum = number.takeIf { AMBIGUOUS_SUM.matches(it) }?.let { CalcEvaluator.evaluate(it) }
+            ?.let { Suggestion("${BuiltInCommand.CALC.word} $number", "= " + CalcEvaluator.format(it), option) }
+        return Analysis(
+            suggestions = listOf(call) + messages + listOfNotNull(sum),
+            listTitle = Texts.get(R.string.cmd_list_options),
+            needsContacts = false,
+            previewTitle = Texts.get(R.string.cmd_phone_title),
+            preview = number,
+            tone = Tone.OK,
+            action = null,
+        )
     }
 
     private fun analyzeUrl(url: String): Analysis = Analysis(
@@ -700,6 +745,18 @@ object CommandEngine {
         title: String,
         build: (ContactEntry) -> CommandAction,
     ): Analysis {
+        // A number typed in place of a name is used as it is, without the contacts permission.
+        PhoneNumber.of(arg)?.let { number ->
+            return Analysis(
+                suggestions = emptyList(),
+                listTitle = Texts.get(R.string.cmd_list_contacts),
+                needsContacts = false,
+                previewTitle = title,
+                preview = number,
+                tone = Tone.OK,
+                action = build(ContactEntry(number, number)),
+            )
+        }
         if (!granted) return needsContactsAnalysis()
         val q = arg.trim().foldAccents()
         val matches = contacts.filter { c ->
@@ -846,6 +903,19 @@ object CommandEngine {
         contacts: List<ContactEntry>,
         granted: Boolean,
     ): Analysis {
+        // A number typed in place of a name is used as it is, without the contacts permission.
+        PhoneNumber.split(arg)?.let { (number, rawMessage) ->
+            val message = cleanMessage(rawMessage)
+            return Analysis(
+                suggestions = emptyList(),
+                listTitle = Texts.get(R.string.cmd_list_contacts),
+                needsContacts = false,
+                previewTitle = Texts.get(R.string.cmd_action_to, action.label.uppercase()),
+                preview = if (message.isEmpty()) number else "$number · “$message”",
+                tone = Tone.OK,
+                action = CommandAction.Custom(action, ContactEntry(number, number), message),
+            )
+        }
         if (!granted) return needsContactsAnalysis()
         val (name, rawMessage) = splitNameAndMessage(arg, contacts)
         val message = cleanMessage(rawMessage)

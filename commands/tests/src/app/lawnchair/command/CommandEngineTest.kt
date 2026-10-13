@@ -229,6 +229,60 @@ class CommandEngineTest {
         assertEquals("DIGITE UMA CONTA (EX.: 12*8)", run("calc ").preview)
     }
 
+    @Test fun aSumTypedBareIsCalc() {
+        assertEquals(CommandAction.Calc("12*3+4", "40"), run("12*3+4").action)
+        assertEquals(CommandAction.Calc("(2+3)/4", "1,25"), run(" (2+3)/4 ").action)
+        assertEquals(CommandAction.Calc("50%", "0,5"), run("50%").action)
+        assertEquals(CommandAction.Calc("-2*3", "-6"), run("-2*3").action)
+        assertEquals("1,5 + 2 = 3,5", run("1,5 + 2").preview)
+    }
+
+    @Test fun aSumStillBeingTypedStaysOnCalc() {
+        assertEquals("EXPRESSÃO INCOMPLETA", run("12*").preview)
+        assertNull(run("12*").action)
+    }
+
+    @Test fun aConversionTypedBareIsCalc() {
+        assertEquals("34,5", (run("15% de 230").action as CommandAction.Calc).result)
+        assertEquals("1000", (run("1 km em m").action as CommandAction.Calc).result)
+    }
+
+    @Test fun aBareNumberOrTextIsNotCalc() {
+        listOf("42", "-5", "3,5", "1.1.1.1", "abrir camera", "9gag", "a+b", "?").forEach {
+            assertFalse(it, CommandEngine.looksLikeCalc(it))
+        }
+        assertFalse(run("42").action is CommandAction.Calc)
+        assertTrue(run("1.1.1.1").action is CommandAction.OpenUrl)
+    }
+
+    @Test fun aPhoneTypedBareOffersCallAndWhatsapp() {
+        val a = run("99999-9999")
+        assertNull(a.action)
+        assertEquals("99999-9999", a.preview)
+        assertEquals("NÚMERO DE TELEFONE · ESCOLHA ABAIXO", a.previewTitle)
+        assertEquals(listOf("ligar 99999-9999", "w 99999-9999"), a.suggestions.map { it.completion })
+        assertEquals(listOf("LIGAR", "WHATSAPP"), a.suggestions.map { it.label })
+    }
+
+    @Test fun aPhoneThatIsAlsoASumOffersTheSumToo() {
+        assertEquals("calc 2000-1500", run("2000-1500").suggestions.last().completion)
+        assertEquals("= 500", run("2000-1500").suggestions.last().label)
+    }
+
+    @Test fun callTakesANumberWithoutContacts() {
+        val a = run("ligar (11) 99999-9999", granted = false)
+        assertEquals(CommandAction.Call(ContactEntry("(11) 99999-9999", "(11) 99999-9999")), a.action)
+        assertEquals("(11) 99999-9999", a.preview)
+    }
+
+    @Test fun whatsappTakesANumberAndAMessage() {
+        val a = run("w 11 99999-9999 chego logo", granted = false)
+        val action = a.action as CommandAction.Custom
+        assertEquals("11 99999-9999", action.contact?.number)
+        assertEquals("chego logo", action.text)
+        assertEquals(CustomActions.WHATSAPP, action.action)
+    }
+
     // ---- t / rota / unknown ----
 
     @Test fun taskNeedsATitle() {
