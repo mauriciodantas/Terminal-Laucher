@@ -170,23 +170,6 @@ object CommandEngine {
 
     private val splitter = Regex("^(\\S*)(\\s+(.*))?$", RegexOption.DOT_MATCHES_ALL)
 
-    private val AMBIGUOUS_SUM = Regex("^\\d{4}-\\d{4}$")
-    private val numberStart = Regex("^[-+]?\\(*[\\d.,]")
-    private val mathOnly = Regex("^[\\d\\s.,()+\\-*/%]+$")
-    private val operator = Regex("[+\\-*/%]")
-
-    /**
-     * "12*3+4", "(2+3)/4", "50%" or "5 km em mi": starts with a number and is either made of math
-     * signs only, with an operator after the first character (a bare "42" or "-5" is not a sum), or
-     * a conversion. A sum still being typed ("12*") counts too, so the preview stays on calc.
-     */
-    fun looksLikeCalc(text: String, rates: CurrencyRates? = null): Boolean {
-        val t = text.trim()
-        if (!numberStart.containsMatchIn(t) || t.none { it.isDigit() }) return false
-        if (mathOnly.matches(t)) return operator.containsMatchIn(t.drop(1))
-        return Conversions.convert(t, rates) != null || (rates == null && Conversions.needsRates(t))
-    }
-
     fun analyze(
         typed: String,
         apps: List<AppEntry>,
@@ -196,20 +179,10 @@ object CommandEngine {
         aliases: List<CommandAlias> = emptyList(),
         extras: CommandExtras = CommandExtras(),
     ): Analysis {
-        val ctx = Ctx(apps, contacts, contactsGranted, custom, aliases, extras)
+        val ctx = CommandContext(apps, contacts, contactsGranted, custom, aliases, extras)
         val analysis = analyzeLine(typed, ctx, 0).copy(help = CommandHelp.of(typed, custom, aliases))
         return analysis.action?.let { analysis.copy(intent = describe(it)) } ?: analysis
     }
-
-    /** Everything a line is analyzed against. */
-    private data class Ctx(
-        val apps: List<AppEntry>,
-        val contacts: List<ContactEntry>,
-        val contactsGranted: Boolean,
-        val custom: List<CustomAction>,
-        val aliases: List<CommandAlias>,
-        val extras: CommandExtras,
-    )
 
     /** How deep aliases that hold chains may nest before the bar stops expanding them. */
     private const val MAX_DEPTH = 4
@@ -218,7 +191,7 @@ object CommandEngine {
      * A whole line: "!!" repeats the last command, an alias stands for its command, "em 30m: ..."
      * schedules what follows and ";" chains several commands.
      */
-    private fun analyzeLine(typed: String, ctx: Ctx, depth: Int): Analysis {
+    private fun analyzeLine(typed: String, ctx: CommandContext, depth: Int): Analysis {
         if (typed.trim() == BuiltInCommand.REPEAT) {
             val last = ctx.extras.history.firstOrNull { it.trim() != BuiltInCommand.REPEAT }
                 ?: return Analysis(
@@ -248,7 +221,7 @@ object CommandEngine {
         return parts.dropLast(1).filter { it.isNotEmpty() } + parts.last()
     }
 
-    private fun analyzeChain(text: String, parts: List<String>, ctx: Ctx, depth: Int): Analysis {
+    private fun analyzeChain(text: String, parts: List<String>, ctx: CommandContext, depth: Int): Analysis {
         val results = parts.map { analyzeLine(it, ctx, depth + 1) }
         // A part the bar does not understand would only search the web: the chain waits for a fix.
         val stuck = results.indexOfFirst { it.action == null || it.tone == Tone.ERROR }
@@ -274,7 +247,7 @@ object CommandEngine {
         )
     }
 
-    private fun analyzeText(typed: String, ctx: Ctx): Analysis {
+    private fun analyzeText(typed: String, ctx: CommandContext): Analysis {
         val apps = ctx.apps
         val contacts = ctx.contacts
         val contactsGranted = ctx.contactsGranted
@@ -289,15 +262,13 @@ object CommandEngine {
         val hasArg = m != null && m.groups[2] != null
         val arg = if (hasArg) m?.groups?.get(3)?.value.orEmpty() else ""
 
-        // A web address on its own opens the site; anything else the bar does not know is still searched.
-        WebAddress.of(text)?.let { return analyzeUrl(it) }
-        // A phone number typed bare offers a call and the messaging actions that take a contact.
-        if (custom.none { it.letter == token } && BuiltInCommand.of(token) == null) {
-            PhoneNumber.of(text)?.let { return analyzePhone(it, custom) }
-        }
-        // A sum or a conversion typed bare is calc, as if "calc " came before it.
-        if (custom.none { it.letter == token } && BuiltInCommand.of(token) == null && looksLikeCalc(text, extras.rates)) {
-            return analyzeCalc(text, extras.rates)
+        // Text no command word starts: the commands that recognize it, one runs and several are listed.
+        val registry = CommandRegistry.of(custom)
+        val named = registry.named(token)
+        if (named == null) {
+            val applicable = registry.applicable(text, ctx)
+            if (applicable.size == 1) return applicable.single().analyzeMatch(text, ctx)
+            if (applicable.size > 1) return analyzeOptions(text, applicable, ctx)
         }
         if (!hasArg) {
             if (token == "?") return analyzeHelp(custom, aliases, extras)
@@ -305,53 +276,30 @@ object CommandEngine {
                 MoreCommands.contactInfo(text.trim().dropLast(1), contacts, contactsGranted)?.let { return it }
                 if (!contactsGranted) return needsContactsAnalysis()
             }
-            val bare = custom.firstOrNull { it.letter == token && it.arg == ArgKind.NONE }
-            if (bare != null) return analyzeCustom(bare, "", contacts, contactsGranted, extras)
-            BuiltInCommand.of(token)?.takeIf { it.runsBare }?.let { return analyzeBuiltIn(it, "", ctx) }
+            if (named != null && !named.requiresArgument) return named.analyze("", ctx)
             return analyzeCommandName(text, token, apps, custom, aliases, extras)
         }
-
-        if (token == BuiltInCommand.TASK) return analyzeTask(arg, ctx.extras.taskApp)
-        val command = BuiltInCommand.of(token)
-        if (command != null) return analyzeBuiltIn(command, arg, ctx)
-        return custom.firstOrNull { it.letter == token }
-            ?.let { analyzeCustom(it, arg, contacts, contactsGranted, extras) }
+        return named?.analyze(arg, ctx)
             ?: analyzeOpen(text.trim(), apps).takeIf { it.action != null }
             ?: unknown(text)
     }
 
-    /** The ways to reach [number]: a call, each action that takes a contact and, for "2000-1500", the sum. */
-    private fun analyzePhone(number: String, custom: List<CustomAction>): Analysis {
-        val option = Texts.get(R.string.cmd_kind_option)
-        val call = Suggestion("${BuiltInCommand.CALL.word} $number", BuiltInCommand.CALL.word.uppercase(), option)
-        val messages = custom.filter { it.arg == ArgKind.CONTACT || it.arg == ArgKind.CONTACT_AND_TEXT }
-            .map { Suggestion("${it.letter} $number", it.label.uppercase(), option) }
-        // Only "2000-1500" reads as much like a sum as a phone; "99999-9999" or "(11) ..." do not.
-        val sum = number.takeIf { AMBIGUOUS_SUM.matches(it) }?.let { CalcEvaluator.evaluate(it) }
-            ?.let { Suggestion("${BuiltInCommand.CALC.word} $number", "= " + CalcEvaluator.format(it), option) }
-        return Analysis(
-            suggestions = listOf(call) + messages + listOfNotNull(sum),
-            listTitle = Texts.get(R.string.cmd_list_options),
-            needsContacts = false,
-            previewTitle = Texts.get(R.string.cmd_phone_title),
-            preview = number,
-            tone = Tone.OK,
-            action = null,
-        )
-    }
-
-    private fun analyzeUrl(url: String): Analysis = Analysis(
-        suggestions = emptyList(),
-        listTitle = Texts.get(R.string.cmd_list_suggestions),
+    /** Several commands take the same text ("99999-9999": call, WhatsApp): the bar lists them and runs none. */
+    private fun analyzeOptions(text: String, commands: List<Command>, ctx: CommandContext): Analysis = Analysis(
+        suggestions = commands.map { it.option(text, ctx) },
+        listTitle = Texts.get(R.string.cmd_list_options),
         needsContacts = false,
-        previewTitle = Texts.get(R.string.cmd_url_title),
-        preview = url.substringAfter("://").removeSuffix("/"),
+        previewTitle = Texts.get(R.string.cmd_options_title),
+        preview = text.trim(),
         tone = Tone.OK,
-        action = CommandAction.OpenUrl(url),
+        action = null,
     )
 
+    /** The kind shown next to each option when several commands take the same text. */
+    fun optionKind(): String = Texts.get(R.string.cmd_kind_option)
+
     /** A line the bar does not understand: Enter searches it on the web. */
-    private fun unknown(text: String): Analysis = Analysis(
+    internal fun unknown(text: String): Analysis = Analysis(
         suggestions = emptyList(),
         listTitle = Texts.get(R.string.cmd_list_suggestions),
         needsContacts = false,
@@ -381,76 +329,43 @@ object CommandEngine {
         )
     }
 
-    private fun analyzeBuiltIn(command: BuiltInCommand, arg: String, ctx: Ctx): Analysis {
+    internal fun analyzeBuiltIn(command: BuiltInCommand, arg: String, ctx: CommandContext): Analysis {
         val apps = ctx.apps
         val contacts = ctx.contacts
         val contactsGranted = ctx.contactsGranted
         val extras = ctx.extras
         return when (command) {
             BuiltInCommand.OPEN -> analyzeOpen(arg, apps)
-
-            BuiltInCommand.CALL -> analyzeContact(arg, contacts, contactsGranted, BuiltInCommand.CALL.word, Texts.get(R.string.cmd_call_title)) {
-                CommandAction.Call(it)
-            }
-
+            BuiltInCommand.CALL -> CallCommand.analyze(arg, ctx)
             BuiltInCommand.ALARM -> analyzeAlarm(arg)
-
-            BuiltInCommand.CALC -> analyzeCalc(arg, extras.rates)
-
+            BuiltInCommand.CALC -> CalcCommand.analyze(arg, ctx)
             BuiltInCommand.ROUTE -> analyzeRoute(arg)
-
             BuiltInCommand.SPLIT -> analyzeSplit(arg, apps)
-
             BuiltInCommand.THEME -> ThemeCommand.analyze(arg, extras)
-
             BuiltInCommand.TIMER -> MoreCommands.timer(arg)
-
             BuiltInCommand.REMIND -> MoreCommands.remind(arg, extras)
-
             BuiltInCommand.WIFI -> MoreCommands.toggle(command, SystemToggle.WIFI, arg)
-
             BuiltInCommand.BLUETOOTH -> MoreCommands.toggle(command, SystemToggle.BLUETOOTH, arg)
-
             BuiltInCommand.TORCH -> MoreCommands.toggle(command, SystemToggle.TORCH, arg)
-
             BuiltInCommand.DND -> MoreCommands.toggle(command, SystemToggle.DND, arg)
-
             BuiltInCommand.ROTATION -> MoreCommands.toggle(command, SystemToggle.ROTATION, arg)
-
             BuiltInCommand.BRIGHTNESS -> MoreCommands.brightness(arg)
-
             BuiltInCommand.VOLUME -> MoreCommands.volume(arg)
-
             BuiltInCommand.PLAY -> MoreCommands.media(MediaKey.PLAY)
-
             BuiltInCommand.PAUSE -> MoreCommands.media(MediaKey.PAUSE)
-
             BuiltInCommand.NEXT -> MoreCommands.media(MediaKey.NEXT)
-
             BuiltInCommand.PREVIOUS -> MoreCommands.media(MediaKey.PREVIOUS)
-
             BuiltInCommand.COPY -> MoreCommands.copy(arg)
-
             BuiltInCommand.PASTE -> MoreCommands.paste(extras)
-
             BuiltInCommand.SETTINGS -> MoreCommands.settings(arg)
-
             BuiltInCommand.AGENDA -> MoreCommands.agenda(extras)
-
             BuiltInCommand.NOTE -> MoreCommands.note(arg, extras)
-
             BuiltInCommand.SCHEDULED -> MoreCommands.scheduled(extras)
-
             BuiltInCommand.CANCEL -> MoreCommands.cancel(arg, extras)
-
             BuiltInCommand.BATTERY, BuiltInCommand.STORAGE, BuiltInCommand.IP, BuiltInCommand.UPTIME -> MoreCommands.info(command, extras)
-
             BuiltInCommand.PING -> MoreCommands.ping(arg)
-
             BuiltInCommand.NETWORK -> MoreCommands.network(extras)
-
             BuiltInCommand.FAST -> MoreCommands.fast(extras)
-
             BuiltInCommand.AI -> MoreCommands.ai(arg, extras)
         }
     }
@@ -737,7 +652,7 @@ object CommandEngine {
         )
     }
 
-    private fun analyzeContact(
+    internal fun analyzeContact(
         arg: String,
         contacts: List<ContactEntry>,
         granted: Boolean,
@@ -849,7 +764,7 @@ object CommandEngine {
 
     private val PLACEHOLDERS = setOf("{number}", "{phone}", "{name}", "{text}")
 
-    private fun analyzeCustom(
+    internal fun analyzeCustom(
         unfilled: CustomAction,
         arg: String,
         contacts: List<ContactEntry>,
@@ -984,63 +899,6 @@ object CommandEngine {
             preview = label?.let { Texts.get(R.string.cmd_alarm_next, it) } ?: Texts.get(R.string.cmd_alarm_empty),
             tone = if (label != null) Tone.OK else Tone.IDLE,
             action = time?.let { CommandAction.SetAlarm(it.first, it.second, days) },
-        )
-    }
-
-    private fun analyzeCalc(arg: String, rates: CurrencyRates? = null): Analysis {
-        val expression = arg.trim()
-        val value = if (expression.isEmpty()) null else CalcEvaluator.evaluate(expression)
-        if (value == null && expression.isNotEmpty()) {
-            Conversions.convert(expression, rates)?.let { converted ->
-                return Analysis(
-                    suggestions = emptyList(),
-                    listTitle = Texts.get(R.string.cmd_list_expression),
-                    needsContacts = false,
-                    previewTitle = Texts.get(R.string.cmd_calc_title),
-                    preview = converted.shown,
-                    tone = Tone.OK,
-                    action = CommandAction.Calc(expression, converted.result),
-                )
-            }
-            if (rates == null && Conversions.needsRates(expression)) {
-                return Analysis(
-                    suggestions = emptyList(),
-                    listTitle = Texts.get(R.string.cmd_list_expression),
-                    needsContacts = false,
-                    previewTitle = Texts.get(R.string.cmd_calc_title),
-                    preview = Conversions.ratesPending(),
-                    tone = Tone.WARN,
-                    action = null,
-                )
-            }
-        }
-        val result = value?.let { CalcEvaluator.format(it) }
-        return Analysis(
-            suggestions = emptyList(),
-            listTitle = Texts.get(R.string.cmd_list_expression),
-            needsContacts = false,
-            previewTitle = Texts.get(R.string.cmd_calc_title),
-            preview = when {
-                result != null -> "$expression = $result"
-                expression.isEmpty() -> Texts.get(R.string.cmd_calc_empty)
-                else -> Texts.get(R.string.cmd_calc_incomplete)
-            },
-            tone = if (result != null) Tone.OK else Tone.IDLE,
-            action = result?.let { CommandAction.Calc(expression, it) },
-        )
-    }
-
-    /** [app] is the tasks app picked before; with none, the system list asks once. */
-    private fun analyzeTask(arg: String, app: String?): Analysis {
-        val title = arg.trim()
-        return Analysis(
-            suggestions = emptyList(),
-            listTitle = Texts.get(R.string.cmd_task_list),
-            needsContacts = false,
-            previewTitle = if (app == null) Texts.get(R.string.cmd_task_title) else Texts.get(R.string.cmd_task_title_app, app.uppercase()),
-            preview = if (title.isEmpty()) Texts.get(R.string.cmd_task_empty) else title.uppercase(),
-            tone = if (title.isEmpty()) Tone.IDLE else Tone.OK,
-            action = title.takeIf { it.isNotEmpty() }?.let { CommandAction.NewTask(it) },
         )
     }
 

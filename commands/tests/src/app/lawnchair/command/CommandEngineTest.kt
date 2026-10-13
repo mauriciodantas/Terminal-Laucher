@@ -249,7 +249,7 @@ class CommandEngineTest {
 
     @Test fun aBareNumberOrTextIsNotCalc() {
         listOf("42", "-5", "3,5", "1.1.1.1", "abrir camera", "9gag", "a+b", "?").forEach {
-            assertFalse(it, CommandEngine.looksLikeCalc(it))
+            assertFalse(it, CalcCommand.looksLikeCalc(it))
         }
         assertFalse(run("42").action is CommandAction.Calc)
         assertTrue(run("1.1.1.1").action is CommandAction.OpenUrl)
@@ -259,7 +259,7 @@ class CommandEngineTest {
         val a = run("99999-9999")
         assertNull(a.action)
         assertEquals("99999-9999", a.preview)
-        assertEquals("NÚMERO DE TELEFONE · ESCOLHA ABAIXO", a.previewTitle)
+        assertEquals("ESCOLHA ABAIXO O QUE FAZER", a.previewTitle)
         assertEquals(listOf("ligar 99999-9999", "w 99999-9999"), a.suggestions.map { it.completion })
         assertEquals(listOf("LIGAR", "WHATSAPP"), a.suggestions.map { it.label })
     }

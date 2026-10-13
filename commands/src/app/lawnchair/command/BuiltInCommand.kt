@@ -59,8 +59,8 @@ enum class BuiltInCommand(
     /** Every word that runs this command, accent-folded like the typed token. */
     fun words(): Set<String> = setOf(word, portuguese, english, short).filter { it.isNotEmpty() }.map { it.foldAccents() }.toSet()
 
-    /** Runs typed alone, with nothing after the word: "lanterna", "agenda", "bateria". */
-    val runsBare: Boolean get() = this in BARE
+    /** Without an argument the command does not run: "abrir" or "calc" alone are only completed. "lanterna" runs alone. */
+    val requiresArgument: Boolean get() = this !in RUN_ALONE
 
     companion object {
         /** One-letter shortcuts, the same in every language: a new task and calc. */
@@ -70,7 +70,8 @@ enum class BuiltInCommand(
         /** Typed twice, the last command runs again. */
         const val REPEAT = "!!"
 
-        private val BARE = setOf(
+        /** Run typed alone, with nothing after the word: "lanterna", "agenda", "bateria". */
+        private val RUN_ALONE = setOf(
             TORCH, DND, ROTATION, WIFI, BLUETOOTH, PLAY, PAUSE, NEXT, PREVIOUS, PASTE, SETTINGS, AGENDA, NOTE, SCHEDULED,
             BATTERY, STORAGE, IP, UPTIME, NETWORK, FAST, BRIGHTNESS, THEME, AI,
         )
