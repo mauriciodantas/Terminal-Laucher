@@ -141,6 +141,7 @@
     <string name="cmd_pref_letter_label">字母</string>
     <string name="cmd_pref_letter_title">動作字母</string>
     <string name="cmd_pref_name_label">名稱</string>
+    <string name="cmd_pref_used">已使用 %1$d 次</string>
     <string name="cmd_pref_pattern_label">模式（選用）</string>
     <string name="cmd_pref_pattern_hint">規則運算式：單獨輸入且符合的文字會執行此動作。例如 [A-Z]{2}\\d{9}BR</string>
     <string name="cmd_pref_sms_fallback">未安裝 %1$s：開啟簡訊</string>

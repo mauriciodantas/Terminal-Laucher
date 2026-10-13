@@ -141,6 +141,7 @@
     <string name="cmd_pref_letter_label">الحرف</string>
     <string name="cmd_pref_letter_title">حرف الإجراء</string>
     <string name="cmd_pref_name_label">الاسم</string>
+    <string name="cmd_pref_used">استُخدم %1$d×</string>
     <string name="cmd_pref_pattern_label">نمط (اختياري)</string>
     <string name="cmd_pref_pattern_hint">تعبير نمطي: النص المكتوب وحده الذي يطابقه يشغّل هذا الإجراء. مثال: [A-Z]{2}\\d{9}BR</string>
     <string name="cmd_pref_sms_fallback">%1$s غير مثبّت: سيتم فتح الرسائل القصيرة</string>

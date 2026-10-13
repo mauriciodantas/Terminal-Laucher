@@ -141,6 +141,7 @@
     <string name="cmd_pref_letter_label">Letter</string>
     <string name="cmd_pref_letter_title">Letter van de actie</string>
     <string name="cmd_pref_name_label">Naam</string>
+    <string name="cmd_pref_used">%1$d× gebruikt</string>
     <string name="cmd_pref_pattern_label">Patroon (optioneel)</string>
     <string name="cmd_pref_pattern_hint">Een reguliere expressie: los getypte tekst die erop past, start deze actie. Bijv. [A-Z]{2}\\d{9}BR</string>
     <string name="cmd_pref_sms_fallback">%1$s niet geïnstalleerd: opent sms</string>

@@ -141,6 +141,7 @@
     <string name="cmd_pref_letter_label">文字</string>
     <string name="cmd_pref_letter_title">操作の文字</string>
     <string name="cmd_pref_name_label">名前</string>
+    <string name="cmd_pref_used">%1$d回使用</string>
     <string name="cmd_pref_pattern_label">パターン（任意）</string>
     <string name="cmd_pref_pattern_hint">正規表現：単独で入力したテキストが一致すると、この操作を実行します。例: [A-Z]{2}\\d{9}BR</string>
     <string name="cmd_pref_sms_fallback">%1$s 未インストール: SMS を開きます</string>

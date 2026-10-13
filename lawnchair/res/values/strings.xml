@@ -1218,6 +1218,7 @@
     <string name="cmd_pref_letter_label">Letter</string>
     <string name="cmd_pref_letter_title">Action letter</string>
     <string name="cmd_pref_name_label">Name</string>
+    <string name="cmd_pref_used">used %1$d×</string>
     <string name="cmd_pref_pattern_label">Pattern (optional)</string>
     <string name="cmd_pref_pattern_hint">A regular expression: text typed alone that matches it runs this action. E.g. [A-Z]{2}\\d{9}BR</string>
     <string name="cmd_pref_sms_fallback">%1$s not installed: opens SMS</string>

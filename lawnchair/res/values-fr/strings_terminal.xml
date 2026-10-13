@@ -141,6 +141,7 @@
     <string name="cmd_pref_letter_label">Lettre</string>
     <string name="cmd_pref_letter_title">Lettre de l\'action</string>
     <string name="cmd_pref_name_label">Nom</string>
+    <string name="cmd_pref_used">utilisé %1$d×</string>
     <string name="cmd_pref_pattern_label">Motif (facultatif)</string>
     <string name="cmd_pref_pattern_hint">Une expression régulière : le texte saisi seul qui y correspond lance cette action. Ex. : [A-Z]{2}\\d{9}BR</string>
     <string name="cmd_pref_sms_fallback">%1$s non installé : ouvre les SMS</string>

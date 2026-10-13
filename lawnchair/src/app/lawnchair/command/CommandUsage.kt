@@ -1,6 +1,8 @@
 package app.lawnchair.command
 
 import android.content.Context
+import app.lawnchair.util.Texts
+import com.android.launcher3.R
 import org.json.JSONObject
 
 /** How many times each action letter and alias was run, to show in settings and clear out dead ones. */
@@ -38,6 +40,6 @@ object CommandUsage {
             .putString(KEY, JSONObject(counts as Map<*, *>).toString()).apply()
     }
 
-    /** "usado 14×", or an empty string when it never ran. */
-    fun label(counts: Map<String, Int>, key: String): String = counts[key]?.takeIf { it > 0 }?.let { "usado $it×" }.orEmpty()
+    /** "used 14×" in the app language, or an empty string when it never ran. */
+    fun label(counts: Map<String, Int>, key: String): String = counts[key]?.takeIf { it > 0 }?.let { Texts.get(R.string.cmd_pref_used, it) }.orEmpty()
 }

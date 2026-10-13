@@ -141,6 +141,7 @@
     <string name="cmd_pref_letter_label">अक्षर</string>
     <string name="cmd_pref_letter_title">कार्रवाई का अक्षर</string>
     <string name="cmd_pref_name_label">नाम</string>
+    <string name="cmd_pref_used">%1$d× इस्तेमाल</string>
     <string name="cmd_pref_pattern_label">पैटर्न (वैकल्पिक)</string>
     <string name="cmd_pref_pattern_hint">एक रेगुलर एक्सप्रेशन: अकेले लिखा गया जो टेक्स्ट इससे मेल खाए, वह यह कार्रवाई चलाता है। उदा. [A-Z]{2}\\d{9}BR</string>
     <string name="cmd_pref_sms_fallback">%1$s इंस्टॉल नहीं है: SMS खुलेगा</string>
