@@ -10,9 +10,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -78,8 +81,7 @@ private enum class EditorTab { ACTION, ALIAS }
 
 /** A list the editor opens over itself to fill the form. */
 private sealed interface EditorPicker {
-    data object Recipes : EditorPicker
-    data object Apps : EditorPicker
+    data object Templates : EditorPicker
     data class Functions(val app: AppEntry) : EditorPicker
     data object Package : EditorPicker
 }
@@ -336,40 +338,15 @@ internal fun CommandEditor(
     when (val p = picker) {
         null -> Unit
 
-        EditorPicker.Recipes -> PickerDialog(
-            title = stringResource(R.string.cmd_pref_recipes),
-            items = CustomActions.CATALOG,
-            label = { "${it.label} · ${it.usage.substringBefore(" ·")}" },
-            onPick = {
+        EditorPicker.Templates -> TemplatePicker(
+            apps = apps,
+            onRecipe = {
                 fill(it)
                 picker = null
             },
+            onApp = { picker = EditorPicker.Functions(it) },
             onDismiss = { picker = null },
         )
-
-        EditorPicker.Apps -> {
-            // Scanning every installed app takes a moment, so it runs off the main thread.
-            val integrationApps by produceState<List<AppEntry>?>(initialValue = null) {
-                value = withContext(Dispatchers.Default) { CommandExecutor.loadIntegrationApps(context) }
-            }
-            val list = integrationApps
-            if (list.isNullOrEmpty()) {
-                AlertDialog(
-                    onDismissRequest = { picker = null },
-                    confirmButton = { TextButton(onClick = { picker = null }) { Text(stringResource(R.string.cmd_pref_close)) } },
-                    title = { Text(stringResource(R.string.cmd_pref_apps_title)) },
-                    text = { Text(stringResource(if (list == null) R.string.cmd_pref_searching_apps else R.string.cmd_pref_no_integrations)) },
-                )
-            } else {
-                PickerDialog(
-                    title = stringResource(R.string.cmd_pref_apps_title),
-                    items = list,
-                    label = { it.label },
-                    onPick = { picker = EditorPicker.Functions(it) },
-                    onDismiss = { picker = null },
-                )
-            }
-        }
 
         is EditorPicker.Functions -> {
             val pkg = ComponentName.unflattenFromString(p.app.id)?.packageName.orEmpty()
@@ -377,7 +354,7 @@ internal fun CommandEditor(
             if (found.isEmpty()) {
                 AlertDialog(
                     onDismissRequest = { picker = null },
-                    confirmButton = { TextButton(onClick = { picker = EditorPicker.Apps }) { Text(stringResource(R.string.cmd_pref_back)) } },
+                    confirmButton = { TextButton(onClick = { picker = EditorPicker.Templates }) { Text(stringResource(R.string.cmd_pref_back)) } },
                     title = { Text(p.app.label) },
                     text = { Text(stringResource(R.string.cmd_pref_no_functions)) },
                 )
@@ -454,19 +431,8 @@ private fun ActionForm(
         label = { Text(stringResource(R.string.cmd_pref_name_label)) },
         modifier = Modifier.fillMaxWidth(),
     )
-    Text(
-        stringResource(R.string.cmd_pref_start_from),
-        style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(top = 12.dp),
-    )
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
-        OutlinedButton(onClick = { onPick(EditorPicker.Recipes) }, modifier = Modifier.weight(1f)) {
-            Text(stringResource(R.string.cmd_pref_recipes), maxLines = 1)
-        }
-        OutlinedButton(onClick = { onPick(EditorPicker.Apps) }, modifier = Modifier.weight(1f)) {
-            Text(stringResource(R.string.cmd_pref_app_functions), maxLines = 1)
-        }
+    OutlinedButton(onClick = { onPick(EditorPicker.Templates) }, modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
+        Text(stringResource(R.string.cmd_pref_start_template))
     }
     if (shortcut) {
         // An app's launcher shortcut has no link to edit: it is the shortcut of that app.
@@ -550,6 +516,64 @@ private fun ActionForm(
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
         )
     }
+}
+
+/**
+ * One list to start from: the ready-made recipes of the apps that are installed (and SMS, which
+ * belongs to no app) first, then every app with something to bind, whose functions open next.
+ */
+@Composable
+private fun TemplatePicker(apps: List<AppEntry>, onRecipe: (CustomAction) -> Unit, onApp: (AppEntry) -> Unit, onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val installed = remember(apps) { apps.mapNotNull { ComponentName.unflattenFromString(it.id)?.packageName }.toSet() }
+    // A recipe whose app is missing could not open, so it is left out.
+    val suggestions = remember(installed) {
+        CustomActions.CATALOG.filter { recipe -> recipe.packages.isEmpty() || recipe.packages.any { it in installed } }
+    }
+    // Scanning every installed app takes a moment, so it runs off the main thread.
+    val integrationApps by produceState<List<AppEntry>?>(initialValue = null) {
+        value = withContext(Dispatchers.Default) { CommandExecutor.loadIntegrationApps(context) }
+    }
+
+    @Composable
+    fun Header(text: Int) {
+        Text(
+            stringResource(text),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(top = 12.dp, bottom = 4.dp),
+        )
+    }
+
+    @Composable
+    fun Entry(text: String, onClick: () -> Unit) {
+        Text(
+            text,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 12.dp),
+        )
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cmd_pref_cancel)) } },
+        title = { Text(stringResource(R.string.cmd_pref_start_template)) },
+        text = {
+            LazyColumn(Modifier.heightIn(max = 460.dp)) {
+                if (suggestions.isNotEmpty()) {
+                    item { Header(R.string.cmd_pref_suggestions) }
+                    items(suggestions) { recipe -> Entry("${recipe.label} · ${recipe.usage.substringBefore(" ·")}") { onRecipe(recipe) } }
+                }
+                item { Header(R.string.cmd_pref_apps_title) }
+                val list = integrationApps
+                when {
+                    list == null -> item { Text(stringResource(R.string.cmd_pref_searching_apps), style = MaterialTheme.typography.bodySmall) }
+                    list.isEmpty() -> item { Text(stringResource(R.string.cmd_pref_no_integrations), style = MaterialTheme.typography.bodySmall) }
+                    else -> items(list) { app -> Entry(app.label) { onApp(app) } }
+                }
+            }
+        },
+    )
 }
 
 @Composable

@@ -90,8 +90,6 @@
     <string name="cmd_pref_group_backup">백업 및 공유</string>
     <string name="cmd_pref_no_actions">작업 없음</string>
     <string name="cmd_pref_no_match">검색 결과 없음</string>
-    <string name="cmd_pref_recipes">준비된 레시피</string>
-    <string name="cmd_pref_app_functions">앱의 기능</string>
     <string name="cmd_pref_backup">공유, 내보내기 또는 가져오기</string>
     <string name="cmd_pref_backup_hint">작업과 별칭을 파일로 보내거나 .tcmd 파일 열기</string>
     <string name="cmd_pref_share">명령어 공유</string>
@@ -131,13 +129,14 @@
     <string name="cmd_pref_kind_intent">인텐트 ·</string>
     <string name="cmd_pref_letter_label">문자</string>
     <string name="cmd_pref_name_label">이름</string>
+    <string name="cmd_pref_start_template">템플릿으로 시작</string>
+    <string name="cmd_pref_suggestions">추천</string>
     <string name="cmd_pref_new_command">새 명령</string>
     <string name="cmd_pref_new_command_hint">사이트나 앱을 여는 작업 또는 이미 쓰는 명령의 별칭</string>
     <string name="cmd_pref_group_commands">내 명령</string>
     <string name="cmd_pref_edit_command">명령 편집</string>
     <string name="cmd_pref_tab_action">사이트/앱 열기</string>
     <string name="cmd_pref_tab_alias">별칭</string>
-    <string name="cmd_pref_start_from">시작하기</string>
     <string name="cmd_pref_link_label">링크 또는 URI</string>
     <string name="cmd_pref_insert_text">+ 텍스트</string>
     <string name="cmd_pref_insert_name">+ 이름</string>

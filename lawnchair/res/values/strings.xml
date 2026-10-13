@@ -1167,8 +1167,6 @@
     <string name="cmd_pref_group_backup">Backup and sharing</string>
     <string name="cmd_pref_no_actions">No actions</string>
     <string name="cmd_pref_no_match">Nothing matches the search</string>
-    <string name="cmd_pref_recipes">Ready-made recipes</string>
-    <string name="cmd_pref_app_functions">An app\'s functions</string>
     <string name="cmd_pref_backup">Share, export or import</string>
     <string name="cmd_pref_backup_hint">Send actions and aliases as a file or open a .tcmd file</string>
     <string name="cmd_pref_share">Share commands</string>
@@ -1208,13 +1206,14 @@
     <string name="cmd_pref_kind_intent">Intent ·</string>
     <string name="cmd_pref_letter_label">Letter</string>
     <string name="cmd_pref_name_label">Name</string>
+    <string name="cmd_pref_start_template">Start from a template</string>
+    <string name="cmd_pref_suggestions">Suggestions</string>
     <string name="cmd_pref_new_command">New command</string>
     <string name="cmd_pref_new_command_hint">An action that opens a site or an app, or an alias for commands you already use</string>
     <string name="cmd_pref_group_commands">Your commands</string>
     <string name="cmd_pref_edit_command">Edit command</string>
     <string name="cmd_pref_tab_action">Opens site/app</string>
     <string name="cmd_pref_tab_alias">Alias</string>
-    <string name="cmd_pref_start_from">Start from</string>
     <string name="cmd_pref_link_label">Link or URI</string>
     <string name="cmd_pref_insert_text">+ text</string>
     <string name="cmd_pref_insert_name">+ name</string>

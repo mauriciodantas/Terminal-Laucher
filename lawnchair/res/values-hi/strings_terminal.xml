@@ -90,8 +90,6 @@
     <string name="cmd_pref_group_backup">बैकअप और शेयर करना</string>
     <string name="cmd_pref_no_actions">कोई कार्रवाई नहीं</string>
     <string name="cmd_pref_no_match">खोज से कुछ नहीं मिला</string>
-    <string name="cmd_pref_recipes">तैयार रेसिपी</string>
-    <string name="cmd_pref_app_functions">किसी ऐप के फ़ंक्शन</string>
     <string name="cmd_pref_backup">शेयर, एक्सपोर्ट या इंपोर्ट करें</string>
     <string name="cmd_pref_backup_hint">कार्रवाइयाँ और उपनाम फ़ाइल के रूप में भेजें या .tcmd फ़ाइल खोलें</string>
     <string name="cmd_pref_share">कमांड शेयर करें</string>
@@ -131,13 +129,14 @@
     <string name="cmd_pref_kind_intent">इंटेंट ·</string>
     <string name="cmd_pref_letter_label">अक्षर</string>
     <string name="cmd_pref_name_label">नाम</string>
+    <string name="cmd_pref_start_template">किसी टेम्पलेट से शुरू करें</string>
+    <string name="cmd_pref_suggestions">सुझाव</string>
     <string name="cmd_pref_new_command">नया कमांड</string>
     <string name="cmd_pref_new_command_hint">कोई साइट या ऐप खोलने वाली कार्रवाई, या पहले से इस्तेमाल होने वाले कमांड के लिए उपनाम</string>
     <string name="cmd_pref_group_commands">आपके कमांड</string>
     <string name="cmd_pref_edit_command">कमांड बदलें</string>
     <string name="cmd_pref_tab_action">साइट/ऐप खोलता है</string>
     <string name="cmd_pref_tab_alias">उपनाम</string>
-    <string name="cmd_pref_start_from">यहाँ से शुरू करें</string>
     <string name="cmd_pref_link_label">लिंक या URI</string>
     <string name="cmd_pref_insert_text">+ टेक्स्ट</string>
     <string name="cmd_pref_insert_name">+ नाम</string>

@@ -90,8 +90,6 @@
     <string name="cmd_pref_group_backup">バックアップと共有</string>
     <string name="cmd_pref_no_actions">操作がありません</string>
     <string name="cmd_pref_no_match">検索に一致するものはありません</string>
-    <string name="cmd_pref_recipes">用意されたレシピ</string>
-    <string name="cmd_pref_app_functions">アプリの機能</string>
     <string name="cmd_pref_backup">共有、エクスポート、インポート</string>
     <string name="cmd_pref_backup_hint">操作とエイリアスをファイルで送信するか、.tcmd ファイルを開きます</string>
     <string name="cmd_pref_share">コマンドを共有</string>
@@ -131,13 +129,14 @@
     <string name="cmd_pref_kind_intent">インテント ·</string>
     <string name="cmd_pref_letter_label">文字</string>
     <string name="cmd_pref_name_label">名前</string>
+    <string name="cmd_pref_start_template">テンプレートから始める</string>
+    <string name="cmd_pref_suggestions">おすすめ</string>
     <string name="cmd_pref_new_command">新しいコマンド</string>
     <string name="cmd_pref_new_command_hint">サイトやアプリを開く操作、または既存のコマンドのエイリアス</string>
     <string name="cmd_pref_group_commands">あなたのコマンド</string>
     <string name="cmd_pref_edit_command">コマンドを編集</string>
     <string name="cmd_pref_tab_action">サイト/アプリを開く</string>
     <string name="cmd_pref_tab_alias">エイリアス</string>
-    <string name="cmd_pref_start_from">ここから始める</string>
     <string name="cmd_pref_link_label">リンクまたは URI</string>
     <string name="cmd_pref_insert_text">+ テキスト</string>
     <string name="cmd_pref_insert_name">+ 名前</string>

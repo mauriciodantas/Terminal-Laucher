@@ -90,8 +90,6 @@
     <string name="cmd_pref_group_backup">Резервное копирование и обмен</string>
     <string name="cmd_pref_no_actions">Нет действий</string>
     <string name="cmd_pref_no_match">Ничего не найдено</string>
-    <string name="cmd_pref_recipes">Готовые рецепты</string>
-    <string name="cmd_pref_app_functions">Функции приложения</string>
     <string name="cmd_pref_backup">Поделиться, экспортировать или импортировать</string>
     <string name="cmd_pref_backup_hint">Отправьте действия и псевдонимы файлом или откройте файл .tcmd</string>
     <string name="cmd_pref_share">Поделиться командами</string>
@@ -131,13 +129,14 @@
     <string name="cmd_pref_kind_intent">Интент ·</string>
     <string name="cmd_pref_letter_label">Буква</string>
     <string name="cmd_pref_name_label">Название</string>
+    <string name="cmd_pref_start_template">Начать с шаблона</string>
+    <string name="cmd_pref_suggestions">Предложения</string>
     <string name="cmd_pref_new_command">Новая команда</string>
     <string name="cmd_pref_new_command_hint">Действие, которое открывает сайт или приложение, или псевдоним для команд, которые вы уже используете</string>
     <string name="cmd_pref_group_commands">Ваши команды</string>
     <string name="cmd_pref_edit_command">Изменить команду</string>
     <string name="cmd_pref_tab_action">Открывает сайт/приложение</string>
     <string name="cmd_pref_tab_alias">Псевдоним</string>
-    <string name="cmd_pref_start_from">Начать с</string>
     <string name="cmd_pref_link_label">Ссылка или URI</string>
     <string name="cmd_pref_insert_text">+ текст</string>
     <string name="cmd_pref_insert_name">+ имя</string>

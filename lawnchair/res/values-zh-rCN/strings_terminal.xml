@@ -90,8 +90,6 @@
     <string name="cmd_pref_group_backup">备份和分享</string>
     <string name="cmd_pref_no_actions">没有操作</string>
     <string name="cmd_pref_no_match">没有匹配的搜索结果</string>
-    <string name="cmd_pref_recipes">现成方案</string>
-    <string name="cmd_pref_app_functions">应用的功能</string>
     <string name="cmd_pref_backup">分享、导出或导入</string>
     <string name="cmd_pref_backup_hint">以文件形式发送操作和别名，或打开 .tcmd 文件</string>
     <string name="cmd_pref_share">分享命令</string>
@@ -131,13 +129,14 @@
     <string name="cmd_pref_kind_intent">Intent ·</string>
     <string name="cmd_pref_letter_label">字母</string>
     <string name="cmd_pref_name_label">名称</string>
+    <string name="cmd_pref_start_template">从模板开始</string>
+    <string name="cmd_pref_suggestions">建议</string>
     <string name="cmd_pref_new_command">新命令</string>
     <string name="cmd_pref_new_command_hint">打开网站或应用的操作，或你已在用的命令的别名</string>
     <string name="cmd_pref_group_commands">你的命令</string>
     <string name="cmd_pref_edit_command">编辑命令</string>
     <string name="cmd_pref_tab_action">打开网站/应用</string>
     <string name="cmd_pref_tab_alias">别名</string>
-    <string name="cmd_pref_start_from">从这里开始</string>
     <string name="cmd_pref_link_label">链接或 URI</string>
     <string name="cmd_pref_insert_text">+ 文本</string>
     <string name="cmd_pref_insert_name">+ 姓名</string>

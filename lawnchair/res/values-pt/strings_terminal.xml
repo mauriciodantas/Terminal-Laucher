@@ -90,8 +90,6 @@
     <string name="cmd_pref_group_backup">Backup e compartilhamento</string>
     <string name="cmd_pref_no_actions">Nenhuma ação</string>
     <string name="cmd_pref_no_match">Nada na busca</string>
-    <string name="cmd_pref_recipes">Receitas prontas</string>
-    <string name="cmd_pref_app_functions">Funções de um app</string>
     <string name="cmd_pref_backup">Compartilhar, exportar ou importar</string>
     <string name="cmd_pref_backup_hint">Envie ações e apelidos como arquivo ou abra um arquivo .tcmd</string>
     <string name="cmd_pref_share">Compartilhar comandos</string>
@@ -131,13 +129,14 @@
     <string name="cmd_pref_kind_intent">Intent · </string>
     <string name="cmd_pref_letter_label">Letra</string>
     <string name="cmd_pref_name_label">Nome</string>
+    <string name="cmd_pref_start_template">Começar de um modelo</string>
+    <string name="cmd_pref_suggestions">Sugestões</string>
     <string name="cmd_pref_new_command">Novo comando</string>
     <string name="cmd_pref_new_command_hint">Uma ação que abre um site ou app, ou um apelido para comandos que você já usa</string>
     <string name="cmd_pref_group_commands">Seus comandos</string>
     <string name="cmd_pref_edit_command">Editar comando</string>
     <string name="cmd_pref_tab_action">Abre site/app</string>
     <string name="cmd_pref_tab_alias">Apelido</string>
-    <string name="cmd_pref_start_from">Começar de</string>
     <string name="cmd_pref_link_label">Link ou URI</string>
     <string name="cmd_pref_insert_text">+ texto</string>
     <string name="cmd_pref_insert_name">+ nome</string>

@@ -90,8 +90,6 @@
     <string name="cmd_pref_group_backup">Yedekleme ve paylaşım</string>
     <string name="cmd_pref_no_actions">İşlem yok</string>
     <string name="cmd_pref_no_match">Aramayla eşleşen yok</string>
-    <string name="cmd_pref_recipes">Hazır tarifler</string>
-    <string name="cmd_pref_app_functions">Bir uygulamanın işlevleri</string>
     <string name="cmd_pref_backup">Paylaş, dışa aktar veya içe aktar</string>
     <string name="cmd_pref_backup_hint">İşlemleri ve takma adları dosya olarak gönderin veya bir .tcmd dosyası açın</string>
     <string name="cmd_pref_share">Komutları paylaş</string>
@@ -131,13 +129,14 @@
     <string name="cmd_pref_kind_intent">Intent ·</string>
     <string name="cmd_pref_letter_label">Harf</string>
     <string name="cmd_pref_name_label">Ad</string>
+    <string name="cmd_pref_start_template">Bir şablonla başla</string>
+    <string name="cmd_pref_suggestions">Öneriler</string>
     <string name="cmd_pref_new_command">Yeni komut</string>
     <string name="cmd_pref_new_command_hint">Bir siteyi veya uygulamayı açan bir eylem ya da zaten kullandığınız komutlar için bir takma ad</string>
     <string name="cmd_pref_group_commands">Komutlarınız</string>
     <string name="cmd_pref_edit_command">Komutu düzenle</string>
     <string name="cmd_pref_tab_action">Site/uygulama açar</string>
     <string name="cmd_pref_tab_alias">Takma ad</string>
-    <string name="cmd_pref_start_from">Şununla başla</string>
     <string name="cmd_pref_link_label">Bağlantı veya URI</string>
     <string name="cmd_pref_insert_text">+ metin</string>
     <string name="cmd_pref_insert_name">+ ad</string>

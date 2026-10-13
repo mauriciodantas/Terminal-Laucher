@@ -90,8 +90,6 @@
     <string name="cmd_pref_group_backup">Backup e condivisione</string>
     <string name="cmd_pref_no_actions">Nessuna azione</string>
     <string name="cmd_pref_no_match">Nessun risultato</string>
-    <string name="cmd_pref_recipes">Ricette pronte</string>
-    <string name="cmd_pref_app_functions">Funzioni di un\'app</string>
     <string name="cmd_pref_backup">Condividi, esporta o importa</string>
     <string name="cmd_pref_backup_hint">Invia azioni e alias come file o apri un file .tcmd</string>
     <string name="cmd_pref_share">Condividi comandi</string>
@@ -131,13 +129,14 @@
     <string name="cmd_pref_kind_intent">Intent ·</string>
     <string name="cmd_pref_letter_label">Lettera</string>
     <string name="cmd_pref_name_label">Nome</string>
+    <string name="cmd_pref_start_template">Parti da un modello</string>
+    <string name="cmd_pref_suggestions">Suggerimenti</string>
     <string name="cmd_pref_new_command">Nuovo comando</string>
     <string name="cmd_pref_new_command_hint">Un\'azione che apre un sito o un\'app, o un alias per comandi che usi già</string>
     <string name="cmd_pref_group_commands">I tuoi comandi</string>
     <string name="cmd_pref_edit_command">Modifica comando</string>
     <string name="cmd_pref_tab_action">Apre sito/app</string>
     <string name="cmd_pref_tab_alias">Alias</string>
-    <string name="cmd_pref_start_from">Parti da</string>
     <string name="cmd_pref_link_label">Link o URI</string>
     <string name="cmd_pref_insert_text">+ testo</string>
     <string name="cmd_pref_insert_name">+ nome</string>
