@@ -97,17 +97,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/** Where the user is in the "add or edit an action" flow. */
-private sealed interface Step {
-    data object Catalog : Step
-    data object Apps : Step
-    data class Shortcuts(val app: AppEntry) : Step
-    data object Advanced : Step
-    data class Letter(val draft: CustomAction, val editing: CustomAction?) : Step
-}
-
 /** A sample contact for previews when the contacts permission is missing. It can never be run. */
-private val DemoContact = ContactEntry("Ana Souza", "+55 11 98765-4321")
+internal val DemoContact = ContactEntry("Ana Souza", "+55 11 98765-4321")
 
 /**
  * Binds letters of the command bar to actions of other apps: recipes from the catalog and the
@@ -120,10 +111,9 @@ fun CommandActionsPreferences() {
     val scope = rememberCoroutineScope()
     val snackbar = remember { SnackbarHostState() }
     var actions by remember { mutableStateOf(CustomActionStore.load(context)) }
-    var step by remember { mutableStateOf<Step?>(null) }
     var aliases by remember { mutableStateOf(AliasStore.load(context)) }
-    // The alias being edited, or a blank one for a new alias; null when no dialog is open.
-    var aliasDraft by remember { mutableStateOf<AliasDraft?>(null) }
+    // The command open in the editor; null when it is closed.
+    var editor by remember { mutableStateOf<EditorTarget?>(null) }
     var query by remember { mutableStateOf("") }
     var backupOpen by remember { mutableStateOf(false) }
     var confirmRestore by remember { mutableStateOf(false) }
@@ -241,13 +231,17 @@ fun CommandActionsPreferences() {
                 placeholder = { Text(stringResource(R.string.cmd_pref_search)) },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             )
-            PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_actions)) {
-                if (shownActions.isEmpty()) {
+            // Actions and aliases are both "my commands": one list, one way to add.
+            PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_commands)) {
+                ClickablePreference(
+                    label = stringResource(R.string.cmd_pref_new_command),
+                    subtitle = stringResource(R.string.cmd_pref_new_command_hint),
+                    onClick = { editor = EditorTarget.New },
+                )
+                if (q.isNotEmpty() && shownActions.isEmpty() && shownAliases.isEmpty()) {
                     ClickablePreference(
                         label = stringResource(R.string.cmd_pref_no_actions),
-                        subtitle = stringResource(
-                            if (q.isEmpty()) R.string.cmd_pref_no_actions_hint else R.string.cmd_pref_no_match,
-                        ),
+                        subtitle = stringResource(R.string.cmd_pref_no_match),
                         onClick = {},
                     )
                 }
@@ -255,40 +249,16 @@ fun CommandActionsPreferences() {
                     ClickablePreference(
                         label = "${action.letter} · ${action.label}",
                         subtitle = action.usage + usedLabel(CommandUsage.actionKey(action.letter)),
-                        onClick = { step = Step.Letter(action, editing = action) },
+                        onClick = { editor = EditorTarget.Action(action) },
                     )
                 }
-            }
-            PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_aliases)) {
                 shownAliases.forEach { alias ->
                     ClickablePreference(
                         label = alias.name,
                         subtitle = "→ ${alias.expansion}" + usedLabel(CommandUsage.aliasKey(alias.name)),
-                        onClick = { aliasDraft = AliasDraft(alias) },
+                        onClick = { editor = EditorTarget.Alias(alias) },
                     )
                 }
-                ClickablePreference(
-                    label = stringResource(R.string.cmd_pref_new_alias),
-                    subtitle = stringResource(R.string.cmd_pref_new_alias_hint),
-                    onClick = { aliasDraft = AliasDraft(null) },
-                )
-            }
-            PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_add)) {
-                ClickablePreference(
-                    label = stringResource(R.string.cmd_pref_recipes),
-                    subtitle = stringResource(R.string.cmd_pref_recipes_hint),
-                    onClick = { step = Step.Catalog },
-                )
-                ClickablePreference(
-                    label = stringResource(R.string.cmd_pref_app_functions),
-                    subtitle = stringResource(R.string.cmd_pref_app_functions_hint),
-                    onClick = { step = Step.Apps },
-                )
-                ClickablePreference(
-                    label = stringResource(R.string.cmd_pref_advanced),
-                    subtitle = stringResource(R.string.cmd_pref_advanced_hint),
-                    onClick = { step = Step.Advanced },
-                )
             }
             PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_default_apps)) {
                 ClickablePreference(
@@ -401,29 +371,37 @@ fun CommandActionsPreferences() {
         )
     }
 
-    aliasDraft?.let { draft ->
-        AliasDialog(
-            editing = draft.editing,
+    editor?.let { target ->
+        CommandEditor(
+            target = target,
+            actions = actions,
             aliases = aliases,
-            custom = actions,
             apps = apps,
             contacts = contacts,
-            onSave = { saved ->
-                updateAliases(
-                    if (draft.editing == null) aliases + saved else aliases.map { if (it === draft.editing) saved else it },
-                )
-                aliasDraft = null
+            onSaveAction = { saved ->
+                val old = (target as? EditorTarget.Action)?.action
+                update(if (old == null) actions + saved else actions.map { if (it === old) saved else it })
+                editor = null
+            },
+            onSaveAlias = { saved ->
+                val old = (target as? EditorTarget.Alias)?.alias
+                updateAliases(if (old == null) aliases + saved else aliases.map { if (it === old) saved else it })
+                editor = null
             },
             onRemove = {
-                draft.editing?.let { removeAlias(it) }
-                aliasDraft = null
+                when (target) {
+                    is EditorTarget.Action -> removeAction(target.action)
+                    is EditorTarget.Alias -> removeAlias(target.alias)
+                    EditorTarget.New -> Unit
+                }
+                editor = null
             },
             onTest = { action ->
                 if (!CommandExecutor.execute(context, action)) {
                     Toast.makeText(context, runFailed, Toast.LENGTH_SHORT).show()
                 }
             },
-            onDismiss = { aliasDraft = null },
+            onDismiss = { editor = null },
         )
     }
 
@@ -481,123 +459,6 @@ fun CommandActionsPreferences() {
             )
         }
     }
-
-    when (val s = step) {
-        null -> Unit
-
-        Step.Catalog -> PickerDialog(
-            title = stringResource(R.string.cmd_pref_recipes),
-            items = CustomActions.CATALOG,
-            label = { "${it.label} · ${it.usage.substringBefore(" ·")}" },
-            onPick = { step = Step.Letter(it, editing = null) },
-            onDismiss = { step = null },
-        )
-
-        Step.Apps -> {
-            // Scanning every installed app takes a moment, so it runs off the main thread.
-            val integrationApps by produceState<List<AppEntry>?>(initialValue = null) {
-                value = withContext(Dispatchers.Default) { CommandExecutor.loadIntegrationApps(context) }
-            }
-            val list = integrationApps
-            if (list == null || list.isEmpty()) {
-                AlertDialog(
-                    onDismissRequest = { step = null },
-                    confirmButton = {
-                        TextButton(onClick = { step = null }) { Text(stringResource(R.string.cmd_pref_close)) }
-                    },
-                    title = { Text(stringResource(R.string.cmd_pref_apps_title)) },
-                    text = {
-                        Text(
-                            stringResource(
-                                if (list == null) R.string.cmd_pref_searching_apps else R.string.cmd_pref_no_integrations,
-                            ),
-                        )
-                    },
-                )
-            } else {
-                PickerDialog(
-                    title = stringResource(R.string.cmd_pref_apps_title),
-                    items = list,
-                    label = { it.label },
-                    onPick = { step = Step.Shortcuts(it) },
-                    onDismiss = { step = null },
-                )
-            }
-        }
-
-        is Step.Shortcuts -> {
-            val pkg = ComponentName.unflattenFromString(s.app.id)?.packageName.orEmpty()
-            val found = remember(pkg) { CommandExecutor.loadIntegrations(context, pkg) }
-            if (found.isEmpty()) {
-                AlertDialog(
-                    onDismissRequest = { step = null },
-                    confirmButton = {
-                        TextButton(onClick = { step = Step.Apps }) { Text(stringResource(R.string.cmd_pref_back)) }
-                    },
-                    title = { Text(s.app.label) },
-                    text = { Text(stringResource(R.string.cmd_pref_no_functions)) },
-                )
-            } else {
-                val shortcutPrefix = stringResource(R.string.cmd_pref_kind_shortcut)
-                val recipePrefix = stringResource(R.string.cmd_pref_kind_recipe)
-                val intentPrefix = stringResource(R.string.cmd_pref_kind_intent)
-                PickerDialog(
-                    title = s.app.label,
-                    items = found,
-                    label = {
-                        when {
-                            it.kind == ActionKind.SHORTCUT -> shortcutPrefix
-                            it.letter.isNotEmpty() -> recipePrefix
-                            else -> intentPrefix
-                        } + it.label
-                    },
-                    onPick = {
-                        // A catalog recipe already carries the app's name; the others get it as a prefix.
-                        val label = if (it.label.startsWith(s.app.label, ignoreCase = true)) it.label else "${s.app.label} · ${it.label}"
-                        step = Step.Letter(it.copy(label = label), editing = null)
-                    },
-                    onDismiss = { step = null },
-                )
-            }
-        }
-
-        Step.Advanced -> AdvancedDialog(
-            contacts = contacts,
-            onTest = { action ->
-                if (!CommandExecutor.execute(context, action)) {
-                    Toast.makeText(context, runFailed, Toast.LENGTH_SHORT).show()
-                }
-            },
-            onDone = { step = Step.Letter(it, editing = null) },
-            onDismiss = { step = null },
-        )
-
-        is Step.Letter -> LetterDialog(
-            step = s,
-            existing = actions,
-            contacts = contacts,
-            onSave = { saved ->
-                update(
-                    if (s.editing == null) {
-                        actions + saved
-                    } else {
-                        actions.map { if (it === s.editing) saved else it }
-                    },
-                )
-                step = null
-            },
-            onRemove = {
-                s.editing?.let { removeAction(it) }
-                step = null
-            },
-            onTest = { action ->
-                if (!CommandExecutor.execute(context, action)) {
-                    Toast.makeText(context, runFailed, Toast.LENGTH_SHORT).show()
-                }
-            },
-            onDismiss = { step = null },
-        )
-    }
 }
 
 /** Share, export or import: three ways to move commands, one entry in the list. */
@@ -634,7 +495,7 @@ private fun BackupDialog(onShare: () -> Unit, onExport: () -> Unit, onImport: ()
 }
 
 @Composable
-private fun <T> PickerDialog(
+internal fun <T> PickerDialog(
     title: String,
     items: List<T>,
     label: (T) -> String,
@@ -667,7 +528,7 @@ private fun <T> PickerDialog(
  * cannot run) and an optional [note].
  */
 @Composable
-private fun PreviewBox(analysis: Analysis?, intro: String? = null, note: String? = null) {
+internal fun PreviewBox(analysis: Analysis?, intro: String? = null, note: String? = null) {
     if (analysis == null) return
     val problem = analysis.action == null && analysis.tone == Tone.ERROR
     val stroke = MaterialTheme.colorScheme.primary
@@ -712,108 +573,6 @@ private fun PreviewBox(analysis: Analysis?, intro: String? = null, note: String?
     }
 }
 
-@Composable
-private fun LetterDialog(
-    step: Step.Letter,
-    existing: List<CustomAction>,
-    contacts: List<ContactEntry>,
-    onSave: (CustomAction) -> Unit,
-    onRemove: () -> Unit,
-    onTest: (CommandAction) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    var letter by remember { mutableStateOf(step.draft.letter.ifEmpty { suggestLetter(step.draft.label, existing) }) }
-    var name by remember { mutableStateOf(step.draft.label) }
-    var pattern by remember { mutableStateOf(step.draft.pattern) }
-    val error = CustomActions.validateLetter(letter, existing, step.editing)
-    val patternError = CommandPattern.validate(pattern.trim())
-    val draft = step.draft.copy(letter = letter.trim().lowercase(), label = name.trim(), pattern = pattern.trim())
-    val sampleText = stringResource(R.string.cmd_pref_sample_text)
-    val sampleContact = stringResource(R.string.cmd_pref_sample_contact)
-    val sampleBoth = stringResource(R.string.cmd_pref_sample_both)
-    var sample by remember {
-        mutableStateOf(
-            when (step.draft.arg) {
-                ArgKind.NONE -> ""
-                ArgKind.TEXT -> sampleText
-                ArgKind.CONTACT -> sampleContact
-                ArgKind.CONTACT_AND_TEXT -> sampleBoth
-            },
-        )
-    }
-    // Without contacts access the preview uses a sample contact, and that one is never run.
-    val pool = contacts.ifEmpty { listOf(DemoContact) }
-    val typed = draft.letter + if (sample.isBlank()) "" else " $sample"
-    val analysis = if (error != null) {
-        null
-    } else {
-        CommandEngine.analyze(typed, emptyList(), pool, true, listOf(draft), emptyList())
-    }
-    val runnable = (analysis?.action as? CommandAction.Custom)
-        ?.takeIf { it.contact !== DemoContact }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.cmd_pref_letter_title)) },
-        text = {
-            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                OutlinedTextField(
-                    value = letter,
-                    onValueChange = { letter = it.take(MAX_LETTER) },
-                    singleLine = true,
-                    textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
-                    label = { Text(stringResource(R.string.cmd_pref_letter_label)) },
-                    isError = error != null,
-                    supportingText = { error?.let { Text(it) } },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    singleLine = true,
-                    textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
-                    label = { Text(stringResource(R.string.cmd_pref_name_label)) },
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                )
-                // Text typed alone that matches it runs the action, without the letter.
-                OutlinedTextField(
-                    value = pattern,
-                    onValueChange = { pattern = it.take(CommandPattern.MAX_LENGTH) },
-                    singleLine = true,
-                    textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
-                    label = { Text(stringResource(R.string.cmd_pref_pattern_label)) },
-                    isError = patternError != null,
-                    supportingText = { Text(patternError ?: stringResource(R.string.cmd_pref_pattern_hint)) },
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                )
-                LetterPreview(draft.letter, sample, analysis, draft.smsFallback, draft.label)
-                if (step.draft.arg != ArgKind.NONE) {
-                    OutlinedTextField(
-                        value = sample,
-                        onValueChange = { sample = it },
-                        singleLine = true,
-                        textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
-                        prefix = { Text(draft.letter + " ", fontFamily = FontFamily.Monospace) },
-                        label = { Text(stringResource(R.string.cmd_pref_try_label)) },
-                        modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-                    )
-                }
-            }
-        },
-        // One row of buttons, as in the prototype: Remover on the left, the rest on the right.
-        confirmButton = {
-            DialogButtons(
-                saveEnabled = error == null && patternError == null && name.isNotBlank(),
-                testEnabled = runnable != null,
-                canRemove = step.editing != null,
-                onSave = { onSave(draft) },
-                onTest = { runnable?.let(onTest) },
-                onRemove = onRemove,
-                onCancel = onDismiss,
-            )
-        },
-    )
-}
-
 /** Remove (when editing) on the left, then Test, Cancel and Save on one row. */
 @Composable
 private fun DialogButtons(
@@ -845,7 +604,7 @@ private fun DialogButtons(
 
 /** What typing the letter with the sample does: the command with its argument highlighted, then the intent. */
 @Composable
-private fun LetterPreview(letter: String, sample: String, analysis: Analysis?, smsFallback: Boolean, appLabel: String) {
+internal fun LetterPreview(letter: String, sample: String, analysis: Analysis?, smsFallback: Boolean, appLabel: String) {
     if (analysis == null) return
     val line = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
     val mono = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace)
@@ -894,94 +653,7 @@ private fun LetterPreview(letter: String, sample: String, analysis: Analysis?, s
     }
 }
 
-private class AliasDraft(val editing: CommandAlias?)
-
-/** Creates or edits an alias: the word and the command it stands for, with what it resolves to now. */
-@Composable
-private fun AliasDialog(
-    editing: CommandAlias?,
-    aliases: List<CommandAlias>,
-    custom: List<CustomAction>,
-    apps: List<AppEntry>,
-    contacts: List<ContactEntry>,
-    onSave: (CommandAlias) -> Unit,
-    onRemove: () -> Unit,
-    onTest: (CommandAction) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    val context = LocalContext.current
-    var name by remember { mutableStateOf(editing?.name.orEmpty()) }
-    var expansion by remember { mutableStateOf(editing?.expansion.orEmpty()) }
-    val error = Aliases.validate(name, expansion, aliases, custom, editing)
-    val granted = remember { CommandExecutor.hasContactsPermission(context) }
-    val analysis = if (expansion.isBlank()) {
-        null
-    } else {
-        CommandEngine.analyze(expansion, apps, contacts, granted, custom, emptyList())
-    }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(stringResource(if (editing == null) R.string.cmd_pref_alias_new_title else R.string.cmd_pref_alias_edit_title))
-        },
-        text = {
-            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it.filter { c -> !c.isWhitespace() }.take(MAX_ALIAS) },
-                    singleLine = true,
-                    label = { Text(stringResource(R.string.cmd_pref_alias_label)) },
-                    supportingText = { Text(stringResource(R.string.cmd_pref_alias_hint)) },
-                )
-                OutlinedTextField(
-                    value = expansion,
-                    onValueChange = { expansion = it },
-                    singleLine = true,
-                    label = { Text(stringResource(R.string.cmd_pref_alias_command)) },
-                    supportingText = { Text(stringResource(R.string.cmd_pref_alias_command_hint)) },
-                    modifier = Modifier.padding(top = 8.dp),
-                )
-                // An empty form needs no complaint; the error appears as soon as something is typed.
-                if (error != null && (name.isNotBlank() || expansion.isNotBlank())) {
-                    Text(error, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 8.dp))
-                }
-                PreviewBox(
-                    analysis,
-                    intro = name.trim().takeIf { it.isNotEmpty() }?.let {
-                        stringResource(R.string.cmd_pref_alias_typing, it.lowercase())
-                    },
-                )
-                if (error == null && analysis != null) {
-                    val word = name.trim().lowercase()
-                    Text(
-                        stringResource(R.string.cmd_pref_alias_spoken, word),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 8.dp),
-                    )
-                    Text(
-                        stringResource(R.string.cmd_pref_alias_with_text, word, expansion.trim()),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            DialogButtons(
-                saveEnabled = error == null,
-                testEnabled = analysis?.action != null,
-                canRemove = editing != null,
-                onSave = { onSave(CommandAlias(name.trim().lowercase(), expansion.trim())) },
-                onTest = { analysis?.action?.let(onTest) },
-                onRemove = onRemove,
-                onCancel = onDismiss,
-            )
-        },
-    )
-}
-
-private const val MAX_ALIAS = 20
+internal const val MAX_ALIAS = 20
 
 private enum class ShareMode { Share, Export }
 
@@ -1060,117 +732,7 @@ private fun SelectCommandsDialog(
 }
 
 /** Manual recipe: the intent action, an optional URI template, the package and what to type. */
-@Composable
-private fun AdvancedDialog(
-    contacts: List<ContactEntry>,
-    onTest: (CommandAction) -> Unit,
-    onDone: (CustomAction) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    var label by remember { mutableStateOf("") }
-    var action by remember { mutableStateOf(ACTION_VIEW) }
-    var template by remember { mutableStateOf("") }
-    var pkg by remember { mutableStateOf("") }
-    var arg by remember { mutableStateOf(ArgKind.TEXT) }
-    var shareText by remember { mutableStateOf(false) }
-    val valid = label.isNotBlank() && (template.isNotBlank() || shareText)
-    val draft = CustomAction(
-        letter = PREVIEW_LETTER,
-        label = label.trim(),
-        kind = ActionKind.INTENT,
-        template = template,
-        packages = listOfNotNull(pkg.takeIf { it.isNotEmpty() }),
-        arg = arg,
-        intentAction = expandAction(action),
-        mimeType = if (shareText) "text/plain" else null,
-        textExtra = if (shareText) "android.intent.extra.TEXT" else null,
-    )
-    val sampleText = stringResource(R.string.cmd_pref_sample_text)
-    val sampleContact = stringResource(R.string.cmd_pref_sample_contact)
-    val sampleBoth = stringResource(R.string.cmd_pref_sample_both)
-    var sample by remember(arg) {
-        mutableStateOf(
-            when (arg) {
-                ArgKind.NONE -> ""
-                ArgKind.TEXT -> sampleText
-                ArgKind.CONTACT -> sampleContact
-                ArgKind.CONTACT_AND_TEXT -> sampleBoth
-            },
-        )
-    }
-    // Same engine as the bar and the letter dialog; a sample contact stands in when there is no access, and is never run.
-    val pool = contacts.ifEmpty { listOf(DemoContact) }
-    val analysis = if (!valid) {
-        null
-    } else {
-        CommandEngine.analyze(PREVIEW_LETTER + if (sample.isBlank()) "" else " $sample", emptyList(), pool, true, listOf(draft), emptyList())
-    }
-    val runnable = (analysis?.action as? CommandAction.Custom)?.takeIf { it.contact !== DemoContact }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.cmd_pref_manual_title)) },
-        text = {
-            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                OutlinedTextField(label, { label = it }, singleLine = true, label = { Text(stringResource(R.string.cmd_pref_manual_name)) })
-                ActionPicker(action = action, onChange = { action = it })
-                OutlinedTextField(
-                    template,
-                    { template = it.trim() },
-                    singleLine = true,
-                    label = { Text(stringResource(R.string.cmd_pref_manual_uri)) },
-                    supportingText = { Text(stringResource(R.string.cmd_pref_manual_uri_hint)) },
-                )
-                OutlinedTextField(
-                    pkg,
-                    { pkg = it.trim() },
-                    singleLine = true,
-                    label = { Text(stringResource(R.string.cmd_pref_manual_package)) },
-                )
-                Text(stringResource(R.string.cmd_pref_manual_arg), modifier = Modifier.padding(top = 12.dp))
-                ArgKind.entries.forEach {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth().clickable { arg = it },
-                    ) {
-                        RadioButton(selected = arg == it, onClick = { arg = it })
-                        Text(stringResource(argLabel(it)))
-                    }
-                }
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth().clickable { shareText = !shareText },
-                ) {
-                    Checkbox(checked = shareText, onCheckedChange = { shareText = it })
-                    Text(stringResource(R.string.cmd_pref_manual_share))
-                }
-                if (arg != ArgKind.NONE) {
-                    OutlinedTextField(
-                        value = sample,
-                        onValueChange = { sample = it },
-                        singleLine = true,
-                        label = { Text(stringResource(R.string.cmd_pref_try_label)) },
-                        modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-                    )
-                }
-                LetterPreview(PREVIEW_LETTER, sample, analysis, draft.smsFallback, draft.label)
-            }
-        },
-        confirmButton = {
-            DialogButtons(
-                saveEnabled = valid,
-                testEnabled = runnable != null,
-                canRemove = false,
-                onSave = { onDone(draft.copy(letter = "")) },
-                onTest = { runnable?.let(onTest) },
-                onRemove = {},
-                onCancel = onDismiss,
-                saveLabel = R.string.cmd_pref_continue,
-            )
-        },
-    )
-}
-
-private fun argLabel(arg: ArgKind) = when (arg) {
+internal fun argLabel(arg: ArgKind) = when (arg) {
     ArgKind.NONE -> R.string.cmd_pref_arg_none
     ArgKind.TEXT -> R.string.cmd_pref_arg_text
     ArgKind.CONTACT -> R.string.cmd_pref_arg_contact
@@ -1181,7 +743,7 @@ private fun argLabel(arg: ArgKind) = when (arg) {
 private val IntentActions = listOf("VIEW", "SEND", "SENDTO", "DIAL", "WEB_SEARCH")
 
 @Composable
-private fun ActionPicker(action: String, onChange: (String) -> Unit) {
+internal fun ActionPicker(action: String, onChange: (String) -> Unit) {
     val known = IntentActions.firstOrNull { expandAction(action) == expandAction(it) }
     var other by remember { mutableStateOf(known == null) }
     var open by remember { mutableStateOf(false) }
@@ -1229,15 +791,15 @@ private fun ActionPicker(action: String, onChange: (String) -> Unit) {
 }
 
 /** "VIEW" becomes "android.intent.action.VIEW"; a full name is kept. */
-private fun expandAction(raw: String) = if ('.' in raw) raw else "android.intent.action." + raw.uppercase().ifEmpty { "VIEW" }
+internal fun expandAction(raw: String) = if ('.' in raw) raw else "android.intent.action." + raw.uppercase().ifEmpty { "VIEW" }
 
-private const val MAX_LETTER = 4
+internal const val MAX_LETTER = 4
 
 /** Stands for the letter in the manual form's preview, before the user picks one. */
-private const val PREVIEW_LETTER = "x"
+internal const val PREVIEW_LETTER = "x"
 
 /** A free letter taken from the label: "Lanterna" gives "l", then "la" and so on. */
-private fun suggestLetter(label: String, existing: List<CustomAction>): String {
+internal fun suggestLetter(label: String, existing: List<CustomAction>): String {
     val base = label.lowercase().filter { it.isLetterOrDigit() }
     for (n in 1..minOf(MAX_LETTER, base.length)) {
         val candidate = base.take(n)

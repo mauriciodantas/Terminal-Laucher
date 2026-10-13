@@ -1162,22 +1162,13 @@
     <string name="cmd_pref_close">Close</string>
     <string name="cmd_pref_back">Back</string>
     <string name="cmd_pref_search">Search actions or aliases</string>
-    <string name="cmd_pref_group_actions">Saved actions</string>
     <string name="cmd_pref_group_actions_short">Actions</string>
     <string name="cmd_pref_group_aliases">Aliases</string>
-    <string name="cmd_pref_group_add">Add</string>
     <string name="cmd_pref_group_backup">Backup and sharing</string>
     <string name="cmd_pref_no_actions">No actions</string>
-    <string name="cmd_pref_no_actions_hint">Add one below</string>
     <string name="cmd_pref_no_match">Nothing matches the search</string>
-    <string name="cmd_pref_new_alias">New alias</string>
-    <string name="cmd_pref_new_alias_hint">A word of your own for a whole command (mom = call maria). Works typed and spoken</string>
     <string name="cmd_pref_recipes">Ready-made recipes</string>
-    <string name="cmd_pref_recipes_hint">WhatsApp, Telegram, SMS, YouTube, Spotify</string>
     <string name="cmd_pref_app_functions">An app\'s functions</string>
-    <string name="cmd_pref_app_functions_hint">Launcher shortcuts and intents the app accepts</string>
-    <string name="cmd_pref_advanced">Advanced</string>
-    <string name="cmd_pref_advanced_hint">Build the intent by hand (action, URI, package)</string>
     <string name="cmd_pref_backup">Share, export or import</string>
     <string name="cmd_pref_backup_hint">Send actions and aliases as a file or open a .tcmd file</string>
     <string name="cmd_pref_share">Share commands</string>
@@ -1216,8 +1207,23 @@
     <string name="cmd_pref_kind_recipe">Recipe ·</string>
     <string name="cmd_pref_kind_intent">Intent ·</string>
     <string name="cmd_pref_letter_label">Letter</string>
-    <string name="cmd_pref_letter_title">Action letter</string>
     <string name="cmd_pref_name_label">Name</string>
+    <string name="cmd_pref_new_command">New command</string>
+    <string name="cmd_pref_new_command_hint">An action that opens a site or an app, or an alias for commands you already use</string>
+    <string name="cmd_pref_group_commands">Your commands</string>
+    <string name="cmd_pref_edit_command">Edit command</string>
+    <string name="cmd_pref_tab_action">Opens site/app</string>
+    <string name="cmd_pref_tab_alias">Alias</string>
+    <string name="cmd_pref_start_from">Start from</string>
+    <string name="cmd_pref_link_label">Link or URI</string>
+    <string name="cmd_pref_insert_text">+ text</string>
+    <string name="cmd_pref_insert_name">+ name</string>
+    <string name="cmd_pref_insert_phone">+ phone</string>
+    <string name="cmd_pref_insert_number">+ intl. number</string>
+    <string name="cmd_pref_app_label">App</string>
+    <string name="cmd_pref_app_any">Any app</string>
+    <string name="cmd_pref_more_options">More options</string>
+    <string name="cmd_pref_sms_option">Open an SMS when the app is not installed</string>
     <string name="cmd_pref_used">used %1$d×</string>
     <string name="cmd_pref_pattern_label">Pattern (optional)</string>
     <string name="cmd_pref_pattern_hint">A regular expression: text typed alone that matches it runs this action. E.g. [A-Z]{2}\\d{9}BR</string>
@@ -1227,8 +1233,6 @@
     <string name="cmd_pref_sample_contact" translatable="false">ana</string>
     <string name="cmd_pref_sample_both">ana on my way</string>
     <string name="cmd_pref_needs_contacts">Grant contacts access in the command bar to check</string>
-    <string name="cmd_pref_alias_new_title">New alias</string>
-    <string name="cmd_pref_alias_edit_title">Edit alias</string>
     <string name="cmd_pref_alias_label">Alias</string>
     <string name="cmd_pref_alias_hint">Typed or spoken. Accents don\'t matter</string>
     <string name="cmd_pref_alias_command">Command</string>
@@ -1241,14 +1245,9 @@
     <string name="cmd_pref_continue_count">Continue (%1$d)</string>
     <string name="cmd_pref_none">None</string>
     <string name="cmd_pref_all">All</string>
-    <string name="cmd_pref_manual_title">Manual action</string>
-    <string name="cmd_pref_manual_name">Name</string>
     <string name="cmd_pref_manual_action">Intent action</string>
     <string name="cmd_pref_action_other">Other…</string>
     <string name="cmd_pref_action_other_hint">Full name, such as android.intent.action.EDIT</string>
-    <string name="cmd_pref_manual_uri">URI</string>
-    <string name="cmd_pref_manual_uri_hint">E.g.: tg://resolve?phone={number} · use {text}, {name}, {phone}</string>
-    <string name="cmd_pref_manual_package">Package (optional)</string>
     <string name="cmd_pref_manual_arg">What to type after the letter</string>
     <string name="cmd_pref_manual_share">Send the text as EXTRA_TEXT (type text/plain)</string>
     <string name="cmd_pref_arg_none">Nothing (runs with just the letter)</string>
