@@ -197,10 +197,13 @@ object AiPrompts {
             "Reply with JSON only, no other text, in this shape:\n" +
             "{\"actions\": [{\"letter\": \"imdb\", \"label\": \"IMDb\", \"kind\": \"INTENT\", " +
             "\"template\": \"https://www.imdb.com/find/?q={text}\", \"packages\": [\"com.imdb.mobile\"], \"arg\": \"TEXT\", " +
-            "\"action\": \"android.intent.action.VIEW\", \"mime\": null, \"extra\": null, \"sms\": false}], " +
+            "\"action\": \"android.intent.action.VIEW\", \"mime\": null, \"extra\": null, \"sms\": false, \"pattern\": \"\"}], " +
             "\"aliases\": [{\"name\": \"night\", \"expansion\": \"theme dark; dnd on\"}], \"note\": \"<one short sentence>\"}\n" +
             "Rules: \"arg\" is NONE, TEXT, CONTACT or CONTACT_AND_TEXT. Template placeholders: {text} (what is typed), " +
             "{name}, {phone} (number as stored) and {number} (digits with country code) of a contact. " +
+            "\"pattern\" is optional: a regular expression that text typed alone, without the letter, must match in full " +
+            "to run the action with that text as {text}. Use it only for text with a clear shape (a tracking code, a flight number), " +
+            "never for ordinary words; leave it empty otherwise. " +
             "\"packages\" lists the apps that should open the link, best first; leave it empty to let the system choose. " +
             "Prefer https links that apps also open; never use file:, content: or intent: schemes. " +
             "Letters and alias names are lower case, one word, and must not be a command word above or one the user already has. " +

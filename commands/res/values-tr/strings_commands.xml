@@ -368,4 +368,8 @@
     <string name="cmd_ai_mode_theme">TEMA</string>
     <string name="cmd_options_title">AŞAĞIDAN NE YAPILACAĞINI SEÇİN</string>
     <string name="cmd_list_options">SEÇENEKLER</string>
+    <string name="cmd_err_pattern_long">En fazla %1$d karakter kullanın</string>
+    <string name="cmd_err_pattern_invalid">Geçersiz düzenli ifade</string>
+    <string name="cmd_err_pattern_broad">Çok geniş: sıradan kelimeleri ve sayıları kabul ediyor</string>
+    <string name="cmd_pack_pattern">%1$s ile eşleşen, tek başına yazılmış metinde de çalışır</string>
 </resources>

@@ -368,4 +368,8 @@
     <string name="cmd_ai_mode_theme">主題</string>
     <string name="cmd_options_title">在下方選擇要執行的動作</string>
     <string name="cmd_list_options">選項</string>
+    <string name="cmd_err_pattern_long">最多使用 %1$d 個字元</string>
+    <string name="cmd_err_pattern_invalid">規則運算式無效</string>
+    <string name="cmd_err_pattern_broad">範圍太廣：會符合一般的字詞和數字</string>
+    <string name="cmd_pack_pattern">單獨輸入且符合 %1$s 的文字也會執行</string>
 </resources>

@@ -30,6 +30,11 @@ data class CustomAction(
     val mimeType: String? = null,
     /** Extra that carries the typed text (e.g. `android.intent.extra.TEXT`) instead of the URI. */
     val textExtra: String? = null,
+    /**
+     * A regular expression for text typed alone, without the letter: a line it matches in full runs
+     * the action with that line as what was typed (`{text}`). Empty for none; see [CommandPattern].
+     */
+    val pattern: String = "",
 ) {
     /** "w [contato] [mensagem]" shown in the command list. */
     val usage: String
@@ -164,7 +169,7 @@ object CustomActions {
         var skipped = 0
         for (action in imported) {
             val letter = action.letter.trim().lowercase()
-            if (validateLetter(letter, list) == null) list = list + action.copy(letter = letter) else skipped++
+            if (validateLetter(letter, list) == null) list = list + action.copy(letter = letter, pattern = CommandPattern.usable(action.pattern)) else skipped++
         }
         return list to skipped
     }

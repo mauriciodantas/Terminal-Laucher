@@ -368,4 +368,8 @@
     <string name="cmd_ai_mode_theme">THEMA</string>
     <string name="cmd_options_title">KIES HIERONDER WAT JE WILT DOEN</string>
     <string name="cmd_list_options">OPTIES</string>
+    <string name="cmd_err_pattern_long">Gebruik maximaal %1$d tekens</string>
+    <string name="cmd_err_pattern_invalid">Ongeldige reguliere expressie</string>
+    <string name="cmd_err_pattern_broad">Te ruim: accepteert gewone woorden en getallen</string>
+    <string name="cmd_pack_pattern">Start ook bij los getypte tekst die past op %1$s</string>
 </resources>

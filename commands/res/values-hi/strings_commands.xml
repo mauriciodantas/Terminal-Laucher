@@ -368,4 +368,8 @@
     <string name="cmd_ai_mode_theme">थीम</string>
     <string name="cmd_options_title">नीचे चुनें क्या करना है</string>
     <string name="cmd_list_options">विकल्प</string>
+    <string name="cmd_err_pattern_long">अधिकतम %1$d अक्षर इस्तेमाल करें</string>
+    <string name="cmd_err_pattern_invalid">अमान्य रेगुलर एक्सप्रेशन</string>
+    <string name="cmd_err_pattern_broad">बहुत व्यापक: यह सामान्य शब्द और संख्याएँ स्वीकार करता है</string>
+    <string name="cmd_pack_pattern">अकेले लिखे गए उस टेक्स्ट पर भी चलता है जो %1$s से मेल खाए</string>
 </resources>

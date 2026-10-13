@@ -141,6 +141,8 @@
     <string name="cmd_pref_letter_label">Huruf</string>
     <string name="cmd_pref_letter_title">Huruf tindakan</string>
     <string name="cmd_pref_name_label">Nama</string>
+    <string name="cmd_pref_pattern_label">Pola (opsional)</string>
+    <string name="cmd_pref_pattern_hint">Ekspresi reguler: teks yang diketik sendiri dan cocok akan menjalankan tindakan ini. Mis. [A-Z]{2}\\d{9}BR</string>
     <string name="cmd_pref_sms_fallback">%1$s tidak terinstal: membuka SMS</string>
     <string name="cmd_pref_try_label">Coba</string>
     <string name="cmd_pref_sample_text">contoh</string>

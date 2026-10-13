@@ -77,6 +77,7 @@ import app.lawnchair.command.CommandEngine
 import app.lawnchair.command.CommandExecutor
 import app.lawnchair.command.CommandPack
 import app.lawnchair.command.CommandPacks
+import app.lawnchair.command.CommandPattern
 import app.lawnchair.command.CommandUsage
 import app.lawnchair.command.ContactEntry
 import app.lawnchair.command.CustomAction
@@ -723,8 +724,10 @@ private fun LetterDialog(
 ) {
     var letter by remember { mutableStateOf(step.draft.letter.ifEmpty { suggestLetter(step.draft.label, existing) }) }
     var name by remember { mutableStateOf(step.draft.label) }
+    var pattern by remember { mutableStateOf(step.draft.pattern) }
     val error = CustomActions.validateLetter(letter, existing, step.editing)
-    val draft = step.draft.copy(letter = letter.trim().lowercase(), label = name.trim())
+    val patternError = CommandPattern.validate(pattern.trim())
+    val draft = step.draft.copy(letter = letter.trim().lowercase(), label = name.trim(), pattern = pattern.trim())
     val sampleText = stringResource(R.string.cmd_pref_sample_text)
     val sampleContact = stringResource(R.string.cmd_pref_sample_contact)
     val sampleBoth = stringResource(R.string.cmd_pref_sample_both)
@@ -771,6 +774,17 @@ private fun LetterDialog(
                     label = { Text(stringResource(R.string.cmd_pref_name_label)) },
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                 )
+                // Text typed alone that matches it runs the action, without the letter.
+                OutlinedTextField(
+                    value = pattern,
+                    onValueChange = { pattern = it.take(CommandPattern.MAX_LENGTH) },
+                    singleLine = true,
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
+                    label = { Text(stringResource(R.string.cmd_pref_pattern_label)) },
+                    isError = patternError != null,
+                    supportingText = { Text(patternError ?: stringResource(R.string.cmd_pref_pattern_hint)) },
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                )
                 LetterPreview(draft.letter, sample, analysis, draft.smsFallback, draft.label)
                 if (step.draft.arg != ArgKind.NONE) {
                     OutlinedTextField(
@@ -788,7 +802,7 @@ private fun LetterDialog(
         // One row of buttons, as in the prototype: Remover on the left, the rest on the right.
         confirmButton = {
             DialogButtons(
-                saveEnabled = error == null && name.isNotBlank(),
+                saveEnabled = error == null && patternError == null && name.isNotBlank(),
                 testEnabled = runnable != null,
                 canRemove = step.editing != null,
                 onSave = { onSave(draft) },

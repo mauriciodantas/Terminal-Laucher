@@ -141,6 +141,8 @@
     <string name="cmd_pref_letter_label">字母</string>
     <string name="cmd_pref_letter_title">操作字母</string>
     <string name="cmd_pref_name_label">名称</string>
+    <string name="cmd_pref_pattern_label">模式（可选）</string>
+    <string name="cmd_pref_pattern_hint">正则表达式：单独输入且与之匹配的文字会运行此操作。例如 [A-Z]{2}\\d{9}BR</string>
     <string name="cmd_pref_sms_fallback">未安装 %1$s：打开短信</string>
     <string name="cmd_pref_try_label">试一试</string>
     <string name="cmd_pref_sample_text">示例</string>

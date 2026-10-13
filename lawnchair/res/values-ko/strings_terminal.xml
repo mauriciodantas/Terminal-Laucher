@@ -141,6 +141,8 @@
     <string name="cmd_pref_letter_label">문자</string>
     <string name="cmd_pref_letter_title">작업 문자</string>
     <string name="cmd_pref_name_label">이름</string>
+    <string name="cmd_pref_pattern_label">패턴(선택)</string>
+    <string name="cmd_pref_pattern_hint">정규 표현식: 단독으로 입력한 텍스트가 일치하면 이 작업을 실행합니다. 예: [A-Z]{2}\\d{9}BR</string>
     <string name="cmd_pref_sms_fallback">%1$s 미설치: SMS 열기</string>
     <string name="cmd_pref_try_label">사용해 보기</string>
     <string name="cmd_pref_sample_text">예시</string>

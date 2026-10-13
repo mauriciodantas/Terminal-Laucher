@@ -49,7 +49,9 @@ object PackRules {
         action.kind == ActionKind.SHORTCUT -> Texts.get(R.string.cmd_desc_shortcut, action.packages.firstOrNull().orEmpty())
         action.template.isEmpty() -> action.intentAction.substringAfterLast('.') + " " + action.mimeType.orEmpty()
         else -> action.template
-    } + if (action.packages.isNotEmpty() && action.kind == ActionKind.INTENT) " · " + action.packages.joinToString() else ""
+    } + (if (action.packages.isNotEmpty() && action.kind == ActionKind.INTENT) " · " + action.packages.joinToString() else "") +
+        // An action that also takes text typed alone says so: it catches lines without its letter.
+        (if (action.pattern.isNotEmpty()) "\n" + Texts.get(R.string.cmd_pack_pattern, action.pattern) else "")
 
     /** The first of "name2".."name9" that [free] accepts, or null. */
     private fun renamed(name: String, free: (String) -> Boolean): String? = (2..9).map { name + it }.firstOrNull(free)
@@ -61,7 +63,7 @@ object PackRules {
     fun preview(actions: List<CustomAction>, aliases: List<CommandAlias>, pack: CommandPack): PackPreview {
         var mergedActions = actions
         val actionEntries = pack.actions.map { raw ->
-            val action = raw.copy(letter = raw.letter.trim().lowercase())
+            val action = raw.copy(letter = raw.letter.trim().lowercase(), pattern = CommandPattern.usable(raw.pattern))
             val conflict = CustomActions.validateLetter(action.letter, mergedActions)
             val suggestion = if (conflict != null && action.letter.isNotEmpty() && action.letter.all { it.isLetterOrDigit() }) {
                 renamed(action.letter) { CustomActions.validateLetter(it, mergedActions) == null }
@@ -99,7 +101,7 @@ object PackRules {
         var mergedActions = actions
         var skipped = 0
         for (raw in pack.actions) {
-            val action = raw.copy(letter = raw.letter.trim().lowercase())
+            val action = raw.copy(letter = raw.letter.trim().lowercase(), pattern = CommandPattern.usable(raw.pattern))
             val conflict = CustomActions.validateLetter(action.letter, mergedActions)
             if (conflict == null) {
                 mergedActions = mergedActions + action

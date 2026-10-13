@@ -141,6 +141,8 @@
     <string name="cmd_pref_letter_label">Harf</string>
     <string name="cmd_pref_letter_title">İşlem harfi</string>
     <string name="cmd_pref_name_label">Ad</string>
+    <string name="cmd_pref_pattern_label">Desen (isteğe bağlı)</string>
+    <string name="cmd_pref_pattern_hint">Bir düzenli ifade: tek başına yazılan ve buna uyan metin bu eylemi çalıştırır. Örn. [A-Z]{2}\\d{9}BR</string>
     <string name="cmd_pref_sms_fallback">%1$s yüklü değil: SMS açılır</string>
     <string name="cmd_pref_try_label">Deneyin</string>
     <string name="cmd_pref_sample_text">örnek</string>

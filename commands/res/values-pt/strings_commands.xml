@@ -405,4 +405,8 @@
     <string name="cmd_ai_mode_theme">TEMA</string>
     <string name="cmd_options_title">ESCOLHA ABAIXO O QUE FAZER</string>
     <string name="cmd_list_options">OPÇÕES</string>
+    <string name="cmd_err_pattern_long">Use no máximo %1$d caracteres</string>
+    <string name="cmd_err_pattern_invalid">Expressão regular inválida</string>
+    <string name="cmd_err_pattern_broad">Abrangente demais: aceita palavras e números comuns</string>
+    <string name="cmd_pack_pattern">Também roda com texto digitado sozinho que bata com %1$s</string>
 </resources>

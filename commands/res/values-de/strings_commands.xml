@@ -368,4 +368,8 @@
     <string name="cmd_ai_mode_theme">THEMA</string>
     <string name="cmd_options_title">UNTEN AUSWÄHLEN, WAS GESCHEHEN SOLL</string>
     <string name="cmd_list_options">OPTIONEN</string>
+    <string name="cmd_err_pattern_long">Höchstens %1$d Zeichen</string>
+    <string name="cmd_err_pattern_invalid">Ungültiger regulärer Ausdruck</string>
+    <string name="cmd_err_pattern_broad">Zu allgemein: passt auf gewöhnliche Wörter und Zahlen</string>
+    <string name="cmd_pack_pattern">Startet auch bei allein eingegebenem Text, der auf %1$s passt</string>
 </resources>

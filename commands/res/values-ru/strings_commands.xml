@@ -368,4 +368,8 @@
     <string name="cmd_ai_mode_theme">ТЕМА</string>
     <string name="cmd_options_title">ВЫБЕРИТЕ НИЖЕ, ЧТО СДЕЛАТЬ</string>
     <string name="cmd_list_options">ВАРИАНТЫ</string>
+    <string name="cmd_err_pattern_long">Не больше %1$d символов</string>
+    <string name="cmd_err_pattern_invalid">Недопустимое регулярное выражение</string>
+    <string name="cmd_err_pattern_broad">Слишком широко: подходит к обычным словам и числам</string>
+    <string name="cmd_pack_pattern">Срабатывает и на отдельно введённый текст, подходящий к %1$s</string>
 </resources>

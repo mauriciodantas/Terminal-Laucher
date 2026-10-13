@@ -141,6 +141,8 @@
     <string name="cmd_pref_letter_label">Litera</string>
     <string name="cmd_pref_letter_title">Litera działania</string>
     <string name="cmd_pref_name_label">Nazwa</string>
+    <string name="cmd_pref_pattern_label">Wzorzec (opcjonalnie)</string>
+    <string name="cmd_pref_pattern_hint">Wyrażenie regularne: wpisany samodzielnie tekst, który do niego pasuje, uruchamia tę akcję. Np. [A-Z]{2}\\d{9}BR</string>
     <string name="cmd_pref_sms_fallback">Brak %1$s: otwiera SMS</string>
     <string name="cmd_pref_try_label">Wypróbuj</string>
     <string name="cmd_pref_sample_text">przykład</string>

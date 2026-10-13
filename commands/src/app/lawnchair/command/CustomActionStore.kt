@@ -37,7 +37,8 @@ object CustomActionStore {
                     .put("sms", it.smsFallback)
                     .put("action", it.intentAction)
                     .put("mime", it.mimeType ?: JSONObject.NULL)
-                    .put("extra", it.textExtra ?: JSONObject.NULL),
+                    .put("extra", it.textExtra ?: JSONObject.NULL)
+                    .put("pattern", it.pattern),
             )
         }
     }
@@ -60,6 +61,7 @@ object CustomActionStore {
                     intentAction = o.optString("action", ACTION_VIEW),
                     mimeType = if (o.isNull("mime")) null else o.getString("mime"),
                     textExtra = if (o.isNull("extra")) null else o.getString("extra"),
+                    pattern = o.optString("pattern", ""),
                 )
             }.getOrNull()
         }

@@ -3,8 +3,9 @@ package app.lawnchair.command
 import app.lawnchair.util.Texts
 
 /**
- * A custom action as a command: "w ana oi", "yt lofi". An action that takes a contact also takes a
- * phone number typed alone, so the number offers it next to the call.
+ * A custom action as a command: "w ana oi", "yt lofi". Typed alone, it takes the text its pattern
+ * matches ("AB123456789BR" for a tracking action) and, when it takes a contact, a phone number, so
+ * the number offers it next to the call.
  */
 class CustomCommand(private val action: CustomAction) : Command {
 
@@ -14,7 +15,8 @@ class CustomCommand(private val action: CustomAction) : Command {
 
     override val requiresArgument: Boolean get() = action.arg != ArgKind.NONE
 
-    override fun isApplicable(text: String, ctx: CommandContext): Boolean = (action.arg == ArgKind.CONTACT || action.arg == ArgKind.CONTACT_AND_TEXT) && PhoneNumber.of(text) != null
+    override fun isApplicable(text: String, ctx: CommandContext): Boolean = CommandPattern.takes(action.pattern, text) ||
+        ((action.arg == ArgKind.CONTACT || action.arg == ArgKind.CONTACT_AND_TEXT) && PhoneNumber.of(text) != null)
 
     override fun analyze(arg: String, ctx: CommandContext): Analysis = CommandEngine.analyzeCustom(action, arg, ctx.contacts, ctx.contactsGranted, ctx.extras)
 

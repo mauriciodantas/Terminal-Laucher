@@ -141,6 +141,8 @@
     <string name="cmd_pref_letter_label">Буква</string>
     <string name="cmd_pref_letter_title">Буква действия</string>
     <string name="cmd_pref_name_label">Название</string>
+    <string name="cmd_pref_pattern_label">Шаблон (необязательно)</string>
+    <string name="cmd_pref_pattern_hint">Регулярное выражение: текст, введённый отдельно и подходящий к нему, запускает это действие. Напр. [A-Z]{2}\\d{9}BR</string>
     <string name="cmd_pref_sms_fallback">%1$s не установлен: откроются SMS</string>
     <string name="cmd_pref_try_label">Попробуйте</string>
     <string name="cmd_pref_sample_text">пример</string>

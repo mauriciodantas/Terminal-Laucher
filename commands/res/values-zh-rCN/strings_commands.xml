@@ -368,4 +368,8 @@
     <string name="cmd_ai_mode_theme">主题</string>
     <string name="cmd_options_title">在下方选择要执行的操作</string>
     <string name="cmd_list_options">选项</string>
+    <string name="cmd_err_pattern_long">最多使用 %1$d 个字符</string>
+    <string name="cmd_err_pattern_invalid">正则表达式无效</string>
+    <string name="cmd_err_pattern_broad">范围太广：会匹配普通的词语和数字</string>
+    <string name="cmd_pack_pattern">单独输入且匹配 %1$s 的文字也会运行</string>
 </resources>

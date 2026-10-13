@@ -141,6 +141,8 @@
     <string name="cmd_pref_letter_label">Letra</string>
     <string name="cmd_pref_letter_title">Letra da ação</string>
     <string name="cmd_pref_name_label">Nome</string>
+    <string name="cmd_pref_pattern_label">Padrão (opcional)</string>
+    <string name="cmd_pref_pattern_hint">Uma expressão regular: o texto escrito sozinho que corresponder a ela executa esta ação. Ex.: [A-Z]{2}\\d{9}BR</string>
     <string name="cmd_pref_sms_fallback">%1$s não instalado: abre as SMS</string>
     <string name="cmd_pref_try_label">Experimente</string>
     <string name="cmd_pref_sample_text">exemplo</string>

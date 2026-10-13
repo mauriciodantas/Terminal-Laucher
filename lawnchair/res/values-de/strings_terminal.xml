@@ -141,6 +141,8 @@
     <string name="cmd_pref_letter_label">Buchstabe</string>
     <string name="cmd_pref_letter_title">Buchstabe der Aktion</string>
     <string name="cmd_pref_name_label">Name</string>
+    <string name="cmd_pref_pattern_label">Muster (optional)</string>
+    <string name="cmd_pref_pattern_hint">Ein regulärer Ausdruck: allein eingegebener Text, der passt, startet diese Aktion. Z. B. [A-Z]{2}\\d{9}BR</string>
     <string name="cmd_pref_sms_fallback">%1$s nicht installiert: öffnet SMS</string>
     <string name="cmd_pref_try_label">Ausprobieren</string>
     <string name="cmd_pref_sample_text">Beispiel</string>
