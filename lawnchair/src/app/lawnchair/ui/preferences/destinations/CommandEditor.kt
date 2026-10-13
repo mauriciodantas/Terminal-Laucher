@@ -30,6 +30,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Surface
@@ -41,6 +42,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,21 +54,33 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import app.lawnchair.command.ACTION_VIEW
 import app.lawnchair.command.ActionKind
 import app.lawnchair.command.Aliases
+import app.lawnchair.command.ApiCall
+import app.lawnchair.command.ApiFormat
+import app.lawnchair.command.ApiProvider
+import app.lawnchair.command.ApiSpec
 import app.lawnchair.command.AppEntry
 import app.lawnchair.command.ArgKind
 import app.lawnchair.command.CommandAction
 import app.lawnchair.command.CommandAlias
 import app.lawnchair.command.CommandEngine
 import app.lawnchair.command.CommandExecutor
+import app.lawnchair.command.CommandExtras
 import app.lawnchair.command.CommandPattern
 import app.lawnchair.command.ContactEntry
 import app.lawnchair.command.CustomAction
 import app.lawnchair.command.CustomActions
+import app.lawnchair.command.HttpResult
+import app.lawnchair.command.HttpRunner
+import app.lawnchair.command.ProviderStore
+import app.lawnchair.command.Providers
 import app.lawnchair.command.R as CommandR
+import app.lawnchair.command.SecretStore
 import com.android.launcher3.R
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /** What the command editor opens on: a saved action, a saved alias, or nothing for a new command. */
@@ -87,6 +101,9 @@ private sealed interface EditorPicker {
 }
 
 private const val EXTRA_TEXT = "android.intent.extra.TEXT"
+
+/** How much of the raw answer the API test shows, enough to see the names of the fields. */
+private const val RAW_PREVIEW = 1500
 
 /**
  * What the user types after the letter, read from the template: `{text}` (or text sent as an extra)
@@ -140,6 +157,20 @@ internal fun CommandEditor(
     var shareText by remember { mutableStateOf(start.textExtra != null) }
     var smsFallback by remember { mutableStateOf(start.smsFallback) }
     var pattern by remember { mutableStateOf(start.pattern) }
+    // "Consulta uma API": a provider, a path on it and what of the answer to show.
+    var apiMode by remember { mutableStateOf(start.kind == ActionKind.API) }
+    var provider by remember { mutableStateOf(start.provider) }
+    var format by remember { mutableStateOf(start.api?.format.orEmpty()) }
+    var listPath by remember { mutableStateOf(start.api?.list.orEmpty()) }
+    var maxItems by remember { mutableStateOf((start.api?.max ?: 5).toString()) }
+    var upcoming by remember { mutableStateOf(start.api?.upcoming.orEmpty()) }
+    var apiResult by remember { mutableStateOf<Pair<String, String>?>(null) }
+    var apiTesting by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val providers by produceState(Providers.BUILT_IN) { value = withContext(Dispatchers.IO) { ProviderStore.all(context) } }
+    val configured by produceState(emptySet<String>(), providers) {
+        value = withContext(Dispatchers.IO) { SecretStore.configured(context, providers.map { it.id }) }
+    }
     var expansion by remember { mutableStateOf(editingAlias?.expansion.orEmpty()) }
     // The rare options start open only when the action uses one of them.
     var moreOpen by remember {
@@ -154,6 +185,7 @@ internal fun CommandEditor(
     /** A recipe or an app's function fills the form; the letter and the name follow it while untouched. */
     fun fill(from: CustomAction) {
         base = from
+        apiMode = false
         template = TextFieldValue(from.template)
         packages = from.packages
         intentAction = from.intentAction
@@ -166,9 +198,13 @@ internal fun CommandEditor(
         }
     }
 
-    val shortcut = base.kind == ActionKind.SHORTCUT
-    val arg = if (shortcut) base.arg else inferArg(template.text, if (shareText) EXTRA_TEXT else null)
-    val draft = base.copy(
+    val shortcut = !apiMode && base.kind == ActionKind.SHORTCUT
+    val arg = when {
+        apiMode -> inferArg(template.text, null)
+        shortcut -> base.arg
+        else -> inferArg(template.text, if (shareText) EXTRA_TEXT else null)
+    }
+    val linkDraft = base.copy(
         letter = word.trim().lowercase(),
         label = name.trim(),
         template = if (shortcut) base.template else template.text.trim(),
@@ -183,10 +219,28 @@ internal fun CommandEditor(
         textExtra = if (shareText) base.textExtra ?: EXTRA_TEXT else null,
         smsFallback = smsFallback,
         pattern = pattern.trim(),
-    )
+    ).let { if (it.kind == ActionKind.API) it.copy(kind = ActionKind.INTENT, provider = "", api = null) else it }
+    val draft = if (apiMode) {
+        linkDraft.copy(
+            kind = ActionKind.API,
+            packages = emptyList(),
+            intentAction = ACTION_VIEW,
+            mimeType = null,
+            textExtra = null,
+            smsFallback = false,
+            provider = provider,
+            api = ApiSpec(format.trim(), listPath.trim(), maxItems.toIntOrNull()?.coerceIn(1, ApiFormat.MAX_ITEMS) ?: 5, upcoming.trim()),
+        )
+    } else {
+        linkDraft
+    }
     val letterError = CustomActions.validateLetter(word, actions, editingAction)
     val patternError = CommandPattern.validate(pattern.trim())
-    val hasTarget = shortcut || template.text.isNotBlank() || shareText
+    val hasTarget = if (apiMode) {
+        provider.isNotEmpty() && template.text.isNotBlank() && format.isNotBlank()
+    } else {
+        shortcut || template.text.isNotBlank() || shareText
+    }
     val actionValid = letterError == null && patternError == null && name.isNotBlank() && hasTarget
     val aliasError = Aliases.validate(word, expansion, aliases, actions, editingAlias)
     val canSave = if (tab == EditorTab.ACTION) actionValid else aliasError == null
@@ -208,7 +262,15 @@ internal fun CommandEditor(
     val pool = contacts.ifEmpty { listOf(DemoContact) }
     val previewLetter = if (letterError == null) draft.letter else PREVIEW_LETTER
     val actionAnalysis = if (tab == EditorTab.ACTION && hasTarget) {
-        CommandEngine.analyze(previewLetter + if (sample.isBlank()) "" else " $sample", emptyList(), pool, true, listOf(draft.copy(letter = previewLetter)), emptyList())
+        CommandEngine.analyze(
+            previewLetter + if (sample.isBlank()) "" else " $sample",
+            emptyList(),
+            pool,
+            true,
+            listOf(draft.copy(letter = previewLetter)),
+            emptyList(),
+            CommandExtras(providers = providers, configuredProviders = configured),
+        )
     } else {
         null
     }
@@ -222,6 +284,22 @@ internal fun CommandEditor(
         (actionAnalysis?.action as? CommandAction.Custom)?.takeIf { it.contact !== DemoContact }
     } else {
         aliasAnalysis?.action
+    }
+
+    /** Asks the API with the sample, as the bar would, and keeps what came back to show it. */
+    fun testApi() {
+        val p = Providers.of(provider, providers) ?: return
+        val spec = draft.api ?: return
+        apiTesting = true
+        scope.launch {
+            val today = java.time.LocalDate.now()
+            val answer = withContext(Dispatchers.IO) { HttpRunner.get(p, ApiCall.path(draft, sample, today), SecretStore.get(context, p.id)) }
+            apiResult = when (answer) {
+                is HttpResult.Answer -> (ApiFormat.render(answer.body, spec, today) ?: context.getString(R.string.cmd_pref_api_nothing)) to answer.body.take(RAW_PREVIEW)
+                else -> HttpRunner.describe(answer, p) to ""
+            }
+            apiTesting = false
+        }
     }
 
     fun save() {
@@ -279,12 +357,70 @@ internal fun CommandEditor(
                         modifier = Modifier.fillMaxWidth(),
                     )
                     if (tab == EditorTab.ACTION) {
-                        ActionForm(
-                            name = name,
-                            onName = {
+                        // The name first: it is the command, whatever it does.
+                        OutlinedTextField(
+                            value = name,
+                            onValueChange = {
                                 name = it
                                 suggest(it)
                             },
+                            singleLine = true,
+                            label = { Text(stringResource(R.string.cmd_pref_name_label)) },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        // One option a line: side by side the longer label wrapped and the two fell out of line.
+                        Column(Modifier.fillMaxWidth().padding(top = 4.dp)) {
+                            listOf(false to R.string.cmd_pref_kind_open, true to R.string.cmd_pref_kind_api).forEach { (api, label) ->
+                                Row(
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(min = 44.dp)
+                                        .clickable {
+                                            apiMode = api
+                                            apiResult = null
+                                        },
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    RadioButton(selected = apiMode == api, onClick = null, modifier = Modifier.padding(end = 6.dp))
+                                    Text(stringResource(label), style = MaterialTheme.typography.bodyMedium)
+                                }
+                            }
+                        }
+                    }
+                    if (tab == EditorTab.ACTION && apiMode) {
+                        ApiForm(
+                            providers = providers,
+                            configured = configured,
+                            provider = provider,
+                            onProvider = {
+                                provider = it
+                                apiResult = null
+                            },
+                            path = template,
+                            onPath = {
+                                template = it
+                                apiResult = null
+                            },
+                            format = format,
+                            onFormat = {
+                                format = it
+                                apiResult = null
+                            },
+                            listPath = listPath,
+                            onListPath = { listPath = it },
+                            maxItems = maxItems,
+                            onMaxItems = { maxItems = it.filter { c -> c.isDigit() }.take(2) },
+                            upcoming = upcoming,
+                            onUpcoming = { upcoming = it },
+                            pattern = pattern,
+                            onPattern = { pattern = it.take(CommandPattern.MAX_LENGTH) },
+                            patternError = patternError,
+                            moreOpen = moreOpen,
+                            onMoreOpen = { moreOpen = it },
+                        )
+                    }
+                    if (tab == EditorTab.ACTION && !apiMode) {
+                        ActionForm(
                             base = base,
                             template = template,
                             onTemplate = { template = it },
@@ -304,6 +440,8 @@ internal fun CommandEditor(
                             onMoreOpen = { moreOpen = it },
                             onPick = { picker = it },
                         )
+                    }
+                    if (tab == EditorTab.ACTION) {
                         if (arg != ArgKind.NONE && hasTarget) {
                             OutlinedTextField(
                                 value = sample,
@@ -316,6 +454,7 @@ internal fun CommandEditor(
                             )
                         }
                         LetterPreview(previewLetter, sample, actionAnalysis, draft.smsFallback, draft.label)
+                        if (apiMode) ApiResult(apiTesting, apiResult)
                     } else {
                         AliasForm(word = word, expansion = expansion, onExpansion = { expansion = it }, error = aliasError, analysis = aliasAnalysis)
                     }
@@ -327,7 +466,10 @@ internal fun CommandEditor(
                         }
                     }
                     Spacer(Modifier.weight(1f))
-                    TextButton(enabled = runnable != null, onClick = { runnable?.let(onTest) }) {
+                    TextButton(
+                        enabled = if (apiMode && tab == EditorTab.ACTION) hasTarget && !apiTesting else runnable != null,
+                        onClick = { if (apiMode && tab == EditorTab.ACTION) testApi() else runnable?.let(onTest) },
+                    ) {
                         Text(stringResource(R.string.cmd_pref_test))
                     }
                 }
@@ -402,8 +544,6 @@ internal fun CommandEditor(
 /** The "opens a site or an app" tab: where the form comes from, the link, the app and the rare options. */
 @Composable
 private fun ActionForm(
-    name: String,
-    onName: (String) -> Unit,
     base: CustomAction,
     template: TextFieldValue,
     onTemplate: (TextFieldValue) -> Unit,
@@ -424,13 +564,6 @@ private fun ActionForm(
     onPick: (EditorPicker) -> Unit,
 ) {
     val shortcut = base.kind == ActionKind.SHORTCUT
-    OutlinedTextField(
-        value = name,
-        onValueChange = onName,
-        singleLine = true,
-        label = { Text(stringResource(R.string.cmd_pref_name_label)) },
-        modifier = Modifier.fillMaxWidth(),
-    )
     OutlinedButton(onClick = { onPick(EditorPicker.Templates) }, modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
         Text(stringResource(R.string.cmd_pref_start_template))
     }
@@ -515,6 +648,173 @@ private fun ActionForm(
             supportingText = { Text(patternError ?: stringResource(R.string.cmd_pref_pattern_hint)) },
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
         )
+    }
+}
+
+/** The "consulta uma API" form: the provider, the path on it and what of the answer to show. */
+@Composable
+private fun ApiForm(
+    providers: List<ApiProvider>,
+    configured: Set<String>,
+    provider: String,
+    onProvider: (String) -> Unit,
+    path: TextFieldValue,
+    onPath: (TextFieldValue) -> Unit,
+    format: String,
+    onFormat: (String) -> Unit,
+    listPath: String,
+    onListPath: (String) -> Unit,
+    maxItems: String,
+    onMaxItems: (String) -> Unit,
+    upcoming: String,
+    onUpcoming: (String) -> Unit,
+    pattern: String,
+    onPattern: (String) -> Unit,
+    patternError: String?,
+    moreOpen: Boolean,
+    onMoreOpen: (Boolean) -> Unit,
+) {
+    var picking by remember { mutableStateOf(false) }
+    val chosen = Providers.of(provider, providers)
+    val noKey = stringResource(R.string.cmd_providers_key_missing)
+    val mono = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace)
+    Box(Modifier.padding(top = 12.dp)) {
+        OutlinedTextField(
+            value = chosen?.let { it.name + " · " + it.host } ?: provider,
+            onValueChange = {},
+            readOnly = true,
+            singleLine = true,
+            label = { Text(stringResource(R.string.cmd_pref_api_provider)) },
+            placeholder = { Text(stringResource(R.string.cmd_pref_api_pick_provider)) },
+            isError = provider.isNotEmpty() && chosen == null,
+            trailingIcon = { Icon(Icons.Default.ArrowDropDown, contentDescription = null) },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        // A read-only field swallows taps, so a transparent layer on top opens the list.
+        Box(Modifier.matchParentSize().clickable { picking = true })
+    }
+    val note = when {
+        chosen == null -> stringResource(R.string.cmd_pref_api_where_providers)
+        chosen.auth.needsSecret && chosen.id !in configured -> stringResource(R.string.cmd_pref_api_no_key, chosen.name)
+        else -> null
+    }
+    note?.let {
+        Text(
+            it,
+            style = MaterialTheme.typography.bodySmall,
+            color = if (chosen != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 4.dp),
+        )
+    }
+    OutlinedTextField(
+        value = path,
+        onValueChange = onPath,
+        singleLine = true,
+        textStyle = mono,
+        label = { Text(stringResource(R.string.cmd_pref_api_path)) },
+        placeholder = { Text("/ws/{text}/json/", fontFamily = FontFamily.Monospace) },
+        supportingText = { Text(chosen?.let { stringResource(R.string.cmd_pref_api_path_hint, it.baseUrl) } ?: "") },
+        modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+    )
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+        listOf(R.string.cmd_pref_insert_text to "{text}", R.string.cmd_pref_insert_year to "{year}").forEach { (label, placeholder) ->
+            SuggestionChip(
+                onClick = {
+                    val at = path.selection.end.coerceIn(0, path.text.length)
+                    onPath(TextFieldValue(path.text.substring(0, at) + placeholder + path.text.substring(at), TextRange(at + placeholder.length)))
+                },
+                label = { Text(stringResource(label)) },
+            )
+        }
+    }
+    OutlinedTextField(
+        value = format,
+        onValueChange = onFormat,
+        minLines = 2,
+        textStyle = mono,
+        label = { Text(stringResource(R.string.cmd_pref_api_format)) },
+        placeholder = { Text("{bairro} · {localidade}/{uf}", fontFamily = FontFamily.Monospace) },
+        supportingText = { Text(stringResource(R.string.cmd_pref_api_format_hint)) },
+        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+    )
+    TextButton(onClick = { onMoreOpen(!moreOpen) }, modifier = Modifier.padding(top = 8.dp)) {
+        Icon(if (moreOpen) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown, contentDescription = null)
+        Text(stringResource(R.string.cmd_pref_more_options))
+    }
+    if (moreOpen) {
+        OutlinedTextField(
+            value = listPath,
+            onValueChange = onListPath,
+            singleLine = true,
+            textStyle = mono,
+            label = { Text(stringResource(R.string.cmd_pref_api_list)) },
+            supportingText = { Text(stringResource(R.string.cmd_pref_api_list_hint)) },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        OutlinedTextField(
+            value = maxItems,
+            onValueChange = onMaxItems,
+            singleLine = true,
+            label = { Text(stringResource(R.string.cmd_pref_api_max)) },
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+        )
+        OutlinedTextField(
+            value = upcoming,
+            onValueChange = onUpcoming,
+            singleLine = true,
+            textStyle = mono,
+            label = { Text(stringResource(R.string.cmd_pref_api_upcoming)) },
+            supportingText = { Text(stringResource(R.string.cmd_pref_api_upcoming_hint)) },
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+        )
+        OutlinedTextField(
+            value = pattern,
+            onValueChange = onPattern,
+            singleLine = true,
+            textStyle = mono,
+            label = { Text(stringResource(R.string.cmd_pref_pattern_label)) },
+            isError = patternError != null,
+            supportingText = { Text(patternError ?: stringResource(R.string.cmd_pref_pattern_hint)) },
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+        )
+    }
+    if (picking) {
+        PickerDialog(
+            title = stringResource(R.string.cmd_pref_api_provider),
+            items = providers,
+            label = { it.name + " · " + it.host + if (it.auth.needsSecret && it.id !in configured) " · $noKey" else "" },
+            onPick = {
+                onProvider(it.id)
+                picking = false
+            },
+            onDismiss = { picking = false },
+        )
+    }
+}
+
+/** What the API test brought: the text the bar would show, then the start of the raw answer. */
+@Composable
+private fun ApiResult(testing: Boolean, result: Pair<String, String>?) {
+    if (!testing && result == null) return
+    Column(Modifier.fillMaxWidth().padding(top = 12.dp)) {
+        Text(stringResource(R.string.cmd_pref_api_result), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+        Text(
+            if (testing) stringResource(R.string.command_running) else result?.first.orEmpty(),
+            style = MaterialTheme.typography.bodyMedium,
+            fontFamily = FontFamily.Monospace,
+            modifier = Modifier.padding(top = 4.dp),
+        )
+        val raw = result?.second.orEmpty()
+        if (!testing && raw.isNotEmpty()) {
+            Text(
+                stringResource(R.string.cmd_pref_api_raw),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(top = 10.dp),
+            )
+            Text(raw, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, modifier = Modifier.padding(top = 4.dp))
+        }
     }
 }
 

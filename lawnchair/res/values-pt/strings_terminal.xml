@@ -561,4 +561,23 @@
     <string name="cmd_imp_destinations">O que sai do aparelho</string>
     <string name="cmd_imp_destination">%1$s recebe: %2$s</string>
     <string name="cmd_imp_sends_nothing">só o pedido em si</string>
+    <string name="cmd_pref_kind_open">Abre site ou app</string>
+    <string name="cmd_pref_kind_api">Consulta uma API</string>
+    <string name="cmd_pref_api_provider">Provedor</string>
+    <string name="cmd_pref_api_pick_provider">Escolha um provedor</string>
+    <string name="cmd_pref_api_where_providers">Provedores e suas chaves ficam em Comandos › Avançado › Provedores de API.</string>
+    <string name="cmd_pref_api_no_key">%1$s ainda sem chave: Comandos › Avançado › Provedores de API.</string>
+    <string name="cmd_pref_api_path">Caminho</string>
+    <string name="cmd_pref_api_path_hint">Em %1$s. {text} é o que você digita depois da letra.</string>
+    <string name="cmd_pref_insert_year">ano</string>
+    <string name="cmd_pref_api_format">O que mostrar</string>
+    <string name="cmd_pref_api_format_hint">Campos da resposta entre chaves, ponto para os de dentro: {endereco.cidade}. {data|date} mostra uma data. Teste para ver a resposta.</string>
+    <string name="cmd_pref_api_list">Lista na resposta (opcional)</string>
+    <string name="cmd_pref_api_list_hint">Caminho de uma lista; cada item aparece com o formato. Vazio para a resposta inteira.</string>
+    <string name="cmd_pref_api_max">Itens no máximo</string>
+    <string name="cmd_pref_api_upcoming">Esconder datas passadas (opcional)</string>
+    <string name="cmd_pref_api_upcoming_hint">Campo de cada item com uma data ISO; as anteriores ficam de fora.</string>
+    <string name="cmd_pref_api_result">O que a barra mostra</string>
+    <string name="cmd_pref_api_raw">Resposta recebida</string>
+    <string name="cmd_pref_api_nothing">(o formato não achou nada nesta resposta)</string>
 </resources>

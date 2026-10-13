@@ -1656,4 +1656,23 @@
     <string name="cmd_imp_destinations">What leaves the phone</string>
     <string name="cmd_imp_destination">%1$s receives: %2$s</string>
     <string name="cmd_imp_sends_nothing">only the request itself</string>
+    <string name="cmd_pref_kind_open">Opens a site or app</string>
+    <string name="cmd_pref_kind_api">Asks an API</string>
+    <string name="cmd_pref_api_provider">Provider</string>
+    <string name="cmd_pref_api_pick_provider">Pick a provider</string>
+    <string name="cmd_pref_api_where_providers">Providers and their keys are set up in Commands › Advanced › API providers.</string>
+    <string name="cmd_pref_api_no_key">%1$s has no key yet: Commands › Advanced › API providers.</string>
+    <string name="cmd_pref_api_path">Path</string>
+    <string name="cmd_pref_api_path_hint">On %1$s. {text} is what you type after the letter.</string>
+    <string name="cmd_pref_insert_year">year</string>
+    <string name="cmd_pref_api_format">What to show</string>
+    <string name="cmd_pref_api_format_hint">Fields of the answer in braces, dots for inner ones: {address.city}. {date|date} shows a date. Test to see the answer.</string>
+    <string name="cmd_pref_api_list">List in the answer (optional)</string>
+    <string name="cmd_pref_api_list_hint">Path of an array; each item is shown with the format. Empty for the whole answer.</string>
+    <string name="cmd_pref_api_max">Items at most</string>
+    <string name="cmd_pref_api_upcoming">Hide past dates (optional)</string>
+    <string name="cmd_pref_api_upcoming_hint">Field of each item with an ISO date; earlier ones are left out.</string>
+    <string name="cmd_pref_api_result">What the bar shows</string>
+    <string name="cmd_pref_api_raw">Answer received</string>
+    <string name="cmd_pref_api_nothing">(the format found nothing in this answer)</string>
 </resources>
