@@ -410,4 +410,111 @@
     <string name="cmd_err_pattern_invalid">Invalid regular expression</string>
     <string name="cmd_err_pattern_broad">Too broad: it takes ordinary words and numbers</string>
     <string name="cmd_pack_pattern">Also runs on text typed alone that matches %1$s</string>
+    <!-- API actions: an https address whose JSON answer is shown in the bar. -->
+    <string name="cmd_api_ready">ENTER ASKS %1$s</string>
+    <string name="cmd_api_empty">NOTHING FOUND</string>
+    <string name="cmd_api_invalid">THIS ACTION HAS NO VALID HTTPS ADDRESS</string>
+    <string name="cmd_api_failed">COULD NOT REACH %1$s · %2$s</string>
+    <string name="cmd_api_too_big">answer too big</string>
+    <string name="cmd_caution_api">sends what you type to %1$s</string>
+
+    <!-- Built-in packs. -->
+    <string name="cmd_word_pack">pack</string>
+    <string name="cmd_usage_pack">[pack] · remove</string>
+    <string name="cmd_help_pack">Packs of commands that come with the app and are added only when you want them. Enter on a pack installs it; a command you already have with the same name stays yours.\n› pack\n› pack brasil\n› pack brasil remove</string>
+    <string name="cmd_word_remove">remove</string>
+    <string name="cmd_pack_title">PACK</string>
+    <string name="cmd_list_packs">PACKS</string>
+    <string name="cmd_kind_pack">PACK</string>
+    <string name="cmd_pack_state_installed">INSTALLED</string>
+    <string name="cmd_pack_pick">PICK A PACK · ENTER INSTALLS IT</string>
+    <string name="cmd_pack_unknown">NO PACK BY THAT NAME</string>
+    <string name="cmd_pack_installed">INSTALLED · %1$s</string>
+    <string name="cmd_pack_not_installed">NOT INSTALLED</string>
+    <string name="cmd_pack_remove">ENTER REMOVES %1$s</string>
+    <string name="cmd_pack_remove_label">remove the pack</string>
+    <string name="cmd_pack_taken">already yours, left out: %1$s</string>
+    <string name="cmd_pack_done">%1$s INSTALLED · %2$s</string>
+    <string name="cmd_pack_done_skipped">%1$s INSTALLED · %2$s · %3$d LEFT OUT (NAME IN USE)</string>
+    <string name="cmd_pack_removed">%1$s REMOVED</string>
+    <string name="cmd_pack_brazil">Correios tracking, address of a CEP and the next holidays</string>
+    <string name="cmd_pack_track">Correios tracking</string>
+    <string name="cmd_pack_holidays">National holidays</string>
+
+    <!-- qr -->
+    <string name="cmd_word_qr" translatable="false">qr</string>
+    <string name="cmd_usage_qr">[text|link] · wifi [network] [password]</string>
+    <string name="cmd_help_qr">Draws a QR code in the bar for another phone to read: a link, a text, or your Wi-Fi so a visitor joins without typing the password. A network name with spaces goes in quotes.\n› qr https://example.com\n› qr wifi home secret123\n› qr wifi \"Ana\'s house\" secret123\n› qr {clip}</string>
+    <string name="cmd_qr_empty">TEXT OR LINK · OR wifi NETWORK PASSWORD</string>
+    <string name="cmd_qr_long">TOO LONG FOR A QR CODE (MAX %1$d)</string>
+    <string name="cmd_qr_wifi">WI-FI %1$s</string>
+    <string name="cmd_qr_ready">ENTER SHOWS THE QR</string>
+    <string name="cmd_qr_shown">QR · POINT THE OTHER CAMERA HERE</string>
+    <string name="cmd_qr_failed">DOES NOT FIT IN A QR CODE</string>
+
+    <!-- nearby -->
+    <string name="cmd_word_nearby">nearby</string>
+    <string name="cmd_usage_nearby">[place]</string>
+    <string name="cmd_help_nearby">Shows places of that kind around you in the maps app.\n› nearby pharmacy\n› nearby gas station</string>
+    <string name="cmd_nearby_title">NEARBY</string>
+    <string name="cmd_nearby_empty">WHAT ARE YOU LOOKING FOR?</string>
+    <string name="cmd_nearby_open">%1$s · OPEN IN MAPS</string>
+    <string name="cmd_nearby_places">pharmacy,gas station,supermarket,bakery,restaurant,hospital,ATM,bank</string>
+    <string name="cmd_kind_place">PLACE</string>
+    <string name="cmd_list_places">PLACES</string>
+
+    <!-- weather -->
+    <string name="cmd_word_weather">weather</string>
+    <string name="cmd_usage_weather">[city]</string>
+    <string name="cmd_help_weather">The weather now, today and the next two days, from Open-Meteo. Alone it uses where you are (only the rounded coordinates are sent); with a city it looks the city up.\n› weather\n› weather lisbon</string>
+    <string name="cmd_weather_title">WEATHER</string>
+    <string name="cmd_weather_place">%1$s · ENTER SHOWS THE WEATHER</string>
+    <string name="cmd_weather_here">HERE · ENTER SHOWS THE WEATHER</string>
+    <string name="cmd_weather_need_location">ALLOW LOCATION, OR TYPE A CITY</string>
+    <string name="cmd_weather_no_location">LOCATION UNKNOWN · TYPE A CITY</string>
+    <string name="cmd_weather_not_found">CITY NOT FOUND: %1$s</string>
+    <string name="cmd_weather_here_name">here</string>
+    <string name="cmd_weather_now">now %1$s · feels %2$s · %3$s</string>
+    <string name="cmd_weather_air">humidity %1$d%% · wind %2$d km/h</string>
+    <string name="cmd_weather_today">today</string>
+    <string name="cmd_weather_tomorrow">tomorrow</string>
+    <string name="cmd_weather_rain">rain %1$d%%</string>
+    <string name="cmd_wx_clear">clear</string>
+    <string name="cmd_wx_mostly_clear">mostly clear</string>
+    <string name="cmd_wx_partly_cloudy">partly cloudy</string>
+    <string name="cmd_wx_overcast">cloudy</string>
+    <string name="cmd_wx_fog">fog</string>
+    <string name="cmd_wx_drizzle">drizzle</string>
+    <string name="cmd_wx_rain_light">light rain</string>
+    <string name="cmd_wx_rain">rain</string>
+    <string name="cmd_wx_rain_heavy">heavy rain</string>
+    <string name="cmd_wx_snow">snow</string>
+    <string name="cmd_wx_showers">showers</string>
+    <string name="cmd_wx_storm">thunderstorm</string>
+    <string name="cmd_wx_storm_hail">thunderstorm with hail</string>
+    <string name="cmd_wx_unknown">—</string>
+
+    <!-- free space -->
+    <string name="cmd_word_free_space">cleanup</string>
+    <string name="cmd_usage_free_space">· free up space</string>
+    <string name="cmd_help_free_space">Opens the system screen that frees up storage: big files, unused apps, downloads.\n› cleanup</string>
+    <string name="cmd_free_space_title">FREE UP SPACE</string>
+    <string name="cmd_free_space_open">ENTER OPENS THE SYSTEM CLEANUP</string>
+    <string name="cmd_cfg_free_space">cleanup</string>
+
+    <!-- uninstall -->
+    <string name="cmd_word_uninstall">uninstall</string>
+    <string name="cmd_usage_uninstall">[app]</string>
+    <string name="cmd_help_uninstall">Asks the system to uninstall an app. The system asks you to confirm first.\n› uninstall some game</string>
+    <string name="cmd_uninstall_title">UNINSTALL</string>
+    <string name="cmd_uninstall_empty">WHICH APP?</string>
+    <string name="cmd_uninstall_open">%1$s · ENTER ASKS THE SYSTEM</string>
+
+    <!-- update -->
+    <string name="cmd_word_update">update</string>
+    <string name="cmd_usage_update">[app]</string>
+    <string name="cmd_help_update">Opens the app\'s page in the Play Store, where Update shows when there is one. Alone it opens the store: Profile › Manage apps updates them all.\n› update whatsapp\n› update</string>
+    <string name="cmd_update_title">UPDATE</string>
+    <string name="cmd_update_store">ENTER OPENS THE PLAY STORE · PROFILE › MANAGE APPS</string>
+    <string name="cmd_update_open">%1$s · ENTER OPENS IT IN THE PLAY STORE</string>
 </resources>

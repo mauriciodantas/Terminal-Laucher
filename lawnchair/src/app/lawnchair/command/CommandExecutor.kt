@@ -141,7 +141,24 @@ object CommandExecutor {
             )
 
             // The command bar puts the text on its line and shows the ping output itself.
-            is CommandAction.FillLine, is CommandAction.Ping, is CommandAction.SpeedTest -> return false
+            is CommandAction.FillLine, is CommandAction.Ping, is CommandAction.SpeedTest, is CommandAction.ShowQr, is CommandAction.Weather -> return false
+
+            is CommandAction.Nearby -> start(
+                context,
+                Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=" + Uri.encode(action.query))),
+            )
+
+            // The system shows its own confirmation; REQUEST_DELETE_PACKAGES lets the launcher ask.
+            is CommandAction.Uninstall -> start(
+                context,
+                Intent(Intent.ACTION_DELETE, Uri.fromParts("package", packageOf(action.app) ?: return false, null)),
+            )
+
+            is CommandAction.UpdateApp -> return openStore(context, action.app)
+
+            is CommandAction.InstallPack -> return installPack(context, action.id) != null
+
+            is CommandAction.RemovePack -> CustomActionStore.save(context, BundledPacks.remove(CustomActionStore.load(context), action.id))
 
             // Only the setup opens a screen; the bar talks to the AI itself.
             is CommandAction.Ai -> {
@@ -239,8 +256,37 @@ object CommandExecutor {
             start(context, Intent(context, app.lawnchair.ui.preferences.PreferenceActivity::class.java))
             return
         }
+        // Without the system cleanup (some makers drop it), the storage screen is the nearest thing.
+        val fallback = if (page == SettingsPage.FREE_SPACE) Intent(SettingsPage.STORAGE.action) else Intent(android.provider.Settings.ACTION_SETTINGS)
         val intent = Intent(page.action)
-        start(context, if (context.packageManager.resolveActivity(intent, 0) != null) intent else Intent(android.provider.Settings.ACTION_SETTINGS))
+        start(context, if (context.packageManager.resolveActivity(intent, 0) != null) intent else fallback)
+    }
+
+    private const val PLAY_STORE = "com.android.vending"
+
+    /** The Play Store page of [app], in the store app when there is one; the store itself when null. */
+    private fun openStore(context: Context, app: AppEntry?): Boolean {
+        val pm = context.packageManager
+        if (app == null) {
+            val store = pm.getLaunchIntentForPackage(PLAY_STORE) ?: Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps"))
+            start(context, store)
+            return true
+        }
+        val pkg = packageOf(app) ?: return false
+        val market = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$pkg")).setPackage(PLAY_STORE)
+        start(context, if (pm.resolveActivity(market, 0) != null) market else Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$pkg")))
+        return true
+    }
+
+    /**
+     * Adds the [BundledPack] [id] to the saved actions. Returns how many of its actions were left
+     * out because the user already has their names, or null when there is no such pack.
+     */
+    fun installPack(context: Context, id: String): Int? {
+        val pack = BundledPacks.of(id) ?: return null
+        val (actions, skipped) = BundledPacks.install(CustomActionStore.load(context), AliasStore.load(context), pack)
+        CustomActionStore.save(context, actions)
+        return skipped
     }
 
     fun hasCallPermission(context: Context): Boolean = context.checkSelfPermission(android.Manifest.permission.CALL_PHONE) ==
@@ -270,6 +316,8 @@ object CommandExecutor {
     private fun runCustom(context: Context, action: CommandAction.Custom): Boolean {
         val spec = action.action
         if (spec.kind == ActionKind.SHORTCUT) return startShortcut(context, spec)
+        // Its answer is shown in the command bar, which fetches it.
+        if (spec.kind == ActionKind.API) return false
         val targets = if (spec.packages.isEmpty()) listOf<String?>(null) else spec.packages
         for (pkg in targets) {
             val intent = buildIntent(spec, action.contact, action.text, pkg)

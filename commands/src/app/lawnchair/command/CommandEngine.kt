@@ -74,6 +74,25 @@ sealed interface CommandAction {
     /** Runs and shows its output in the bar instead of closing it. */
     data class Ping(val host: String) : CommandAction
 
+    /** "qr ...": the code is drawn in the bar for another phone's camera. */
+    data class ShowQr(val content: String) : CommandAction
+
+    /** "perto farmácia": places of that kind around, in the maps app. */
+    data class Nearby(val query: String) : CommandAction
+
+    /** "clima recife", or "clima" at [location] ("lat,long"): shown in the bar. */
+    data class Weather(val place: String, val location: String?) : CommandAction
+
+    /** Asks the system to uninstall [app]; it confirms first. */
+    data class Uninstall(val app: AppEntry) : CommandAction
+
+    /** The Play Store page of [app], or the store itself when null. */
+    data class UpdateApp(val app: AppEntry?) : CommandAction
+
+    /** Adds or takes away a [BundledPack] by its id. */
+    data class InstallPack(val id: String) : CommandAction
+    data class RemovePack(val id: String) : CommandAction
+
     /** "fast": latency, download and upload, shown in the bar as they are measured. */
     data object SpeedTest : CommandAction
 
@@ -414,6 +433,20 @@ object CommandEngine {
 
         is CommandAction.Ping -> "ping -c 3 " + action.host
 
+        is CommandAction.ShowQr -> "QR · " + action.content.length + " chars"
+
+        is CommandAction.Nearby -> "geo:0,0?q=" + encode(action.query)
+
+        is CommandAction.Weather -> "GET api.open-meteo.com" + if (action.place.isEmpty()) " · {location}" else " · \"" + action.place + "\""
+
+        is CommandAction.Uninstall -> "ACTION_DELETE · package:" + action.app.id.substringBefore('/')
+
+        is CommandAction.UpdateApp -> action.app?.let { "market://details?id=" + it.id.substringBefore('/') } ?: "com.android.vending"
+
+        is CommandAction.InstallPack -> "actions += " + action.id
+
+        is CommandAction.RemovePack -> "actions -= " + action.id
+
         is CommandAction.SpeedTest -> "GET/POST speed.cloudflare.com · ≤ ${Speed.MAX_MB} MB"
 
         is CommandAction.Ai -> when (action.mode) {
@@ -461,6 +494,7 @@ object CommandEngine {
     private fun describeCustom(action: CommandAction.Custom): String {
         val spec = action.action
         if (spec.kind == ActionKind.SHORTCUT) return Texts.get(R.string.cmd_desc_shortcut, spec.packages.firstOrNull().orEmpty())
+        if (spec.kind == ActionKind.API) return "GET " + (ApiCall.url(spec, action.text, java.time.LocalDate.now()) ?: spec.template)
         if (spec.template.isEmpty()) {
             return (spec.intentAction.substringAfterLast('.') + " " + spec.mimeType.orEmpty() + " · " + action.text).trim()
         }
@@ -632,7 +666,11 @@ object CommandEngine {
                 listTitle = action.label.uppercase(),
                 needsContacts = false,
                 previewTitle = action.label.uppercase(),
-                preview = if (text.isEmpty()) Texts.get(R.string.cmd_text_empty) else text.uppercase(),
+                preview = when {
+                    text.isEmpty() -> Texts.get(R.string.cmd_text_empty)
+                    action.kind == ActionKind.API -> text.uppercase() + " · " + Texts.get(R.string.cmd_api_ready, ApiCall.host(action))
+                    else -> text.uppercase()
+                },
                 tone = if (text.isEmpty()) Tone.IDLE else Tone.OK,
                 action = text.takeIf { it.isNotEmpty() }?.let { CommandAction.Custom(action, text = it) },
             )
@@ -643,7 +681,7 @@ object CommandEngine {
             listTitle = action.label.uppercase(),
             needsContacts = false,
             previewTitle = action.label.uppercase(),
-            preview = Texts.get(R.string.cmd_enter_to_run),
+            preview = if (action.kind == ActionKind.API) Texts.get(R.string.cmd_api_ready, ApiCall.host(action)) else Texts.get(R.string.cmd_enter_to_run),
             tone = Tone.OK,
             action = CommandAction.Custom(action),
         )

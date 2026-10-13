@@ -24,6 +24,8 @@ android {
 
 dependencies {
     implementation libs.kotlinx.coroutines.android
+    // Draws the QR codes of "qr".
+    implementation libs.zxing.core
 
     testImplementation libs.junit
     // The JVM tests run outside Android, whose org.json is only a stub there.

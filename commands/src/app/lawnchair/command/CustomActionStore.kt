@@ -38,10 +38,18 @@ object CustomActionStore {
                     .put("action", it.intentAction)
                     .put("mime", it.mimeType ?: JSONObject.NULL)
                     .put("extra", it.textExtra ?: JSONObject.NULL)
-                    .put("pattern", it.pattern),
+                    .put("pattern", it.pattern)
+                    .put("api", it.api?.let { api -> apiJson(api) } ?: JSONObject.NULL)
+                    .put("pack", it.pack),
             )
         }
     }
+
+    private fun apiJson(api: ApiSpec): JSONObject = JSONObject()
+        .put("format", api.format)
+        .put("list", api.list)
+        .put("max", api.max)
+        .put("upcoming", api.upcoming)
 
     fun decode(raw: String): List<CustomAction> = fromJson(JSONArray(raw))
 
@@ -62,6 +70,15 @@ object CustomActionStore {
                     mimeType = if (o.isNull("mime")) null else o.getString("mime"),
                     textExtra = if (o.isNull("extra")) null else o.getString("extra"),
                     pattern = o.optString("pattern", ""),
+                    api = o.optJSONObject("api")?.let { api ->
+                        ApiSpec(
+                            format = api.getString("format"),
+                            list = api.optString("list", ""),
+                            max = api.optInt("max", 5),
+                            upcoming = api.optString("upcoming", ""),
+                        )
+                    },
+                    pack = o.optString("pack", ""),
                 )
             }.getOrNull()
         }

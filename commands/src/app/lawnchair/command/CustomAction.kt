@@ -5,8 +5,11 @@ import app.lawnchair.util.Texts
 /** What the user types after the letter of a [CustomAction]. */
 enum class ArgKind { NONE, TEXT, CONTACT, CONTACT_AND_TEXT }
 
-/** How a [CustomAction] reaches the app: a URI/intent template or a launcher shortcut. */
-enum class ActionKind { INTENT, SHORTCUT }
+/**
+ * How a [CustomAction] does its work: a URI/intent template, a launcher shortcut, or an https
+ * address whose JSON answer is shown in the bar ([CustomAction.api] says how).
+ */
+enum class ActionKind { INTENT, SHORTCUT, API }
 
 /**
  * A command the user bound to a letter. "w ana oi" is the WhatsApp preset: the letter is `w`, the
@@ -35,6 +38,10 @@ data class CustomAction(
      * the action with that line as what was typed (`{text}`). Empty for none; see [CommandPattern].
      */
     val pattern: String = "",
+    /** For [ActionKind.API]: which parts of the answer are shown, and how. */
+    val api: ApiSpec? = null,
+    /** The built-in pack the action came with ("brasil"), so the pack can be removed; empty for the user's own. */
+    val pack: String = "",
 ) {
     /** "w [contato] [mensagem]" shown in the command list. */
     val usage: String

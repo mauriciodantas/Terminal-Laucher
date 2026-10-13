@@ -15,6 +15,9 @@ class CustomCommand(private val action: CustomAction) : Command {
 
     override val requiresArgument: Boolean get() = action.arg != ArgKind.NONE
 
+    /** A pattern is narrower than what the built-ins take: "01310-100" lists the CEP before calc's subtraction. */
+    override val optionOrder: Int get() = if (action.pattern.isNotEmpty()) -1 else 0
+
     override fun isApplicable(text: String, ctx: CommandContext): Boolean = CommandPattern.takes(action.pattern, text) ||
         ((action.arg == ArgKind.CONTACT || action.arg == ArgKind.CONTACT_AND_TEXT) && PhoneNumber.of(text) != null)
 

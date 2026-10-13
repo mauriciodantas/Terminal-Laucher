@@ -22,6 +22,9 @@ enum class SettingsPage(@StringRes private val wordsRes: Int, private val fixed:
     DISPLAY(R.string.cmd_cfg_display, "tela,display,screen", "android.settings.DISPLAY_SETTINGS"),
     SOUND(R.string.cmd_cfg_sound, "som,sound", "android.settings.SOUND_SETTINGS"),
     STORAGE(R.string.cmd_cfg_storage, "armazenamento,storage", "android.settings.INTERNAL_STORAGE_SETTINGS"),
+
+    /** The system's own cleanup ("liberar espaço"); where it is missing, the storage screen opens. */
+    FREE_SPACE(R.string.cmd_cfg_free_space, "limpeza,liberar,cleanup", "android.os.storage.action.MANAGE_STORAGE"),
     LOCATION(R.string.cmd_cfg_location, "localizacao,location,gps", "android.settings.LOCATION_SOURCE_SETTINGS"),
     SECURITY(R.string.cmd_cfg_security, "seguranca,security", "android.settings.SECURITY_SETTINGS"),
     ACCESSIBILITY(R.string.cmd_cfg_accessibility, "acessibilidade,accessibility", "android.settings.ACCESSIBILITY_SETTINGS"),

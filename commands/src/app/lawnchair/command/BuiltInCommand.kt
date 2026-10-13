@@ -51,6 +51,13 @@ enum class BuiltInCommand(
     NETWORK(R.string.cmd_word_network, "rede", "network", short = "net"),
     FAST(R.string.cmd_word_fast, "fast", "fast", short = "speedtest"),
     AI(R.string.cmd_word_ai, "ia", "ai"),
+    QR(R.string.cmd_word_qr, "qr", "qr"),
+    NEARBY(R.string.cmd_word_nearby, "perto", "nearby"),
+    WEATHER(R.string.cmd_word_weather, "clima", "weather", short = "tempo"),
+    FREE_SPACE(R.string.cmd_word_free_space, "liberar", "cleanup"),
+    UNINSTALL(R.string.cmd_word_uninstall, "desinstalar", "uninstall"),
+    UPDATE(R.string.cmd_word_update, "atualizar", "update"),
+    PACK(R.string.cmd_word_pack, "pacote", "pack"),
     ;
 
     /** The word shown and suggested: "abrir" in Portuguese, "open" in English. */

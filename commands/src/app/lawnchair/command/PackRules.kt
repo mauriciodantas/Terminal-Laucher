@@ -36,17 +36,25 @@ object PackRules {
         return scheme.takeIf { s -> s.all { it.isLetterOrDigit() || it in "+-." } }
     }
 
-    fun isBlocked(action: CustomAction): Boolean = action.kind == ActionKind.INTENT && schemeOf(action.template.trim()) in BLOCKED_SCHEMES
+    /** An API action only reaches an https address, and needs to say what it shows. */
+    fun isBlocked(action: CustomAction): Boolean = when (action.kind) {
+        ActionKind.INTENT -> schemeOf(action.template.trim()) in BLOCKED_SCHEMES
+        ActionKind.API -> !ApiCall.isUsable(action)
+        ActionKind.SHORTCUT -> false
+    }
 
     /** A short warning for an action that is allowed but unusual, or null. */
     fun caution(action: CustomAction): String? {
         if (action.kind == ActionKind.SHORTCUT) return null
+        // What is typed goes to somebody else's server: the import says whose.
+        if (action.kind == ActionKind.API) return Texts.get(R.string.cmd_caution_api, ApiCall.host(action))
         val scheme = schemeOf(action.template.trim()) ?: return null
         return if (scheme in COMMON_SCHEMES) null else Texts.get(R.string.cmd_caution_app_link, scheme)
     }
 
     private fun detail(action: CustomAction): String = when {
         action.kind == ActionKind.SHORTCUT -> Texts.get(R.string.cmd_desc_shortcut, action.packages.firstOrNull().orEmpty())
+        action.kind == ActionKind.API -> "GET " + action.template
         action.template.isEmpty() -> action.intentAction.substringAfterLast('.') + " " + action.mimeType.orEmpty()
         else -> action.template
     } + (if (action.packages.isNotEmpty() && action.kind == ActionKind.INTENT) " · " + action.packages.joinToString() else "") +

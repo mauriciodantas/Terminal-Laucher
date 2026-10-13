@@ -10,6 +10,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -21,6 +22,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -300,6 +302,9 @@ private fun CommandScreen(onClose: () -> Unit) {
 
     // The speed test running in the bar, so a second Enter does not start another.
     var speedJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
+
+    // The code "qr" drew, shown under the preview until something else is typed.
+    var qr by remember { mutableStateOf<QrMatrix?>(null) }
     var pendingAction by remember { mutableStateOf<CommandAction?>(null) }
     var pendingCommand by remember { mutableStateOf("") }
 
@@ -339,6 +344,7 @@ private fun CommandScreen(onClose: () -> Unit) {
         field = TextFieldValue(value, TextRange(cursor))
         selected = 0
         done = null
+        qr = null
     }
 
     val executedLabel = stringResource(R.string.command_executed)
@@ -506,6 +512,60 @@ private fun CommandScreen(onClose: () -> Unit) {
                         done = context.getString(R.string.cmd_fast_failed, it.message ?: it.javaClass.simpleName)
                     }
                 }
+                return
+            }
+
+            // Drawn under the preview; the bar stays open for the other phone to read it.
+            is CommandAction.ShowQr -> {
+                record(action, command)
+                val code = QrCode.encode(action.content)
+                qr = code
+                done = context.getString(if (code != null) CommandR.string.cmd_qr_shown else CommandR.string.cmd_qr_failed)
+                return
+            }
+
+            // Fetched here and shown in the preview, like the ping output.
+            is CommandAction.Weather -> {
+                record(action, command)
+                done = context.getString(R.string.command_running)
+                scope.launch { done = withContext(Dispatchers.IO) { Weather.run(action) } }
+                return
+            }
+
+            is CommandAction.Custom -> if (action.action.kind == ActionKind.API) {
+                record(action, command)
+                done = context.getString(R.string.command_running)
+                scope.launch { done = withContext(Dispatchers.IO) { ApiCall.run(action.action, action.text) } }
+                return
+            }
+
+            // The new commands work right away: the list the bar completes from is read again.
+            is CommandAction.InstallPack -> {
+                val pack = BundledPacks.of(action.id)
+                val skipped = CommandExecutor.installPack(context, action.id)
+                if (pack == null || skipped == null) {
+                    done = failedLabel
+                    return
+                }
+                record(action, command)
+                custom = CustomActionStore.load(context)
+                val letters = custom.filter { it.pack == pack.id }.joinToString(" · ") { it.letter }
+                done = if (skipped == 0) {
+                    context.getString(CommandR.string.cmd_pack_done, pack.name.uppercase(), letters)
+                } else {
+                    context.getString(CommandR.string.cmd_pack_done_skipped, pack.name.uppercase(), letters, skipped)
+                }
+                return
+            }
+
+            is CommandAction.RemovePack -> {
+                if (!CommandExecutor.execute(context, action)) {
+                    done = failedLabel
+                    return
+                }
+                record(action, command)
+                custom = CustomActionStore.load(context)
+                done = context.getString(CommandR.string.cmd_pack_removed, BundledPacks.of(action.id)?.name?.uppercase() ?: action.id)
                 return
             }
 
@@ -754,6 +814,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                                 if (it.text != field.text) {
                                     selected = 0
                                     done = null
+                                    qr = null
                                     // Typing something else stops a speed test, which would keep writing over the preview.
                                     speedJob?.cancel()
                                 }
@@ -1208,6 +1269,12 @@ private fun CommandScreen(onClose: () -> Unit) {
                         letterSpacing = 0.9.sp,
                         modifier = Modifier.padding(top = 3.dp),
                     )
+                    val code = qr
+                    if (done != null && code != null) {
+                        Box(Modifier.fillMaxWidth().padding(top = 8.dp), contentAlignment = Alignment.Center) {
+                            QrImage(code)
+                        }
+                    }
                     val note = aiNote?.takeIf { it.first == text.trim() && it.second.isNotEmpty() }?.second
                     if (done == null && note != null) {
                         Text(
@@ -1335,5 +1402,28 @@ private fun FKey(text: String, color: Color, modifier: Modifier = Modifier, onCl
         contentAlignment = Alignment.Center,
     ) {
         Text(text, color = color, fontFamily = mono(), fontSize = 10.sp, letterSpacing = 0.8.sp)
+    }
+}
+
+/**
+ * A QR code from "qr", black on white whatever the theme: phone cameras read that best, and the
+ * white margin around it is part of the code.
+ */
+@Composable
+private fun QrImage(code: QrMatrix) {
+    Canvas(
+        Modifier
+            .widthIn(max = 280.dp)
+            .fillMaxWidth(0.85f)
+            .aspectRatio(1f)
+            .background(Color.White),
+    ) {
+        val cell = size.width / code.size
+        for (y in 0 until code.size) {
+            for (x in 0 until code.size) {
+                // A hair wider than the cell, so no seams show between dark squares.
+                if (code[x, y]) drawRect(Color.Black, Offset(x * cell, y * cell), Size(cell + 0.5f, cell + 0.5f))
+            }
+        }
     }
 }
