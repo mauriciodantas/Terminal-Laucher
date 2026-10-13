@@ -92,7 +92,11 @@ enum class ThemeVerb(
  * a whole theme by name (the user's saved ones and the ready-made looks of Appearance), and saving,
  * sharing and deleting themes. Pure, so it can be unit tested.
  */
-object ThemeCommand {
+object ThemeCommand : BuiltIn(BuiltInCommand.THEME, null, R.string.cmd_help_theme) {
+
+    override fun usages(): List<Pair<String, String>> = listOf(word to word + " " + ThemeChange.usage())
+
+    override fun analyze(arg: String, ctx: CommandContext): Analysis = analyze(arg, ctx.extras)
 
     /** Families of the system fonts that every Android has. */
     val SYSTEM_FONTS = listOf("sans-serif", "sans-serif-condensed", "sans-serif-light", "serif", "monospace", "cursive", "casual")
@@ -240,7 +244,7 @@ object ThemeCommand {
         val off = Texts.get(R.string.cmd_state_off).split(',').first().trim()
         val suggestions = listOf(on, off).map { Suggestion("$word $it", it.uppercase(), Texts.get(R.string.cmd_kind_option)) }
             .filter { rest.isEmpty() || it.completion.foldAccents().startsWith("$word $rest".foldAccents()) }
-        val state = MoreCommands.state(rest)
+        val state = ToggleCommand.state(rest)
         val percent = if (element.value == ThemeValue.EFFECT && state == null) percentOf(rest) else null
         val spec = when {
             percent != null -> intensity(element, percent / 100f)

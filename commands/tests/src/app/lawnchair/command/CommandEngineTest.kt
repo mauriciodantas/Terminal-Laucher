@@ -35,7 +35,7 @@ class CommandEngineTest {
     @Test fun emptyTextListsTheCommands() {
         val a = run("")
         assertEquals(
-            listOf("abrir ", "alarme ", "calc ", "ligar ", "rota ", "t "),
+            listOf("abrir ", "alarme ", "ligar ", "rota ", "t ", "calc "),
             a.suggestions.map { it.completion },
         )
         assertNull(a.action)
@@ -207,8 +207,8 @@ class CommandEngineTest {
     }
 
     @Test fun parseTimeHandlesEdges() {
-        assertEquals(0 to 0, CommandEngine.parseTime("0"))
-        assertEquals(null, CommandEngine.parseTime("abc"))
+        assertEquals(0 to 0, AlarmCommand.parseTime("0"))
+        assertEquals(null, AlarmCommand.parseTime("abc"))
     }
 
     // ---- calc ----
@@ -501,10 +501,10 @@ class CommandEngineTest {
     }
 
     @Test fun splitFindsTheCutBetweenTwoNames() {
-        assertEquals("google maps" to "chrome", CommandEngine.splitAppNames("google maps chrome", splitApps))
-        assertEquals("chrome" to "google maps", CommandEngine.splitAppNames("chrome google maps", splitApps))
+        assertEquals("google maps" to "chrome", SplitCommand.splitAppNames("google maps chrome", splitApps))
+        assertEquals("chrome" to "google maps", SplitCommand.splitAppNames("chrome google maps", splitApps))
         // A whole name that is one app waits for the second one.
-        assertEquals("google maps" to "", CommandEngine.splitAppNames("google maps", splitApps))
+        assertEquals("google maps" to "", SplitCommand.splitAppNames("google maps", splitApps))
     }
 
     @Test fun splitWithOneAppAsksForTheSecond() {

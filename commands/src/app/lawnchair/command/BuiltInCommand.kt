@@ -59,9 +59,6 @@ enum class BuiltInCommand(
     /** Every word that runs this command, accent-folded like the typed token. */
     fun words(): Set<String> = setOf(word, portuguese, english, short).filter { it.isNotEmpty() }.map { it.foldAccents() }.toSet()
 
-    /** Without an argument the command does not run: "abrir" or "calc" alone are only completed. "lanterna" runs alone. */
-    val requiresArgument: Boolean get() = this !in RUN_ALONE
-
     companion object {
         /** One-letter shortcuts, the same in every language: a new task and calc. */
         const val TASK = "t"
@@ -69,12 +66,6 @@ enum class BuiltInCommand(
 
         /** Typed twice, the last command runs again. */
         const val REPEAT = "!!"
-
-        /** Run typed alone, with nothing after the word: "lanterna", "agenda", "bateria". */
-        private val RUN_ALONE = setOf(
-            TORCH, DND, ROTATION, WIFI, BLUETOOTH, PLAY, PAUSE, NEXT, PREVIOUS, PASTE, SETTINGS, AGENDA, NOTE, SCHEDULED,
-            BATTERY, STORAGE, IP, UPTIME, NETWORK, FAST, BRIGHTNESS, THEME, AI,
-        )
 
         /** The command an accent-folded [token] names, or null. "c" is calc. */
         fun of(token: String): BuiltInCommand? = if (token == CALC_SHORT) CALC else entries.firstOrNull { token in it.words() }

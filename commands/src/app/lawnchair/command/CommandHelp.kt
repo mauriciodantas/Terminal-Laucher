@@ -36,53 +36,11 @@ object CommandHelp {
             val text = Texts.get(R.string.cmd_help_alias, expanded) + (inner?.let { "\n\n" + it.text }.orEmpty())
             return CommandHelpText(alias.name.uppercase(), text)
         }
-        custom.firstOrNull { it.letter == lead }?.let {
-            return CommandHelpText(it.letter.uppercase() + " · " + it.label.uppercase(), Texts.get(R.string.cmd_help_custom) + "\n› " + it.usage)
-        }
-        if (lead == BuiltInCommand.TASK) return help(BuiltInCommand.TASK, R.string.cmd_help_task)
-        val command = BuiltInCommand.of(lead) ?: return null
-        return CommandHelpText(command.word.uppercase(), text(command))
+        return CommandRegistry.of(custom).named(lead)?.help()
     }
 
     /** Aliases that name other aliases are followed this deep, so a loop of them ends. */
     private const val MAX_DEPTH = 4
 
     private fun help(title: String, res: Int) = CommandHelpText(title.uppercase(), Texts.get(res))
-
-    private fun text(command: BuiltInCommand): String = Texts.get(
-        when (command) {
-            BuiltInCommand.OPEN -> R.string.cmd_help_open
-            BuiltInCommand.ALARM -> R.string.cmd_help_alarm
-            BuiltInCommand.CALC -> R.string.cmd_help_calc
-            BuiltInCommand.CALL -> R.string.cmd_help_call
-            BuiltInCommand.ROUTE -> R.string.cmd_help_route
-            BuiltInCommand.SPLIT -> R.string.cmd_help_split
-            BuiltInCommand.THEME -> R.string.cmd_help_theme
-            BuiltInCommand.TIMER -> R.string.cmd_help_timer
-            BuiltInCommand.REMIND -> R.string.cmd_help_remind
-            BuiltInCommand.WIFI -> R.string.cmd_help_wifi
-            BuiltInCommand.BLUETOOTH -> R.string.cmd_help_bluetooth
-            BuiltInCommand.TORCH -> R.string.cmd_help_torch
-            BuiltInCommand.DND -> R.string.cmd_help_dnd
-            BuiltInCommand.BRIGHTNESS -> R.string.cmd_help_brightness
-            BuiltInCommand.ROTATION -> R.string.cmd_help_rotation
-            BuiltInCommand.VOLUME -> R.string.cmd_help_volume
-            BuiltInCommand.PLAY, BuiltInCommand.PAUSE, BuiltInCommand.NEXT, BuiltInCommand.PREVIOUS -> R.string.cmd_help_media
-            BuiltInCommand.COPY -> R.string.cmd_help_copy
-            BuiltInCommand.PASTE -> R.string.cmd_help_paste
-            BuiltInCommand.SETTINGS -> R.string.cmd_help_settings
-            BuiltInCommand.AGENDA -> R.string.cmd_help_agenda
-            BuiltInCommand.NOTE -> R.string.cmd_help_note
-            BuiltInCommand.SCHEDULED -> R.string.cmd_help_scheduled
-            BuiltInCommand.CANCEL -> R.string.cmd_help_cancel
-            BuiltInCommand.BATTERY -> R.string.cmd_help_battery
-            BuiltInCommand.STORAGE -> R.string.cmd_help_storage
-            BuiltInCommand.IP -> R.string.cmd_help_ip
-            BuiltInCommand.UPTIME -> R.string.cmd_help_uptime
-            BuiltInCommand.PING -> R.string.cmd_help_ping
-            BuiltInCommand.NETWORK -> R.string.cmd_help_network
-            BuiltInCommand.FAST -> R.string.cmd_help_fast
-            BuiltInCommand.AI -> R.string.cmd_help_ai
-        },
-    )
 }

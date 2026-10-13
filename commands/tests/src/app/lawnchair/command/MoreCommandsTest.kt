@@ -381,8 +381,8 @@ class MoreCommandsTest {
     }
 
     @Test fun wifiBandsAndSignal() {
-        assertEquals("2.4 GHz", MoreCommands.band(2437))
-        assertEquals("6 GHz", MoreCommands.band(6115))
-        assertEquals("fraco", app.lawnchair.util.Texts.get(MoreCommands.signalQuality(-80)))
+        assertEquals("2.4 GHz", NetworkCommand.band(2437))
+        assertEquals("6 GHz", NetworkCommand.band(6115))
+        assertEquals("fraco", app.lawnchair.util.Texts.get(NetworkCommand.signalQuality(-80)))
     }
 }

@@ -24,7 +24,7 @@ class CommandRegistryTest {
         assertSame(CallCommand, registry.named("call"))
         assertSame(TaskCommand, registry.named("t"))
         assertEquals("w", registry.named("w")?.word)
-        assertTrue(registry.named("lanterna") is LegacyCommand)
+        assertTrue(registry.named("lanterna") is ToggleCommand)
         assertNull(registry.named("nada"))
         // A command with no word is only reached by the text it recognizes.
         assertNull(registry.named(""))
@@ -45,6 +45,25 @@ class CommandRegistryTest {
         // The sum comes after the ways to reach the number.
         assertEquals(listOf("ligar", "w", "calc"), registry.applicable("2000-1500", ctx).map { it.word })
         assertEquals(emptyList<Command>(), registry.applicable("abrir camera", ctx))
+    }
+
+    @Test fun everyBuiltInWordHasItsCommand() {
+        BuiltInCommand.entries.forEach { id ->
+            val command = registry.named(id.portuguese)
+            assertTrue(id.name, command is BuiltIn && command.id == id)
+            assertTrue(id.name, command!!.help() != null)
+            assertTrue(id.name, command.usages().isNotEmpty())
+        }
+    }
+
+    @Test fun aiIsListedOnlyOnceSetUp() {
+        assertFalse(AiAskCommand.isListed(CommandExtras()))
+        assertTrue(AiAskCommand.isListed(CommandExtras(ai = "Claude · claude-sonnet")))
+    }
+
+    @Test fun enterPicksAmongOptions() {
+        assertTrue(CommandEngine.analyze("99999-9999", emptyList(), emptyList(), false).picksOnEnter)
+        assertFalse(CommandEngine.analyze("calc 1+1", emptyList(), emptyList(), false).picksOnEnter)
     }
 
     @Test fun eachOptionTypesTheWholeCommand() {

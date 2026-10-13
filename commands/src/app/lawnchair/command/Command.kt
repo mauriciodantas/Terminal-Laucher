@@ -39,6 +39,15 @@ interface Command {
     /** Text typed alone that [isApplicable] took; by default the same as typing the word before it. */
     fun analyzeMatch(text: String, ctx: CommandContext): Analysis = analyze(text.trim(), ctx)
 
+    /** The lines the command list and "?" show, word first: ("calc", "calc 12*8"). Empty keeps it out. */
+    fun usages(): List<Pair<String, String>> = emptyList()
+
+    /** Listed only while it can be used: "ia" shows up once a key is saved. */
+    fun isListed(extras: CommandExtras): Boolean = true
+
+    /** What the command does and how to write it, shown under the preview. */
+    fun help(): CommandHelpText? = null
+
     /** How the command shows up when several take the same text; picking it types the whole command. */
     fun option(text: String, ctx: CommandContext): Suggestion = Suggestion("$word ${text.trim()}", word.uppercase(), CommandEngine.optionKind())
 }
@@ -53,24 +62,49 @@ class CommandRegistry(private val commands: List<Command>) {
     fun applicable(text: String, ctx: CommandContext): List<Command> = commands.filter { it.isApplicable(text, ctx) }.sortedBy { it.optionOrder }
 
     companion object {
-        /** The built-in commands; the ones still analyzed by [CommandEngine] go through [LegacyCommand]. */
-        val BUILT_IN: List<Command>
-            get() = BuiltInCommand.entries.map {
-                when (it) {
-                    BuiltInCommand.CALC -> CalcCommand
-                    BuiltInCommand.CALL -> CallCommand
-                    else -> LegacyCommand(it)
-                }
-            } + TaskCommand + UrlCommand
+        /** The built-in commands, in the order the command list shows them. */
+        val BUILT_IN: List<Command> by lazy {
+            listOf(
+                OpenCommand,
+                AlarmCommand,
+                CallCommand,
+                RouteCommand,
+                TaskCommand,
+                CalcCommand,
+                SplitCommand,
+                ThemeCommand,
+                TimerCommand,
+                RemindCommand,
+                NoteCommand,
+                AgendaCommand,
+                ToggleCommand(BuiltInCommand.TORCH, SystemToggle.TORCH, R.string.cmd_usage_switch, R.string.cmd_help_torch),
+                ToggleCommand(BuiltInCommand.DND, SystemToggle.DND, R.string.cmd_usage_switch, R.string.cmd_help_dnd),
+                ToggleCommand(BuiltInCommand.ROTATION, SystemToggle.ROTATION, R.string.cmd_usage_switch, R.string.cmd_help_rotation),
+                ToggleCommand(BuiltInCommand.WIFI, SystemToggle.WIFI, R.string.cmd_usage_panel, R.string.cmd_help_wifi),
+                ToggleCommand(BuiltInCommand.BLUETOOTH, SystemToggle.BLUETOOTH, R.string.cmd_usage_panel, R.string.cmd_help_bluetooth),
+                BrightnessCommand,
+                VolumeCommand,
+                MediaCommand(BuiltInCommand.PLAY, MediaKey.PLAY),
+                MediaCommand(BuiltInCommand.PAUSE, MediaKey.PAUSE),
+                MediaCommand(BuiltInCommand.NEXT, MediaKey.NEXT),
+                MediaCommand(BuiltInCommand.PREVIOUS, MediaKey.PREVIOUS),
+                CopyCommand,
+                PasteCommand,
+                SettingsCommand,
+                ScheduledCommand,
+                CancelCommand,
+                InfoCommand(BuiltInCommand.BATTERY, R.string.cmd_help_battery),
+                InfoCommand(BuiltInCommand.STORAGE, R.string.cmd_help_storage),
+                InfoCommand(BuiltInCommand.IP, R.string.cmd_help_ip),
+                InfoCommand(BuiltInCommand.UPTIME, R.string.cmd_help_uptime),
+                NetworkCommand,
+                FastCommand,
+                PingCommand,
+                AiAskCommand,
+                UrlCommand,
+            )
+        }
 
         fun of(custom: List<CustomAction>): CommandRegistry = CommandRegistry(BUILT_IN + custom.map { CustomCommand(it) })
     }
-}
-
-/** A built-in command whose rules still live in [CommandEngine]; each one moves to its own class over time. */
-class LegacyCommand(private val command: BuiltInCommand) : Command {
-    override val word: String get() = command.word
-    override fun names(): Set<String> = command.words()
-    override val requiresArgument: Boolean get() = command.requiresArgument
-    override fun analyze(arg: String, ctx: CommandContext): Analysis = CommandEngine.analyzeBuiltIn(command, arg, ctx)
 }

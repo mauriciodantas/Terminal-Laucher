@@ -583,15 +583,21 @@ private fun CommandScreen(onClose: () -> Unit) {
         commit(action, command)
     }
 
-    fun run() {
-        analysis.action?.let { runAction(it, text) }
-    }
-
     /** A suggestion that is already a complete, runnable command runs on the tap, without Enter. */
     fun pick(suggestion: Suggestion) {
         setText(suggestion.completion)
         CommandEngine.analyze(suggestion.completion, apps, contacts, granted, custom, aliases, extras.copy(history = history)).action
             ?.let { runAction(it, suggestion.completion.trim()) }
+    }
+
+    /** Enter runs the command; among options, which have none of their own, it picks the highlighted one. */
+    fun run() {
+        val action = analysis.action
+        if (action != null) {
+            runAction(action, text)
+        } else if (analysis.picksOnEnter) {
+            analysis.suggestions.getOrNull(sel)?.let { pick(it) }
+        }
     }
 
     val voiceIntent = remember { CommandActivity.voiceIntent(context) }

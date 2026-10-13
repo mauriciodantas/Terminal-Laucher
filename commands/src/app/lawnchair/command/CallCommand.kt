@@ -3,11 +3,7 @@ package app.lawnchair.command
 import app.lawnchair.util.Texts
 
 /** "ligar ana" calls a contact, "ligar 99999-9999" a number. A phone number typed alone offers the call. */
-object CallCommand : Command {
-
-    override val word: String get() = BuiltInCommand.CALL.word
-
-    override fun names(): Set<String> = BuiltInCommand.CALL.words()
+object CallCommand : BuiltIn(BuiltInCommand.CALL, R.string.cmd_usage_call, R.string.cmd_help_call) {
 
     override val requiresArgument = true
 

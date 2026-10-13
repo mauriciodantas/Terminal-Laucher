@@ -11,6 +11,10 @@ object TaskCommand : Command {
 
     override val requiresArgument = true
 
+    override fun usages(): List<Pair<String, String>> = listOf(word to word + " " + Texts.get(R.string.cmd_usage_task))
+
+    override fun help(): CommandHelpText = CommandHelpText(word.uppercase(), Texts.get(R.string.cmd_help_task))
+
     override fun analyze(arg: String, ctx: CommandContext): Analysis {
         val title = arg.trim()
         val app = ctx.extras.taskApp

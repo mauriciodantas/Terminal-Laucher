@@ -6,11 +6,12 @@ import app.lawnchair.util.Texts
  * "calc 12*8" or "c 12*8": math, units, currencies and percentages. A sum or a conversion typed
  * alone ("12*8", "5 km em mi") is calc too.
  */
-object CalcCommand : Command {
+object CalcCommand : BuiltIn(BuiltInCommand.CALC, R.string.cmd_usage_calc, R.string.cmd_help_calc) {
 
-    override val word: String get() = BuiltInCommand.CALC.word
+    override fun names(): Set<String> = super.names() + BuiltInCommand.CALC_SHORT
 
-    override fun names(): Set<String> = BuiltInCommand.CALC.words() + BuiltInCommand.CALC_SHORT
+    /** "c" is listed too, as the short form. */
+    override fun usages(): List<Pair<String, String>> = super.usages() + (BuiltInCommand.CALC_SHORT to BuiltInCommand.CALC_SHORT + " " + Texts.get(R.string.cmd_usage_calc_short))
 
     override val requiresArgument = true
 
