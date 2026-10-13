@@ -14,7 +14,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,7 +27,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -43,14 +42,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
@@ -59,19 +53,18 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import app.lawnchair.LawnchairLauncher
-import app.lawnchair.preferences2.asState
-import app.lawnchair.preferences2.preferenceManager2
-import app.lawnchair.theme.color.ColorOption
+import app.lawnchair.theme.ComplementaryColors
+import app.lawnchair.ui.preferences.components.colorpreference.LookChip
+import app.lawnchair.ui.preferences.components.colorpreference.WheelChip
+import app.lawnchair.ui.preferences.components.colorpreference.rememberLooks
 import app.lawnchair.ui.preferences.components.isNotificationServiceEnabled
-import app.lawnchair.ui.preferences.destinations.phosphorEntries
 import app.lawnchair.ui.theme.EdgeToEdge
 import app.lawnchair.ui.theme.LawnchairTheme
 import app.lawnchair.util.isDefaultLauncher
 import com.android.launcher3.R
-import com.patrykmichalik.opto.core.setBlocking
 
 /**
- * First-run setup for Terminal: boot log, default launcher, phosphor color and notification
+ * First-run setup for Terminal: boot log, default launcher, theme and notification
  * access. It is shown once, the first time the launcher starts, and never blocks the home screen.
  */
 class OnboardingActivity : ComponentActivity() {
@@ -200,7 +193,7 @@ private fun OnboardingScreen(onFinish: () -> Unit) {
             when (step) {
                 STEP_BOOT -> BootStep(isDefault, notificationsGranted)
                 STEP_DEFAULT -> DefaultLauncherStep(isDefault)
-                STEP_COLOR -> ColorStep(onChoose = { colorChosen = true })
+                STEP_COLOR -> ThemeStep(onChoose = { colorChosen = true })
                 STEP_NOTIFICATIONS -> NotificationsStep(notificationsGranted)
                 else -> ReadyStep(isDefault, defaultSkipped, notificationsGranted, notificationsSkipped, colorChosen)
             }
@@ -296,34 +289,22 @@ private fun DefaultLauncherStep(isDefault: Boolean) {
     }
 }
 
+/**
+ * The look of the launcher: one row of the same ready-made looks as Appearance › Themes, after the
+ * color wheel to compose any other. The whole screen follows the choice, so it is its own preview.
+ */
 @Composable
-private fun ColorStep(onChoose: () -> Unit) {
-    val prefs2 = preferenceManager2()
-    val accent by prefs2.accentColor.asState()
+private fun ThemeStep(onChoose: () -> Unit) {
+    val looks = rememberLooks(onApply = { onChoose() })
     StepIntro(R.string.onboarding_color_heading, 2, R.string.onboarding_color_title)
-    Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-        phosphorEntries.forEach { entry ->
-            val option = entry.value as ColorOption.CustomColor
-            val label = entry.label()
-            val selected = (accent as? ColorOption.CustomColor)?.color == option.color
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(Color(option.color))
-                    .then(if (selected) Modifier.border(2.dp, MaterialTheme.colorScheme.onSurface, CircleShape) else Modifier)
-                    .semantics {
-                        role = Role.Button
-                        contentDescription = label
-                    }
-                    .clickable {
-                        prefs2.accentColor.setBlocking(option)
-                        onChoose()
-                    },
-            )
-        }
+    Row(
+        modifier = Modifier.horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        WheelChip(onClick = looks::openWheel)
+        ComplementaryColors.all.forEach { pair -> LookChip(pair, looks.isSelected(pair), onClick = { looks.apply(pair) }) }
     }
-    Spacer(Modifier.height(20.dp))
+    Spacer(Modifier.height(16.dp))
     Mono(stringResource(R.string.onboarding_color_hint), color = dim(), size = 11.sp, lineHeight = 17.sp)
 }
 

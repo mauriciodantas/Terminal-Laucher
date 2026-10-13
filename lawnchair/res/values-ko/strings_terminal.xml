@@ -40,9 +40,9 @@
     <string name="onboarding_default_benefit_shortcuts">[+] 앱 바로가기 및 추가 기능</string>
     <string name="onboarding_default_active">기본 런처 사용 중</string>
     <string name="onboarding_default_active_desc">TERMINAL이 이 기기의 기본 런처입니다.</string>
-    <string name="onboarding_color_heading">&gt; 형광체 색상</string>
-    <string name="onboarding_color_title">형광체 색상 선택</string>
-    <string name="onboarding_color_hint">나중에 설정 › 모양에서 변경할 수 있습니다.</string>
+    <string name="onboarding_color_heading">&gt; 테마</string>
+    <string name="onboarding_color_title">테마 선택</string>
+    <string name="onboarding_color_hint">탭하면 바로 적용됩니다. 색상환에서 직접 만들거나 나중에 설정 › 모양에서 바꿀 수 있습니다.</string>
     <string name="onboarding_notifications_heading">&gt; 알림 점</string>
     <string name="onboarding_notifications_title">아이콘에 알림 표시</string>
     <string name="onboarding_notifications_desc">알림이 있는 앱에 점을 표시하려면 Terminal에 알림 액세스 권한이 필요합니다.</string>
@@ -53,7 +53,7 @@
     <string name="onboarding_ready_skipped">건너뛴 항목은 나중에 설정에서 켤 수 있습니다.</string>
     <string name="onboarding_ready_hint_swipe">▲ 스와이프하여 프로그램 디렉터리 열기</string>
     <string name="onboarding_ready_hint_command">&gt; 명령어를 입력하여 앱 찾기</string>
-    <string name="onboarding_ready_color">형광체 색상</string>
+    <string name="onboarding_ready_color">테마</string>
     <string name="onboarding_enter">TERMINAL 시작</string>
     <string name="onboarding_skip_all">설정 건너뛰기</string>
     <string name="onboarding_redo_menu">초기 설정 다시 하기</string>

@@ -40,9 +40,9 @@
     <string name="onboarding_default_benefit_shortcuts">[+] 應用程式捷徑和額外功能</string>
     <string name="onboarding_default_active">預設啟動器已啟用</string>
     <string name="onboarding_default_active_desc">TERMINAL 是這部裝置的預設啟動器。</string>
-    <string name="onboarding_color_heading">&gt; 螢光色</string>
-    <string name="onboarding_color_title">選擇螢光色</string>
-    <string name="onboarding_color_hint">之後可在「設定 › 外觀」中變更。</string>
+    <string name="onboarding_color_heading">&gt; 主題</string>
+    <string name="onboarding_color_title">選擇主題</string>
+    <string name="onboarding_color_hint">輕觸即可立即預覽。在色輪上調出自己的配色，或稍後在 設定 › 外觀 中變更。</string>
     <string name="onboarding_notifications_heading">&gt; 通知圓點</string>
     <string name="onboarding_notifications_title">在圖示上顯示提醒</string>
     <string name="onboarding_notifications_desc">Terminal 需要通知存取權，才能用圓點標示有提醒的應用程式。</string>
@@ -53,7 +53,7 @@
     <string name="onboarding_ready_skipped">略過的項目可稍後在設定中開啟。</string>
     <string name="onboarding_ready_hint_swipe">▲ 滑動開啟程式目錄</string>
     <string name="onboarding_ready_hint_command">&gt; 輸入指令來尋找應用程式</string>
-    <string name="onboarding_ready_color">螢光色</string>
+    <string name="onboarding_ready_color">主題</string>
     <string name="onboarding_enter">進入 TERMINAL</string>
     <string name="onboarding_skip_all">略過設定</string>
     <string name="onboarding_redo_menu">重新進行初始設定</string>

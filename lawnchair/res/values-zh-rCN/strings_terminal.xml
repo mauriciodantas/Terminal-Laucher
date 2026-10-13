@@ -40,9 +40,9 @@
     <string name="onboarding_default_benefit_shortcuts">[+] 应用快捷方式和额外功能</string>
     <string name="onboarding_default_active">默认启动器已启用</string>
     <string name="onboarding_default_active_desc">TERMINAL 是此设备的默认启动器。</string>
-    <string name="onboarding_color_heading">&gt; 荧光色</string>
-    <string name="onboarding_color_title">选择荧光色</string>
-    <string name="onboarding_color_hint">之后可在“设置 › 外观”中更改。</string>
+    <string name="onboarding_color_heading">&gt; 主题</string>
+    <string name="onboarding_color_title">选择主题</string>
+    <string name="onboarding_color_hint">点按即可立即预览。在色轮上调出自己的配色，或稍后在 设置 › 外观 中更改。</string>
     <string name="onboarding_notifications_heading">&gt; 通知圆点</string>
     <string name="onboarding_notifications_title">在图标上显示提醒</string>
     <string name="onboarding_notifications_desc">Terminal 需要通知访问权限，才能用圆点标记有提醒的应用。</string>
@@ -53,7 +53,7 @@
     <string name="onboarding_ready_skipped">跳过的项目可稍后在设置中开启。</string>
     <string name="onboarding_ready_hint_swipe">▲ 滑动打开程序目录</string>
     <string name="onboarding_ready_hint_command">&gt; 输入命令查找应用</string>
-    <string name="onboarding_ready_color">荧光色</string>
+    <string name="onboarding_ready_color">主题</string>
     <string name="onboarding_enter">进入 TERMINAL</string>
     <string name="onboarding_skip_all">跳过设置</string>
     <string name="onboarding_redo_menu">重新进行初始设置</string>

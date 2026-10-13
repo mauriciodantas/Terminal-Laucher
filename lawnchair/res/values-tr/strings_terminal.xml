@@ -40,9 +40,9 @@
     <string name="onboarding_default_benefit_shortcuts">[+] UYGULAMA KISAYOLLARI VE EK ÖZELLİKLER</string>
     <string name="onboarding_default_active">VARSAYILAN BAŞLATICI ETKİN</string>
     <string name="onboarding_default_active_desc">TERMINAL BU CİHAZIN VARSAYILAN BAŞLATICISI.</string>
-    <string name="onboarding_color_heading">&gt; FOSFOR RENGİ</string>
-    <string name="onboarding_color_title">FOSFOR RENGİNİ SEÇİN</string>
-    <string name="onboarding_color_hint">DAHA SONRA AYARLAR › GÖRÜNÜM BÖLÜMÜNDEN DEĞİŞTİREBİLİRSİNİZ.</string>
+    <string name="onboarding_color_heading">&gt; TEMA</string>
+    <string name="onboarding_color_title">BİR TEMA SEÇ</string>
+    <string name="onboarding_color_hint">HEMEN GÖRMEK İÇİN BİRİNE DOKUN. RENK ÇARKINDA KENDİNİNKİNİ OLUŞTUR YA DA SONRA AYARLAR › GÖRÜNÜM\'DEN DEĞİŞTİR.</string>
     <string name="onboarding_notifications_heading">&gt; BİLDİRİM NOKTALARI</string>
     <string name="onboarding_notifications_title">SİMGELERDE UYARILARI GÖSTERİN</string>
     <string name="onboarding_notifications_desc">Terminal\'in uyarısı olan uygulamaları bir noktayla işaretlemesi için bildirim erişimi gerekir.</string>
@@ -53,7 +53,7 @@
     <string name="onboarding_ready_skipped">ATLANAN ÖĞELER DAHA SONRA AYARLAR\'DAN AÇILABİLİR.</string>
     <string name="onboarding_ready_hint_swipe">▲ PROGRAM DİZİNİ İÇİN KAYDIRIN</string>
     <string name="onboarding_ready_hint_command">&gt; UYGULAMA BULMAK İÇİN BİR KOMUT YAZIN</string>
-    <string name="onboarding_ready_color">FOSFOR RENGİ</string>
+    <string name="onboarding_ready_color">TEMA</string>
     <string name="onboarding_enter">TERMINAL\'E GİR</string>
     <string name="onboarding_skip_all">KURULUMU ATLA</string>
     <string name="onboarding_redo_menu">İlk kurulumu tekrarla</string>

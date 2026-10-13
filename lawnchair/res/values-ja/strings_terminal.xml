@@ -40,9 +40,9 @@
     <string name="onboarding_default_benefit_shortcuts">[+] アプリのショートカットと追加機能</string>
     <string name="onboarding_default_active">デフォルトのランチャーに設定済み</string>
     <string name="onboarding_default_active_desc">TERMINAL はこのデバイスのデフォルトのランチャーです。</string>
-    <string name="onboarding_color_heading">&gt; 蛍光体の色</string>
-    <string name="onboarding_color_title">蛍光体の色を選択</string>
-    <string name="onboarding_color_hint">あとで [設定] › [外観] から変更できます。</string>
+    <string name="onboarding_color_heading">&gt; テーマ</string>
+    <string name="onboarding_color_title">テーマを選択</string>
+    <string name="onboarding_color_hint">タップするとすぐに反映されます。カラーホイールで自分の配色を作るか、あとで 設定 › 外観 で変更できます。</string>
     <string name="onboarding_notifications_heading">&gt; 通知ドット</string>
     <string name="onboarding_notifications_title">アイコンにお知らせを表示</string>
     <string name="onboarding_notifications_desc">お知らせのあるアプリにドットを付けるには、Terminal に通知へのアクセスを許可する必要があります。</string>
@@ -53,7 +53,7 @@
     <string name="onboarding_ready_skipped">スキップした項目はあとで設定から有効にできます。</string>
     <string name="onboarding_ready_hint_swipe">▲ スワイプしてプログラム一覧へ</string>
     <string name="onboarding_ready_hint_command">&gt; コマンドを入力してアプリを検索</string>
-    <string name="onboarding_ready_color">蛍光体の色</string>
+    <string name="onboarding_ready_color">テーマ</string>
     <string name="onboarding_enter">TERMINAL に入る</string>
     <string name="onboarding_skip_all">セットアップをスキップ</string>
     <string name="onboarding_redo_menu">初期設定をやり直す</string>

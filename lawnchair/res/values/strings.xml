@@ -1115,9 +1115,9 @@
     <string name="onboarding_default_benefit_shortcuts">[+] APP SHORTCUTS AND EXTRA FEATURES</string>
     <string name="onboarding_default_active">DEFAULT LAUNCHER ACTIVE</string>
     <string name="onboarding_default_active_desc">TERMINAL IS THIS DEVICE\'S DEFAULT LAUNCHER.</string>
-    <string name="onboarding_color_heading">&gt; PHOSPHOR COLOR</string>
-    <string name="onboarding_color_title">CHOOSE THE PHOSPHOR COLOR</string>
-    <string name="onboarding_color_hint">YOU CAN CHANGE IT LATER IN SETTINGS › APPEARANCE.</string>
+    <string name="onboarding_color_heading">&gt; THEME</string>
+    <string name="onboarding_color_title">CHOOSE A THEME</string>
+    <string name="onboarding_color_hint">TAP ONE TO SEE IT NOW. MIX YOUR OWN ON THE WHEEL, OR CHANGE IT LATER IN SETTINGS › APPEARANCE.</string>
     <string name="onboarding_notifications_heading">&gt; NOTIFICATION DOTS</string>
     <string name="onboarding_notifications_title">SHOW ALERTS ON ICONS</string>
     <string name="onboarding_notifications_desc">Terminal needs notification access to mark apps that have alerts with a dot.</string>
@@ -1128,7 +1128,7 @@
     <string name="onboarding_ready_skipped">SKIPPED ITEMS CAN BE TURNED ON LATER IN SETTINGS.</string>
     <string name="onboarding_ready_hint_swipe">▲ SWIPE UP FOR THE PROGRAM DIRECTORY</string>
     <string name="onboarding_ready_hint_command">&gt; TYPE A COMMAND TO FIND APPS</string>
-    <string name="onboarding_ready_color">PHOSPHOR COLOR</string>
+    <string name="onboarding_ready_color">THEME</string>
     <string name="onboarding_enter">ENTER TERMINAL</string>
     <string name="onboarding_skip_all">SKIP SETUP</string>
     <string name="onboarding_redo_menu">Run initial setup again</string>

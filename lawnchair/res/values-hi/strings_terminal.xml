@@ -40,9 +40,9 @@
     <string name="onboarding_default_benefit_shortcuts">[+] ऐप शॉर्टकट और अतिरिक्त सुविधाएँ</string>
     <string name="onboarding_default_active">डिफ़ॉल्ट लॉन्चर सक्रिय</string>
     <string name="onboarding_default_active_desc">TERMINAL इस डिवाइस का डिफ़ॉल्ट लॉन्चर है।</string>
-    <string name="onboarding_color_heading">&gt; फ़ॉस्फ़र का रंग</string>
-    <string name="onboarding_color_title">फ़ॉस्फ़र का रंग चुनें</string>
-    <string name="onboarding_color_hint">आप इसे बाद में सेटिंग › दिखावट में बदल सकते हैं।</string>
+    <string name="onboarding_color_heading">&gt; थीम</string>
+    <string name="onboarding_color_title">थीम चुनें</string>
+    <string name="onboarding_color_hint">तुरंत देखने के लिए किसी पर टैप करें। रंग चक्र पर अपना बनाएँ या बाद में सेटिंग › रूप में बदलें।</string>
     <string name="onboarding_notifications_heading">&gt; सूचना बिंदु</string>
     <string name="onboarding_notifications_title">आइकॉन पर अलर्ट दिखाएँ</string>
     <string name="onboarding_notifications_desc">जिन ऐप में अलर्ट हैं उन पर बिंदु लगाने के लिए Terminal को सूचनाओं का ऐक्सेस चाहिए।</string>
@@ -53,7 +53,7 @@
     <string name="onboarding_ready_skipped">छोड़े गए आइटम बाद में सेटिंग में चालू किए जा सकते हैं।</string>
     <string name="onboarding_ready_hint_swipe">▲ प्रोग्राम सूची के लिए स्वाइप करें</string>
     <string name="onboarding_ready_hint_command">&gt; ऐप ढूँढने के लिए कमांड लिखें</string>
-    <string name="onboarding_ready_color">फ़ॉस्फ़र का रंग</string>
+    <string name="onboarding_ready_color">थीम</string>
     <string name="onboarding_enter">TERMINAL में जाएँ</string>
     <string name="onboarding_skip_all">सेटअप छोड़ें</string>
     <string name="onboarding_redo_menu">शुरुआती सेटअप फिर से करें</string>

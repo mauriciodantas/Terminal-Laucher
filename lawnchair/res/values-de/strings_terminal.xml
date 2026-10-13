@@ -40,9 +40,9 @@
     <string name="onboarding_default_benefit_shortcuts">[+] APP-VERKNÜPFUNGEN UND ZUSATZFUNKTIONEN</string>
     <string name="onboarding_default_active">STANDARD-LAUNCHER AKTIV</string>
     <string name="onboarding_default_active_desc">TERMINAL IST DER STANDARD-LAUNCHER DIESES GERÄTS.</string>
-    <string name="onboarding_color_heading">&gt; PHOSPHORFARBE</string>
-    <string name="onboarding_color_title">PHOSPHORFARBE WÄHLEN</string>
-    <string name="onboarding_color_hint">DU KANNST SIE SPÄTER UNTER EINSTELLUNGEN › DARSTELLUNG ÄNDERN.</string>
+    <string name="onboarding_color_heading">&gt; DESIGN</string>
+    <string name="onboarding_color_title">WÄHLE EIN DESIGN</string>
+    <string name="onboarding_color_hint">TIPPE EINES AN, UM ES SOFORT ZU SEHEN. MISCHE DEIN EIGENES AM FARBKREIS ODER ÄNDERE ES SPÄTER UNTER EINSTELLUNGEN › DARSTELLUNG.</string>
     <string name="onboarding_notifications_heading">&gt; BENACHRICHTIGUNGSPUNKTE</string>
     <string name="onboarding_notifications_title">HINWEISE AUF SYMBOLEN ANZEIGEN</string>
     <string name="onboarding_notifications_desc">Terminal braucht Zugriff auf Benachrichtigungen, um Apps mit Hinweisen mit einem Punkt zu markieren.</string>
@@ -53,7 +53,7 @@
     <string name="onboarding_ready_skipped">ÜBERSPRUNGENE PUNKTE KÖNNEN SPÄTER IN DEN EINSTELLUNGEN AKTIVIERT WERDEN.</string>
     <string name="onboarding_ready_hint_swipe">▲ WISCHEN FÜR DAS PROGRAMMVERZEICHNIS</string>
     <string name="onboarding_ready_hint_command">&gt; BEFEHL EINGEBEN, UM APPS ZU FINDEN</string>
-    <string name="onboarding_ready_color">PHOSPHORFARBE</string>
+    <string name="onboarding_ready_color">DESIGN</string>
     <string name="onboarding_enter">TERMINAL STARTEN</string>
     <string name="onboarding_skip_all">EINRICHTUNG ÜBERSPRINGEN</string>
     <string name="onboarding_redo_menu">Ersteinrichtung wiederholen</string>

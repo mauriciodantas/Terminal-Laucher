@@ -40,9 +40,9 @@
     <string name="onboarding_default_benefit_shortcuts">[+] APP-SNELKOPPELINGEN EN EXTRA FUNCTIES</string>
     <string name="onboarding_default_active">STANDAARD LAUNCHER ACTIEF</string>
     <string name="onboarding_default_active_desc">TERMINAL IS DE STANDAARD LAUNCHER VAN DIT APPARAAT.</string>
-    <string name="onboarding_color_heading">&gt; FOSFORKLEUR</string>
-    <string name="onboarding_color_title">KIES DE FOSFORKLEUR</string>
-    <string name="onboarding_color_hint">JE KUNT DIT LATER WIJZIGEN IN INSTELLINGEN › WEERGAVE.</string>
+    <string name="onboarding_color_heading">&gt; THEMA</string>
+    <string name="onboarding_color_title">KIES EEN THEMA</string>
+    <string name="onboarding_color_hint">TIK ER EEN AAN OM HET METEEN TE ZIEN. MAAK JE EIGEN OP HET KLEURENWIEL OF WIJZIG HET LATER IN INSTELLINGEN › UITERLIJK.</string>
     <string name="onboarding_notifications_heading">&gt; MELDINGSSTIPJES</string>
     <string name="onboarding_notifications_title">TOON MELDINGEN OP ICONEN</string>
     <string name="onboarding_notifications_desc">Terminal heeft toegang tot meldingen nodig om apps met meldingen met een stipje te markeren.</string>
@@ -53,7 +53,7 @@
     <string name="onboarding_ready_skipped">OVERGESLAGEN ONDERDELEN KUNNEN LATER IN INSTELLINGEN WORDEN INGESCHAKELD.</string>
     <string name="onboarding_ready_hint_swipe">▲ VEEG VOOR DE PROGRAMMALIJST</string>
     <string name="onboarding_ready_hint_command">&gt; TYP EEN OPDRACHT OM APPS TE ZOEKEN</string>
-    <string name="onboarding_ready_color">FOSFORKLEUR</string>
+    <string name="onboarding_ready_color">THEMA</string>
     <string name="onboarding_enter">TERMINAL OPENEN</string>
     <string name="onboarding_skip_all">CONFIGURATIE OVERSLAAN</string>
     <string name="onboarding_redo_menu">Eerste configuratie opnieuw doen</string>

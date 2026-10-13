@@ -40,9 +40,9 @@
     <string name="onboarding_default_benefit_shortcuts">[+] اختصارات التطبيقات وميزات إضافية</string>
     <string name="onboarding_default_active">المشغّل التلقائي مفعّل</string>
     <string name="onboarding_default_active_desc">TERMINAL هو المشغّل التلقائي لهذا الجهاز.</string>
-    <string name="onboarding_color_heading">&gt; لون الفوسفور</string>
-    <string name="onboarding_color_title">اختر لون الفوسفور</string>
-    <string name="onboarding_color_hint">يمكنك تغييره لاحقًا من الإعدادات › المظهر.</string>
+    <string name="onboarding_color_heading">&gt; السمة</string>
+    <string name="onboarding_color_title">اختر سمة</string>
+    <string name="onboarding_color_hint">المس واحدة لتراها فورًا. اصنع سمتك على عجلة الألوان أو غيّرها لاحقًا من الإعدادات › المظهر.</string>
     <string name="onboarding_notifications_heading">&gt; نقاط الإشعارات</string>
     <string name="onboarding_notifications_title">اعرض التنبيهات على الرموز</string>
     <string name="onboarding_notifications_desc">يحتاج Terminal إلى الوصول إلى الإشعارات لتمييز التطبيقات التي لديها تنبيهات بنقطة.</string>
@@ -53,7 +53,7 @@
     <string name="onboarding_ready_skipped">يمكن تفعيل العناصر التي تم تخطيها لاحقًا من الإعدادات.</string>
     <string name="onboarding_ready_hint_swipe">▲ مرِّر للأعلى لفتح دليل البرامج</string>
     <string name="onboarding_ready_hint_command">&gt; اكتب أمرًا للبحث عن التطبيقات</string>
-    <string name="onboarding_ready_color">لون الفوسفور</string>
+    <string name="onboarding_ready_color">السمة</string>
     <string name="onboarding_enter">الدخول إلى TERMINAL</string>
     <string name="onboarding_skip_all">تخطي الإعداد</string>
     <string name="onboarding_redo_menu">إعادة الإعداد الأولي</string>

@@ -40,9 +40,9 @@
     <string name="onboarding_default_benefit_shortcuts">[+] ACCESOS DIRECTOS DE APPS Y FUNCIONES EXTRA</string>
     <string name="onboarding_default_active">LAUNCHER PREDETERMINADO ACTIVO</string>
     <string name="onboarding_default_active_desc">TERMINAL ES EL LAUNCHER PREDETERMINADO DE ESTE DISPOSITIVO.</string>
-    <string name="onboarding_color_heading">&gt; COLOR DEL FÓSFORO</string>
-    <string name="onboarding_color_title">ELIGE EL COLOR DEL FÓSFORO</string>
-    <string name="onboarding_color_hint">PUEDES CAMBIARLO MÁS TARDE EN AJUSTES › APARIENCIA.</string>
+    <string name="onboarding_color_heading">&gt; TEMA</string>
+    <string name="onboarding_color_title">ELIGE UN TEMA</string>
+    <string name="onboarding_color_hint">TOCA UNO PARA VERLO AL INSTANTE. CREA EL TUYO EN LA RUEDA O CÁMBIALO LUEGO EN AJUSTES › APARIENCIA.</string>
     <string name="onboarding_notifications_heading">&gt; PUNTOS DE NOTIFICACIÓN</string>
     <string name="onboarding_notifications_title">MUESTRA AVISOS EN LOS ICONOS</string>
     <string name="onboarding_notifications_desc">Terminal necesita acceso a las notificaciones para marcar con un punto las apps que tienen avisos.</string>
@@ -53,7 +53,7 @@
     <string name="onboarding_ready_skipped">LOS ELEMENTOS OMITIDOS SE PUEDEN ACTIVAR MÁS TARDE EN AJUSTES.</string>
     <string name="onboarding_ready_hint_swipe">▲ DESLIZA PARA EL DIRECTORIO DE PROGRAMAS</string>
     <string name="onboarding_ready_hint_command">&gt; ESCRIBE UN COMANDO PARA BUSCAR APPS</string>
-    <string name="onboarding_ready_color">COLOR DEL FÓSFORO</string>
+    <string name="onboarding_ready_color">TEMA</string>
     <string name="onboarding_enter">ENTRAR EN TERMINAL</string>
     <string name="onboarding_skip_all">OMITIR CONFIGURACIÓN</string>
     <string name="onboarding_redo_menu">Repetir la configuración inicial</string>

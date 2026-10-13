@@ -40,9 +40,9 @@
     <string name="onboarding_default_benefit_shortcuts">[+] SKRÓTY APLIKACJI I DODATKOWE FUNKCJE</string>
     <string name="onboarding_default_active">DOMYŚLNY LAUNCHER AKTYWNY</string>
     <string name="onboarding_default_active_desc">TERMINAL JEST DOMYŚLNYM LAUNCHEREM TEGO URZĄDZENIA.</string>
-    <string name="onboarding_color_heading">&gt; KOLOR LUMINOFORU</string>
-    <string name="onboarding_color_title">WYBIERZ KOLOR LUMINOFORU</string>
-    <string name="onboarding_color_hint">MOŻESZ GO PÓŹNIEJ ZMIENIĆ W USTAWIENIA › WYGLĄD.</string>
+    <string name="onboarding_color_heading">&gt; MOTYW</string>
+    <string name="onboarding_color_title">WYBIERZ MOTYW</string>
+    <string name="onboarding_color_hint">DOTKNIJ, ABY ZOBACZYĆ OD RAZU. UTWÓRZ WŁASNY NA KOLE KOLORÓW LUB ZMIEŃ PÓŹNIEJ W USTAWIENIA › WYGLĄD.</string>
     <string name="onboarding_notifications_heading">&gt; KROPKI POWIADOMIEŃ</string>
     <string name="onboarding_notifications_title">POKAZUJ ALERTY NA IKONACH</string>
     <string name="onboarding_notifications_desc">Terminal potrzebuje dostępu do powiadomień, aby oznaczać kropką aplikacje z alertami.</string>
@@ -53,7 +53,7 @@
     <string name="onboarding_ready_skipped">POMINIĘTE ELEMENTY MOŻNA WŁĄCZYĆ PÓŹNIEJ W USTAWIENIACH.</string>
     <string name="onboarding_ready_hint_swipe">▲ PRZESUŃ DO KATALOGU PROGRAMÓW</string>
     <string name="onboarding_ready_hint_command">&gt; WPISZ POLECENIE, ABY ZNALEŹĆ APLIKACJE</string>
-    <string name="onboarding_ready_color">KOLOR LUMINOFORU</string>
+    <string name="onboarding_ready_color">MOTYW</string>
     <string name="onboarding_enter">WEJDŹ DO TERMINALA</string>
     <string name="onboarding_skip_all">POMIŃ KONFIGURACJĘ</string>
     <string name="onboarding_redo_menu">Powtórz konfigurację początkową</string>

@@ -40,9 +40,9 @@
     <string name="onboarding_default_benefit_shortcuts">[+] ЯРЛЫКИ ПРИЛОЖЕНИЙ И ДОПОЛНИТЕЛЬНЫЕ ФУНКЦИИ</string>
     <string name="onboarding_default_active">ЛАУНЧЕР ПО УМОЛЧАНИЮ АКТИВЕН</string>
     <string name="onboarding_default_active_desc">TERMINAL — ЛАУНЧЕР ПО УМОЛЧАНИЮ НА ЭТОМ УСТРОЙСТВЕ.</string>
-    <string name="onboarding_color_heading">&gt; ЦВЕТ ЛЮМИНОФОРА</string>
-    <string name="onboarding_color_title">ВЫБЕРИТЕ ЦВЕТ ЛЮМИНОФОРА</string>
-    <string name="onboarding_color_hint">ЕГО МОЖНО ИЗМЕНИТЬ ПОЗЖЕ В РАЗДЕЛЕ НАСТРОЙКИ › ОФОРМЛЕНИЕ.</string>
+    <string name="onboarding_color_heading">&gt; ТЕМА</string>
+    <string name="onboarding_color_title">ВЫБЕРИТЕ ТЕМУ</string>
+    <string name="onboarding_color_hint">НАЖМИТЕ, ЧТОБЫ СРАЗУ УВИДЕТЬ. СОБЕРИТЕ СВОЮ НА ЦВЕТОВОМ КРУГЕ ИЛИ ИЗМЕНИТЕ ПОЗЖЕ В НАСТРОЙКИ › ВНЕШНИЙ ВИД.</string>
     <string name="onboarding_notifications_heading">&gt; ЗНАЧКИ УВЕДОМЛЕНИЙ</string>
     <string name="onboarding_notifications_title">ПОКАЗЫВАЙТЕ ОПОВЕЩЕНИЯ НА ЗНАЧКАХ</string>
     <string name="onboarding_notifications_desc">Terminal нужен доступ к уведомлениям, чтобы отмечать точкой приложения с оповещениями.</string>
@@ -53,7 +53,7 @@
     <string name="onboarding_ready_skipped">ПРОПУЩЕННЫЕ ПУНКТЫ МОЖНО ВКЛЮЧИТЬ ПОЗЖЕ В НАСТРОЙКАХ.</string>
     <string name="onboarding_ready_hint_swipe">▲ ПРОВЕДИТЕ ВВЕРХ ДЛЯ КАТАЛОГА ПРОГРАММ</string>
     <string name="onboarding_ready_hint_command">&gt; ВВЕДИТЕ КОМАНДУ, ЧТОБЫ НАЙТИ ПРИЛОЖЕНИЯ</string>
-    <string name="onboarding_ready_color">ЦВЕТ ЛЮМИНОФОРА</string>
+    <string name="onboarding_ready_color">ТЕМА</string>
     <string name="onboarding_enter">ВОЙТИ В TERMINAL</string>
     <string name="onboarding_skip_all">ПРОПУСТИТЬ НАСТРОЙКУ</string>
     <string name="onboarding_redo_menu">Повторить начальную настройку</string>

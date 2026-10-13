@@ -40,9 +40,9 @@
     <string name="onboarding_default_benefit_shortcuts">[+] PINTASAN APLIKASI DAN FITUR TAMBAHAN</string>
     <string name="onboarding_default_active">LAUNCHER DEFAULT AKTIF</string>
     <string name="onboarding_default_active_desc">TERMINAL ADALAH LAUNCHER DEFAULT PERANGKAT INI.</string>
-    <string name="onboarding_color_heading">&gt; WARNA FOSFOR</string>
-    <string name="onboarding_color_title">PILIH WARNA FOSFOR</string>
-    <string name="onboarding_color_hint">ANDA DAPAT MENGUBAHNYA NANTI DI SETELAN › TAMPILAN.</string>
+    <string name="onboarding_color_heading">&gt; TEMA</string>
+    <string name="onboarding_color_title">PILIH TEMA</string>
+    <string name="onboarding_color_hint">KETUK SALAH SATU UNTUK MELIHATNYA LANGSUNG. BUAT SENDIRI DI RODA WARNA ATAU UBAH NANTI DI SETELAN › TAMPILAN.</string>
     <string name="onboarding_notifications_heading">&gt; TITIK NOTIFIKASI</string>
     <string name="onboarding_notifications_title">TAMPILKAN PERINGATAN DI IKON</string>
     <string name="onboarding_notifications_desc">Terminal memerlukan akses notifikasi untuk menandai aplikasi yang memiliki peringatan dengan titik.</string>
@@ -53,7 +53,7 @@
     <string name="onboarding_ready_skipped">ITEM YANG DILEWATI DAPAT DIAKTIFKAN NANTI DI SETELAN.</string>
     <string name="onboarding_ready_hint_swipe">▲ GESER KE DIREKTORI PROGRAM</string>
     <string name="onboarding_ready_hint_command">&gt; KETIK PERINTAH UNTUK MENCARI APLIKASI</string>
-    <string name="onboarding_ready_color">WARNA FOSFOR</string>
+    <string name="onboarding_ready_color">TEMA</string>
     <string name="onboarding_enter">MASUK KE TERMINAL</string>
     <string name="onboarding_skip_all">LEWATI PENYIAPAN</string>
     <string name="onboarding_redo_menu">Ulangi penyiapan awal</string>

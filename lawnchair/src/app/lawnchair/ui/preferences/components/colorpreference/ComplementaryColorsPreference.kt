@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,6 +29,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.ColorUtils
 import app.lawnchair.preferences.getAdapter
@@ -42,6 +44,44 @@ import com.android.launcher3.R
  */
 @Composable
 fun ComplementaryColorsPreference(modifier: Modifier = Modifier) {
+    val looks = rememberLooks()
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceContainer),
+    ) {
+        Row(
+            modifier = Modifier
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            WheelChip(onClick = looks::openWheel)
+            ComplementaryColors.all.forEach { pair -> LookChip(pair, looks.isSelected(pair), onClick = { looks.apply(pair) }) }
+        }
+    }
+}
+
+/**
+ * The look on screen and how a look is applied, as Appearance does it: the background, then the
+ * accent, then the secondary color (a pair goes back to the dimmed accent). While it is remembered,
+ * [openWheel] opens the color wheel to compose any other look.
+ */
+@Stable
+class Looks internal constructor(
+    private val accent: Int?,
+    private val background: Int?,
+    private val secondary: Int?,
+    val apply: (ComplementaryColors.Pair) -> Unit,
+    private val onOpenWheel: () -> Unit,
+) {
+    fun isSelected(pair: ComplementaryColors.Pair) = accent == pair.accent && background == pair.background && secondary == pair.secondary
+
+    fun openWheel() = onOpenWheel()
+}
+
+@Composable
+fun rememberLooks(onApply: (ComplementaryColors.Pair) -> Unit = {}): Looks {
     val prefs2 = preferenceManager2()
     val accent = prefs2.accentColor.getAdapter()
     val background = prefs2.launcherBackgroundColor.getAdapter()
@@ -57,6 +97,7 @@ fun ComplementaryColorsPreference(modifier: Modifier = Modifier) {
         accent.onChange(ColorOption.CustomColor(pair.accent))
         // A pair goes back to the dimmed accent; a triad brings its third color.
         secondary.onChange(pair.secondary?.let { ColorOption.CustomColor(it) } ?: ColorOption.Default)
+        onApply(pair)
     }
     if (wheelOpen) {
         ComplementaryWheelDialog(
@@ -70,63 +111,54 @@ fun ComplementaryColorsPreference(modifier: Modifier = Modifier) {
             onDismiss = { wheelOpen = false },
         )
     }
+    return Looks(currentAccent, currentBackground, currentSecondary, applyPair) { wheelOpen = true }
+}
 
+/** One look: its accent prompt over its background (and the secondary beside it), with its name under. */
+@Composable
+fun LookChip(pair: ComplementaryColors.Pair, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceContainer),
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .padding(4.dp),
     ) {
-        Row(
+        Box(
             modifier = Modifier
-                .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                .size(width = 64.dp, height = 40.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .border(
+                    border = BorderStroke(
+                        width = if (selected) 2.dp else 1.dp,
+                        color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                )
+                .background(Color(pair.background)),
+            contentAlignment = Alignment.Center,
         ) {
-            WheelChip(onClick = { wheelOpen = true })
-            ComplementaryColors.all.forEach { pair ->
-                val selected = currentAccent == pair.accent && currentBackground == pair.background &&
-                    currentSecondary == pair.secondary
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .clickable { applyPair(pair) }
-                        .padding(4.dp),
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(width = 64.dp, height = 40.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .border(
-                                border = BorderStroke(
-                                    width = if (selected) 2.dp else 1.dp,
-                                    color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
-                                ),
-                                shape = RoundedCornerShape(10.dp),
-                            )
-                            .background(Color(pair.background)),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Row(verticalAlignment = Alignment.Bottom) {
-                            Text(text = ">_", color = Color(pair.accent), style = MaterialTheme.typography.titleMedium)
-                            // A three-color look shows its secondary color beside the prompt.
-                            pair.secondary?.let { Text(text = " ~", color = Color(it), style = MaterialTheme.typography.titleMedium) }
-                        }
-                    }
-                    Text(
-                        text = stringResource(id = pair.name),
-                        style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.padding(top = 4.dp),
-                    )
-                }
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text(text = ">_", color = Color(pair.accent), style = MaterialTheme.typography.titleMedium)
+                // A three-color look shows its secondary color beside the prompt.
+                pair.secondary?.let { Text(text = " ~", color = Color(it), style = MaterialTheme.typography.titleMedium) }
             }
         }
+        Text(
+            text = stringResource(id = pair.name),
+            style = MaterialTheme.typography.labelSmall,
+            // Set, not inherited: outside a surface (the first-run screen) the inherited color is black.
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(top = 4.dp),
+        )
     }
 }
 
 /** The first chip: a ring of every hue, opening the wheel to pick any other. */
 @Composable
-private fun WheelChip(onClick: () -> Unit) {
+fun WheelChip(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val ring = remember {
         Brush.sweepGradient(
             (0..360 step 30).map { Color(ColorUtils.HSLToColor(floatArrayOf(it.toFloat(), 0.85f, 0.55f))) },
@@ -134,7 +166,7 @@ private fun WheelChip(onClick: () -> Unit) {
     }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
+        modifier = modifier
             .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
             .padding(4.dp),
@@ -152,6 +184,7 @@ private fun WheelChip(onClick: () -> Unit) {
         Text(
             text = stringResource(id = R.string.complementary_custom),
             style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(top = 4.dp),
         )
     }

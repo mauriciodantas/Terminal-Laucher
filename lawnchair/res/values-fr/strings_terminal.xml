@@ -40,9 +40,9 @@
     <string name="onboarding_default_benefit_shortcuts">[+] RACCOURCIS D\'APPLIS ET FONCTIONS SUPPLÉMENTAIRES</string>
     <string name="onboarding_default_active">LANCEUR PAR DÉFAUT ACTIF</string>
     <string name="onboarding_default_active_desc">TERMINAL EST LE LANCEUR PAR DÉFAUT DE CET APPAREIL.</string>
-    <string name="onboarding_color_heading">&gt; COULEUR DU PHOSPHORE</string>
-    <string name="onboarding_color_title">CHOISISSEZ LA COULEUR DU PHOSPHORE</string>
-    <string name="onboarding_color_hint">VOUS POURREZ LA CHANGER PLUS TARD DANS PARAMÈTRES › APPARENCE.</string>
+    <string name="onboarding_color_heading">&gt; THÈME</string>
+    <string name="onboarding_color_title">CHOISISSEZ UN THÈME</string>
+    <string name="onboarding_color_hint">TOUCHEZ-EN UN POUR LE VOIR AUSSITÔT. COMPOSEZ LE VÔTRE SUR LA ROUE OU CHANGEZ-LE PLUS TARD DANS PARAMÈTRES › APPARENCE.</string>
     <string name="onboarding_notifications_heading">&gt; PASTILLES DE NOTIFICATION</string>
     <string name="onboarding_notifications_title">AFFICHEZ LES ALERTES SUR LES ICÔNES</string>
     <string name="onboarding_notifications_desc">Terminal a besoin d\'accéder aux notifications pour marquer d\'une pastille les applis qui ont des alertes.</string>
@@ -53,7 +53,7 @@
     <string name="onboarding_ready_skipped">LES ÉLÉMENTS IGNORÉS PEUVENT ÊTRE ACTIVÉS PLUS TARD DANS PARAMÈTRES.</string>
     <string name="onboarding_ready_hint_swipe">▲ BALAYEZ VERS LE RÉPERTOIRE DES PROGRAMMES</string>
     <string name="onboarding_ready_hint_command">&gt; SAISISSEZ UNE COMMANDE POUR TROUVER DES APPLIS</string>
-    <string name="onboarding_ready_color">COULEUR DU PHOSPHORE</string>
+    <string name="onboarding_ready_color">THÈME</string>
     <string name="onboarding_enter">ENTRER DANS TERMINAL</string>
     <string name="onboarding_skip_all">IGNORER LA CONFIGURATION</string>
     <string name="onboarding_redo_menu">Refaire la configuration initiale</string>
