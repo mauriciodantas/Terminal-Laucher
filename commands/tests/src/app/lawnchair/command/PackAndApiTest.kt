@@ -64,7 +64,18 @@ class PackAndApiTest {
         assertEquals("Recife", ApiFormat.renderItem(org.json.JSONObject(body), "{results.0.address.city}"))
     }
 
-    @Test fun addressFillsTextAndYear() {
+    @Test fun aWildcardJoinsEveryItemOfAnArray() {
+        val body = """{"name":"charizard","types":[{"type":{"name":"fire"}},{"type":{"name":"flying"}}],
+            "chain":{"species":[{"name":"charmander"},{"name":"charmeleon"},{"name":"charizard"}]},"none":[]}"""
+        assertEquals(
+            "charizard · fire, flying\nfamília charmander, charmeleon, charizard",
+            ApiFormat.render(body, ApiSpec("{name} · {types.*.type.name}\nfamília {chain.species.*.name}"), today, pt),
+        )
+        // An empty array leaves its part out, as an empty field does.
+        assertEquals("charizard", ApiFormat.render(body, ApiSpec("{name} · {none.*.name}"), today, pt))
+    }
+
+        @Test fun addressFillsTextAndYear() {
         assertEquals("https://viacep.com.br/ws/01310-100/json/", ApiCall.url(action("cep"), " 01310-100 ", today, providers))
         assertEquals("https://brasilapi.com.br/api/feriados/v1/2026", ApiCall.url(action("feriados"), "", today, providers))
         assertEquals("viacep.com.br", ApiCall.host(action("cep"), providers))

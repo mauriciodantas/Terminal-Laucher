@@ -21,7 +21,8 @@ import org.json.JSONTokener
  * but escaped for that type, so typed quotes cannot break out of a JSON string.
  *
  * [format] is the text shown: `{field}` is the value at that path of the answer ("{city}",
- * "{address.street}", "{0.name}") and `{field|date}` shows an ISO date as the short local date and
+ * "{address.street}", "{0.name}"), `*` stands for every item of an array and joins them
+ * ("{types.*.name}" is "fire, flying"), and `{field|date}` shows an ISO date as the short local date and
  * weekday. A part between " · " whose fields are all empty is left out, and so is a line.
  * [list] is the path of an array in the answer, each item shown with [format], at most [max]. With
  * [upcoming], the field of each item holding an ISO date, items before today are left out.
@@ -62,7 +63,7 @@ enum class BodyType(val contentType: String) {
 /** Turns a JSON answer into the text of an [ApiSpec]. Pure, so it can be unit tested. */
 object ApiFormat {
 
-    const val MAX_ITEMS = 20
+    const val MAX_ITEMS = 40
 
     private val FIELD = Regex("\\{([^{}|\\s]+)(?:\\|([a-z]+))?\\}")
 
@@ -94,7 +95,13 @@ object ApiFormat {
             var filled = 0
             val text = FIELD.replace(part) { m ->
                 fields++
-                val value = show(at(item, m.groupValues[1]), m.groupValues[2], locale)
+                val path = m.groupValues[1]
+                // "types.*.name": every item of the array, joined; otherwise the one value.
+                val value = if (WILDCARD in path.split('.')) {
+                    all(item, path).map { show(it, m.groupValues[2], locale) }.filter { it.isNotEmpty() }.distinct().joinToString(JOIN)
+                } else {
+                    show(at(item, path), m.groupValues[2], locale)
+                }
                 if (value.isNotEmpty()) filled++
                 value
             }.trim()
@@ -107,6 +114,24 @@ object ApiFormat {
         ?.takeIf { it is JSONObject || it is JSONArray }
 
     /** The value at a dotted [path] ("address.city", "0.name"), or null. */
+    private const val WILDCARD = "*"
+    private const val JOIN = ", "
+
+    /** Every value at a [path] with `*` for "each item of this array" ("types.*.type.name"). */
+    fun all(node: Any?, path: String): List<Any?> {
+        var current = listOf(node)
+        for (key in path.split('.').filter { it.isNotEmpty() }) {
+            current = current.flatMap { n ->
+                when {
+                    key == WILDCARD && n is JSONArray -> (0 until n.length()).map { n.opt(it) }
+                    key == WILDCARD -> emptyList()
+                    else -> listOf(at(n, key))
+                }
+            }.filter { it != null && it != JSONObject.NULL }
+        }
+        return current
+    }
+
     fun at(node: Any?, path: String): Any? = path.split('.').filter { it.isNotEmpty() }.fold(node) { current, key ->
         when (current) {
             is JSONObject -> current.opt(key)
@@ -209,12 +234,10 @@ object ApiCall {
      * show (a 201 or 204 with no body, or no format) that it went through.
      */
     fun outcome(spec: ApiSpec, code: Int, body: String, today: LocalDate, locale: java.util.Locale = java.util.Locale.getDefault()): String {
-        val shown = if (spec.format.isBlank() || body.isBlank()) null else ApiFormat.render(body, spec, today, locale)
-        return when {
-            shown != null -> shown
-            spec.writes -> Texts.get(R.string.cmd_api_done, spec.method, code)
-            else -> Texts.get(R.string.cmd_api_empty)
-        }
+        // A write with nothing to show went through; a format that finds nothing found nothing,
+        // even over POST, as a GraphQL query is.
+        if (spec.writes && (spec.format.isBlank() || body.isBlank())) return Texts.get(R.string.cmd_api_done, spec.method, code)
+        return ApiFormat.render(body, spec, today, locale) ?: Texts.get(R.string.cmd_api_empty)
     }
 
     /** The address [action] asks for [text], without any secret; null when it reaches nothing allowed. */

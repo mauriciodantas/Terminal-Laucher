@@ -52,6 +52,10 @@ class ApiWriteTest {
         assertEquals("POST OK · HTTP 201", ApiCall.outcome(spec.copy(method = HttpMethods.POST), 201, """{"id": 7}""", today))
         assertEquals("criada #7", ApiCall.outcome(ApiSpec("criada #{id}", method = HttpMethods.POST), 201, """{"id": 7}""", today, Locale.ROOT))
         assertEquals(Texts(R.string.cmd_api_empty), ApiCall.outcome(ApiSpec("{x}"), 200, "{}", today))
+        // A GraphQL query goes over POST: an empty result is "nothing found", not "POST OK".
+        val graphql = ApiSpec("#{id} {name}", list = "data.pokemon", method = HttpMethods.POST, body = "{}")
+        assertEquals(Texts(R.string.cmd_api_empty), ApiCall.outcome(graphql, 200, """{"data":{"pokemon":[]}}""", today))
+        assertEquals("#25 pikachu", ApiCall.outcome(graphql, 200, """{"data":{"pokemon":[{"id":25,"name":"pikachu"}]}}""", today))
     }
 
     private fun Texts(id: Int) = app.lawnchair.util.Texts.get(id)

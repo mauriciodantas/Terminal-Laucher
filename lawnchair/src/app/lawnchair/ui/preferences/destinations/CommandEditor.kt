@@ -317,7 +317,8 @@ internal fun CommandEditor(
             apiResult = when (answer) {
                 is HttpResult.Answer -> {
                     val shown = if (spec.format.isBlank() || answer.body.isBlank()) null else ApiFormat.render(answer.body, spec, today)
-                    (shown ?: if (spec.writes) ApiCall.outcome(spec, answer.code, answer.body, today) else context.getString(R.string.cmd_pref_api_nothing)) to
+                    val wentThrough = spec.writes && (spec.format.isBlank() || answer.body.isBlank())
+                    (shown ?: if (wentThrough) ApiCall.outcome(spec, answer.code, answer.body, today) else context.getString(R.string.cmd_pref_api_nothing)) to
                         answer.body.take(RAW_PREVIEW)
                 }
 

@@ -281,12 +281,17 @@ private fun CommandScreen(onClose: () -> Unit) {
         reloadExtras()
         RatesStore.refresh(context)?.let { rates -> extras = extras.copy(rates = rates) }
     }
-    // Back from the advanced settings with a key saved, the command waiting for it can run.
+    // Back from the settings, what changed there counts: a key saved, a command added or removed.
     val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
     DisposableEffect(lifecycle) {
         val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
             if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
-                scope.launch { extras = withContext(Dispatchers.IO) { with(CommandSources) { extras.withProviders(context) } } }
+                scope.launch {
+                    val (actions, names) = withContext(Dispatchers.IO) { CustomActionStore.load(context) to AliasStore.load(context) }
+                    custom = actions
+                    aliases = names
+                    extras = withContext(Dispatchers.IO) { with(CommandSources) { extras.withProviders(context) } }
+                }
             }
         }
         lifecycle.addObserver(observer)
@@ -1316,7 +1321,11 @@ private fun CommandScreen(onClose: () -> Unit) {
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 14.sp,
                         letterSpacing = 0.9.sp,
-                        modifier = Modifier.padding(top = 3.dp),
+                        // A long answer (a list of 40 moves) scrolls instead of pushing the keys away.
+                        modifier = Modifier
+                            .padding(top = 3.dp)
+                            .heightIn(max = 360.dp)
+                            .verticalScroll(rememberScrollState()),
                     )
                     val code = qr
                     if (done != null && code != null) {
