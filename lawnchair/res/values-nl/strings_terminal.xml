@@ -129,6 +129,8 @@
     <string name="cmd_pref_kind_intent">Intent ·</string>
     <string name="cmd_pref_letter_label">Letter</string>
     <string name="cmd_pref_name_label">Naam</string>
+    <string name="cmd_pref_help_label">Hulp (optioneel)</string>
+    <string name="cmd_pref_help_hint">Hoe je het gebruikt, wat het nodig heeft, wat het teruggeeft. Wordt in de balk getoond terwijl je de opdracht typt.</string>
     <string name="cmd_pref_start_template">Begin met een sjabloon</string>
     <string name="cmd_pref_suggestions">Suggesties</string>
     <string name="cmd_pref_new_command">Nieuw commando</string>

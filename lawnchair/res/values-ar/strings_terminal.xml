@@ -129,6 +129,8 @@
     <string name="cmd_pref_kind_intent">Intent ·</string>
     <string name="cmd_pref_letter_label">الحرف</string>
     <string name="cmd_pref_name_label">الاسم</string>
+    <string name="cmd_pref_help_label">مساعدة (اختياري)</string>
+    <string name="cmd_pref_help_hint">كيفية الاستخدام، وما يحتاجه، وما يُرجعه. تظهر في الشريط أثناء كتابة الأمر.</string>
     <string name="cmd_pref_start_template">البدء من قالب</string>
     <string name="cmd_pref_suggestions">اقتراحات</string>
     <string name="cmd_pref_new_command">أمر جديد</string>

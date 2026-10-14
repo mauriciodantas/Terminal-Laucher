@@ -129,6 +129,8 @@
     <string name="cmd_pref_kind_intent">Intent ·</string>
     <string name="cmd_pref_letter_label">Letra</string>
     <string name="cmd_pref_name_label">Nombre</string>
+    <string name="cmd_pref_help_label">Ayuda (opcional)</string>
+    <string name="cmd_pref_help_hint">Cómo usarlo, qué necesita, qué devuelve. Aparece en la barra mientras se escribe el comando.</string>
     <string name="cmd_pref_start_template">Empezar desde una plantilla</string>
     <string name="cmd_pref_suggestions">Sugerencias</string>
     <string name="cmd_pref_new_command">Nuevo comando</string>

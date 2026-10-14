@@ -129,6 +129,8 @@
     <string name="cmd_pref_kind_intent">인텐트 ·</string>
     <string name="cmd_pref_letter_label">문자</string>
     <string name="cmd_pref_name_label">이름</string>
+    <string name="cmd_pref_help_label">도움말 (선택)</string>
+    <string name="cmd_pref_help_hint">사용 방법, 필요한 것, 반환하는 내용. 명령을 입력하는 동안 바에 표시됩니다.</string>
     <string name="cmd_pref_start_template">템플릿으로 시작</string>
     <string name="cmd_pref_suggestions">추천</string>
     <string name="cmd_pref_new_command">새 명령</string>

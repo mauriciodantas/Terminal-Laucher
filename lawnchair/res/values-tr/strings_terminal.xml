@@ -129,6 +129,8 @@
     <string name="cmd_pref_kind_intent">Intent ·</string>
     <string name="cmd_pref_letter_label">Harf</string>
     <string name="cmd_pref_name_label">Ad</string>
+    <string name="cmd_pref_help_label">Yardım (isteğe bağlı)</string>
+    <string name="cmd_pref_help_hint">Nasıl kullanılır, neye ihtiyaç duyar, ne döndürür. Komut yazılırken çubukta gösterilir.</string>
     <string name="cmd_pref_start_template">Bir şablonla başla</string>
     <string name="cmd_pref_suggestions">Öneriler</string>
     <string name="cmd_pref_new_command">Yeni komut</string>

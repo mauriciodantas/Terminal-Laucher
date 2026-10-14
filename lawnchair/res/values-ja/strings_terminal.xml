@@ -129,6 +129,8 @@
     <string name="cmd_pref_kind_intent">インテント ·</string>
     <string name="cmd_pref_letter_label">文字</string>
     <string name="cmd_pref_name_label">名前</string>
+    <string name="cmd_pref_help_label">ヘルプ（任意）</string>
+    <string name="cmd_pref_help_hint">使い方、必要なもの、返す内容。コマンドの入力中にバーに表示されます。</string>
     <string name="cmd_pref_start_template">テンプレートから始める</string>
     <string name="cmd_pref_suggestions">おすすめ</string>
     <string name="cmd_pref_new_command">新しいコマンド</string>

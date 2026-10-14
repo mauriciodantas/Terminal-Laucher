@@ -129,6 +129,8 @@
     <string name="cmd_pref_kind_intent">Intent ·</string>
     <string name="cmd_pref_letter_label">Buchstabe</string>
     <string name="cmd_pref_name_label">Name</string>
+    <string name="cmd_pref_help_label">Hilfe (optional)</string>
+    <string name="cmd_pref_help_hint">Wie man ihn nutzt, was er braucht, was er liefert. Wird in der Leiste angezeigt, während der Befehl getippt wird.</string>
     <string name="cmd_pref_start_template">Mit einer Vorlage beginnen</string>
     <string name="cmd_pref_suggestions">Vorschläge</string>
     <string name="cmd_pref_new_command">Neuer Befehl</string>

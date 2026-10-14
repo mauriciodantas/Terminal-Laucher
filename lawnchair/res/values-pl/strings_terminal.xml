@@ -129,6 +129,8 @@
     <string name="cmd_pref_kind_intent">Intencja ·</string>
     <string name="cmd_pref_letter_label">Litera</string>
     <string name="cmd_pref_name_label">Nazwa</string>
+    <string name="cmd_pref_help_label">Pomoc (opcjonalnie)</string>
+    <string name="cmd_pref_help_hint">Jak go używać, czego potrzebuje, co zwraca. Widoczna na pasku podczas wpisywania polecenia.</string>
     <string name="cmd_pref_start_template">Zacznij od szablonu</string>
     <string name="cmd_pref_suggestions">Sugestie</string>
     <string name="cmd_pref_new_command">Nowe polecenie</string>

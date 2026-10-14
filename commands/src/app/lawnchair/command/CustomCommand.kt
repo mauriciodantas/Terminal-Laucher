@@ -23,7 +23,11 @@ class CustomCommand(private val action: CustomAction) : Command {
 
     override fun analyze(arg: String, ctx: CommandContext): Analysis = CommandEngine.analyzeCustom(action, arg, ctx.contacts, ctx.contactsGranted, ctx.extras)
 
-    override fun help(): CommandHelpText = CommandHelpText(action.letter.uppercase() + " · " + action.label.uppercase(), Texts.get(R.string.cmd_help_custom) + "\n› " + action.usage)
+    /** The user's own help when there is one, then how to write the command. */
+    override fun help(): CommandHelpText = CommandHelpText(
+        action.letter.uppercase() + " · " + action.label.uppercase(),
+        action.help.trim().ifEmpty { Texts.get(R.string.cmd_help_custom) } + "\n› " + action.usage,
+    )
 
     override fun option(text: String, ctx: CommandContext): Suggestion = Suggestion("${action.letter} ${text.trim()}", action.label.uppercase(), CommandEngine.optionKind())
 }

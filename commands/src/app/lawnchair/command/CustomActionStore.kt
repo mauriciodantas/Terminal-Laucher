@@ -41,7 +41,8 @@ object CustomActionStore {
                     .put("pattern", it.pattern)
                     .put("api", it.api?.let { api -> apiJson(api) } ?: JSONObject.NULL)
                     .put("pack", it.pack)
-                    .put("provider", it.provider),
+                    .put("provider", it.provider)
+                    .apply { if (it.help.isNotEmpty()) put("help", it.help) },
             )
         }
     }
@@ -87,6 +88,7 @@ object CustomActionStore {
                     },
                     pack = o.optString("pack", ""),
                     provider = o.optString("provider", ""),
+                    help = o.optString("help", "").take(CustomActions.MAX_HELP),
                 )
             }.getOrNull()
         }

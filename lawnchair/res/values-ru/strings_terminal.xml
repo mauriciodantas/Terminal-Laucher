@@ -129,6 +129,8 @@
     <string name="cmd_pref_kind_intent">Интент ·</string>
     <string name="cmd_pref_letter_label">Буква</string>
     <string name="cmd_pref_name_label">Название</string>
+    <string name="cmd_pref_help_label">Справка (необязательно)</string>
+    <string name="cmd_pref_help_hint">Как использовать, что нужно, что возвращает. Показывается на панели, пока вводится команда.</string>
     <string name="cmd_pref_start_template">Начать с шаблона</string>
     <string name="cmd_pref_suggestions">Предложения</string>
     <string name="cmd_pref_new_command">Новая команда</string>

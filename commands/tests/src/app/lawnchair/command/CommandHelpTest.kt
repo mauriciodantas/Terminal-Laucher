@@ -49,6 +49,16 @@ class CommandHelpTest {
         assertNotNull(help("x", listOf(CommandAlias("x", "x"))))
     }
 
+    @Test fun customHelpIsShownAndSaved() {
+        val action = CustomActions.WHATSAPP.copy(letter = "rast", help = "Rastreia uma encomenda dos Correios.")
+        val text = CommandHelp.of("rast ", listOf(action), emptyList())!!.text
+        assertTrue(text.startsWith("Rastreia uma encomenda"))
+        assertTrue(text.contains(action.usage))
+        assertEquals(action.help, CustomActionStore.decode(CustomActionStore.encode(listOf(action))).single().help)
+        // An action saved before the field existed has no help, and keeps the general line.
+        assertEquals("", CustomActionStore.decode(CustomActionStore.encode(listOf(CustomActions.WHATSAPP))).single().help)
+    }
+
     @Test fun analysisCarriesHelp() {
         val analysis = CommandEngine.analyze("volume 30", emptyList(), emptyList(), true)
         assertEquals("VOLUME", analysis.help?.title)

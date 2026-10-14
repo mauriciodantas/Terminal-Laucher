@@ -129,6 +129,8 @@
     <string name="cmd_pref_kind_intent">इंटेंट ·</string>
     <string name="cmd_pref_letter_label">अक्षर</string>
     <string name="cmd_pref_name_label">नाम</string>
+    <string name="cmd_pref_help_label">सहायता (वैकल्पिक)</string>
+    <string name="cmd_pref_help_hint">कैसे इस्तेमाल करें, क्या चाहिए, क्या लौटाता है। कमांड लिखते समय बार में दिखती है।</string>
     <string name="cmd_pref_start_template">किसी टेम्पलेट से शुरू करें</string>
     <string name="cmd_pref_suggestions">सुझाव</string>
     <string name="cmd_pref_new_command">नया कमांड</string>

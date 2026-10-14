@@ -129,6 +129,8 @@
     <string name="cmd_pref_kind_intent">Intent ·</string>
     <string name="cmd_pref_letter_label">字母</string>
     <string name="cmd_pref_name_label">名稱</string>
+    <string name="cmd_pref_help_label">說明（選填）</string>
+    <string name="cmd_pref_help_hint">用法、所需內容、回傳結果。輸入指令時顯示在列中。</string>
     <string name="cmd_pref_start_template">從範本開始</string>
     <string name="cmd_pref_suggestions">建議</string>
     <string name="cmd_pref_new_command">新指令</string>

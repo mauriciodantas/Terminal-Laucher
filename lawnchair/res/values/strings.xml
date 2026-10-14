@@ -1206,6 +1206,8 @@
     <string name="cmd_pref_kind_intent">Intent ·</string>
     <string name="cmd_pref_letter_label">Letter</string>
     <string name="cmd_pref_name_label">Name</string>
+    <string name="cmd_pref_help_label">Help (optional)</string>
+    <string name="cmd_pref_help_hint">How to use it, what it needs, what it returns. Shown in the bar while the command is typed.</string>
     <string name="cmd_pref_start_template">Start from a template</string>
     <string name="cmd_pref_suggestions">Suggestions</string>
     <string name="cmd_pref_new_command">New command</string>

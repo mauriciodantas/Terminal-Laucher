@@ -47,6 +47,8 @@ data class CustomAction(
     val provider: String = "",
     /** The built-in pack the action came with ("brasil"), so the pack can be removed; empty for the user's own. */
     val pack: String = "",
+    /** What the user wrote about the command (how to use it, what it needs), shown in its help; empty for none. */
+    val help: String = "",
 ) {
     /** "w [contato] [mensagem]" shown in the command list. */
     val usage: String
@@ -61,6 +63,9 @@ data class CustomAction(
 const val ACTION_VIEW = "android.intent.action.VIEW"
 
 object CustomActions {
+
+    /** The longest help a command keeps, so a pack cannot fill the bar with text. */
+    const val MAX_HELP = 1000
 
     private const val SEND = "android.intent.action.SEND"
     private const val SENDTO = "android.intent.action.SENDTO"

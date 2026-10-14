@@ -160,6 +160,7 @@ internal fun CommandEditor(
     var shareText by remember { mutableStateOf(start.textExtra != null) }
     var smsFallback by remember { mutableStateOf(start.smsFallback) }
     var pattern by remember { mutableStateOf(start.pattern) }
+    var help by remember { mutableStateOf(start.help) }
     // "Consulta uma API": a provider, a path on it and what of the answer to show.
     var apiMode by remember { mutableStateOf(start.kind == ActionKind.API) }
     var provider by remember { mutableStateOf(start.provider) }
@@ -212,7 +213,9 @@ internal fun CommandEditor(
             // "{1}", "{2}": words of what is typed, so a text too.
             inferArg(sent, null).let { if (it == ArgKind.NONE && ApiCall.usesWords(sent)) ArgKind.TEXT else it }
         }
+
         shortcut -> base.arg
+
         else -> inferArg(template.text, if (shareText) EXTRA_TEXT else null)
     }
     val linkDraft = base.copy(
@@ -230,6 +233,7 @@ internal fun CommandEditor(
         textExtra = if (shareText) base.textExtra ?: EXTRA_TEXT else null,
         smsFallback = smsFallback,
         pattern = pattern.trim(),
+        help = help.trim(),
     ).let { if (it.kind == ActionKind.API) it.copy(kind = ActionKind.INTENT, provider = "", api = null) else it }
     val draft = if (apiMode) {
         linkDraft.copy(
@@ -483,6 +487,15 @@ internal fun CommandEditor(
                         )
                     }
                     if (tab == EditorTab.ACTION) {
+                        OutlinedTextField(
+                            value = help,
+                            onValueChange = { help = it.take(CustomActions.MAX_HELP) },
+                            minLines = 2,
+                            maxLines = 6,
+                            label = { Text(stringResource(R.string.cmd_pref_help_label)) },
+                            supportingText = { Text(stringResource(R.string.cmd_pref_help_hint)) },
+                            modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                        )
                         if (arg != ArgKind.NONE && hasTarget) {
                             OutlinedTextField(
                                 value = sample,
