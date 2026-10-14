@@ -127,6 +127,8 @@ data class Analysis(
     val picksOnEnter: Boolean = false,
     /** With [Need.SECRET], the provider whose secret is missing. */
     val needProvider: String? = null,
+    /** Enter only arms it: a second Enter on the same line runs it (a DELETE). */
+    val confirmFirst: Boolean = false,
 )
 
 /** A one-tap start for the empty command line: a recent command, an alias or a custom letter. */
@@ -496,7 +498,11 @@ object CommandEngine {
     private fun describeCustom(action: CommandAction.Custom, providers: List<ApiProvider>): String {
         val spec = action.action
         if (spec.kind == ActionKind.SHORTCUT) return Texts.get(R.string.cmd_desc_shortcut, spec.packages.firstOrNull().orEmpty())
-        if (spec.kind == ActionKind.API) return "GET " + (ApiCall.url(spec, action.text, java.time.LocalDate.now(), providers) ?: spec.template)
+        if (spec.kind == ActionKind.API) {
+            val api = spec.api
+            val type = if (api != null && api.writes && api.body.isNotBlank()) " · " + api.bodyType.name.lowercase() else ""
+            return (api?.method ?: HttpMethods.GET) + " " + (ApiCall.url(spec, action.text, java.time.LocalDate.now(), providers) ?: spec.template) + type
+        }
         if (spec.template.isEmpty()) {
             return (spec.intentAction.substringAfterLast('.') + " " + spec.mimeType.orEmpty() + " · " + action.text).trim()
         }
@@ -625,17 +631,36 @@ object CommandEngine {
 
     /** [action] with the variables of its template filled, encoded as the URI wants them. */
     private fun withVariables(action: CustomAction, extras: CommandExtras): CustomAction {
-        if ('{' !in action.template) return action
-        var template = action.template
-        Regex("\\{([^{}\\s]+)\\}").findAll(action.template).forEach { m ->
+        val api = action.api
+        val filled = action.copy(template = fillVariables(action.template, extras, ::encode))
+        // A request body takes them too, escaped for its own type instead of for an address.
+        if (api == null || '{' !in api.body) return filled
+        return filled.copy(api = api.copy(body = fillVariables(api.body, extras) { ApiCall.escape(it, api.bodyType) }))
+    }
+
+    private fun fillVariables(text: String, extras: CommandExtras, escape: (String) -> String): String {
+        if ('{' !in text) return text
+        var result = text
+        Regex("\\{([^{}\\s]+)\\}").findAll(text).forEach { m ->
             if (m.value in PLACEHOLDERS) return@forEach
             val value = Variables.expand(m.value, extras)
-            if (value.missing.isEmpty() && value.text != m.value) template = template.replace(m.value, encode(value.text))
+            if (value.missing.isEmpty() && value.text != m.value) result = result.replace(m.value, escape(value.text))
         }
-        return action.copy(template = template)
+        return result
     }
 
     private val PLACEHOLDERS = setOf("{number}", "{phone}", "{name}", "{text}")
+
+    /** "ENTER ASKS viacep.com.br", or for a write "ENTER SENDS POST TO api.x.com", so it is not a surprise. */
+    private fun apiReady(action: CustomAction, providers: List<ApiProvider>): String {
+        val host = ApiCall.host(action, providers)
+        val spec = action.api ?: return Texts.get(R.string.cmd_api_ready, host)
+        return when {
+            HttpMethods.confirms(spec.method) -> Texts.get(R.string.cmd_api_write_confirm, spec.method, host)
+            spec.writes -> Texts.get(R.string.cmd_api_write_ready, spec.method, host)
+            else -> Texts.get(R.string.cmd_api_ready, host)
+        }
+    }
 
     internal fun analyzeCustom(
         unfilled: CustomAction,
@@ -686,11 +711,16 @@ object CommandEngine {
                 previewTitle = action.label.uppercase(),
                 preview = when {
                     text.isEmpty() -> Texts.get(R.string.cmd_text_empty)
-                    action.kind == ActionKind.API -> text.uppercase() + " · " + Texts.get(R.string.cmd_api_ready, ApiCall.host(action, providers))
+                    action.kind == ActionKind.API -> text.uppercase() + " · " + apiReady(action, providers)
                     else -> text.uppercase()
                 },
-                tone = if (text.isEmpty()) Tone.IDLE else Tone.OK,
+                tone = when {
+                    text.isEmpty() -> Tone.IDLE
+                    action.api?.writes == true -> Tone.WARN
+                    else -> Tone.OK
+                },
                 action = text.takeIf { it.isNotEmpty() }?.let { CommandAction.Custom(action, text = it) },
+                confirmFirst = action.api?.let { HttpMethods.confirms(it.method) } == true,
             )
         }
 
@@ -699,9 +729,10 @@ object CommandEngine {
             listTitle = action.label.uppercase(),
             needsContacts = false,
             previewTitle = action.label.uppercase(),
-            preview = if (action.kind == ActionKind.API) Texts.get(R.string.cmd_api_ready, ApiCall.host(action, providers)) else Texts.get(R.string.cmd_enter_to_run),
-            tone = Tone.OK,
+            preview = if (action.kind == ActionKind.API) apiReady(action, providers) else Texts.get(R.string.cmd_enter_to_run),
+            tone = if (action.api?.writes == true) Tone.WARN else Tone.OK,
             action = CommandAction.Custom(action),
+            confirmFirst = action.api?.let { HttpMethods.confirms(it.method) } == true,
         )
     }
 

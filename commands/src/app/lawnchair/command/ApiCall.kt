@@ -15,9 +15,10 @@ import org.json.JSONObject
 import org.json.JSONTokener
 
 /**
- * How an [ActionKind.API] action shows what its address answers. The action's template is an https
- * address fetched with GET, `{text}` filled with what was typed and `{year}` with the current year;
- * the answer must be JSON.
+ * What an [ActionKind.API] action sends and how it shows the answer. The action's template is the
+ * path (or https address) asked with [method], `{text}` filled with what was typed and `{year}` with
+ * the current year. A method other than GET may carry a [body] of [bodyType], filled the same way
+ * but escaped for that type, so typed quotes cannot break out of a JSON string.
  *
  * [format] is the text shown: `{field}` is the value at that path of the answer ("{city}",
  * "{address.street}", "{0.name}") and `{field|date}` shows an ISO date as the short local date and
@@ -30,7 +31,33 @@ data class ApiSpec(
     val list: String = "",
     val max: Int = 5,
     val upcoming: String = "",
-)
+    val method: String = HttpMethods.GET,
+    val body: String = "",
+    val bodyType: BodyType = BodyType.JSON,
+) {
+    /** It changes something on the other side: the bar warns, and an import never ticks it for the user. */
+    val writes: Boolean get() = method != HttpMethods.GET
+}
+
+object HttpMethods {
+    const val GET = "GET"
+    const val POST = "POST"
+    const val PUT = "PUT"
+    const val PATCH = "PATCH"
+    const val DELETE = "DELETE"
+
+    val ALL = listOf(GET, POST, PUT, PATCH, DELETE)
+
+    /** The ones asked twice in the bar: what they do cannot be undone from here. */
+    fun confirms(method: String): Boolean = method == DELETE
+}
+
+/** How a request body is written, and so how what is typed is escaped inside it. */
+enum class BodyType(val contentType: String) {
+    JSON("application/json; charset=utf-8"),
+    FORM("application/x-www-form-urlencoded; charset=utf-8"),
+    TEXT("text/plain; charset=utf-8"),
+}
 
 /** Turns a JSON answer into the text of an [ApiSpec]. Pure, so it can be unit tested. */
 object ApiFormat {
@@ -124,9 +151,16 @@ object ApiCall {
         uri.scheme.equals("https", ignoreCase = true) && !uri.host.isNullOrEmpty()
     }.getOrDefault(false)
 
-    /** Whether [action] can run at all: it says what it shows, and reaches a provider or an https address. */
-    fun isUsable(action: CustomAction): Boolean = action.api != null &&
-        (action.provider.isNotEmpty() || isAllowed(action.template.trim().replace(PLACEHOLDER, "x")))
+    /**
+     * Whether [action] can run at all: a known method, something to show for a GET (a write may
+     * show just its status), and a provider or an https address to reach.
+     */
+    fun isUsable(action: CustomAction): Boolean {
+        val spec = action.api ?: return false
+        if (spec.method !in HttpMethods.ALL) return false
+        if (!spec.writes && spec.format.isBlank()) return false
+        return action.provider.isNotEmpty() || isAllowed(action.template.trim().replace(PLACEHOLDER, "x"))
+    }
 
     /**
      * The provider [action] goes through: the one it names, or for an address of its own an open
@@ -147,6 +181,41 @@ object ApiCall {
     fun path(action: CustomAction, text: String, today: LocalDate): String = action.template.trim()
         .replace("{text}", encode(text.trim()))
         .replace("{year}", today.year.toString())
+
+    /**
+     * The body [action] sends for [text], with what was typed and the year escaped for its type;
+     * null when it sends none.
+     */
+    fun body(action: CustomAction, text: String, today: LocalDate): String? {
+        val spec = action.api ?: return null
+        if (!spec.writes || spec.body.isBlank()) return null
+        return spec.body
+            .replace("{text}", escape(text.trim(), spec.bodyType))
+            .replace("{year}", today.year.toString())
+    }
+
+    /** [value] as it may stand inside a body of [type]: inside a JSON string, a form value, or as it is. */
+    fun escape(value: String, type: BodyType): String = when (type) {
+        // A JSON string's own quoting, without the outer quotes the template already has.
+        BodyType.JSON -> JSONObject.quote(value).let { it.substring(1, it.length - 1) }
+
+        BodyType.FORM -> java.net.URLEncoder.encode(value, "UTF-8")
+
+        BodyType.TEXT -> value
+    }
+
+    /**
+     * What the bar shows for an answer: the format filled from it, or for a write with nothing to
+     * show (a 201 or 204 with no body, or no format) that it went through.
+     */
+    fun outcome(spec: ApiSpec, code: Int, body: String, today: LocalDate, locale: java.util.Locale = java.util.Locale.getDefault()): String {
+        val shown = if (spec.format.isBlank() || body.isBlank()) null else ApiFormat.render(body, spec, today, locale)
+        return when {
+            shown != null -> shown
+            spec.writes -> Texts.get(R.string.cmd_api_done, spec.method, code)
+            else -> Texts.get(R.string.cmd_api_empty)
+        }
+    }
 
     /** The address [action] asks for [text], without any secret; null when it reaches nothing allowed. */
     fun url(action: CustomAction, text: String, today: LocalDate, providers: List<ApiProvider> = Providers.BUILT_IN): String? {
@@ -169,9 +238,9 @@ object ApiCall {
     ): String {
         val spec = action.api ?: return Texts.get(R.string.cmd_api_invalid)
         val provider = providerOf(action, providers) ?: return Texts.get(R.string.cmd_provider_missing, action.provider)
-        val result = HttpRunner.get(provider, path(action, text, today), secret(provider.id))
+        val result = HttpRunner.send(provider, path(action, text, today), secret(provider.id), spec.method, body(action, text, today), spec.bodyType)
         return when (result) {
-            is HttpResult.Answer -> ApiFormat.render(result.body, spec, today) ?: Texts.get(R.string.cmd_api_empty)
+            is HttpResult.Answer -> outcome(spec, result.code, result.body, today)
             else -> HttpRunner.describe(result, provider)
         }
     }
@@ -192,8 +261,9 @@ sealed interface HttpResult {
 }
 
 /**
- * Sends GET requests for a provider. Redirects are followed by hand, so the credentials never go to
- * a host the provider does not own. Blocking.
+ * Sends requests for a provider. Redirects of a GET are followed by hand, so the credentials never
+ * go to a host the provider does not own; a write is never redirected, since the redirect would
+ * resend it somewhere else or turn it into a GET. Blocking.
  */
 object HttpRunner {
 
@@ -201,16 +271,26 @@ object HttpRunner {
     private const val TIMEOUT_MS = 10_000
     private const val MAX_REDIRECTS = 3
 
-    fun get(provider: ApiProvider, path: String, secret: String?): HttpResult {
+    fun get(provider: ApiProvider, path: String, secret: String?): HttpResult = send(provider, path, secret)
+
+    fun send(
+        provider: ApiProvider,
+        path: String,
+        secret: String?,
+        method: String = HttpMethods.GET,
+        body: String? = null,
+        bodyType: BodyType = BodyType.JSON,
+    ): HttpResult {
+        if (method !in HttpMethods.ALL) return HttpResult.Error("method $method")
         val request = when (val p = ProviderRequests.prepare(provider, path, secret)) {
             is Prepared.Ready -> p.request
             is Prepared.NeedsSecret -> return HttpResult.NeedsSecret(p.provider)
             is Prepared.Blocked -> return HttpResult.Blocked(p.reason)
         }
-        return runCatching { send(provider, request) }.getOrElse { HttpResult.Error(it.message ?: it.javaClass.simpleName) }
+        return runCatching { exchange(provider, request, method, body, bodyType) }.getOrElse { HttpResult.Error(it.message ?: it.javaClass.simpleName) }
     }
 
-    private fun send(provider: ApiProvider, first: HttpRequest): HttpResult {
+    private fun exchange(provider: ApiProvider, first: HttpRequest, method: String, body: String?, bodyType: BodyType): HttpResult {
         var url = first.url
         repeat(MAX_REDIRECTS + 1) {
             val connection = URL(url).openConnection() as HttpURLConnection
@@ -218,11 +298,20 @@ object HttpRunner {
                 connection.instanceFollowRedirects = false
                 connection.connectTimeout = TIMEOUT_MS
                 connection.readTimeout = TIMEOUT_MS
+                connection.requestMethod = method
                 connection.setRequestProperty("Accept", "application/json")
                 connection.setRequestProperty("User-Agent", "TerminalLauncher")
                 first.headers.forEach { (k, v) -> connection.setRequestProperty(k, v) }
+                if (body != null) {
+                    val bytes = body.toByteArray()
+                    connection.doOutput = true
+                    connection.setRequestProperty("Content-Type", bodyType.contentType)
+                    connection.setFixedLengthStreamingMode(bytes.size)
+                    connection.outputStream.use { it.write(bytes) }
+                }
                 val code = connection.responseCode
                 if (code in 300..399) {
+                    if (method != HttpMethods.GET) return HttpResult.Error(Texts.get(R.string.cmd_api_write_redirect, code))
                     val location = connection.getHeaderField("Location") ?: return HttpResult.Failed(code)
                     val next = URL(URL(url), location).toString()
                     if (!ProviderRequests.mayFollow(provider, next)) {

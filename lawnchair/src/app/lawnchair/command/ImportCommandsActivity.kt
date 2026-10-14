@@ -131,9 +131,9 @@ private fun ImportDialog(
     onDismiss: () -> Unit,
 ) {
     // What fits starts ticked; a clash starts unticked and, when ticked, comes in under another name.
-    // An action that sends the location or the clipboard out is never ticked for the user.
+    // An action that sends the location or the clipboard out, or changes data, is never ticked for the user.
     var actionsOn by remember {
-        mutableStateOf(preview.actions.indices.filter { preview.actions[it].conflict == null && preview.sends.getOrNull(it)?.isSensitive != true }.toSet())
+        mutableStateOf(preview.actions.indices.filter { preview.actions[it].conflict == null && preview.sends.getOrNull(it)?.needsTrust != true }.toSet())
     }
     var aliasesOn by remember { mutableStateOf(preview.aliases.indices.filter { preview.aliases[it].conflict == null }.toSet()) }
     val count = actionsOn.size + aliasesOn.size
@@ -207,10 +207,13 @@ private fun ImportDialog(
                     )
                     destinations.forEach { (host, all) ->
                         val merged = PackSends(host, all.any { it.typed }, all.flatMap { it.variables }.toSet())
+                        // The methods that change data on that host, said up front: "(POST, DELETE)".
+                        val writes = all.filter { it.writes }.map { it.method }.distinct()
+                        val methods = if (writes.isEmpty()) "" else " (" + writes.joinToString(", ") + ")"
                         Text(
-                            stringResource(R.string.cmd_imp_destination, host, merged.label().ifEmpty { stringResource(R.string.cmd_imp_sends_nothing) }),
+                            stringResource(R.string.cmd_imp_destination, host + methods, merged.label().ifEmpty { stringResource(R.string.cmd_imp_sends_nothing) }),
                             style = MaterialTheme.typography.bodySmall,
-                            color = if (merged.isSensitive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = if (merged.isSensitive || writes.isNotEmpty()) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(top = 4.dp),
                         )
                     }

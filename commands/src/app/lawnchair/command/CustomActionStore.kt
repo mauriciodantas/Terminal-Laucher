@@ -47,6 +47,9 @@ object CustomActionStore {
     }
 
     private fun apiJson(api: ApiSpec): JSONObject = JSONObject()
+        .put("method", api.method)
+        .put("body", api.body)
+        .put("type", api.bodyType.name.lowercase())
         .put("format", api.format)
         .put("list", api.list)
         .put("max", api.max)
@@ -77,6 +80,9 @@ object CustomActionStore {
                             list = api.optString("list", ""),
                             max = api.optInt("max", 5),
                             upcoming = api.optString("upcoming", ""),
+                            method = api.optString("method", HttpMethods.GET).uppercase(),
+                            body = api.optString("body", ""),
+                            bodyType = BodyType.entries.firstOrNull { it.name.equals(api.optString("type"), ignoreCase = true) } ?: BodyType.JSON,
                         )
                     },
                     pack = o.optString("pack", ""),

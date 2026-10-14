@@ -580,4 +580,13 @@
     <string name="cmd_pref_api_result">O que a barra mostra</string>
     <string name="cmd_pref_api_raw">Resposta recebida</string>
     <string name="cmd_pref_api_nothing">(o formato não achou nada nesta resposta)</string>
+    <string name="cmd_pref_api_method_writes">%1$s altera dados do outro lado. A barra avisa antes de enviar.</string>
+    <string name="cmd_pref_api_method_confirm">%1$s apaga dados do outro lado. A barra pede Enter duas vezes.</string>
+    <string name="cmd_pref_api_body_type">Corpo</string>
+    <string name="cmd_pref_api_body">Corpo da requisição (opcional)</string>
+    <string name="cmd_pref_api_body_hint">{text} é escapado para o tipo: aspas digitadas ficam dentro da string JSON.</string>
+    <string name="cmd_pref_api_format_optional">O que mostrar (opcional)</string>
+    <string name="cmd_pref_api_test_write_title">Enviar um %1$s de verdade?</string>
+    <string name="cmd_pref_api_test_write">O teste envia %1$s para %2$s com o exemplo, de verdade: o que ele mudar lá fica mudado.</string>
+    <string name="cmd_pref_api_test_write_ok">Enviar %1$s</string>
 </resources>

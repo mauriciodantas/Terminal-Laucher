@@ -29,9 +29,15 @@ data class PackPreview(
 )
 
 /** What an API action sends to [host] each time it runs: what is typed, and the [variables] it fills in. */
-data class PackSends(val host: String, val typed: Boolean, val variables: Set<Variables.Var>) {
+data class PackSends(val host: String, val typed: Boolean, val variables: Set<Variables.Var>, val method: String = HttpMethods.GET) {
     /** It tells somebody else where the user is or what they copied: never ticked for them. */
     val isSensitive: Boolean get() = variables.isNotEmpty()
+
+    /** It changes data on the other side (POST, PUT, PATCH, DELETE): never ticked for them either. */
+    val writes: Boolean get() = method != HttpMethods.GET
+
+    /** What makes an import leave it unticked. */
+    val needsTrust: Boolean get() = isSensitive || writes
 
     /** "o que você digitar · sua localização". */
     fun label(): String = listOfNotNull(
@@ -96,8 +102,12 @@ object PackRules {
 
     private fun detail(action: CustomAction): String = when {
         action.kind == ActionKind.SHORTCUT -> Texts.get(R.string.cmd_desc_shortcut, action.packages.firstOrNull().orEmpty())
-        action.kind == ActionKind.API -> "GET " + (if (action.provider.isEmpty()) "" else action.provider + " · ") + action.template
+
+        action.kind == ActionKind.API -> (action.api?.method ?: HttpMethods.GET) + " " +
+            (if (action.provider.isEmpty()) "" else action.provider + " · ") + action.template
+
         action.template.isEmpty() -> action.intentAction.substringAfterLast('.') + " " + action.mimeType.orEmpty()
+
         else -> action.template
     } + (if (action.packages.isNotEmpty() && action.kind == ActionKind.INTENT) " · " + action.packages.joinToString() else "") +
         // An action that also takes text typed alone says so: it catches lines without its letter.
@@ -126,7 +136,14 @@ object PackRules {
                 null
             }
             if (conflict == null) mergedActions = mergedActions + action
-            val caution = if (out?.isSensitive == true) Texts.get(R.string.cmd_caution_sends, out.label(), out.host) else caution(action)
+            val caution = when {
+                out?.writes == true -> Texts.get(R.string.cmd_caution_writes, out.method, out.host) +
+                    if (out.isSensitive) "\n" + Texts.get(R.string.cmd_caution_sends, out.label(), out.host) else ""
+
+                out?.isSensitive == true -> Texts.get(R.string.cmd_caution_sends, out.label(), out.host)
+
+                else -> caution(action)
+            }
             PackEntry(action, detail(action), conflict, suggestion, caution)
         }
         var mergedAliases = aliases
@@ -185,8 +202,9 @@ object PackRules {
     /** What [action] sends out each run and where; null for one that does not call an API. */
     fun sends(action: CustomAction, providers: List<ApiProvider>): PackSends? {
         if (action.kind != ActionKind.API) return null
-        val variables = Variables.used(action.template).intersect(Variables.SENSITIVE)
-        return PackSends(ApiCall.host(action, providers), action.arg != ArgKind.NONE, variables)
+        val api = action.api
+        val variables = Variables.used(action.template + " " + api?.body.orEmpty()).intersect(Variables.SENSITIVE)
+        return PackSends(ApiCall.host(action, providers), action.arg != ArgKind.NONE, variables, api?.method ?: HttpMethods.GET)
     }
 
     /**

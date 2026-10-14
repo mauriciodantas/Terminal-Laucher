@@ -540,4 +540,10 @@
     <string name="cmd_caution_sends">⚠ sends %1$s to %2$s each time it runs · tick it only if you trust who sent it</string>
     <string name="cmd_provider_reused">you already have %1$s with the same address: these commands use yours</string>
     <string name="cmd_provider_renamed">you have another %1$s (other address or authentication): this one comes in as %2$s</string>
+    <string name="cmd_api_done">%1$s OK · HTTP %2$d</string>
+    <string name="cmd_api_write_redirect">redirect (HTTP %1$d) not followed for a write</string>
+    <string name="cmd_api_write_ready">ENTER SENDS %1$s TO %2$s</string>
+    <string name="cmd_api_write_confirm">%1$s ON %2$s · ENTER TWICE TO CONFIRM</string>
+    <string name="cmd_api_confirm_armed">%1$s ON %2$s · ENTER AGAIN TO SEND, CHANGE THE LINE TO CANCEL</string>
+    <string name="cmd_caution_writes">⚠ changes data: %1$s on %2$s · tick it only if you trust who sent it</string>
 </resources>
