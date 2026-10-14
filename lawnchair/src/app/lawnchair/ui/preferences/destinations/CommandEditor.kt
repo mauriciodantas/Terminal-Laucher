@@ -208,7 +208,10 @@ internal fun CommandEditor(
 
     val shortcut = !apiMode && base.kind == ActionKind.SHORTCUT
     val arg = when {
-        apiMode -> inferArg(template.text + " " + (if (method == HttpMethods.GET) "" else body.text), null)
+        apiMode -> (template.text + " " + (if (method == HttpMethods.GET) "" else body.text)).let { sent ->
+            // "{1}", "{2}": words of what is typed, so a text too.
+            inferArg(sent, null).let { if (it == ArgKind.NONE && ApiCall.usesWords(sent)) ArgKind.TEXT else it }
+        }
         shortcut -> base.arg
         else -> inferArg(template.text, if (shareText) EXTRA_TEXT else null)
     }

@@ -46,6 +46,18 @@ class ApiWriteTest {
         assertNull(ApiCall.body(action(HttpMethods.GET, "{text}"), "x", today))
     }
 
+    @Test fun wordsOfWhatIsTypedFillTheirOwnPlaces() {
+        // "25 red": the number and the game of a GraphQL query, each where it belongs.
+        val a = action(HttpMethods.POST, """{"query": "{x(n: {1}, game: \"{2}\", all: \"{text}\", y: {year}, none: \"{3}\")}"}""")
+        val query = JSONObject(ApiCall.body(a, "  25   red ", today)!!).getString("query")
+        assertEquals("""{x(n: 25, game: "red", all: "25   red", y: 2026, none: "")}""", query)
+        // A typed "{2}" is not filled again, and a word is escaped like the whole text.
+        assertEquals("""{x(n: {2}, game: "a"b", all: "{2} a"b", y: 2026, none: "")}""", JSONObject(ApiCall.body(a, """{2} a"b""", today)!!).getString("query"))
+        assertEquals("https://api.todo.com/tasks/pikachu/red%20x", ApiCall.url(action(HttpMethods.GET, template = "/tasks/{1}/{2}%20x"), "pikachu red", today, Providers.all(listOf(todo))))
+        assertTrue(ApiCall.usesWords("""{"q": "{1}"}"""))
+        assertFalse(ApiCall.usesWords("/tasks?q={text}&y={year}"))
+    }
+
     @Test fun aWriteWithNothingToShowSaysItWentThrough() {
         val spec = ApiSpec("", method = HttpMethods.DELETE)
         assertEquals("DELETE OK · HTTP 204", ApiCall.outcome(spec, 204, "", today))

@@ -16,8 +16,9 @@ import org.json.JSONTokener
 
 /**
  * What an [ActionKind.API] action sends and how it shows the answer. The action's template is the
- * path (or https address) asked with [method], `{text}` filled with what was typed and `{year}` with
- * the current year. A method other than GET may carry a [body] of [bodyType], filled the same way
+ * path (or https address) asked with [method], `{text}` filled with what was typed, `{1}` to `{9}`
+ * with its words one by one ("25 red": `{1}` is 25, `{2}` red) and `{year}` with the current year.
+ * A method other than GET may carry a [body] of [bodyType], filled the same way
  * but escaped for that type, so typed quotes cannot break out of a JSON string.
  *
  * [format] is the text shown: `{field}` is the value at that path of the answer ("{city}",
@@ -202,10 +203,30 @@ object ApiCall {
     fun host(action: CustomAction, providers: List<ApiProvider> = Providers.BUILT_IN): String = providerOf(action, providers)?.host
         ?: action.provider
 
+    /** What was typed, `{1}` to `{9}` for its words, and the year: what a template or body is filled with. */
+    private val FILLED = Regex("\\{(text|year|[1-9])\\}")
+
+    /** True when [template] asks for a word of what was typed (`{1}` to `{9}`), so it needs a text. */
+    fun usesWords(template: String): Boolean = FILLED.findAll(template).any { it.groupValues[1].first().isDigit() }
+
+    /**
+     * [template] with what was typed, its words and the year, each typed part passed through [escape].
+     * One pass, so a typed "{2}" is never filled again; a word that was not typed is empty.
+     */
+    private fun fill(template: String, text: String, today: LocalDate, escape: (String) -> String): String {
+        val typed = text.trim()
+        val words = typed.split(Regex("\\s+")).filter { it.isNotEmpty() }
+        return FILLED.replace(template) { m ->
+            when (val key = m.groupValues[1]) {
+                "text" -> escape(typed)
+                "year" -> today.year.toString()
+                else -> escape(words.getOrElse(key.toInt() - 1) { "" })
+            }
+        }
+    }
+
     /** The path or address of [action] with what was typed and the year filled in. */
-    fun path(action: CustomAction, text: String, today: LocalDate): String = action.template.trim()
-        .replace("{text}", encode(text.trim()))
-        .replace("{year}", today.year.toString())
+    fun path(action: CustomAction, text: String, today: LocalDate): String = fill(action.template.trim(), text, today, ::encode)
 
     /**
      * The body [action] sends for [text], with what was typed and the year escaped for its type;
@@ -214,9 +235,7 @@ object ApiCall {
     fun body(action: CustomAction, text: String, today: LocalDate): String? {
         val spec = action.api ?: return null
         if (!spec.writes || spec.body.isBlank()) return null
-        return spec.body
-            .replace("{text}", escape(text.trim(), spec.bodyType))
-            .replace("{year}", today.year.toString())
+        return fill(spec.body, text, today) { escape(it, spec.bodyType) }
     }
 
     /** [value] as it may stand inside a body of [type]: inside a JSON string, a form value, or as it is. */
