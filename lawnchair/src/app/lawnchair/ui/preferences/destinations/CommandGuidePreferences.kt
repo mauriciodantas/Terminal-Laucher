@@ -135,12 +135,15 @@ DOCUMENTAÇÃO DA API A INTEGRAR:
 [Forneça aqui a documentação da API, URL base, endpoint desejado e estrutura de resposta JSON]"""
 
 @Composable
-fun CommandGuidePreferences() {
+fun CommandGuidePreferences(
+    modifier: Modifier = Modifier,
+) {
     val context = LocalContext.current
     val promptCopiedMessage = stringResource(R.string.cmd_guide_prompt_copied)
 
     PreferenceLayout(
         label = stringResource(R.string.cmd_guide_title),
+        modifier = modifier,
         actions = {
             ClickableIcon(
                 imageVector = Icons.Rounded.ContentCopy,

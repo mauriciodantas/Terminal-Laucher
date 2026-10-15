@@ -24,8 +24,6 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.HelpOutline
-import app.lawnchair.ui.preferences.LocalNavController
-import app.lawnchair.ui.preferences.navigation.CommandGuide
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FilterChip
@@ -84,6 +82,8 @@ import app.lawnchair.command.ProviderStore
 import app.lawnchair.command.Providers
 import app.lawnchair.command.R as CommandR
 import app.lawnchair.command.SecretStore
+import app.lawnchair.ui.preferences.LocalNavController
+import app.lawnchair.ui.preferences.navigation.CommandGuide
 import com.android.launcher3.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
