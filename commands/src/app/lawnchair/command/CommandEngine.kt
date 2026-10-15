@@ -77,6 +77,9 @@ sealed interface CommandAction {
     /** "qr ...": the code is drawn in the bar for another phone's camera. */
     data class ShowQr(val content: String) : CommandAction
 
+    /** A Pix QR code's text, handed to the bank app as the camera hands it one it reads. */
+    data class Pix(val code: String) : CommandAction
+
     /** "perto farmácia": places of that kind around, in the maps app. */
     data class Nearby(val query: String) : CommandAction
 
@@ -441,6 +444,8 @@ object CommandEngine {
         is CommandAction.Ping -> "ping -c 3 " + action.host
 
         is CommandAction.ShowQr -> "QR · " + action.content.length + " chars"
+
+        is CommandAction.Pix -> "android.intent.action.Pix · " + action.code
 
         is CommandAction.Nearby -> "geo:0,0?q=" + encode(action.query)
 

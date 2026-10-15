@@ -447,6 +447,13 @@
     <string name="cmd_qr_shown">QR · APONTE A OUTRA CÂMERA AQUI</string>
     <string name="cmd_qr_failed">NÃO CABE NUM QR CODE</string>
 
+    <string name="cmd_usage_pix">[chave]</string>
+    <string name="cmd_help_pix">Abre o app do banco com o Pix dessa chave, sem valor, como se o QR code tivesse sido lido: o banco mostra quem recebe e pede o valor. A chave pode ser CPF, CNPJ, celular, email ou chave aleatória; CPF, CNPJ ou chave aleatória digitados sozinhos também oferecem o Pix.\n› pix 123.456.789-09\n› pix +55 11 99999-8888\n› pix ana@exemplo.com</string>
+    <string name="cmd_pix_empty">CPF, CNPJ, CELULAR, EMAIL OU CHAVE ALEATÓRIA</string>
+    <string name="cmd_pix_invalid">NÃO É UMA CHAVE PIX</string>
+    <string name="cmd_pix_ready">ENTER ABRE O BANCO</string>
+    <string name="cmd_pix_no_app">NENHUM APP DE BANCO RECEBE O PIX</string>
+
 
     <string name="cmd_word_nearby">perto</string>
     <string name="cmd_usage_nearby">[lugar]</string>

@@ -93,6 +93,7 @@ class CommandRegistry(private val commands: List<Command>) {
                 CopyCommand,
                 PasteCommand,
                 QrCommand,
+                PixCommand,
                 SettingsCommand,
                 ScheduledCommand,
                 CancelCommand,
