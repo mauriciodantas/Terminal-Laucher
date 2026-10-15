@@ -183,8 +183,15 @@ internal fun CommandEditor(
     var expansion by remember { mutableStateOf(editingAlias?.expansion.orEmpty()) }
     // The rare options start open only when the action uses one of them.
     var moreOpen by remember {
-        mutableStateOf(expandAction(start.intentAction) != expandAction("VIEW") || shareText || smsFallback || start.pattern.isNotEmpty())
+        mutableStateOf(
+            expandAction(start.intentAction) != expandAction("VIEW") ||
+                shareText ||
+                smsFallback ||
+                start.pattern.isNotEmpty() ||
+                start.api?.let { it.method != HttpMethods.GET || it.list.isNotEmpty() || it.upcoming.isNotEmpty() } == true,
+        )
     }
+    var apiDetailsOpen by remember { mutableStateOf(target == EditorTarget.New) }
     var picker by remember { mutableStateOf<EditorPicker?>(null) }
 
     fun suggest(label: String) {
@@ -402,20 +409,23 @@ internal fun CommandEditor(
                             modifier = Modifier.fillMaxWidth(),
                         )
                         // One option a line: side by side the longer label wrapped and the two fell out of line.
-                        Column(Modifier.fillMaxWidth().padding(top = 4.dp)) {
-                            listOf(false to R.string.cmd_pref_kind_open, true to R.string.cmd_pref_kind_api).forEach { (api, label) ->
-                                Row(
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .heightIn(min = 44.dp)
-                                        .clickable {
-                                            apiMode = api
-                                            apiResult = null
-                                        },
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    RadioButton(selected = apiMode == api, onClick = null, modifier = Modifier.padding(end = 6.dp))
-                                    Text(stringResource(label), style = MaterialTheme.typography.bodyMedium)
+                        // Only a new command chooses its kind: a saved command keeps it.
+                        if (target == EditorTarget.New) {
+                            Column(Modifier.fillMaxWidth().padding(top = 4.dp)) {
+                                listOf(false to R.string.cmd_pref_kind_open, true to R.string.cmd_pref_kind_api).forEach { (api, label) ->
+                                    Row(
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .heightIn(min = 44.dp)
+                                            .clickable {
+                                                apiMode = api
+                                                apiResult = null
+                                            },
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        RadioButton(selected = apiMode == api, onClick = null, modifier = Modifier.padding(end = 6.dp))
+                                        Text(stringResource(label), style = MaterialTheme.typography.bodyMedium)
+                                    }
                                 }
                             }
                         }
@@ -460,6 +470,8 @@ internal fun CommandEditor(
                             pattern = pattern,
                             onPattern = { pattern = it.take(CommandPattern.MAX_LENGTH) },
                             patternError = patternError,
+                            detailsOpen = apiDetailsOpen,
+                            onDetailsOpen = { apiDetailsOpen = it },
                             moreOpen = moreOpen,
                             onMoreOpen = { moreOpen = it },
                         )
@@ -490,8 +502,8 @@ internal fun CommandEditor(
                         OutlinedTextField(
                             value = help,
                             onValueChange = { help = it.take(CustomActions.MAX_HELP) },
-                            minLines = 2,
-                            maxLines = 6,
+                            minLines = 1,
+                            maxLines = 4,
                             label = { Text(stringResource(R.string.cmd_pref_help_label)) },
                             supportingText = { Text(stringResource(R.string.cmd_pref_help_hint)) },
                             modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
@@ -752,6 +764,8 @@ private fun ApiForm(
     pattern: String,
     onPattern: (String) -> Unit,
     patternError: String?,
+    detailsOpen: Boolean,
+    onDetailsOpen: (Boolean) -> Unit,
     moreOpen: Boolean,
     onMoreOpen: (Boolean) -> Unit,
 ) {
@@ -787,136 +801,176 @@ private fun ApiForm(
             modifier = Modifier.padding(top = 4.dp),
         )
     }
-    OutlinedTextField(
-        value = path,
-        onValueChange = onPath,
-        singleLine = true,
-        textStyle = mono,
-        label = { Text(stringResource(R.string.cmd_pref_api_path)) },
-        placeholder = { Text("/ws/{text}/json/", fontFamily = FontFamily.Monospace) },
-        supportingText = { Text(chosen?.let { stringResource(R.string.cmd_pref_api_path_hint, it.baseUrl) } ?: "") },
-        modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-    )
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
-        listOf(R.string.cmd_pref_insert_text to "{text}", R.string.cmd_pref_insert_year to "{year}").forEach { (label, placeholder) ->
-            SuggestionChip(
-                onClick = {
-                    val at = path.selection.end.coerceIn(0, path.text.length)
-                    onPath(TextFieldValue(path.text.substring(0, at) + placeholder + path.text.substring(at), TextRange(at + placeholder.length)))
-                },
-                label = { Text(stringResource(label)) },
-            )
-        }
-    }
-    // GET reads; the others change data, so they say so and may carry a body.
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
-        HttpMethods.ALL.forEach { m ->
-            FilterChip(
-                selected = method == m,
-                onClick = { onMethod(m) },
-                label = { Text(m, fontFamily = FontFamily.Monospace) },
-            )
-        }
-    }
-    if (method != HttpMethods.GET) {
-        Text(
-            stringResource(if (HttpMethods.confirms(method)) R.string.cmd_pref_api_method_confirm else R.string.cmd_pref_api_method_writes, method),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.error,
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 12.dp)
+            .clickable { onDetailsOpen(!detailsOpen) }
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            if (detailsOpen) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(end = 6.dp),
         )
-        Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(R.string.cmd_pref_api_body_type), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(end = 8.dp))
-            BodyType.entries.forEach { type ->
-                FilterChip(
-                    selected = bodyType == type,
-                    onClick = { onBodyType(type) },
-                    label = { Text(type.name.lowercase(), fontFamily = FontFamily.Monospace) },
-                    modifier = Modifier.padding(end = 6.dp),
+        Column(Modifier.weight(1f)) {
+            Text(
+                stringResource(R.string.cmd_pref_api_details),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            if (!detailsOpen && path.text.isNotBlank()) {
+                Text(
+                    "$method · ${path.text.trim()}",
+                    style = MaterialTheme.typography.bodySmall,
+                    fontFamily = FontFamily.Monospace,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
                 )
             }
         }
+    }
+
+    if (detailsOpen) {
         OutlinedTextField(
-            value = body,
-            onValueChange = onBody,
-            minLines = 3,
+            value = path,
+            onValueChange = onPath,
+            singleLine = true,
             textStyle = mono,
-            label = { Text(stringResource(R.string.cmd_pref_api_body)) },
-            placeholder = {
-                Text(
-                    when (bodyType) {
-                        BodyType.JSON -> "{\"title\": \"{text}\"}"
-                        BodyType.FORM -> "title={text}&done=false"
-                        BodyType.TEXT -> "{text}"
-                    },
-                    fontFamily = FontFamily.Monospace,
-                )
-            },
-            supportingText = { Text(stringResource(R.string.cmd_pref_api_body_hint)) },
+            label = { Text(stringResource(R.string.cmd_pref_api_path)) },
+            placeholder = { Text("/ws/{text}/json/", fontFamily = FontFamily.Monospace) },
+            supportingText = { Text(chosen?.let { stringResource(R.string.cmd_pref_api_path_hint, it.baseUrl) } ?: "") },
             modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
         )
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
             listOf(R.string.cmd_pref_insert_text to "{text}", R.string.cmd_pref_insert_year to "{year}").forEach { (label, placeholder) ->
                 SuggestionChip(
                     onClick = {
-                        val at = body.selection.end.coerceIn(0, body.text.length)
-                        onBody(TextFieldValue(body.text.substring(0, at) + placeholder + body.text.substring(at), TextRange(at + placeholder.length)))
+                        val at = path.selection.end.coerceIn(0, path.text.length)
+                        onPath(TextFieldValue(path.text.substring(0, at) + placeholder + path.text.substring(at), TextRange(at + placeholder.length)))
                     },
                     label = { Text(stringResource(label)) },
                 )
             }
         }
-    }
-    OutlinedTextField(
-        value = format,
-        onValueChange = onFormat,
-        minLines = 2,
-        textStyle = mono,
-        label = { Text(stringResource(if (method == HttpMethods.GET) R.string.cmd_pref_api_format else R.string.cmd_pref_api_format_optional)) },
-        placeholder = { Text("{bairro} · {localidade}/{uf}", fontFamily = FontFamily.Monospace) },
-        supportingText = { Text(stringResource(R.string.cmd_pref_api_format_hint)) },
-        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-    )
-    TextButton(onClick = { onMoreOpen(!moreOpen) }, modifier = Modifier.padding(top = 8.dp)) {
-        Icon(if (moreOpen) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown, contentDescription = null)
-        Text(stringResource(R.string.cmd_pref_more_options))
-    }
-    if (moreOpen) {
         OutlinedTextField(
-            value = listPath,
-            onValueChange = onListPath,
-            singleLine = true,
+            value = format,
+            onValueChange = onFormat,
+            minLines = 2,
             textStyle = mono,
-            label = { Text(stringResource(R.string.cmd_pref_api_list)) },
-            supportingText = { Text(stringResource(R.string.cmd_pref_api_list_hint)) },
-            modifier = Modifier.fillMaxWidth(),
-        )
-        OutlinedTextField(
-            value = maxItems,
-            onValueChange = onMaxItems,
-            singleLine = true,
-            label = { Text(stringResource(R.string.cmd_pref_api_max)) },
-            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+            label = { Text(stringResource(if (method == HttpMethods.GET) R.string.cmd_pref_api_format else R.string.cmd_pref_api_format_optional)) },
+            placeholder = { Text("{bairro} · {localidade}/{uf}", fontFamily = FontFamily.Monospace) },
+            supportingText = { Text(stringResource(R.string.cmd_pref_api_format_hint)) },
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
         )
-        OutlinedTextField(
-            value = upcoming,
-            onValueChange = onUpcoming,
-            singleLine = true,
-            textStyle = mono,
-            label = { Text(stringResource(R.string.cmd_pref_api_upcoming)) },
-            supportingText = { Text(stringResource(R.string.cmd_pref_api_upcoming_hint)) },
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-        )
-        OutlinedTextField(
-            value = pattern,
-            onValueChange = onPattern,
-            singleLine = true,
-            textStyle = mono,
-            label = { Text(stringResource(R.string.cmd_pref_pattern_label)) },
-            isError = patternError != null,
-            supportingText = { Text(patternError ?: stringResource(R.string.cmd_pref_pattern_hint)) },
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-        )
+        TextButton(onClick = { onMoreOpen(!moreOpen) }, modifier = Modifier.padding(top = 8.dp)) {
+            Icon(if (moreOpen) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown, contentDescription = null)
+            Text(stringResource(R.string.cmd_pref_more_options))
+        }
+        if (moreOpen) {
+            Text(
+                stringResource(R.string.cmd_pref_api_method),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
+                HttpMethods.ALL.forEach { m ->
+                    FilterChip(
+                        selected = method == m,
+                        onClick = { onMethod(m) },
+                        label = { Text(m, fontFamily = FontFamily.Monospace) },
+                    )
+                }
+            }
+            if (method != HttpMethods.GET) {
+                Text(
+                    stringResource(if (HttpMethods.confirms(method)) R.string.cmd_pref_api_method_confirm else R.string.cmd_pref_api_method_writes, method),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+                Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(stringResource(R.string.cmd_pref_api_body_type), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(end = 8.dp))
+                    BodyType.entries.forEach { type ->
+                        FilterChip(
+                            selected = bodyType == type,
+                            onClick = { onBodyType(type) },
+                            label = { Text(type.name.lowercase(), fontFamily = FontFamily.Monospace) },
+                            modifier = Modifier.padding(end = 6.dp),
+                        )
+                    }
+                }
+                OutlinedTextField(
+                    value = body,
+                    onValueChange = onBody,
+                    minLines = 3,
+                    textStyle = mono,
+                    label = { Text(stringResource(R.string.cmd_pref_api_body)) },
+                    placeholder = {
+                        Text(
+                            when (bodyType) {
+                                BodyType.JSON -> "{\"title\": \"{text}\"}"
+                                BodyType.FORM -> "title={text}&done=false"
+                                BodyType.TEXT -> "{text}"
+                            },
+                            fontFamily = FontFamily.Monospace,
+                        )
+                    },
+                    supportingText = { Text(stringResource(R.string.cmd_pref_api_body_hint)) },
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                )
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+                    listOf(R.string.cmd_pref_insert_text to "{text}", R.string.cmd_pref_insert_year to "{year}").forEach { (label, placeholder) ->
+                        SuggestionChip(
+                            onClick = {
+                                val at = body.selection.end.coerceIn(0, body.text.length)
+                                onBody(TextFieldValue(body.text.substring(0, at) + placeholder + body.text.substring(at), TextRange(at + placeholder.length)))
+                            },
+                            label = { Text(stringResource(label)) },
+                        )
+                    }
+                }
+            }
+            OutlinedTextField(
+                value = listPath,
+                onValueChange = onListPath,
+                singleLine = true,
+                textStyle = mono,
+                label = { Text(stringResource(R.string.cmd_pref_api_list)) },
+                supportingText = { Text(stringResource(R.string.cmd_pref_api_list_hint)) },
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+            )
+            OutlinedTextField(
+                value = maxItems,
+                onValueChange = onMaxItems,
+                singleLine = true,
+                label = { Text(stringResource(R.string.cmd_pref_api_max)) },
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+            )
+            OutlinedTextField(
+                value = upcoming,
+                onValueChange = onUpcoming,
+                singleLine = true,
+                textStyle = mono,
+                label = { Text(stringResource(R.string.cmd_pref_api_upcoming)) },
+                supportingText = { Text(stringResource(R.string.cmd_pref_api_upcoming_hint)) },
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+            )
+            OutlinedTextField(
+                value = pattern,
+                onValueChange = onPattern,
+                singleLine = true,
+                textStyle = mono,
+                label = { Text(stringResource(R.string.cmd_pref_pattern_label)) },
+                isError = patternError != null,
+                supportingText = { Text(patternError ?: stringResource(R.string.cmd_pref_pattern_hint)) },
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+            )
+        }
     }
     if (picking) {
         PickerDialog(

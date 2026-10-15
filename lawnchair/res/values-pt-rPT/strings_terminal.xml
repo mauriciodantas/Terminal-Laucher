@@ -524,4 +524,6 @@
     <string name="saved_themes_empty">Ainda não há temas guardados: guarde este, importe um ficheiro .tthm ou use ia tema</string>
     <string name="saved_themes_delete">Apagar</string>
     <string name="saved_themes_delete_title">Apagar o tema %1$s?</string>
+    <string name="cmd_pref_api_details">Detalhes da API</string>
+    <string name="cmd_pref_api_method">Método HTTP</string>
 </resources>

@@ -1694,4 +1694,6 @@
     <string name="cmd_pref_api_test_write_title">Send a real %1$s?</string>
     <string name="cmd_pref_api_test_write">The test sends %1$s to %2$s with the example, for real: whatever it changes there stays changed.</string>
     <string name="cmd_pref_api_test_write_ok">Send %1$s</string>
+    <string name="cmd_pref_api_details">API details</string>
+    <string name="cmd_pref_api_method">HTTP method</string>
 </resources>

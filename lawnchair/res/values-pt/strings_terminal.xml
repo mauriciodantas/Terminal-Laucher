@@ -599,4 +599,6 @@
     <string name="cmd_pref_api_test_write_title">Enviar um %1$s de verdade?</string>
     <string name="cmd_pref_api_test_write">O teste envia %1$s para %2$s com o exemplo, de verdade: o que ele mudar lá fica mudado.</string>
     <string name="cmd_pref_api_test_write_ok">Enviar %1$s</string>
+    <string name="cmd_pref_api_details">Detalhes da API</string>
+    <string name="cmd_pref_api_method">Método HTTP</string>
 </resources>
