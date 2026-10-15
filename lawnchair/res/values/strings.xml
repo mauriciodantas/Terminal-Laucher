@@ -1314,6 +1314,16 @@
     <string name="lottie_widget_playback_once">Once per tap</string>
     <string name="lottie_widget_theme_colors">Theme colors</string>
     <string name="lottie_widget_theme_colors_summary">Paints the animation in the accent color of the theme</string>
+    <string name="lottie_widget_show_result">Show result</string>
+    <string name="lottie_widget_show_result_summary">Displays the result of the command when the widget is tapped</string>
+    <string name="lottie_widget_result_duration">Animation return timer</string>
+    <string name="lottie_widget_result_duration_summary">Brings the animation back after displaying the result</string>
+    <string name="lottie_widget_duration_15s">15 seconds</string>
+    <string name="lottie_widget_duration_30s">30 seconds</string>
+    <string name="lottie_widget_duration_1m">1 minute (default)</string>
+    <string name="lottie_widget_duration_2m">2 minutes</string>
+    <string name="lottie_widget_duration_5m">5 minutes</string>
+    <string name="lottie_widget_default_animation">Default animation</string>
     <string name="lottie_widget_share">Share widget</string>
     <string name="lottie_widget_share_subject">Terminal widget</string>
     <string name="lottie_widget_share_failed">Could not create the widget file</string>

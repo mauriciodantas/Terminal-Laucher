@@ -235,6 +235,16 @@
     <string name="lottie_widget_playback_once">Uma vez a cada toque</string>
     <string name="lottie_widget_theme_colors">Cores do tema</string>
     <string name="lottie_widget_theme_colors_summary">Pinta a animação na cor de destaque do tema</string>
+    <string name="lottie_widget_show_result">Mostrar resultado</string>
+    <string name="lottie_widget_show_result_summary">Mostra o resultado do comando executado ao tocar no widget</string>
+    <string name="lottie_widget_result_duration">Tempo para retorno da animação</string>
+    <string name="lottie_widget_result_duration_summary">A animação volta a ser apresentada após o tempo selecionado</string>
+    <string name="lottie_widget_duration_15s">15 segundos</string>
+    <string name="lottie_widget_duration_30s">30 segundos</string>
+    <string name="lottie_widget_duration_1m">1 minuto (padrão)</string>
+    <string name="lottie_widget_duration_2m">2 minutos</string>
+    <string name="lottie_widget_duration_5m">5 minutos</string>
+    <string name="lottie_widget_default_animation">Animação padrão</string>
     <string name="lottie_widget_share">Partilhar widget</string>
     <string name="lottie_widget_share_subject">Widget do Terminal</string>
     <string name="lottie_widget_share_failed">Não foi possível criar o ficheiro do widget</string>

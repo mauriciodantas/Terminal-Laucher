@@ -25,3 +25,4 @@ lawnWithQuickstep/release
 
 # Claude Code (skills e configurações locais)
 /.claude/
+/brag-output-*

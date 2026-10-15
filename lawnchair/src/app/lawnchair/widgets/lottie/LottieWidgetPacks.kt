@@ -40,10 +40,13 @@ data class LottieWidgetPack(
     val themeColors: Boolean,
     /** The letters and aliases [command] uses; empty when it uses only built-in commands. */
     val commands: CommandPack,
+    val showResult: Boolean = false,
+    val resultDurationSeconds: Int = LottieWidgetStore.DEFAULT_RESULT_DURATION_SECONDS,
 ) {
     override fun equals(other: Any?) = other is LottieWidgetPack && name == other.name && command == other.command &&
-        playback == other.playback && themeColors == other.themeColors && commands == other.commands &&
-        animation.contentEquals(other.animation)
+        playback == other.playback && themeColors == other.themeColors && showResult == other.showResult &&
+        resultDurationSeconds == other.resultDurationSeconds &&
+        commands == other.commands && animation.contentEquals(other.animation)
 
     override fun hashCode() = animation.contentHashCode() * 31 + command.hashCode()
 }
@@ -75,6 +78,8 @@ object LottieWidgetPacks {
             .put("command", pack.command)
             .put("playback", pack.playback.name)
             .put("themeColors", pack.themeColors)
+            .put("showResult", pack.showResult)
+            .put("resultDurationSeconds", pack.resultDurationSeconds)
             .put("commands", JSONObject(CommandPacks.encode(pack.commands.actions, pack.commands.aliases)))
         ZipOutputStream(out).use { zip ->
             zip.putNextEntry(ZipEntry(MANIFEST))
@@ -110,6 +115,8 @@ object LottieWidgetPacks {
             command = o.optString("command").trim(),
             playback = Playback.entries.firstOrNull { it.name == o.optString("playback") } ?: Playback.LOOP,
             themeColors = o.optBoolean("themeColors", false),
+            showResult = o.optBoolean("showResult", false),
+            resultDurationSeconds = o.optInt("resultDurationSeconds", LottieWidgetStore.DEFAULT_RESULT_DURATION_SECONDS),
             commands = commands ?: CommandPack(emptyList(), emptyList()),
         )
     }
@@ -155,19 +162,23 @@ object LottieWidgetPacks {
     /** Builds the pack for what the configuration screen shows and returns a share sheet for it. */
     fun shareIntent(
         context: Context,
-        animation: File,
+        animation: File?,
         name: String,
         command: String,
         playback: Playback,
         themeColors: Boolean,
+        showResult: Boolean = false,
+        resultDurationSeconds: Int = LottieWidgetStore.DEFAULT_RESULT_DURATION_SECONDS,
     ): Intent? = runCatching {
         val line = command.trim()
         val pack = LottieWidgetPack(
             name = name,
-            animation = animation.readBytes(),
+            animation = animation?.readBytes() ?: DefaultWidgetAnimation.bytes,
             command = line,
             playback = playback,
             themeColors = themeColors,
+            showResult = showResult,
+            resultDurationSeconds = resultDurationSeconds,
             commands = dependencies(line, CustomActionStore.load(context), AliasStore.load(context)),
         )
         val dir = File(context.cacheDir, "widgets").apply { mkdirs() }

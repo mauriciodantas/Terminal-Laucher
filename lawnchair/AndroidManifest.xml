@@ -265,9 +265,14 @@
 
         <activity
             android:name="app.lawnchair.widgets.lottie.LottieWidgetConfigActivity"
+            android:exported="true"
             android:excludeFromRecents="true"
             android:windowSoftInputMode="adjustResize"
-            android:theme="@style/Theme.Transparent" />
+            android:theme="@style/Theme.Transparent">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
 
         <activity
             android:name="app.lawnchair.widgets.lottie.ImportWidgetActivity"

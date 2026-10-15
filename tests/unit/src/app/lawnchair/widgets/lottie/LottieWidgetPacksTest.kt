@@ -41,4 +41,33 @@ class LottieWidgetPacksTest {
         val b = CommandAlias("b", "a")
         assertEquals(2, LottieWidgetPacks.dependencies("a", actions, listOf(a, b)).aliases.size)
     }
+
+    @Test fun packPreservesShowResult() {
+        val packWithResult = LottieWidgetPack(
+            name = "test.json",
+            animation = byteArrayOf(1, 2, 3),
+            command = "ping 1.1.1.1",
+            playback = LottieWidgetStore.Playback.LOOP,
+            themeColors = true,
+            commands = app.lawnchair.command.CommandPack(emptyList(), emptyList()),
+            showResult = true,
+            resultDurationSeconds = 120,
+        )
+        val out = java.io.ByteArrayOutputStream()
+        LottieWidgetPacks.write(packWithResult, out)
+        val readPack = LottieWidgetPacks.read(java.io.ByteArrayInputStream(out.toByteArray()))
+        assertTrue(readPack.showResult)
+        assertEquals(120, readPack.resultDurationSeconds)
+        assertEquals(packWithResult, readPack)
+    }
+
+    @Test fun defaultAnimationIsValidLottie() {
+        val json = org.json.JSONObject(DefaultWidgetAnimation.JSON)
+        assertEquals("5.5.7", json.getString("v"))
+        assertEquals(30, json.getInt("fr"))
+        assertEquals(200, json.getInt("w"))
+        assertEquals(200, json.getInt("h"))
+        val layers = json.getJSONArray("layers")
+        assertTrue(layers.length() >= 3)
+    }
 }

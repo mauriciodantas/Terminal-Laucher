@@ -12,9 +12,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -65,9 +67,6 @@ class LottieWidgetConfigActivity : ComponentActivity() {
     private val pickFile = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) {
             stage(uri)
-        } else if (animationName == null && !showDialog) {
-            // A new widget whose picker was closed: nothing to configure.
-            finish()
         }
     }
 
@@ -84,12 +83,14 @@ class LottieWidgetConfigActivity : ComponentActivity() {
             finish()
             return
         }
-        animationName = LottieWidgetStore.animationName(this, appWidgetId)
+        val isCustom = LottieWidgetStore.hasCustomAnimation(this, appWidgetId)
+        animationName = if (isCustom) LottieWidgetStore.animationName(this, appWidgetId) else null
         val initialCommand = LottieWidgetStore.command(this, appWidgetId)
         val initialPlayback = LottieWidgetStore.playback(this, appWidgetId)
         val initialThemeColors = LottieWidgetStore.themeColors(this, appWidgetId)
-        showDialog = animationName != null
-        if (savedInstanceState == null && animationName == null) pickAnimation()
+        val initialShowResult = LottieWidgetStore.showResult(this, appWidgetId)
+        val initialResultDuration = LottieWidgetStore.resultDurationSeconds(this, appWidgetId)
+        showDialog = true
 
         setContent {
             LawnchairTheme {
@@ -99,6 +100,8 @@ class LottieWidgetConfigActivity : ComponentActivity() {
                         initialCommand = initialCommand,
                         initialPlayback = initialPlayback,
                         initialThemeColors = initialThemeColors,
+                        initialShowResult = initialShowResult,
+                        initialResultDuration = initialResultDuration,
                         onPick = ::pickAnimation,
                         onSave = ::save,
                         onShare = ::share,
@@ -124,19 +127,19 @@ class LottieWidgetConfigActivity : ComponentActivity() {
         }
     }
 
-    private fun save(command: String, playback: Playback, themeColors: Boolean) {
-        if (LottieWidgetStore.save(applicationContext, appWidgetId, animationName, command, playback, themeColors)) {
+    private fun save(command: String, playback: Playback, themeColors: Boolean, showResult: Boolean, resultDuration: Int) {
+        if (LottieWidgetStore.save(applicationContext, appWidgetId, animationName, command, playback, themeColors, showResult, resultDuration)) {
             setResult(RESULT_OK, resultIntent())
         }
         finish()
     }
 
-    private fun share(command: String, playback: Playback, themeColors: Boolean) {
-        val file = LottieWidgetStore.shownFile(this, appWidgetId) ?: return
-        val name = animationName ?: file.name
+    private fun share(command: String, playback: Playback, themeColors: Boolean, showResult: Boolean, resultDuration: Int) {
+        val file = LottieWidgetStore.shownFile(this, appWidgetId)
+        val name = animationName ?: file?.name ?: getString(R.string.lottie_widget_default_animation)
         lifecycleScope.launch {
             val intent = withContext(Dispatchers.IO) {
-                LottieWidgetPacks.shareIntent(applicationContext, file, name, command, playback, themeColors)
+                LottieWidgetPacks.shareIntent(applicationContext, file, name, command, playback, themeColors, showResult, resultDuration)
             }
             if (intent != null) startActivity(intent) else Toast.makeText(applicationContext, R.string.lottie_widget_share_failed, Toast.LENGTH_LONG).show()
         }
@@ -156,15 +159,19 @@ private fun ConfigDialog(
     initialCommand: String,
     initialPlayback: Playback,
     initialThemeColors: Boolean,
+    initialShowResult: Boolean,
+    initialResultDuration: Int,
     onPick: () -> Unit,
-    onSave: (String, Playback, Boolean) -> Unit,
-    onShare: (String, Playback, Boolean) -> Unit,
+    onSave: (String, Playback, Boolean, Boolean, Int) -> Unit,
+    onShare: (String, Playback, Boolean, Boolean, Int) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val context = LocalContext.current
     var command by remember { mutableStateOf(initialCommand) }
     var playback by remember { mutableStateOf(initialPlayback) }
     var themeColors by remember { mutableStateOf(initialThemeColors) }
+    var showResult by remember { mutableStateOf(initialShowResult) }
+    var resultDuration by remember { mutableStateOf(initialResultDuration) }
     var analysis by remember { mutableStateOf<Analysis?>(null) }
     LaunchedEffect(command) {
         analysis = null
@@ -178,12 +185,12 @@ private fun ConfigDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.lottie_widget)) },
         text = {
-            Column {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(stringResource(R.string.lottie_widget_animation), style = MaterialTheme.typography.titleSmall)
                         Text(
-                            animationName ?: stringResource(R.string.lottie_widget_no_animation),
+                            animationName ?: stringResource(R.string.lottie_widget_default_animation),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -209,9 +216,12 @@ private fun ConfigDialog(
                         .padding(top = 16.dp),
                 )
                 CommandPreview(command = command, playback = playback, analysis = analysis)
+                ShowResultSwitch(checked = showResult, onChange = { showResult = it })
+                if (showResult) {
+                    ResultDurationChoice(selected = resultDuration, onSelect = { resultDuration = it })
+                }
                 TextButton(
-                    enabled = animationName != null,
-                    onClick = { onShare(command, playback, themeColors) },
+                    onClick = { onShare(command, playback, themeColors, showResult, resultDuration) },
                     modifier = Modifier.padding(top = 8.dp),
                 ) {
                     Text(stringResource(R.string.lottie_widget_share))
@@ -219,7 +229,7 @@ private fun ConfigDialog(
             }
         },
         confirmButton = {
-            TextButton(enabled = animationName != null, onClick = { onSave(command, playback, themeColors) }) {
+            TextButton(onClick = { onSave(command, playback, themeColors, showResult, resultDuration) }) {
                 Text(stringResource(R.string.lottie_widget_save))
             }
         },
@@ -305,3 +315,63 @@ private fun toneColor(tone: Tone): Color = when (tone) {
     Tone.WARN, Tone.ERROR -> MaterialTheme.colorScheme.error
     Tone.IDLE -> MaterialTheme.colorScheme.onSurfaceVariant
 }
+
+@Composable
+private fun ShowResultSwitch(checked: Boolean, onChange: (Boolean) -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .padding(top = 16.dp)
+            .fillMaxWidth()
+            .toggleable(value = checked, role = Role.Switch, onValueChange = onChange),
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.lottie_widget_show_result), style = MaterialTheme.typography.titleSmall)
+            Text(
+                stringResource(R.string.lottie_widget_show_result_summary),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Switch(checked = checked, onCheckedChange = null, modifier = Modifier.padding(start = 8.dp))
+    }
+}
+
+@Composable
+private fun ResultDurationChoice(selected: Int, onSelect: (Int) -> Unit) {
+    val options = listOf(
+        15 to R.string.lottie_widget_duration_15s,
+        30 to R.string.lottie_widget_duration_30s,
+        60 to R.string.lottie_widget_duration_1m,
+        120 to R.string.lottie_widget_duration_2m,
+        300 to R.string.lottie_widget_duration_5m,
+    )
+    Column(
+        modifier = Modifier
+            .padding(top = 16.dp)
+            .selectableGroup(),
+    ) {
+        Text(stringResource(R.string.lottie_widget_result_duration), style = MaterialTheme.typography.titleSmall)
+        Text(
+            stringResource(R.string.lottie_widget_result_duration_summary),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = 4.dp),
+        )
+        options.forEach { (seconds, labelRes) ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .selectable(selected = seconds == selected, role = Role.RadioButton, onClick = { onSelect(seconds) }),
+            ) {
+                RadioButton(selected = seconds == selected, onClick = null, modifier = Modifier.padding(8.dp))
+                Text(
+                    stringResource(labelRes),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+        }
+    }
+}
+
