@@ -39,19 +39,47 @@ data class ApiSpec(
 ) {
     /** It changes something on the other side: the bar warns, and an import never ticks it for the user. */
     val writes: Boolean get() = method != HttpMethods.GET
+
+    fun toJson(): JSONObject = JSONObject().apply {
+        put("method", method)
+        put("format", format)
+        if (list.isNotEmpty()) put("list", list)
+        if (max != 5) put("max", max)
+        if (upcoming.isNotEmpty()) put("upcoming", upcoming)
+        if (writes) {
+            if (body.isNotEmpty()) put("body", body)
+            put("type", bodyType.name.lowercase())
+        }
+    }
+
+    fun toJsonString(): String = toJson().toString(2)
+
+    companion object {
+        fun fromJson(o: JSONObject): ApiSpec {
+            val rawMethod = o.optString("method", HttpMethods.GET).uppercase()
+            val method = if (rawMethod in HttpMethods.ALL) rawMethod else HttpMethods.GET
+            return ApiSpec(
+                format = o.optString("format", ""),
+                list = o.optString("list", ""),
+                max = o.optInt("max", 5).coerceIn(1, ApiFormat.MAX_ITEMS),
+                upcoming = o.optString("upcoming", ""),
+                method = method,
+                body = o.optString("body", ""),
+                bodyType = BodyType.entries.firstOrNull { it.name.equals(o.optString("type"), ignoreCase = true) } ?: BodyType.JSON,
+            )
+        }
+
+        fun parse(raw: String): ApiSpec? = runCatching {
+            fromJson(JSONObject(raw))
+        }.getOrNull()
+    }
 }
 
 object HttpMethods {
     const val GET = "GET"
     const val POST = "POST"
-    const val PUT = "PUT"
-    const val PATCH = "PATCH"
-    const val DELETE = "DELETE"
 
-    val ALL = listOf(GET, POST, PUT, PATCH, DELETE)
-
-    /** The ones asked twice in the bar: what they do cannot be undone from here. */
-    fun confirms(method: String): Boolean = method == DELETE
+    val ALL = listOf(GET, POST)
 }
 
 /** How a request body is written, and so how what is typed is escaped inside it. */

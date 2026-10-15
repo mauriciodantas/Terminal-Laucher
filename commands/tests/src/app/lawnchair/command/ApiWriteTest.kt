@@ -41,7 +41,7 @@ class ApiWriteTest {
 
     @Test fun formAndTextBodies() {
         assertEquals("q=a+b%26c&y=2026", ApiCall.body(action(HttpMethods.POST, "q={text}&y={year}", BodyType.FORM), "a b&c", today))
-        assertEquals("nota: oi \"x\"", ApiCall.body(action(HttpMethods.PUT, "nota: {text}", BodyType.TEXT), "oi \"x\"", today))
+        assertEquals("nota: oi \"x\"", ApiCall.body(action(HttpMethods.POST, "nota: {text}", BodyType.TEXT), "oi \"x\"", today))
         // A GET sends no body, whatever is saved.
         assertNull(ApiCall.body(action(HttpMethods.GET, "{text}"), "x", today))
     }
@@ -59,9 +59,9 @@ class ApiWriteTest {
     }
 
     @Test fun aWriteWithNothingToShowSaysItWentThrough() {
-        val spec = ApiSpec("", method = HttpMethods.DELETE)
-        assertEquals("DELETE OK · HTTP 204", ApiCall.outcome(spec, 204, "", today))
-        assertEquals("POST OK · HTTP 201", ApiCall.outcome(spec.copy(method = HttpMethods.POST), 201, """{"id": 7}""", today))
+        val spec = ApiSpec("", method = HttpMethods.POST)
+        assertEquals("POST OK · HTTP 204", ApiCall.outcome(spec, 204, "", today))
+        assertEquals("POST OK · HTTP 201", ApiCall.outcome(spec, 201, """{"id": 7}""", today))
         assertEquals("criada #7", ApiCall.outcome(ApiSpec("criada #{id}", method = HttpMethods.POST), 201, """{"id": 7}""", today, Locale.ROOT))
         assertEquals(Texts(R.string.cmd_api_empty), ApiCall.outcome(ApiSpec("{x}"), 200, "{}", today))
         // A GraphQL query goes over POST: an empty result is "nothing found", not "POST OK".
@@ -79,16 +79,11 @@ class ApiWriteTest {
         assertTrue(PackRules.isBlocked(action("CONNECT")))
     }
 
-    @Test fun theBarWarnsAndDeleteAsksTwice() {
+    @Test fun theBarWarnsOnWrites() {
         val post = run("tarefa comprar pão", action(HttpMethods.POST, """{"t":"{text}"}"""))
         assertEquals(Tone.WARN, post.tone)
-        assertFalse(post.confirmFirst)
         assertTrue(post.preview.contains("POST"))
         assertEquals("POST https://api.todo.com/tasks · json", post.intent)
-        val delete = run("tarefa 42", action(HttpMethods.DELETE, template = "/tasks/{text}"))
-        assertTrue(delete.confirmFirst)
-        assertEquals("DELETE https://api.todo.com/tasks/42", delete.intent)
-        assertFalse(run("tarefa x", action(HttpMethods.GET, format = "{t}")).confirmFirst)
     }
 
     @Test fun variablesInTheBodyAreEscapedAndCalledOut() {
@@ -109,10 +104,17 @@ class ApiWriteTest {
     }
 
     @Test fun methodAndBodySurviveTheStore() {
-        val a = action(HttpMethods.PATCH, """{"t":"{text}"}""", BodyType.FORM, "ok")
+        val a = action(HttpMethods.POST, """{"t":"{text}"}""", BodyType.FORM, "ok")
         assertEquals(listOf(a), CustomActionStore.decode(CustomActionStore.encode(listOf(a))))
         // Actions saved before methods existed read as GET.
         val old = CustomActionStore.encode(listOf(action(HttpMethods.GET, format = "{x}"))).replace(""","method":"GET"""", "")
         assertEquals(HttpMethods.GET, CustomActionStore.decode(old).single().api!!.method)
+    }
+
+    @Test fun apiSpecJsonParsing() {
+        val spec = ApiSpec(format = "{title}", list = "results", max = 10, upcoming = "date", method = HttpMethods.POST, body = "{}", bodyType = BodyType.JSON)
+        val jsonString = spec.toJsonString()
+        val parsed = ApiSpec.parse(jsonString)
+        assertEquals(spec, parsed)
     }
 }

@@ -95,11 +95,13 @@ import app.lawnchair.command.R as CommandR
 import app.lawnchair.command.StatsStore
 import app.lawnchair.command.TaskApp
 import app.lawnchair.command.Tone
+import app.lawnchair.ui.preferences.LocalNavController
 import app.lawnchair.ui.preferences.components.NavigationActionPreference
 import app.lawnchair.ui.preferences.components.controls.ClickablePreference
 import app.lawnchair.ui.preferences.components.layout.ClickableIcon
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
+import app.lawnchair.ui.preferences.navigation.CommandGuide
 import app.lawnchair.ui.preferences.navigation.CommandProviders
 import app.lawnchair.util.foldAccents
 import com.android.launcher3.R
@@ -118,6 +120,7 @@ internal val DemoContact = ContactEntry("Ana Souza", "+55 11 98765-4321")
 @Composable
 fun CommandActionsPreferences() {
     val context = LocalContext.current
+    val navController = LocalNavController.current
     val scope = rememberCoroutineScope()
     val snackbar = remember { SnackbarHostState() }
     var actions by remember { mutableStateOf(CustomActionStore.load(context)) }
@@ -464,6 +467,11 @@ fun CommandActionsPreferences() {
                         destination = CommandProviders(),
                         subtitle = stringResource(R.string.cmd_providers_entry),
                     )
+                    NavigationActionPreference(
+                        label = stringResource(R.string.cmd_guide_title),
+                        destination = CommandGuide,
+                        subtitle = stringResource(R.string.cmd_guide_subtitle),
+                    )
                 }
             }
         }
@@ -489,6 +497,10 @@ fun CommandActionsPreferences() {
             onImport = {
                 backupOpen = false
                 importer.launch(arrayOf("*/*"))
+            },
+            onOpenGuide = {
+                backupOpen = false
+                navController.navigate(CommandGuide)
             },
             onDismiss = { backupOpen = false },
         )
@@ -660,7 +672,13 @@ fun CommandActionsPreferences() {
 
 /** Share, export or import: three ways to move commands, one entry in the list. */
 @Composable
-private fun BackupDialog(onShare: () -> Unit, onExport: () -> Unit, onImport: () -> Unit, onDismiss: () -> Unit) {
+private fun BackupDialog(
+    onShare: () -> Unit,
+    onExport: () -> Unit,
+    onImport: () -> Unit,
+    onOpenGuide: () -> Unit,
+    onDismiss: () -> Unit,
+) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.cmd_pref_backup)) },
@@ -685,6 +703,7 @@ private fun BackupDialog(onShare: () -> Unit, onExport: () -> Unit, onImport: ()
                 Option(R.string.cmd_pref_share, R.string.cmd_pref_share_hint, onShare)
                 Option(R.string.cmd_pref_export, R.string.cmd_pref_export_hint, onExport)
                 Option(R.string.cmd_pref_import, R.string.cmd_pref_import_hint, onImport)
+                Option(R.string.cmd_guide_title, R.string.cmd_guide_backup_hint, onOpenGuide)
             }
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cmd_pref_cancel)) } },

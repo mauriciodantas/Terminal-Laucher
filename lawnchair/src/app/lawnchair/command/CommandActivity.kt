@@ -322,9 +322,6 @@ private fun CommandScreen(onClose: () -> Unit) {
 
     // The code "qr" drew, shown under the preview until something else is typed.
     var qr by remember { mutableStateOf<QrMatrix?>(null) }
-
-    // The line a first Enter armed when the command asks twice; any change disarms it.
-    var armed by remember { mutableStateOf<String?>(null) }
     var pendingAction by remember { mutableStateOf<CommandAction?>(null) }
     var pendingCommand by remember { mutableStateOf("") }
 
@@ -685,18 +682,6 @@ private fun CommandScreen(onClose: () -> Unit) {
     /** Enter runs the command; among options, which have none of their own, it picks the highlighted one. */
     fun run() {
         val action = analysis.action
-        // A DELETE is armed by the first Enter and sent by the second, on the same line.
-        if (action != null && analysis.confirmFirst && armed != text) {
-            armed = text
-            val spec = (action as? CommandAction.Custom)?.action
-            done = context.getString(
-                CommandR.string.cmd_api_confirm_armed,
-                spec?.api?.method.orEmpty(),
-                spec?.let { ApiCall.host(it, extras.providers) }.orEmpty(),
-            )
-            return
-        }
-        armed = null
         if (action != null) {
             runAction(action, text)
         } else if (analysis.picksOnEnter) {
@@ -1295,8 +1280,7 @@ private fun CommandScreen(onClose: () -> Unit) {
 
             // Preview.
             val preview: @Composable () -> Unit = {
-                // Armed and waiting for the second Enter, nothing ran yet: the title stays the command's.
-                val previewTitle = if (done != null && armed != text) stringResource(R.string.command_executed) else analysis.previewTitle
+                val previewTitle = if (done != null) stringResource(R.string.command_executed) else analysis.previewTitle
                 val previewText = done ?: analysis.preview
                 val previewColor = when {
                     done != null -> phosphor

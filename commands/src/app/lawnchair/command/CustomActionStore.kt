@@ -47,14 +47,7 @@ object CustomActionStore {
         }
     }
 
-    private fun apiJson(api: ApiSpec): JSONObject = JSONObject()
-        .put("method", api.method)
-        .put("body", api.body)
-        .put("type", api.bodyType.name.lowercase())
-        .put("format", api.format)
-        .put("list", api.list)
-        .put("max", api.max)
-        .put("upcoming", api.upcoming)
+    private fun apiJson(api: ApiSpec): JSONObject = api.toJson()
 
     fun decode(raw: String): List<CustomAction> = fromJson(JSONArray(raw))
 
@@ -75,17 +68,7 @@ object CustomActionStore {
                     mimeType = if (o.isNull("mime")) null else o.getString("mime"),
                     textExtra = if (o.isNull("extra")) null else o.getString("extra"),
                     pattern = o.optString("pattern", ""),
-                    api = o.optJSONObject("api")?.let { api ->
-                        ApiSpec(
-                            format = api.getString("format"),
-                            list = api.optString("list", ""),
-                            max = api.optInt("max", 5),
-                            upcoming = api.optString("upcoming", ""),
-                            method = api.optString("method", HttpMethods.GET).uppercase(),
-                            body = api.optString("body", ""),
-                            bodyType = BodyType.entries.firstOrNull { it.name.equals(api.optString("type"), ignoreCase = true) } ?: BodyType.JSON,
-                        )
-                    },
+                    api = o.optJSONObject("api")?.let { api -> ApiSpec.fromJson(api) },
                     pack = o.optString("pack", ""),
                     provider = o.optString("provider", ""),
                     help = o.optString("help", "").take(CustomActions.MAX_HELP),

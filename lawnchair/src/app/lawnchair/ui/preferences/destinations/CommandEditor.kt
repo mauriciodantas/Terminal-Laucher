@@ -23,6 +23,9 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.rounded.HelpOutline
+import app.lawnchair.ui.preferences.LocalNavController
+import app.lawnchair.ui.preferences.navigation.CommandGuide
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FilterChip
@@ -164,15 +167,7 @@ internal fun CommandEditor(
     // "Consulta uma API": a provider, a path on it and what of the answer to show.
     var apiMode by remember { mutableStateOf(start.kind == ActionKind.API) }
     var provider by remember { mutableStateOf(start.provider) }
-    var format by remember { mutableStateOf(start.api?.format.orEmpty()) }
-    var listPath by remember { mutableStateOf(start.api?.list.orEmpty()) }
-    var maxItems by remember { mutableStateOf((start.api?.max ?: 5).toString()) }
-    var upcoming by remember { mutableStateOf(start.api?.upcoming.orEmpty()) }
-    var method by remember { mutableStateOf(start.api?.method ?: HttpMethods.GET) }
-    var body by remember { mutableStateOf(TextFieldValue(start.api?.body.orEmpty())) }
-    var bodyType by remember { mutableStateOf(start.api?.bodyType ?: BodyType.JSON) }
-    // A test of a write sends it for real, so it asks first.
-    var confirmTest by remember { mutableStateOf(false) }
+    var apiSpec by remember { mutableStateOf(start.api ?: ApiSpec("")) }
     var apiResult by remember { mutableStateOf<Pair<String, String>?>(null) }
     var apiTesting by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -216,7 +211,7 @@ internal fun CommandEditor(
 
     val shortcut = !apiMode && base.kind == ActionKind.SHORTCUT
     val arg = when {
-        apiMode -> (template.text + " " + (if (method == HttpMethods.GET) "" else body.text)).let { sent ->
+        apiMode -> (template.text + " " + (if (apiSpec.writes) apiSpec.body else "")).let { sent ->
             // "{1}", "{2}": words of what is typed, so a text too.
             inferArg(sent, null).let { if (it == ArgKind.NONE && ApiCall.usesWords(sent)) ArgKind.TEXT else it }
         }
@@ -251,16 +246,7 @@ internal fun CommandEditor(
             textExtra = null,
             smsFallback = false,
             provider = provider,
-            api = ApiSpec(
-                format = format.trim(),
-                list = listPath.trim(),
-                max = maxItems.toIntOrNull()?.coerceIn(1, ApiFormat.MAX_ITEMS) ?: 5,
-                upcoming = upcoming.trim(),
-                method = method,
-                // A GET sends no body: whatever was typed for another method is not kept.
-                body = if (method == HttpMethods.GET) "" else body.text.trim(),
-                bodyType = bodyType,
-            ),
+            api = apiSpec,
         )
     } else {
         linkDraft
@@ -268,8 +254,7 @@ internal fun CommandEditor(
     val letterError = CustomActions.validateLetter(word, actions, editingAction)
     val patternError = CommandPattern.validate(pattern.trim())
     val hasTarget = if (apiMode) {
-        // A write may show only that it went through; a GET has to show something.
-        provider.isNotEmpty() && template.text.isNotBlank() && (format.isNotBlank() || method != HttpMethods.GET)
+        provider.isNotEmpty() && template.text.isNotBlank() && (apiSpec.format.isNotBlank() || apiSpec.writes)
     } else {
         shortcut || template.text.isNotBlank() || shareText
     }
@@ -444,29 +429,11 @@ internal fun CommandEditor(
                                 template = it
                                 apiResult = null
                             },
-                            format = format,
-                            onFormat = {
-                                format = it
+                            apiSpec = apiSpec,
+                            onApiSpec = {
+                                apiSpec = it
                                 apiResult = null
                             },
-                            listPath = listPath,
-                            onListPath = { listPath = it },
-                            maxItems = maxItems,
-                            onMaxItems = { maxItems = it.filter { c -> c.isDigit() }.take(2) },
-                            upcoming = upcoming,
-                            onUpcoming = { upcoming = it },
-                            method = method,
-                            onMethod = {
-                                method = it
-                                apiResult = null
-                            },
-                            body = body,
-                            onBody = {
-                                body = it
-                                apiResult = null
-                            },
-                            bodyType = bodyType,
-                            onBodyType = { bodyType = it },
                             pattern = pattern,
                             onPattern = { pattern = it.take(CommandPattern.MAX_LENGTH) },
                             patternError = patternError,
@@ -535,10 +502,10 @@ internal fun CommandEditor(
                     TextButton(
                         enabled = if (apiMode && tab == EditorTab.ACTION) hasTarget && !apiTesting else runnable != null,
                         onClick = {
-                            when {
-                                !(apiMode && tab == EditorTab.ACTION) -> runnable?.let(onTest)
-                                method != HttpMethods.GET -> confirmTest = true
-                                else -> testApi()
+                            if (apiMode && tab == EditorTab.ACTION) {
+                                testApi()
+                            } else {
+                                runnable?.let(onTest)
                             }
                         },
                     ) {
@@ -547,21 +514,6 @@ internal fun CommandEditor(
                 }
             }
         }
-    }
-
-    if (confirmTest) {
-        AlertDialog(
-            onDismissRequest = { confirmTest = false },
-            title = { Text(stringResource(R.string.cmd_pref_api_test_write_title, method)) },
-            text = { Text(stringResource(R.string.cmd_pref_api_test_write, method, Providers.of(provider, providers)?.host.orEmpty())) },
-            confirmButton = {
-                TextButton(onClick = {
-                    confirmTest = false
-                    testApi()
-                }) { Text(stringResource(R.string.cmd_pref_api_test_write_ok, method)) }
-            },
-            dismissButton = { TextButton(onClick = { confirmTest = false }) { Text(stringResource(R.string.cmd_pref_cancel)) } },
-        )
     }
 
     when (val p = picker) {
@@ -738,7 +690,7 @@ private fun ActionForm(
     }
 }
 
-/** The "consulta uma API" form: the provider, the path on it and what of the answer to show. */
+/** The "consulta uma API" form: the provider, the path on it, method, format, and optional advanced JSON spec. */
 @Composable
 private fun ApiForm(
     providers: List<ApiProvider>,
@@ -747,20 +699,8 @@ private fun ApiForm(
     onProvider: (String) -> Unit,
     path: TextFieldValue,
     onPath: (TextFieldValue) -> Unit,
-    format: String,
-    onFormat: (String) -> Unit,
-    listPath: String,
-    onListPath: (String) -> Unit,
-    maxItems: String,
-    onMaxItems: (String) -> Unit,
-    upcoming: String,
-    onUpcoming: (String) -> Unit,
-    method: String,
-    onMethod: (String) -> Unit,
-    body: TextFieldValue,
-    onBody: (TextFieldValue) -> Unit,
-    bodyType: BodyType,
-    onBodyType: (BodyType) -> Unit,
+    apiSpec: ApiSpec,
+    onApiSpec: (ApiSpec) -> Unit,
     pattern: String,
     onPattern: (String) -> Unit,
     patternError: String?,
@@ -824,7 +764,7 @@ private fun ApiForm(
             )
             if (!detailsOpen && path.text.isNotBlank()) {
                 Text(
-                    "$method · ${path.text.trim()}",
+                    "${apiSpec.method} · ${path.text.trim()}",
                     style = MaterialTheme.typography.bodySmall,
                     fontFamily = FontFamily.Monospace,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -857,109 +797,75 @@ private fun ApiForm(
             }
         }
         OutlinedTextField(
-            value = format,
-            onValueChange = onFormat,
+            value = apiSpec.format,
+            onValueChange = { onApiSpec(apiSpec.copy(format = it)) },
             minLines = 2,
             textStyle = mono,
-            label = { Text(stringResource(if (method == HttpMethods.GET) R.string.cmd_pref_api_format else R.string.cmd_pref_api_format_optional)) },
+            label = { Text(stringResource(if (!apiSpec.writes) R.string.cmd_pref_api_format else R.string.cmd_pref_api_format_optional)) },
             placeholder = { Text("{bairro} · {localidade}/{uf}", fontFamily = FontFamily.Monospace) },
             supportingText = { Text(stringResource(R.string.cmd_pref_api_format_hint)) },
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
         )
+
+        Text(
+            stringResource(R.string.cmd_pref_api_method),
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(top = 8.dp),
+        )
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
+            HttpMethods.ALL.forEach { m ->
+                FilterChip(
+                    selected = apiSpec.method == m,
+                    onClick = {
+                        val newWrites = m != HttpMethods.GET
+                        onApiSpec(apiSpec.copy(method = m, body = if (newWrites) apiSpec.body else ""))
+                    },
+                    label = { Text(m, fontFamily = FontFamily.Monospace) },
+                )
+            }
+        }
+        if (apiSpec.writes) {
+            Text(
+                stringResource(R.string.cmd_pref_api_method_writes, apiSpec.method),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+            var bodyText by remember(apiSpec.body) { mutableStateOf(TextFieldValue(apiSpec.body)) }
+            OutlinedTextField(
+                value = bodyText,
+                onValueChange = {
+                    bodyText = it
+                    onApiSpec(apiSpec.copy(body = it.text))
+                },
+                minLines = 3,
+                textStyle = mono,
+                label = { Text(stringResource(R.string.cmd_pref_api_body)) },
+                placeholder = { Text("{\"title\": \"{text}\"}", fontFamily = FontFamily.Monospace) },
+                supportingText = { Text(stringResource(R.string.cmd_pref_api_body_hint)) },
+                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+            )
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+                listOf(R.string.cmd_pref_insert_text to "{text}", R.string.cmd_pref_insert_year to "{year}").forEach { (label, placeholder) ->
+                    SuggestionChip(
+                        onClick = {
+                            val at = bodyText.selection.end.coerceIn(0, bodyText.text.length)
+                            val newText = bodyText.text.substring(0, at) + placeholder + bodyText.text.substring(at)
+                            val updated = TextFieldValue(newText, TextRange(at + placeholder.length))
+                            bodyText = updated
+                            onApiSpec(apiSpec.copy(body = updated.text))
+                        },
+                        label = { Text(stringResource(label)) },
+                    )
+                }
+            }
+        }
+
         TextButton(onClick = { onMoreOpen(!moreOpen) }, modifier = Modifier.padding(top = 8.dp)) {
             Icon(if (moreOpen) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown, contentDescription = null)
             Text(stringResource(R.string.cmd_pref_more_options))
         }
         if (moreOpen) {
-            Text(
-                stringResource(R.string.cmd_pref_api_method),
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(top = 4.dp),
-            )
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
-                HttpMethods.ALL.forEach { m ->
-                    FilterChip(
-                        selected = method == m,
-                        onClick = { onMethod(m) },
-                        label = { Text(m, fontFamily = FontFamily.Monospace) },
-                    )
-                }
-            }
-            if (method != HttpMethods.GET) {
-                Text(
-                    stringResource(if (HttpMethods.confirms(method)) R.string.cmd_pref_api_method_confirm else R.string.cmd_pref_api_method_writes, method),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(top = 4.dp),
-                )
-                Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(stringResource(R.string.cmd_pref_api_body_type), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(end = 8.dp))
-                    BodyType.entries.forEach { type ->
-                        FilterChip(
-                            selected = bodyType == type,
-                            onClick = { onBodyType(type) },
-                            label = { Text(type.name.lowercase(), fontFamily = FontFamily.Monospace) },
-                            modifier = Modifier.padding(end = 6.dp),
-                        )
-                    }
-                }
-                OutlinedTextField(
-                    value = body,
-                    onValueChange = onBody,
-                    minLines = 3,
-                    textStyle = mono,
-                    label = { Text(stringResource(R.string.cmd_pref_api_body)) },
-                    placeholder = {
-                        Text(
-                            when (bodyType) {
-                                BodyType.JSON -> "{\"title\": \"{text}\"}"
-                                BodyType.FORM -> "title={text}&done=false"
-                                BodyType.TEXT -> "{text}"
-                            },
-                            fontFamily = FontFamily.Monospace,
-                        )
-                    },
-                    supportingText = { Text(stringResource(R.string.cmd_pref_api_body_hint)) },
-                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-                )
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
-                    listOf(R.string.cmd_pref_insert_text to "{text}", R.string.cmd_pref_insert_year to "{year}").forEach { (label, placeholder) ->
-                        SuggestionChip(
-                            onClick = {
-                                val at = body.selection.end.coerceIn(0, body.text.length)
-                                onBody(TextFieldValue(body.text.substring(0, at) + placeholder + body.text.substring(at), TextRange(at + placeholder.length)))
-                            },
-                            label = { Text(stringResource(label)) },
-                        )
-                    }
-                }
-            }
-            OutlinedTextField(
-                value = listPath,
-                onValueChange = onListPath,
-                singleLine = true,
-                textStyle = mono,
-                label = { Text(stringResource(R.string.cmd_pref_api_list)) },
-                supportingText = { Text(stringResource(R.string.cmd_pref_api_list_hint)) },
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-            )
-            OutlinedTextField(
-                value = maxItems,
-                onValueChange = onMaxItems,
-                singleLine = true,
-                label = { Text(stringResource(R.string.cmd_pref_api_max)) },
-                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-            )
-            OutlinedTextField(
-                value = upcoming,
-                onValueChange = onUpcoming,
-                singleLine = true,
-                textStyle = mono,
-                label = { Text(stringResource(R.string.cmd_pref_api_upcoming)) },
-                supportingText = { Text(stringResource(R.string.cmd_pref_api_upcoming_hint)) },
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-            )
             OutlinedTextField(
                 value = pattern,
                 onValueChange = onPattern,
@@ -970,6 +876,85 @@ private fun ApiForm(
                 supportingText = { Text(patternError ?: stringResource(R.string.cmd_pref_pattern_hint)) },
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
             )
+
+            var advancedOpen by remember {
+                mutableStateOf(apiSpec.list.isNotEmpty() || apiSpec.upcoming.isNotEmpty() || apiSpec.max != 5 || apiSpec.bodyType != BodyType.JSON)
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp)
+                    .clickable { advancedOpen = !advancedOpen }
+                    .padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    if (advancedOpen) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(end = 6.dp),
+                )
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        stringResource(R.string.cmd_pref_api_advanced),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                    Text(
+                        stringResource(R.string.cmd_pref_api_advanced_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            if (advancedOpen) {
+                var rawJson by remember { mutableStateOf(apiSpec.toJsonString()) }
+                var jsonError by remember { mutableStateOf<String?>(null) }
+                var lastParsedSpec by remember { mutableStateOf(apiSpec) }
+
+                androidx.compose.runtime.LaunchedEffect(apiSpec) {
+                    if (apiSpec != lastParsedSpec) {
+                        rawJson = apiSpec.toJsonString()
+                        lastParsedSpec = apiSpec
+                        jsonError = null
+                    }
+                }
+
+                val invalidJsonError = stringResource(R.string.cmd_pref_api_json_invalid)
+                OutlinedTextField(
+                    value = rawJson,
+                    onValueChange = {
+                        rawJson = it
+                        val parsed = ApiSpec.parse(it)
+                        if (parsed != null) {
+                            jsonError = null
+                            lastParsedSpec = parsed
+                            onApiSpec(parsed)
+                        } else {
+                            jsonError = invalidJsonError
+                        }
+                    },
+                    minLines = 6,
+                    maxLines = 14,
+                    textStyle = mono,
+                    isError = jsonError != null,
+                    supportingText = {
+                        Text(
+                            jsonError ?: stringResource(R.string.cmd_pref_api_advanced_hint),
+                            color = if (jsonError != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                )
+                val navController = LocalNavController.current
+                TextButton(
+                    onClick = { navController.navigate(CommandGuide) },
+                    modifier = Modifier.padding(top = 2.dp),
+                ) {
+                    Icon(Icons.Rounded.HelpOutline, contentDescription = null, modifier = Modifier.padding(end = 6.dp))
+                    Text(stringResource(R.string.cmd_guide_editor_hint))
+                }
+            }
         }
     }
     if (picking) {

@@ -531,7 +531,5 @@
     <string name="cmd_api_done">%1$s OK · HTTP %2$d</string>
     <string name="cmd_api_write_redirect">redirecionamento (HTTP %1$d) não seguido numa escrita</string>
     <string name="cmd_api_write_ready">ENTER ENVIA %1$s PARA %2$s</string>
-    <string name="cmd_api_write_confirm">%1$s EM %2$s · ENTER DUAS VEZES PARA CONFIRMAR</string>
-    <string name="cmd_api_confirm_armed">%1$s EM %2$s · ENTER DE NOVO PARA ENVIAR, MUDE A LINHA PARA CANCELAR</string>
     <string name="cmd_caution_writes">⚠ altera dados: %1$s em %2$s · marque só se confia em quem mandou</string>
 </resources>

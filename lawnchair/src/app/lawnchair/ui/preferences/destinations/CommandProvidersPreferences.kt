@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.HelpOutline
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -41,9 +43,13 @@ import app.lawnchair.command.KeyPlacement
 import app.lawnchair.command.ProviderStore
 import app.lawnchair.command.Providers
 import app.lawnchair.command.SecretStore
+import app.lawnchair.ui.preferences.LocalNavController
+import app.lawnchair.ui.preferences.components.NavigationActionPreference
 import app.lawnchair.ui.preferences.components.controls.ClickablePreference
+import app.lawnchair.ui.preferences.components.layout.ClickableIcon
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
+import app.lawnchair.ui.preferences.navigation.CommandGuide
 import com.android.launcher3.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -63,6 +69,7 @@ private sealed interface ProviderEdit {
 @Composable
 fun CommandProvidersPreferences(open: String = "") {
     val context = LocalContext.current
+    val navController = LocalNavController.current
     var saved by remember { mutableStateOf(ProviderStore.load(context)) }
     val all = Providers.all(saved)
     val actions = remember { CustomActionStore.load(context) }
@@ -72,7 +79,15 @@ fun CommandProvidersPreferences(open: String = "") {
     }
     var editing by remember { mutableStateOf(Providers.of(open, all)?.let { ProviderEdit.Existing(it) } as ProviderEdit?) }
 
-    PreferenceLayout(label = stringResource(R.string.cmd_providers_title)) {
+    PreferenceLayout(
+        label = stringResource(R.string.cmd_providers_title),
+        actions = {
+            ClickableIcon(
+                imageVector = Icons.Rounded.HelpOutline,
+                onClick = { navController.navigate(CommandGuide) },
+            )
+        },
+    ) {
         PreferenceGroup(
             heading = stringResource(R.string.cmd_providers_group),
             description = stringResource(R.string.cmd_providers_intro),
@@ -101,6 +116,13 @@ fun CommandProvidersPreferences(open: String = "") {
                     onClick = { editing = ProviderEdit.Existing(provider) },
                 )
             }
+        }
+        PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_advanced)) {
+            NavigationActionPreference(
+                label = stringResource(R.string.cmd_guide_title),
+                destination = CommandGuide,
+                subtitle = stringResource(R.string.cmd_guide_subtitle),
+            )
         }
     }
 

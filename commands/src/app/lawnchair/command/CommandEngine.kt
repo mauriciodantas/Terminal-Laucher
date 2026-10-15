@@ -127,8 +127,6 @@ data class Analysis(
     val picksOnEnter: Boolean = false,
     /** With [Need.SECRET], the provider whose secret is missing. */
     val needProvider: String? = null,
-    /** Enter only arms it: a second Enter on the same line runs it (a DELETE). */
-    val confirmFirst: Boolean = false,
 )
 
 /** A one-tap start for the empty command line: a recent command, an alias or a custom letter. */
@@ -656,7 +654,6 @@ object CommandEngine {
         val host = ApiCall.host(action, providers)
         val spec = action.api ?: return Texts.get(R.string.cmd_api_ready, host)
         return when {
-            HttpMethods.confirms(spec.method) -> Texts.get(R.string.cmd_api_write_confirm, spec.method, host)
             spec.writes -> Texts.get(R.string.cmd_api_write_ready, spec.method, host)
             else -> Texts.get(R.string.cmd_api_ready, host)
         }
@@ -720,7 +717,6 @@ object CommandEngine {
                     else -> Tone.OK
                 },
                 action = text.takeIf { it.isNotEmpty() }?.let { CommandAction.Custom(action, text = it) },
-                confirmFirst = action.api?.let { HttpMethods.confirms(it.method) } == true,
             )
         }
 
@@ -732,7 +728,6 @@ object CommandEngine {
             preview = if (action.kind == ActionKind.API) apiReady(action, providers) else Texts.get(R.string.cmd_enter_to_run),
             tone = if (action.api?.writes == true) Tone.WARN else Tone.OK,
             action = CommandAction.Custom(action),
-            confirmFirst = action.api?.let { HttpMethods.confirms(it.method) } == true,
         )
     }
 

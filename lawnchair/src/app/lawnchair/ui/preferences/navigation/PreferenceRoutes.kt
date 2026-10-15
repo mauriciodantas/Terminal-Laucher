@@ -166,6 +166,12 @@ data object CommandActions : PreferenceRootRoute, PreferenceDeepLink {
 @Serializable
 data class CommandProviders(val open: String = "") : PreferenceRoute
 
+/** Guide and technical specs for creating .tcmd packs manually or via AI. */
+@Serializable
+data object CommandGuide : PreferenceRoute, PreferenceDeepLink {
+    override val deepLink = "$URI/command-guide"
+}
+
 // App Drawer section routes
 @Serializable
 data object AppDrawerHiddenApps : PreferenceRoute, PreferenceDeepLink {
