@@ -1193,6 +1193,14 @@
     <string name="cmd_pref_history_cleared">History cleared</string>
     <string name="cmd_pref_action_removed">Action %1$s removed</string>
     <string name="cmd_pref_alias_removed">Alias %1$s removed</string>
+    <string name="cmd_pref_select_commands">Select commands</string>
+    <string name="cmd_pref_selected_count">%1$d selected</string>
+    <string name="cmd_pref_delete_confirm_title">Delete commands?</string>
+    <string name="cmd_pref_delete_confirm_text">Delete %1$d selected command?</string>
+    <string name="cmd_pref_delete_confirm_text_multiple">Delete %1$d selected commands?</string>
+    <string name="cmd_pref_command_removed">1 command removed</string>
+    <string name="cmd_pref_commands_removed">%1$d commands removed</string>
+    <string name="cmd_pref_delete">Delete</string>
     <string name="cmd_pref_exported">Commands exported</string>
     <string name="cmd_pref_export_failed">Export failed</string>
     <string name="cmd_pref_share_failed">Sharing failed</string>

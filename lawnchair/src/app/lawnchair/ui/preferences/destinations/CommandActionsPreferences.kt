@@ -3,6 +3,7 @@ package app.lawnchair.ui.preferences.destinations
 import android.content.ComponentName
 import android.content.Intent
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -23,6 +24,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.rounded.Checklist
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Deselect
+import androidx.compose.material.icons.rounded.SelectAll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
@@ -91,6 +97,7 @@ import app.lawnchair.command.TaskApp
 import app.lawnchair.command.Tone
 import app.lawnchair.ui.preferences.components.NavigationActionPreference
 import app.lawnchair.ui.preferences.components.controls.ClickablePreference
+import app.lawnchair.ui.preferences.components.layout.ClickableIcon
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
 import app.lawnchair.ui.preferences.navigation.CommandProviders
@@ -126,6 +133,17 @@ fun CommandActionsPreferences() {
     var taskPicker by remember { mutableStateOf(false) }
     var aiConfig by remember { mutableStateOf(AiStore.load(context)) }
     var aiOpen by remember { mutableStateOf(false) }
+
+    var selectionMode by remember { mutableStateOf(false) }
+    var selectedActions by remember { mutableStateOf(emptySet<CustomAction>()) }
+    var selectedAliases by remember { mutableStateOf(emptySet<CommandAlias>()) }
+    var confirmDeleteSelected by remember { mutableStateOf(false) }
+
+    BackHandler(enabled = selectionMode) {
+        selectionMode = false
+        selectedActions = emptySet()
+        selectedAliases = emptySet()
+    }
 
     // Contacts and apps feed the live previews of the editors; they load off the main thread.
     val contacts by produceState(emptyList<ContactEntry>()) {
@@ -167,6 +185,36 @@ fun CommandActionsPreferences() {
         val before = aliases
         updateAliases(aliases.filter { it !== alias })
         undoable(context.getString(R.string.cmd_pref_alias_removed, alias.name)) { updateAliases(before) }
+    }
+
+    fun removeSelected() {
+        val toRemoveActions = selectedActions
+        val toRemoveAliases = selectedAliases
+        val beforeActions = actions
+        val beforeAliases = aliases
+        val count = toRemoveActions.size + toRemoveAliases.size
+        if (count == 0) return
+
+        if (toRemoveActions.isNotEmpty()) {
+            update(actions.filterNot { it in toRemoveActions })
+        }
+        if (toRemoveAliases.isNotEmpty()) {
+            updateAliases(aliases.filterNot { it in toRemoveAliases })
+        }
+
+        selectionMode = false
+        selectedActions = emptySet()
+        selectedAliases = emptySet()
+
+        val message = if (count == 1) {
+            context.getString(R.string.cmd_pref_command_removed)
+        } else {
+            context.getString(R.string.cmd_pref_commands_removed, count)
+        }
+        undoable(message) {
+            update(beforeActions)
+            updateAliases(beforeAliases)
+        }
     }
 
     fun restoreDefaults() {
@@ -226,8 +274,63 @@ fun CommandActionsPreferences() {
 
     fun usedLabel(key: String): String = CommandUsage.label(usage, key).let { if (it.isEmpty()) "" else " · $it" }
 
+    val selectedCount = selectedActions.size + selectedAliases.size
+    val screenTitle = if (selectionMode) {
+        if (selectedCount == 0) {
+            stringResource(R.string.cmd_pref_select_commands)
+        } else {
+            stringResource(R.string.cmd_pref_selected_count, selectedCount)
+        }
+    } else {
+        stringResource(R.string.command_actions_title)
+    }
+
     Box(Modifier.fillMaxSize()) {
-        PreferenceLayout(label = stringResource(R.string.command_actions_title)) {
+        PreferenceLayout(
+            label = screenTitle,
+            actions = {
+                if (selectionMode) {
+                    val allShownSelected = (shownActions.isNotEmpty() || shownAliases.isNotEmpty()) &&
+                        shownActions.all { it in selectedActions } &&
+                        shownAliases.all { it in selectedAliases }
+                    ClickableIcon(
+                        imageVector = if (allShownSelected) Icons.Rounded.Deselect else Icons.Rounded.SelectAll,
+                        onClick = {
+                            if (allShownSelected) {
+                                selectedActions = selectedActions - shownActions.toSet()
+                                selectedAliases = selectedAliases - shownAliases.toSet()
+                            } else {
+                                selectedActions = selectedActions + shownActions
+                                selectedAliases = selectedAliases + shownAliases
+                            }
+                        },
+                    )
+                    ClickableIcon(
+                        imageVector = Icons.Rounded.Delete,
+                        enabled = selectedCount > 0,
+                        tint = if (selectedCount > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                        onClick = {
+                            if (selectedCount > 0) {
+                                confirmDeleteSelected = true
+                            }
+                        },
+                    )
+                    ClickableIcon(
+                        imageVector = Icons.Rounded.Close,
+                        onClick = {
+                            selectionMode = false
+                            selectedActions = emptySet()
+                            selectedAliases = emptySet()
+                        },
+                    )
+                } else if (actions.isNotEmpty() || aliases.isNotEmpty()) {
+                    ClickableIcon(
+                        imageVector = Icons.Rounded.Checklist,
+                        onClick = { selectionMode = true },
+                    )
+                }
+            },
+        ) {
             OutlinedTextField(
                 value = query,
                 onValueChange = { query = it },
@@ -237,11 +340,13 @@ fun CommandActionsPreferences() {
             )
             // Actions and aliases are both "my commands": one list, one way to add.
             PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_commands)) {
-                ClickablePreference(
-                    label = stringResource(R.string.cmd_pref_new_command),
-                    subtitle = stringResource(R.string.cmd_pref_new_command_hint),
-                    onClick = { editor = EditorTarget.New },
-                )
+                if (!selectionMode) {
+                    ClickablePreference(
+                        label = stringResource(R.string.cmd_pref_new_command),
+                        subtitle = stringResource(R.string.cmd_pref_new_command_hint),
+                        onClick = { editor = EditorTarget.New },
+                    )
+                }
                 if (q.isNotEmpty() && shownActions.isEmpty() && shownAliases.isEmpty()) {
                     ClickablePreference(
                         label = stringResource(R.string.cmd_pref_no_actions),
@@ -250,64 +355,116 @@ fun CommandActionsPreferences() {
                     )
                 }
                 shownActions.forEach { action ->
+                    val isSelected = action in selectedActions
                     ClickablePreference(
                         label = "${action.letter} · ${action.label}",
                         subtitle = action.usage + usedLabel(CommandUsage.actionKey(action.letter)),
-                        onClick = { editor = EditorTarget.Action(action) },
+                        startWidget = if (selectionMode) {
+                            {
+                                Checkbox(
+                                    checked = isSelected,
+                                    onCheckedChange = null,
+                                )
+                            }
+                        } else {
+                            null
+                        },
+                        onClick = {
+                            if (selectionMode) {
+                                selectedActions = if (isSelected) selectedActions - action else selectedActions + action
+                            } else {
+                                editor = EditorTarget.Action(action)
+                            }
+                        },
+                        onLongClick = {
+                            if (selectionMode) {
+                                selectedActions = if (isSelected) selectedActions - action else selectedActions + action
+                            } else {
+                                selectionMode = true
+                                selectedActions = setOf(action)
+                            }
+                        },
                     )
                 }
                 shownAliases.forEach { alias ->
+                    val isSelected = alias in selectedAliases
                     ClickablePreference(
                         label = alias.name,
                         subtitle = "→ ${alias.expansion}" + usedLabel(CommandUsage.aliasKey(alias.name)),
-                        onClick = { editor = EditorTarget.Alias(alias) },
+                        startWidget = if (selectionMode) {
+                            {
+                                Checkbox(
+                                    checked = isSelected,
+                                    onCheckedChange = null,
+                                )
+                            }
+                        } else {
+                            null
+                        },
+                        onClick = {
+                            if (selectionMode) {
+                                selectedAliases = if (isSelected) selectedAliases - alias else selectedAliases + alias
+                            } else {
+                                editor = EditorTarget.Alias(alias)
+                            }
+                        },
+                        onLongClick = {
+                            if (selectionMode) {
+                                selectedAliases = if (isSelected) selectedAliases - alias else selectedAliases + alias
+                            } else {
+                                selectionMode = true
+                                selectedAliases = setOf(alias)
+                            }
+                        },
                     )
                 }
             }
-            PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_default_apps)) {
-                ClickablePreference(
-                    label = stringResource(R.string.cmd_pref_task_app),
-                    subtitle = taskApp ?: stringResource(R.string.cmd_pref_task_app_none),
-                    onClick = { taskPicker = true },
-                )
-            }
-            PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_ai)) {
-                ClickablePreference(
-                    label = stringResource(R.string.cmd_pref_ai),
-                    subtitle = aiConfig?.label ?: stringResource(R.string.cmd_pref_ai_none),
-                    onClick = { aiOpen = true },
-                )
-            }
-            PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_backup)) {
-                ClickablePreference(
-                    label = stringResource(R.string.cmd_pref_backup),
-                    subtitle = stringResource(R.string.cmd_pref_backup_hint),
-                    onClick = { backupOpen = true },
-                )
-                ClickablePreference(
-                    label = stringResource(R.string.cmd_pref_restore),
-                    subtitle = stringResource(R.string.cmd_pref_restore_hint),
-                    onClick = { confirmRestore = true },
-                )
-            }
-            PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_history)) {
-                ClickablePreference(
-                    label = stringResource(R.string.cmd_pref_clear_history),
-                    subtitle = if (history.isEmpty()) {
-                        stringResource(R.string.cmd_pref_clear_history_empty)
-                    } else {
-                        stringResource(R.string.cmd_pref_clear_history_count, history.size)
-                    },
-                    onClick = { if (history.isNotEmpty()) clearHistory() },
-                )
-            }
-            // Rarely needed, so kept apart: what API commands go through and their keys.
-            PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_advanced)) {
-                NavigationActionPreference(
-                    label = stringResource(R.string.cmd_providers_title),
-                    destination = CommandProviders(),
-                    subtitle = stringResource(R.string.cmd_providers_entry),
-                )
+            if (!selectionMode) {
+                PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_default_apps)) {
+                    ClickablePreference(
+                        label = stringResource(R.string.cmd_pref_task_app),
+                        subtitle = taskApp ?: stringResource(R.string.cmd_pref_task_app_none),
+                        onClick = { taskPicker = true },
+                    )
+                }
+                PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_ai)) {
+                    ClickablePreference(
+                        label = stringResource(R.string.cmd_pref_ai),
+                        subtitle = aiConfig?.label ?: stringResource(R.string.cmd_pref_ai_none),
+                        onClick = { aiOpen = true },
+                    )
+                }
+                PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_backup)) {
+                    ClickablePreference(
+                        label = stringResource(R.string.cmd_pref_backup),
+                        subtitle = stringResource(R.string.cmd_pref_backup_hint),
+                        onClick = { backupOpen = true },
+                    )
+                    ClickablePreference(
+                        label = stringResource(R.string.cmd_pref_restore),
+                        subtitle = stringResource(R.string.cmd_pref_restore_hint),
+                        onClick = { confirmRestore = true },
+                    )
+                }
+                PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_history)) {
+                    ClickablePreference(
+                        label = stringResource(R.string.cmd_pref_clear_history),
+                        subtitle = if (history.isEmpty()) {
+                            stringResource(R.string.cmd_pref_clear_history_empty)
+                        } else {
+                            stringResource(R.string.cmd_pref_clear_history_count, history.size)
+                        },
+                        onClick = { if (history.isNotEmpty()) clearHistory() },
+                    )
+                }
+                // Rarely needed, so kept apart: what API commands go through and their keys.
+                PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_advanced)) {
+                    NavigationActionPreference(
+                        label = stringResource(R.string.cmd_providers_title),
+                        destination = CommandProviders(),
+                        subtitle = stringResource(R.string.cmd_providers_entry),
+                    )
+                }
             }
         }
         SnackbarHost(
@@ -334,6 +491,34 @@ fun CommandActionsPreferences() {
                 importer.launch(arrayOf("*/*"))
             },
             onDismiss = { backupOpen = false },
+        )
+    }
+
+    if (confirmDeleteSelected) {
+        AlertDialog(
+            onDismissRequest = { confirmDeleteSelected = false },
+            title = { Text(stringResource(R.string.cmd_pref_delete_confirm_title)) },
+            text = {
+                val message = if (selectedCount == 1) {
+                    stringResource(R.string.cmd_pref_delete_confirm_text, selectedCount)
+                } else {
+                    stringResource(R.string.cmd_pref_delete_confirm_text_multiple, selectedCount)
+                }
+                Text(message)
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        confirmDeleteSelected = false
+                        removeSelected()
+                    },
+                ) {
+                    Text(stringResource(R.string.cmd_pref_delete), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmDeleteSelected = false }) { Text(stringResource(R.string.cmd_pref_cancel)) }
+            },
         )
     }
 

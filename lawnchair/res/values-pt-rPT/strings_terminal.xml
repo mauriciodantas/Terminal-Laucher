@@ -116,6 +116,14 @@
     <string name="cmd_pref_history_cleared">Histórico limpo</string>
     <string name="cmd_pref_action_removed">Ação %1$s removida</string>
     <string name="cmd_pref_alias_removed">Alcunha %1$s removida</string>
+    <string name="cmd_pref_select_commands">Selecionar comandos</string>
+    <string name="cmd_pref_selected_count">%1$d selecionados</string>
+    <string name="cmd_pref_delete_confirm_title">Eliminar comandos?</string>
+    <string name="cmd_pref_delete_confirm_text">Eliminar %1$d comando selecionado?</string>
+    <string name="cmd_pref_delete_confirm_text_multiple">Eliminar %1$d comandos selecionados?</string>
+    <string name="cmd_pref_command_removed">1 comando removido</string>
+    <string name="cmd_pref_commands_removed">%1$d comandos removidos</string>
+    <string name="cmd_pref_delete">Eliminar</string>
     <string name="cmd_pref_exported">Comandos exportados</string>
     <string name="cmd_pref_export_failed">Falha ao exportar</string>
     <string name="cmd_pref_share_failed">Falha ao partilhar</string>

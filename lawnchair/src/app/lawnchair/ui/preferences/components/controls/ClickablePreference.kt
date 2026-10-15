@@ -16,6 +16,9 @@
 
 package app.lawnchair.ui.preferences.components.controls
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.material3.Button
@@ -25,7 +28,9 @@ import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -39,6 +44,7 @@ import app.lawnchair.ui.util.preview.PreviewLawnchair
 import com.android.launcher3.util.MSDLPlayerWrapper
 import com.google.android.msdl.data.model.MSDLToken
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ClickablePreference(
     label: String,
@@ -50,32 +56,58 @@ fun ClickablePreference(
         disabledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
     ),
     hapticToken: MSDLToken? = MSDLToken.TAP_LOW_EMPHASIS,
+    startWidget: (@Composable () -> Unit)? = null,
+    endWidget: (@Composable () -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
     onClick: () -> Unit,
 ) {
     val bottomSheetHandler = bottomSheetHandler
     val mMSDLPlayerWrapper = MSDLPlayerWrapper.INSTANCE.get(LocalContext.current)
-    PreferenceTemplate(
-        title = { Text(text = label) },
-        modifier = modifier,
-        description = subtitle?.let { { Text(text = it) } },
-        onClick = {
-            if (confirmationText != null) {
-                mMSDLPlayerWrapper.playToken(MSDLToken.TAP_MEDIUM_EMPHASIS)
-                bottomSheetHandler.show {
-                    PreferenceClickConfirmation(
-                        title = label,
-                        text = confirmationText,
-                        onDismissRequest = { bottomSheetHandler.hide() },
-                        onConfirm = onClick,
-                    )
-                }
-            } else {
-                hapticToken?.let { mMSDLPlayerWrapper.playToken(it) }
-                onClick()
+    val handleClick = {
+        if (confirmationText != null) {
+            mMSDLPlayerWrapper.playToken(MSDLToken.TAP_MEDIUM_EMPHASIS)
+            bottomSheetHandler.show {
+                PreferenceClickConfirmation(
+                    title = label,
+                    text = confirmationText,
+                    onDismissRequest = { bottomSheetHandler.hide() },
+                    onConfirm = onClick,
+                )
             }
-        },
-        colors = colors,
-    )
+        } else {
+            hapticToken?.let { mMSDLPlayerWrapper.playToken(it) }
+            onClick()
+        }
+    }
+    if (onLongClick != null) {
+        PreferenceTemplate(
+            title = { Text(text = label) },
+            modifier = modifier,
+            contentModifier = Modifier.combinedClickable(
+                onClick = handleClick,
+                onLongClick = {
+                    mMSDLPlayerWrapper.playToken(MSDLToken.LONG_PRESS)
+                    onLongClick()
+                },
+                indication = ripple(),
+                interactionSource = remember { MutableInteractionSource() },
+            ),
+            description = subtitle?.let { { Text(text = it) } },
+            startWidget = startWidget,
+            endWidget = endWidget,
+            colors = colors,
+        )
+    } else {
+        PreferenceTemplate(
+            title = { Text(text = label) },
+            modifier = modifier,
+            description = subtitle?.let { { Text(text = it) } },
+            startWidget = startWidget,
+            endWidget = endWidget,
+            onClick = handleClick,
+            colors = colors,
+        )
+    }
 }
 
 @Composable
