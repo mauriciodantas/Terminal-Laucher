@@ -12,7 +12,14 @@ import android.os.Process
 import android.provider.AlarmClock
 import android.provider.CalendarContract
 import android.provider.ContactsContract
+import androidx.core.content.FileProvider
 import app.lawnchair.theme.SystemColorMode
+import app.lawnchair.widgets.lottie.ImportWidgetActivity
+import app.lawnchair.widgets.lottie.LottieWidgetPack
+import app.lawnchair.widgets.lottie.LottieWidgetPacks
+import app.lawnchair.widgets.lottie.LottieWidgetStore.Playback
+import java.io.File
+import org.json.JSONObject
 
 /** Runs a [CommandAction] and loads the data the command bar completes from. */
 object CommandExecutor {
@@ -218,6 +225,70 @@ object CommandExecutor {
                 context,
                 Intent(Intent.ACTION_VIEW, Uri.parse(action.url)).addCategory(Intent.CATEGORY_BROWSABLE),
             )
+
+            is CommandAction.ImportTheme -> return ThemeStore.review(context, action.spec)
+
+            is CommandAction.ImportWidget -> {
+                val dir = File(context.cacheDir, "widgets").apply { mkdirs() }
+                val file = File(dir, "import.${LottieWidgetPacks.EXTENSION}")
+                val json = action.json.trim()
+                val pack = if (json.startsWith("{") && runCatching { JSONObject(json).optString("format") == "terminal-widget" }.getOrDefault(false)) {
+                    val o = JSONObject(json)
+                    val animBytes = when {
+                        o.has("animation") -> {
+                            val a = o.opt("animation")
+                            if (a is JSONObject) {
+                                a.toString().toByteArray(Charsets.UTF_8)
+                            } else {
+                                a?.toString().orEmpty().toByteArray(Charsets.UTF_8)
+                            }
+                        }
+
+                        else -> json.toByteArray(Charsets.UTF_8)
+                    }
+                    LottieWidgetPack(
+                        name = o.optString("name").ifBlank { action.name },
+                        animation = animBytes,
+                        command = o.optString("command").trim(),
+                        playback = Playback.entries.firstOrNull { it.name == o.optString("playback") } ?: Playback.LOOP,
+                        themeColors = o.optBoolean("themeColors", false),
+                        commands = o.optJSONObject("commands")?.let { runCatching { CommandPacks.decode(it.toString()) }.getOrNull() } ?: CommandPack(emptyList(), emptyList()),
+                    )
+                } else {
+                    LottieWidgetPack(
+                        name = action.name.ifBlank { "widget.json" },
+                        animation = action.json.toByteArray(Charsets.UTF_8),
+                        command = "",
+                        playback = Playback.LOOP,
+                        themeColors = false,
+                        commands = CommandPack(emptyList(), emptyList()),
+                    )
+                }
+                file.outputStream().use { LottieWidgetPacks.write(pack, it) }
+                val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+                start(
+                    context,
+                    Intent(context, ImportWidgetActivity::class.java)
+                        .setAction(Intent.ACTION_VIEW)
+                        .setData(uri)
+                        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION),
+                )
+            }
+
+            is CommandAction.ImportCommands -> {
+                val dir = File(context.cacheDir, "commands").apply { mkdirs() }
+                val file = File(dir, "import.${CommandPacks.EXTENSION}").apply {
+                    writeText(CommandPacks.encode(action.pack.actions, action.pack.aliases, action.pack.providers))
+                }
+                val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+                start(
+                    context,
+                    Intent(context, ImportCommandsActivity::class.java)
+                        .setAction(Intent.ACTION_VIEW)
+                        .setData(uri)
+                        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION),
+                )
+            }
 
             is CommandAction.WebSearch -> start(
                 context,

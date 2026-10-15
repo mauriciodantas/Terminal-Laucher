@@ -452,6 +452,7 @@
     <string name="cmd_qr_shown">QR · POINT THE OTHER CAMERA HERE</string>
     <string name="cmd_qr_failed">DOES NOT FIT IN A QR CODE</string>
 
+
     <!-- nearby -->
     <string name="cmd_word_nearby">nearby</string>
     <string name="cmd_usage_nearby">[place]</string>
@@ -544,4 +545,22 @@
     <string name="cmd_api_write_redirect">redirect (HTTP %1$d) not followed for a write</string>
     <string name="cmd_api_write_ready">ENTER SENDS %1$s TO %2$s</string>
     <string name="cmd_caution_writes">⚠ changes data: %1$s on %2$s · tick it only if you trust who sent it</string>
+
+    <!-- import -->
+    <string name="cmd_word_import">import</string>
+    <string name="cmd_usage_import">[json] · import theme, widget or commands</string>
+    <string name="cmd_help_import">Imports a theme, widget or command pack from a JSON.\n› import {...}</string>
+    <string name="cmd_kind_import">IMPORT</string>
+    <string name="cmd_import_title">IMPORT</string>
+    <string name="cmd_import_theme_title">IMPORT THEME</string>
+    <string name="cmd_import_widget_title">IMPORT WIDGET</string>
+    <string name="cmd_import_commands_title">IMPORT COMMANDS</string>
+    <string name="cmd_import_theme_preview">theme \"%1$s\" · enter to review and apply</string>
+    <string name="cmd_import_widget_preview">widget \"%1$s\" · enter to place on home screen</string>
+    <string name="cmd_import_commands_preview">%1$d command(s) · enter to review and add</string>
+    <string name="cmd_import_unknown_json">JSON not recognized as a theme, widget or command</string>
+    <string name="cmd_import_incomplete_json">incomplete JSON · complete or paste the full content</string>
+    <string name="cmd_import_action_theme">Import theme</string>
+    <string name="cmd_import_action_widget">Import widget</string>
+    <string name="cmd_import_action_commands">Import commands</string>
 </resources>

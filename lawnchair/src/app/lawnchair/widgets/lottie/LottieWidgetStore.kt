@@ -83,8 +83,7 @@ object LottieWidgetStore {
     fun lastResultAt(context: Context, appWidgetId: Int): Long = prefs(context).getLong(KEY_LAST_RESULT_AT + appWidgetId, 0L)
 
     /** Duration in seconds that the result stays visible before the animation returns. Default: 60s (1 min). */
-    fun resultDurationSeconds(context: Context, appWidgetId: Int): Int =
-        prefs(context).getInt(KEY_RESULT_DURATION + appWidgetId, DEFAULT_RESULT_DURATION_SECONDS)
+    fun resultDurationSeconds(context: Context, appWidgetId: Int): Int = prefs(context).getInt(KEY_RESULT_DURATION + appWidgetId, DEFAULT_RESULT_DURATION_SECONDS)
 
     /** Saves or clears the last command output displayed on the widget, along with its timestamp. */
     fun saveLastResult(context: Context, appWidgetId: Int, result: String?) {

@@ -108,6 +108,7 @@ class CommandRegistry(private val commands: List<Command>) {
                 PingCommand,
                 AiAskCommand,
                 PackCommand,
+                ImportCommand,
                 UrlCommand,
             )
         }

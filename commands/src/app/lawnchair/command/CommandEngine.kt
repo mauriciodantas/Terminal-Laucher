@@ -104,6 +104,10 @@ sealed interface CommandAction {
 
     /** "tema escuro; silencio on; abrir kindle": [steps] run in order. */
     data class Chain(val steps: List<CommandAction>, val lines: List<String>) : CommandAction
+
+    data class ImportTheme(val spec: ThemeSpec, val json: String) : CommandAction
+    data class ImportWidget(val json: String, val name: String) : CommandAction
+    data class ImportCommands(val pack: CommandPack, val json: String) : CommandAction
 }
 
 /** Everything the screen needs for the text typed so far. [action] is null while it cannot run. */
@@ -197,6 +201,7 @@ object CommandEngine {
     /** The commands of "a; b; c", keeping an empty last one while it is being typed. */
     fun splitChain(text: String): List<String> {
         if (';' !in text) return listOf(text)
+        if (JsonImport.isPotentialJson(text)) return listOf(text)
         val parts = text.split(';').map { it.trim() }
         return parts.dropLast(1).filter { it.isNotEmpty() } + parts.last()
     }
@@ -489,6 +494,12 @@ object CommandEngine {
         is CommandAction.WebSearch -> "ACTION_WEB_SEARCH · \"${action.query}\""
 
         is CommandAction.OpenUrl -> "ACTION_VIEW · " + action.url
+
+        is CommandAction.ImportTheme -> "ImportThemeActivity · " + action.spec.name.ifBlank { "tema" }
+
+        is CommandAction.ImportWidget -> "ImportWidgetActivity · " + action.name
+
+        is CommandAction.ImportCommands -> "ImportCommandsActivity · " + action.pack.actions.size + " actions, " + action.pack.aliases.size + " aliases"
 
         is CommandAction.Custom -> describeCustom(action, providers)
     }

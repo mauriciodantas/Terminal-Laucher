@@ -58,6 +58,7 @@ enum class BuiltInCommand(
     UNINSTALL(R.string.cmd_word_uninstall, "desinstalar", "uninstall"),
     UPDATE(R.string.cmd_word_update, "atualizar", "update"),
     PACK(R.string.cmd_word_pack, "pacote", "pack"),
+    IMPORT(R.string.cmd_word_import, "importar", "import"),
     ;
 
     /** The word shown and suggested: "abrir" in Portuguese, "open" in English. */

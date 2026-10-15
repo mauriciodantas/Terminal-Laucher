@@ -447,6 +447,7 @@
     <string name="cmd_qr_shown">QR · APONTE A OUTRA CÂMERA AQUI</string>
     <string name="cmd_qr_failed">NÃO CABE NUM QR CODE</string>
 
+
     <string name="cmd_word_nearby">perto</string>
     <string name="cmd_usage_nearby">[lugar]</string>
     <string name="cmd_help_nearby">Mostra lugares desse tipo perto de você no app de mapas.\n› perto farmácia\n› perto posto</string>
@@ -532,4 +533,22 @@
     <string name="cmd_api_write_redirect">redirecionamento (HTTP %1$d) não seguido numa escrita</string>
     <string name="cmd_api_write_ready">ENTER ENVIA %1$s PARA %2$s</string>
     <string name="cmd_caution_writes">⚠ altera dados: %1$s em %2$s · marque só se confia em quem mandou</string>
+
+    <!-- import -->
+    <string name="cmd_word_import">importar</string>
+    <string name="cmd_usage_import">[json] · importar tema, widget ou comandos</string>
+    <string name="cmd_help_import">Importa um tema, widget ou comandos a partir de um JSON.\n› importar {...}</string>
+    <string name="cmd_kind_import">IMPORTAR</string>
+    <string name="cmd_import_title">IMPORTAR</string>
+    <string name="cmd_import_theme_title">IMPORTAR TEMA</string>
+    <string name="cmd_import_widget_title">IMPORTAR WIDGET</string>
+    <string name="cmd_import_commands_title">IMPORTAR COMANDOS</string>
+    <string name="cmd_import_theme_preview">tema \"%1$s\" · enter para revisar e aplicar</string>
+    <string name="cmd_import_widget_preview">widget \"%1$s\" · enter para posicionar na tela inicial</string>
+    <string name="cmd_import_commands_preview">%1$d comando(s) · enter para revisar e adicionar</string>
+    <string name="cmd_import_unknown_json">JSON não reconhecido como tema, widget ou comando</string>
+    <string name="cmd_import_incomplete_json">JSON incompleto · complete ou cole o conteúdo inteiro</string>
+    <string name="cmd_import_action_theme">Importar tema</string>
+    <string name="cmd_import_action_widget">Importar widget</string>
+    <string name="cmd_import_action_commands">Importar comandos</string>
 </resources>

@@ -370,6 +370,7 @@ private fun CommandScreen(onClose: () -> Unit) {
     fun record(action: CommandAction, command: String) {
         // "!!" is not kept: the command it repeated stays the last one.
         if (command.trim() == BuiltInCommand.REPEAT) return
+        if (action is CommandAction.ImportTheme || action is CommandAction.ImportWidget || action is CommandAction.ImportCommands) return
         history = CommandEngine.pushHistory(history, command)
         CommandActivity.saveHistory(context, history)
         CommandUsage.record(context, CommandUsage.keysFor(action, command, aliases))

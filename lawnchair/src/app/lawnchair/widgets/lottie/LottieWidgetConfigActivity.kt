@@ -27,6 +27,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -171,7 +172,7 @@ private fun ConfigDialog(
     var playback by remember { mutableStateOf(initialPlayback) }
     var themeColors by remember { mutableStateOf(initialThemeColors) }
     var showResult by remember { mutableStateOf(initialShowResult) }
-    var resultDuration by remember { mutableStateOf(initialResultDuration) }
+    var resultDuration by remember { mutableIntStateOf(initialResultDuration) }
     var analysis by remember { mutableStateOf<Analysis?>(null) }
     LaunchedEffect(command) {
         analysis = null
@@ -374,4 +375,3 @@ private fun ResultDurationChoice(selected: Int, onSelect: (Int) -> Unit) {
         }
     }
 }
-

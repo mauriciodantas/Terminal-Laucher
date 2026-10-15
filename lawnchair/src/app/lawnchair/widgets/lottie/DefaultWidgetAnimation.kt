@@ -199,10 +199,9 @@ object DefaultWidgetAnimation {
     }
   ]
 }
-""".trimIndent()
+    """.trimIndent()
 
     val bytes: ByteArray by lazy { JSON.toByteArray(Charsets.UTF_8) }
 
-    fun load(context: Context): LottieComposition? =
-        LottieCompositionFactory.fromJsonStringSync(JSON, "default_widget_animation").value
+    fun load(context: Context): LottieComposition? = LottieCompositionFactory.fromJsonStringSync(JSON, "default_widget_animation").value
 }
