@@ -109,7 +109,7 @@ class PackAndApiTest {
         val a = run("pacote brasil")
         assertEquals(CommandAction.InstallPack("brasil"), a.action)
         val custom = installed()
-        assertEquals(listOf("w", "rastrear", "cep", "feriados"), custom.map { it.letter })
+        assertEquals(listOf("w", "rastrear", "pix", "cep", "feriados"), custom.map { it.letter })
         assertNull(run("pacote brasil", custom).action)
         assertEquals(CommandAction.RemovePack("brasil"), run("pacote brasil remover", custom).action)
         assertEquals(CustomActions.DEFAULTS, BundledPacks.remove(custom, "brasil"))

@@ -121,9 +121,6 @@ object CommandExecutor {
 
             is CommandAction.Copy -> copy(context, action.text)
 
-            // What the Samsung camera sends when it reads a Pix QR code; the bank apps declare this action.
-            is CommandAction.Pix -> start(context, Intent(PIX_ACTION).putExtra(PIX_DATA, action.code))
-
             is CommandAction.Schedule -> CommandScheduler.add(context, action.job)
 
             is CommandAction.CancelJob -> CommandScheduler.cancel(context, action.job)
@@ -426,7 +423,7 @@ object CommandExecutor {
         } else if (spec.mimeType != null) {
             intent.type = spec.mimeType
         }
-        spec.textExtra?.let { intent.putExtra(it, text) }
+        spec.textExtra?.let { intent.putExtra(it, spec.extraFor(text) ?: text) }
         pkg?.let { intent.setPackage(it) }
         return intent
     }
@@ -524,8 +521,6 @@ object CommandExecutor {
         context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 
-    private const val PIX_ACTION = "android.intent.action.Pix"
-    private const val PIX_DATA = "PIX_DATA"
     private const val MAX_CONTACTS = 2000
     private const val SPLIT_SECOND_DELAY_MS = 700L
 }

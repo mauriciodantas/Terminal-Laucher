@@ -34,6 +34,11 @@ data class CustomAction(
     /** Extra that carries the typed text (e.g. `android.intent.extra.TEXT`) instead of the URI. */
     val textExtra: String? = null,
     /**
+     * What [textExtra] carries, when not just the typed text: `{text}` is the text as typed and
+     * `{pix}` the Pix QR code of the key typed ([PixCode]). Empty for the text itself.
+     */
+    val extraValue: String = "",
+    /**
      * A regular expression for text typed alone, without the letter: a line it matches in full runs
      * the action with that line as what was typed (`{text}`). Empty for none; see [CommandPattern].
      */
@@ -61,6 +66,17 @@ data class CustomAction(
 }
 
 const val ACTION_VIEW = "android.intent.action.VIEW"
+
+/** Whether the action turns what is typed into a Pix code, so only a Pix key can be typed. */
+val CustomAction.takesPixKey: Boolean get() = "{pix}" in extraValue
+
+/** What [CustomAction.textExtra] carries for [text]; null when `{pix}` gets something that is not a Pix key. */
+fun CustomAction.extraFor(text: String): String? {
+    if (extraValue.isEmpty()) return text
+    var value = extraValue.replace("{text}", text)
+    if (takesPixKey) value = value.replace("{pix}", PixCode.of(PixKey.of(text)?.value ?: return null))
+    return value
+}
 
 object CustomActions {
 

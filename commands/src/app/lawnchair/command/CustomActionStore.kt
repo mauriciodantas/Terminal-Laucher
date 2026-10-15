@@ -39,6 +39,7 @@ object CustomActionStore {
                     .put("mime", it.mimeType ?: JSONObject.NULL)
                     .put("extra", it.textExtra ?: JSONObject.NULL)
                     .put("pattern", it.pattern)
+                    .apply { if (it.extraValue.isNotEmpty()) put("extraValue", it.extraValue) }
                     .put("api", it.api?.let { api -> apiJson(api) } ?: JSONObject.NULL)
                     .put("pack", it.pack)
                     .put("provider", it.provider)
@@ -68,6 +69,7 @@ object CustomActionStore {
                     mimeType = if (o.isNull("mime")) null else o.getString("mime"),
                     textExtra = if (o.isNull("extra")) null else o.getString("extra"),
                     pattern = o.optString("pattern", ""),
+                    extraValue = o.optString("extraValue", ""),
                     api = o.optJSONObject("api")?.let { api -> ApiSpec.fromJson(api) },
                     pack = o.optString("pack", ""),
                     provider = o.optString("provider", ""),

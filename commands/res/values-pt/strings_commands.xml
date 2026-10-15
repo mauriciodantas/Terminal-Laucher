@@ -427,6 +427,7 @@
     <string name="cmd_pack_pick">ESCOLHA UM PACOTE · ENTER INSTALA</string>
     <string name="cmd_pack_unknown">NENHUM PACOTE COM ESSE NOME</string>
     <string name="cmd_pack_installed">INSTALADO · %1$s</string>
+    <string name="cmd_pack_update">NOVO NO PACOTE: %1$s · ENTER ADICIONA</string>
     <string name="cmd_pack_not_installed">NÃO ESTÁ INSTALADO</string>
     <string name="cmd_pack_remove">ENTER REMOVE %1$s</string>
     <string name="cmd_pack_remove_label">remover o pacote</string>
@@ -434,9 +435,10 @@
     <string name="cmd_pack_done">%1$s INSTALADO · %2$s</string>
     <string name="cmd_pack_done_skipped">%1$s INSTALADO · %2$s · %3$d DE FORA (NOME EM USO)</string>
     <string name="cmd_pack_removed">%1$s REMOVIDO</string>
-    <string name="cmd_pack_brazil">Rastreio dos Correios, endereço de um CEP e os próximos feriados</string>
+    <string name="cmd_pack_brazil">Pix para uma chave, rastreio dos Correios, endereço de um CEP e os próximos feriados</string>
     <string name="cmd_pack_track">Rastreio dos Correios</string>
     <string name="cmd_pack_holidays">Feriados nacionais</string>
+    <string name="cmd_pack_pix_help">Abre o app do banco com o Pix dessa chave, sem valor, como se o QR code tivesse sido lido: o banco mostra quem recebe e pede o valor. A chave pode ser CPF, CNPJ, celular, email ou chave aleatória, e digitada sozinha também oferece o Pix.</string>
 
     <string name="cmd_usage_qr">[texto|link] · wifi [rede] [senha]</string>
     <string name="cmd_help_qr">Desenha um QR code na barra para outro celular ler: um link, um texto, ou o seu Wi-Fi, para a visita entrar sem digitar a senha. Nome de rede com espaço vai entre aspas.\n› qr https://exemplo.com\n› qr wifi casa senha123\n› qr wifi \"Casa da Ana\" senha123\n› qr {clip}</string>
@@ -447,12 +449,7 @@
     <string name="cmd_qr_shown">QR · APONTE A OUTRA CÂMERA AQUI</string>
     <string name="cmd_qr_failed">NÃO CABE NUM QR CODE</string>
 
-    <string name="cmd_usage_pix">[chave]</string>
-    <string name="cmd_help_pix">Abre o app do banco com o Pix dessa chave, sem valor, como se o QR code tivesse sido lido: o banco mostra quem recebe e pede o valor. A chave pode ser CPF, CNPJ, celular, email ou chave aleatória; CPF, CNPJ ou chave aleatória digitados sozinhos também oferecem o Pix.\n› pix 123.456.789-09\n› pix +55 11 99999-8888\n› pix ana@exemplo.com</string>
-    <string name="cmd_pix_empty">CPF, CNPJ, CELULAR, EMAIL OU CHAVE ALEATÓRIA</string>
     <string name="cmd_pix_invalid">NÃO É UMA CHAVE PIX</string>
-    <string name="cmd_pix_ready">ENTER ABRE O BANCO</string>
-    <string name="cmd_pix_no_app">NENHUM APP DE BANCO RECEBE O PIX</string>
 
 
     <string name="cmd_word_nearby">perto</string>

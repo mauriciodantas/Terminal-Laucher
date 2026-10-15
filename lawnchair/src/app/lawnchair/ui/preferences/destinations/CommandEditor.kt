@@ -228,8 +228,11 @@ internal fun CommandEditor(
         arg = arg,
         intentAction = expandAction(intentAction),
         mimeType = when {
-            shareText -> base.mimeType ?: "text/plain"
+            // An extra the action already had keeps its type, or lack of one ("Pix" matches no type).
+            shareText -> if (base.textExtra != null) base.mimeType else "text/plain"
+
             base.textExtra != null -> null
+
             else -> base.mimeType
         },
         textExtra = if (shareText) base.textExtra ?: EXTRA_TEXT else null,

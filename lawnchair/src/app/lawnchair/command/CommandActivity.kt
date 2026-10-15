@@ -604,7 +604,7 @@ private fun CommandScreen(onClose: () -> Unit) {
         }
         val ok = CommandExecutor.execute(context, action)
         if (!ok) {
-            done = if (action is CommandAction.Pix) context.getString(CommandR.string.cmd_pix_no_app) else failedLabel
+            done = failedLabel
             return
         }
         record(action, command)

@@ -1,35 +1,9 @@
 package app.lawnchair.command
 
-import app.lawnchair.util.Texts
-
 /**
- * "pix 123.456.789-09": the Pix of that key with no amount, handed to the bank app the way the
- * camera hands it a Pix QR code it reads; the bank shows who gets the money and asks the amount.
- * A valid CPF or CNPJ, or a random key, typed alone offers it too.
+ * Pix keys and the code of a Pix QR code, for the "pix" command of the Brazil pack: the code is
+ * handed to the bank app the way the Samsung camera hands it a Pix QR code it reads.
  */
-object PixCommand : BuiltIn(BuiltInCommand.PIX, R.string.cmd_usage_pix, R.string.cmd_help_pix) {
-
-    override val requiresArgument = true
-
-    /** Email and phone typed alone are left to the commands that write and call. */
-    private val TYPED_ALONE = setOf(PixKind.CPF, PixKind.CNPJ, PixKind.RANDOM)
-
-    override fun isApplicable(text: String, ctx: CommandContext): Boolean = PixKey.of(text)?.kind in TYPED_ALONE
-
-    override fun analyze(arg: String, ctx: CommandContext): Analysis {
-        val title = "PIX"
-        val text = arg.trim()
-        if (text.isEmpty()) return commandResult(title, Texts.get(R.string.cmd_pix_empty), Tone.IDLE, null)
-        val key = PixKey.of(text) ?: return commandResult(title, Texts.get(R.string.cmd_pix_invalid), Tone.ERROR, null)
-        return commandResult(
-            title,
-            key.kind.label + " " + key.shown + " · " + Texts.get(R.string.cmd_pix_ready),
-            Tone.OK,
-            CommandAction.Pix(PixCode.of(key.value)),
-        )
-    }
-}
-
 enum class PixKind(val label: String) { CPF("CPF"), CNPJ("CNPJ"), PHONE("TEL"), EMAIL("EMAIL"), RANDOM("EVP") }
 
 /** A Pix key written the way the Central Bank directory stores it, and the way it is shown. */
@@ -61,6 +35,8 @@ data class PixKey(val kind: PixKind, val value: String, val shown: String) {
                     "${digits.substring(0, 2)}.${digits.substring(2, 5)}.${digits.substring(5, 8)}/${digits.substring(8, 12)}-${digits.substring(12)}",
                 )
             }
+            // Written with dots or a slash it is a CPF or CNPJ, so wrong check digits are no phone.
+            if (t.any { it == '.' || it == '/' }) return null
             val phone = when {
                 (plus || digits.length > 11) && digits.startsWith("55") && digits.length in 12..13 -> digits
                 !plus && digits.length in 10..11 -> "55$digits"

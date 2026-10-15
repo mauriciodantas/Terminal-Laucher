@@ -51,6 +51,13 @@ object BundledPacks {
         return PackInstall(left, providers.filter { p -> p.pack != id || left.any { it.provider == p.id } })
     }
 
+    /** The letters of an installed [pack] that a newer version added and the user does not have yet. */
+    fun missing(actions: List<CustomAction>, aliases: List<CommandAlias>, pack: BundledPack): List<String> {
+        val have = actions.filter { it.pack == pack.id }.map { it.letter }.toSet()
+        val taken = conflicts(actions, aliases, pack).toSet()
+        return pack.actions.map { it.letter }.filter { it !in have && it !in taken }
+    }
+
     /** The letters of [pack] another command already uses, which an install leaves out. */
     fun conflicts(actions: List<CustomAction>, aliases: List<CommandAlias>, pack: BundledPack): List<String> = PackRules.preview(remove(actions, pack.id), aliases, CommandPack(pack.actions, emptyList())).actions
         .filter { it.conflict != null }
@@ -70,6 +77,22 @@ object BundledPacks {
                 arg = ArgKind.TEXT,
                 // "QB123456789BR" typed alone is a Correios tracking code.
                 pattern = "[A-Za-z]{2}\\d{9}[A-Za-z]{2}",
+                pack = BRAZIL,
+            ),
+            CustomAction(
+                letter = "pix",
+                label = "Pix",
+                kind = ActionKind.INTENT,
+                template = "",
+                packages = emptyList(),
+                arg = ArgKind.TEXT,
+                // What the Samsung camera sends the bank apps when it reads a Pix QR code.
+                intentAction = "android.intent.action.Pix",
+                textExtra = "PIX_DATA",
+                extraValue = "{pix}",
+                // A CPF, CNPJ, +55 phone, email or random key typed alone.
+                pattern = "\\d{3}\\.?\\d{3}\\.?\\d{3}-?\\d{2}|\\d{2}\\.?\\d{3}\\.?\\d{3}/?\\d{4}-?\\d{2}|\\+55\\d{10,11}|[\\w.+-]+@[\\w-]+\\.[\\w.-]+|[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}",
+                help = Texts.get(R.string.cmd_pack_pix_help),
                 pack = BRAZIL,
             ),
             CustomAction(
@@ -123,6 +146,13 @@ object PackCommand : BuiltIn(BuiltInCommand.PACK, R.string.cmd_usage_pack, R.str
             removing && installed -> commandResult(packTitle, Texts.get(R.string.cmd_pack_remove, letters), Tone.WARN, CommandAction.RemovePack(pack.id))
 
             removing -> commandResult(packTitle, Texts.get(R.string.cmd_pack_not_installed), Tone.IDLE, null)
+
+            installed && BundledPacks.missing(ctx.custom, ctx.aliases, pack).isNotEmpty() -> commandResult(
+                packTitle,
+                Texts.get(R.string.cmd_pack_update, BundledPacks.missing(ctx.custom, ctx.aliases, pack).joinToString(" · ")),
+                Tone.OK,
+                CommandAction.InstallPack(pack.id),
+            )
 
             installed -> commandResult(
                 packTitle,

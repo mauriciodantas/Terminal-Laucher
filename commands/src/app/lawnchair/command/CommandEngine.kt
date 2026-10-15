@@ -77,9 +77,6 @@ sealed interface CommandAction {
     /** "qr ...": the code is drawn in the bar for another phone's camera. */
     data class ShowQr(val content: String) : CommandAction
 
-    /** A Pix QR code's text, handed to the bank app as the camera hands it one it reads. */
-    data class Pix(val code: String) : CommandAction
-
     /** "perto farmácia": places of that kind around, in the maps app. */
     data class Nearby(val query: String) : CommandAction
 
@@ -445,8 +442,6 @@ object CommandEngine {
 
         is CommandAction.ShowQr -> "QR · " + action.content.length + " chars"
 
-        is CommandAction.Pix -> "android.intent.action.Pix · " + action.code
-
         is CommandAction.Nearby -> "geo:0,0?q=" + encode(action.query)
 
         is CommandAction.Weather -> "GET api.open-meteo.com" + if (action.place.isEmpty()) " · {location}" else " · \"" + action.place + "\""
@@ -518,7 +513,7 @@ object CommandEngine {
             return (api?.method ?: HttpMethods.GET) + " " + (ApiCall.url(spec, action.text, java.time.LocalDate.now(), providers) ?: spec.template) + type
         }
         if (spec.template.isEmpty()) {
-            return (spec.intentAction.substringAfterLast('.') + " " + spec.mimeType.orEmpty() + " · " + action.text).trim()
+            return (spec.intentAction.substringAfterLast('.') + " " + spec.mimeType.orEmpty() + " · " + (spec.extraFor(action.text) ?: action.text)).trim()
         }
         val values = mapOf(
             "{number}" to action.contact?.number?.filter { it.isDigit() }.orEmpty(),
@@ -717,6 +712,10 @@ object CommandEngine {
 
         ArgKind.TEXT -> {
             val text = arg.trim()
+            val pixKey = if (action.takesPixKey) PixKey.of(text) else null
+            if (action.takesPixKey && text.isNotEmpty() && pixKey == null) {
+                return commandResult(action.label.uppercase(), Texts.get(R.string.cmd_pix_invalid), Tone.ERROR, null)
+            }
             Analysis(
                 suggestions = emptyList(),
                 listTitle = action.label.uppercase(),
@@ -725,6 +724,7 @@ object CommandEngine {
                 preview = when {
                     text.isEmpty() -> Texts.get(R.string.cmd_text_empty)
                     action.kind == ActionKind.API -> text.uppercase() + " · " + apiReady(action, providers)
+                    pixKey != null -> pixKey.kind.label + " " + pixKey.shown
                     else -> text.uppercase()
                 },
                 tone = when {

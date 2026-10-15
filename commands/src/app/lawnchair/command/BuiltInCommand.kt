@@ -52,7 +52,6 @@ enum class BuiltInCommand(
     FAST(R.string.cmd_word_fast, "fast", "fast", short = "speedtest"),
     AI(R.string.cmd_word_ai, "ia", "ai"),
     QR(R.string.cmd_word_qr, "qr", "qr"),
-    PIX(R.string.cmd_word_pix, "pix", "pix"),
     NEARBY(R.string.cmd_word_nearby, "perto", "nearby"),
     WEATHER(R.string.cmd_word_weather, "clima", "weather", short = "tempo"),
     FREE_SPACE(R.string.cmd_word_free_space, "liberar", "cleanup"),

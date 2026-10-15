@@ -430,6 +430,7 @@
     <string name="cmd_pack_pick">PICK A PACK · ENTER INSTALLS IT</string>
     <string name="cmd_pack_unknown">NO PACK BY THAT NAME</string>
     <string name="cmd_pack_installed">INSTALLED · %1$s</string>
+    <string name="cmd_pack_update">NEW IN THE PACK: %1$s · ENTER ADDS</string>
     <string name="cmd_pack_not_installed">NOT INSTALLED</string>
     <string name="cmd_pack_remove">ENTER REMOVES %1$s</string>
     <string name="cmd_pack_remove_label">remove the pack</string>
@@ -437,9 +438,10 @@
     <string name="cmd_pack_done">%1$s INSTALLED · %2$s</string>
     <string name="cmd_pack_done_skipped">%1$s INSTALLED · %2$s · %3$d LEFT OUT (NAME IN USE)</string>
     <string name="cmd_pack_removed">%1$s REMOVED</string>
-    <string name="cmd_pack_brazil">Correios tracking, address of a CEP and the next holidays</string>
+    <string name="cmd_pack_brazil">Pix to a key, Correios tracking, address of a CEP and the next holidays</string>
     <string name="cmd_pack_track">Correios tracking</string>
     <string name="cmd_pack_holidays">National holidays</string>
+    <string name="cmd_pack_pix_help">Opens the bank app with the Pix of that key and no amount, as if its QR code had been read: the bank shows who gets it and asks the amount. The key can be a CPF, CNPJ, phone, email or random key, and typed alone it offers the Pix too.</string>
 
     <!-- qr -->
     <string name="cmd_word_qr" translatable="false">qr</string>
@@ -452,14 +454,7 @@
     <string name="cmd_qr_shown">QR · POINT THE OTHER CAMERA HERE</string>
     <string name="cmd_qr_failed">DOES NOT FIT IN A QR CODE</string>
 
-    <!-- pix -->
-    <string name="cmd_word_pix" translatable="false">pix</string>
-    <string name="cmd_usage_pix">[key]</string>
-    <string name="cmd_help_pix">Opens the bank app with the Pix of that key and no amount, as if its QR code had been read: the bank shows who gets it and asks the amount. The key can be a CPF, CNPJ, phone, email or random key; a CPF, CNPJ or random key typed alone offers it too.\n› pix 123.456.789-09\n› pix +55 11 99999-8888\n› pix ana@example.com</string>
-    <string name="cmd_pix_empty">CPF, CNPJ, PHONE, EMAIL OR RANDOM KEY</string>
     <string name="cmd_pix_invalid">NOT A PIX KEY</string>
-    <string name="cmd_pix_ready">ENTER OPENS THE BANK</string>
-    <string name="cmd_pix_no_app">NO BANK APP TAKES PIX</string>
 
 
     <!-- nearby -->
