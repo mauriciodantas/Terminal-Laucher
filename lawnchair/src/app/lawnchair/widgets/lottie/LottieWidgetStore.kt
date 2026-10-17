@@ -180,7 +180,7 @@ object LottieWidgetStore {
      */
     @Synchronized
     fun applyPending(context: Context, appWidgetId: Int): Boolean {
-        if (hasAnimation(context, appWidgetId)) return false
+        if (hasCustomAnimation(context, appWidgetId)) return false
         val pending = File(File(context.filesDir, DIR), PENDING)
         val prefs = prefs(context)
         val fresh = System.currentTimeMillis() - prefs.getLong(KEY_PENDING_AT, 0) <= PENDING_MAX_AGE
