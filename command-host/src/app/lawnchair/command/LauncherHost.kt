@@ -87,7 +87,9 @@ object AppHost : CommandHost {
     override fun aiSystem(mode: AiMode, context: AiContext): String? = when (mode) {
         AiMode.FOLDERS -> AiPrompts.base(context) + "\n\n" + LauncherAiPrompts.drawer(context) + "\n\n" +
             if (context.host.forceFolders) LauncherAiPrompts.FOLDERS_FORCE_RULES else LauncherAiPrompts.FOLDERS_RULES
+
         AiMode.THEME -> AiPrompts.base(context) + "\n\n" + LauncherAiPrompts.currentTheme(context) + LauncherAiPrompts.THEME_RULES
+
         else -> null
     }
 
@@ -170,11 +172,17 @@ object AppHost : CommandHost {
         }
 
         is ThemeAction.Apply -> ThemeCommand.describe(action.spec)
+
         is ThemeAction.Save -> "themes += \"${action.name}\""
+
         is ThemeAction.Share -> "ACTION_SEND " + ThemeSpecs.MIME
+
         is ThemeAction.Delete -> "themes -= \"${action.name}\""
+
         is ImportAction.Theme -> "ImportThemeActivity · " + action.spec.name.ifBlank { "tema" }
+
         is ImportAction.Widget -> "ImportWidgetActivity · " + action.name
+
         else -> null
     }
 }
