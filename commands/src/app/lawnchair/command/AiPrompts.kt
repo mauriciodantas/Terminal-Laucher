@@ -18,6 +18,9 @@ enum class AiMode(@StringRes private val wordRes: Int, val portuguese: String, v
     FOLDERS(R.string.cmd_ai_word_folders, "pastas", "folders"),
     THEME(R.string.cmd_ai_word_theme, "tema", "theme"),
 
+    /** "ia provedor claude CHAVE": sets up the service and key from the bar, no chat. */
+    CONFIG(R.string.cmd_ai_word_config, "provedor", "provider"),
+
     /** No key saved yet: Enter opens the settings where it goes. */
     SETUP(0, "", ""),
     ;
@@ -28,7 +31,7 @@ enum class AiMode(@StringRes private val wordRes: Int, val portuguese: String, v
 
     companion object {
         /** The modes chosen by a word after "ia". */
-        val OFFERED get() = listOf(RUN, CREATE, FOLDERS, THEME)
+        val OFFERED get() = listOf(RUN, CREATE, FOLDERS, THEME, CONFIG)
 
         /** The mode an accent-folded first word names; null when it is part of a question. */
         fun of(word: String): AiMode? = word.foldAccents().let { w -> OFFERED.firstOrNull { w in it.words() } }

@@ -86,6 +86,14 @@ sealed interface CommandAction {
     /** Asks the system to uninstall [app]; it confirms first. */
     data class Uninstall(val app: AppEntry) : CommandAction
 
+    /**
+     * Sets up, changes or removes the AI service from the bar. A null field keeps what is saved. The
+     * key never shows in [toString], so it stays out of logs.
+     */
+    data class AiSetup(val provider: AiProvider?, val key: String?, val model: String?, val remove: Boolean = false) : CommandAction {
+        override fun toString() = "AiSetup(provider=$provider, key=${if (key == null) "kept" else "hidden"}, model=$model, remove=$remove)"
+    }
+
     /** Opens the system settings page of [app] (permissions, notifications, defaults). */
     data class AppInfo(val app: AppEntry) : CommandAction
 
@@ -466,6 +474,8 @@ object CommandEngine {
         is CommandAction.RemovePack -> "actions -= " + action.id
 
         is CommandAction.SpeedTest -> "GET/POST speed.cloudflare.com · ≤ ${Speed.MAX_MB} MB"
+
+        is CommandAction.AiSetup -> if (action.remove) "AI key -= saved" else "AI provider = " + (action.provider?.label ?: "kept") + " · key " + (if (action.key == null) "kept" else "hidden")
 
         is CommandAction.Ai -> when (action.mode) {
             AiMode.SETUP -> "launcher settings · " + Texts.get(R.string.cmd_ai_title).lowercase()

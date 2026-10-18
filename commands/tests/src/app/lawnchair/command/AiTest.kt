@@ -34,6 +34,32 @@ class AiTest {
         assertTrue(run("?").suggestions.any { it.completion.trim() == BuiltInCommand.AI.word })
     }
 
+    @Test fun providerSetupWorksWhileLocked() {
+        val locked = CommandExtras()
+        val a = run("ia provedor claude sk-ant-abcdef123456 claude-opus-5-5", locked)
+        assertEquals(Tone.OK, a.tone)
+        assertEquals(CommandAction.AiSetup(AiProvider.ANTHROPIC, "sk-ant-abcdef123456", "claude-opus-5-5"), a.action)
+        // The preview shows the key masked, never whole.
+        assertFalse(a.preview.contains("sk-ant-abcdef123456"))
+        // A key alone tells its service by the prefix.
+        assertEquals(CommandAction.AiSetup(AiProvider.GEMINI, "AIzaXYZ12345", null), run("ai provider AIzaXYZ12345", locked).action)
+        // A service without a key is not enough while none is saved.
+        assertNull(run("ia provedor claude", locked).action)
+        // With a key saved, a service or a model alone keeps the key.
+        assertEquals(CommandAction.AiSetup(AiProvider.OPENAI, null, null), run("ia provedor openai").action)
+        assertEquals(CommandAction.AiSetup(null, null, "gpt-5"), run("ia provedor gpt-5").action)
+        // The key is a secret: the action never prints it.
+        assertFalse(CommandAction.AiSetup(null, "sk-secret", null).toString().contains("sk-secret"))
+    }
+
+    @Test fun providerSetupRemoveAndOffers() {
+        assertEquals(CommandAction.AiSetup(null, null, null, remove = true), run("ia provedor remover").action)
+        assertNull(run("ia provedor remover", CommandExtras()).action)
+        assertTrue(run("ia provedor ").suggestions.any { it.label == "Claude" })
+        assertTrue(run("ia p").suggestions.any { it.completion.startsWith("ia provedor") || it.completion.startsWith("ai provider") })
+        assertEquals(Tone.ERROR, run("ia provedor claude sk-ant-abc123 modelo extra").tone)
+    }
+
     @Test fun modes() {
         assertEquals(CommandAction.Ai(AiMode.CHAT, "quanto é 1 pé em metros"), run("ia quanto é 1 pé em metros").action)
         assertEquals(CommandAction.Ai(AiMode.RUN, "silêncio até as 8"), run("ia fazer silêncio até as 8").action)
@@ -43,7 +69,7 @@ class AiTest {
     }
 
     @Test fun offersTheModes() {
-        assertEquals(4, run("ia").suggestions.size)
+        assertEquals(5, run("ia").suggestions.size)
         assertEquals(1, run("ia fa").suggestions.size)
     }
 

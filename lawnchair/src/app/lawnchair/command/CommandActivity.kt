@@ -374,6 +374,8 @@ private fun CommandScreen(onClose: () -> Unit) {
         // "!!" is not kept: the command it repeated stays the last one.
         if (command.trim() == BuiltInCommand.REPEAT) return
         if (action is CommandAction.ImportTheme || action is CommandAction.ImportWidget || action is CommandAction.ImportCommands) return
+        // The line carries the key: it stays out of the history, the usage counts and the statistics.
+        if (action is CommandAction.AiSetup) return
         history = CommandEngine.pushHistory(history, command)
         CommandActivity.saveHistory(context, history)
         CommandUsage.record(context, CommandUsage.keysFor(action, command, aliases))
@@ -514,6 +516,24 @@ private fun CommandScreen(onClose: () -> Unit) {
         when (action) {
             is CommandAction.Ai -> if (action.mode != AiMode.SETUP) {
                 askAi(action, command)
+                return
+            }
+
+            is CommandAction.AiSetup -> {
+                val before = AiStore.load(context)
+                if (!CommandExecutor.execute(context, action)) {
+                    done = failedLabel
+                    return
+                }
+                extras = extras.copy(ai = AiStore.load(context)?.label)
+                setText("")
+                undoAction = {
+                    AiStore.save(context, before)
+                    extras = extras.copy(ai = before?.label)
+                    done = context.getString(R.string.cmd_pref_undo)
+                }
+                done = AiStore.load(context)?.let { context.getString(CommandR.string.cmd_ai_setup_saved, it.label.uppercase()) }
+                    ?: context.getString(CommandR.string.cmd_ai_setup_removed)
                 return
             }
 

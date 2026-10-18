@@ -177,6 +177,19 @@ object CommandExecutor {
                 ProviderStore.save(context, left.providers)
             }
 
+            is CommandAction.AiSetup -> {
+                if (action.remove) {
+                    AiStore.save(context, null)
+                } else {
+                    val base = AiStore.load(context)
+                    val key = action.key ?: base?.key ?: return false
+                    val provider = action.provider ?: AiProvider.guess(key) ?: base?.provider ?: AiProvider.OPENAI
+                    // The model of one service means nothing to another: switching drops it unless a new one comes with it.
+                    val model = action.model ?: if (base?.provider == provider) base.model else ""
+                    AiStore.save(context, AiConfig(provider, key, model, base?.timeoutSeconds ?: AiConfig.DEFAULT_TIMEOUT))
+                }
+            }
+
             // Only the setup opens a screen; the bar talks to the AI itself.
             is CommandAction.Ai -> {
                 if (action.mode != AiMode.SETUP) return false
@@ -336,7 +349,7 @@ object CommandExecutor {
      */
     fun runsInBackground(context: Context, action: CommandAction): Boolean = when (action) {
         is CommandAction.Theme, is CommandAction.ThemeApply, is CommandAction.ThemeSave, is CommandAction.ThemeDelete, is CommandAction.Calc, is CommandAction.Copy, is CommandAction.Schedule,
-        is CommandAction.CancelJob, is CommandAction.Volume, is CommandAction.Media, is CommandAction.AddNote,
+        is CommandAction.CancelJob, is CommandAction.Volume, is CommandAction.Media, is CommandAction.AddNote, is CommandAction.AiSetup,
         -> true
 
         // Without the special access these open the screen that grants it, which needs the bar in front.

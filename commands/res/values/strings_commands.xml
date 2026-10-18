@@ -386,8 +386,8 @@
     <string name="cmd_word_ai">ai</string>
     <string name="cmd_ai_word_run">do</string>
     <string name="cmd_ai_word_create">create</string>
-    <string name="cmd_usage_ai">[question] · do [request] · create [command] · folders · theme [description]</string>
-    <string name="cmd_help_ai">Talks to the AI set up in settings and shows the answer here; keep asking to go on with the conversation. do turns a request into a command of the bar, which waits on the line for Enter. create writes a new command and opens the import screen. Only the request, the commands and the app names are sent. folders sorts the apps into app drawer folders and shows the plan before anything changes. theme designs a theme and shows it before applying.\n› ai how many cups in a liter\n› ai do dnd on; in 1h: dnd off\n› ai create search on imdb\n› ai summarize {clip}\n› ai folders\n› ai folders --force\n› ai theme 80s neon with a typewriter font</string>
+    <string name="cmd_usage_ai">[question] · do [request] · create [command] · folders · theme [description] · provider [service] [key] [model]</string>
+    <string name="cmd_help_ai">Talks to the AI set up in settings and shows the answer here; keep asking to go on with the conversation. do turns a request into a command of the bar, which waits on the line for Enter. create writes a new command and opens the import screen. Only the request, the commands and the app names are sent. folders sorts the apps into app drawer folders and shows the plan before anything changes. theme designs a theme and shows it before applying.\n› ai how many cups in a liter\n› ai do dnd on; in 1h: dnd off\n› ai create search on imdb\n› ai summarize {clip}\n› ai folders\n› ai folders --force\n› ai theme 80s neon with a typewriter font\nprovider sets up the service, key and model from the bar; a word left out keeps what is saved, and the key stays out of the history. provider remove deletes the key.\n› ai provider claude sk-ant-…\n› ai provider gemini-flash-latest</string>
     <string name="cmd_ai_title">AI</string>
     <string name="cmd_ai_locked">ADD AN AI KEY IN SETTINGS · ENTER OPENS THEM</string>
     <string name="cmd_ai_mode_chat">CHAT</string>
@@ -606,4 +606,17 @@
     <string name="cmd_app_info_title">APP SETTINGS</string>
     <string name="cmd_app_info_empty">WHICH APP?</string>
     <string name="cmd_app_info_open">%1$s · ENTER OPENS ITS SETTINGS</string>
+    <string name="cmd_ai_word_config">provider</string>
+    <string name="cmd_ai_mode_config">PROVIDER</string>
+    <string name="cmd_ai_setup_current">CURRENT · %1$s</string>
+    <string name="cmd_ai_setup_none">NO SERVICE YET · ia provider claude KEY</string>
+    <string name="cmd_ai_setup_nothing">NO KEY SAVED TO REMOVE</string>
+    <string name="cmd_ai_setup_remove">ENTER REMOVES THE SAVED KEY</string>
+    <string name="cmd_ai_setup_key_missing">KEY MISSING · EXAMPLE %1$s</string>
+    <string name="cmd_ai_setup_key">KEY %1$s</string>
+    <string name="cmd_ai_setup_model">MODEL %1$s</string>
+    <string name="cmd_ai_setup_save">ENTER SAVES</string>
+    <string name="cmd_ai_setup_extra">TOO MANY WORDS · SERVICE, KEY, MODEL</string>
+    <string name="cmd_ai_setup_saved">AI SET UP · %1$s</string>
+    <string name="cmd_ai_setup_removed">AI KEY REMOVED</string>
 </resources>
