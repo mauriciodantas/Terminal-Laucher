@@ -1725,4 +1725,16 @@
     <string name="cmd_pref_default_launcher_none">None chosen · tap to choose</string>
     <string name="command_settings">Settings</string>
     <string name="command_close">Close</string>
+
+    <string name="cmd_variables_title">Variables</string>
+    <string name="cmd_variables_entry">Texts that {NAME} stands for in any command</string>
+    <string name="cmd_variables_group">Your variables</string>
+    <string name="cmd_variables_intro">A variable keeps a text under a name: write {NAME} in any command of the bar and it is replaced. HOME = \"Rua X, 123\" turns \"route {HOME}\" into a route to it. The bar sets them too: export NAME=\"text\".</string>
+    <string name="cmd_variables_new">New variable</string>
+    <string name="cmd_variables_new_hint">A name and the text it stands for</string>
+    <string name="cmd_variables_edit">Edit variable</string>
+    <string name="cmd_variables_name">Name</string>
+    <string name="cmd_variables_value">Text</string>
+    <string name="cmd_variables_save">Save</string>
+    <string name="cmd_variables_remove">Remove</string>
 </resources>

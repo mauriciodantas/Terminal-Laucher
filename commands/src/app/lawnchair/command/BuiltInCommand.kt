@@ -62,6 +62,10 @@ enum class BuiltInCommand(
     IMPORT(R.string.cmd_word_import, "importar", "import"),
     ALIAS(R.string.cmd_word_alias, "alias", "alias"),
     UNALIAS(R.string.cmd_word_unalias, "unalias", "unalias"),
+    EXPORT(R.string.cmd_word_export, "exportar", "export"),
+    UNSET(R.string.cmd_word_unset, "esquecer", "unset"),
+    ECHO(R.string.cmd_word_echo, "ecoar", "echo"),
+    HISTORY(R.string.cmd_word_history, "historico", "history"),
     ;
 
     /** The word shown and suggested: "abrir" in Portuguese, "open" in English. */
@@ -77,6 +81,9 @@ enum class BuiltInCommand(
 
         /** Typed twice, the last command runs again. */
         const val REPEAT = "!!"
+
+        /** "!3" runs the third most recent command, "!ab" the last one that starts with "ab". */
+        const val RECALL = "!"
 
         /** The command an accent-folded [token] names, or null. "c" is calc. */
         fun of(token: String): BuiltInCommand? = if (token == CALC_SHORT) CALC else entries.firstOrNull { token in it.words() }

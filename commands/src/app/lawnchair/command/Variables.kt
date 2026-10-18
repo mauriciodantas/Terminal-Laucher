@@ -17,6 +17,7 @@ object Variables {
     private val NAMES = mapOf(
         "clip" to Var.CLIP, "copiado" to Var.CLIP, "area" to Var.CLIP,
         "sel" to Var.SELECTION, "selection" to Var.SELECTION, "selecao" to Var.SELECTION,
+        "share" to Var.SELECTION, "shared" to Var.SELECTION, "compartilhado" to Var.SELECTION,
         "date" to Var.DATE, "data" to Var.DATE, "hoje" to Var.DATE, "today" to Var.DATE,
         "time" to Var.TIME, "hora" to Var.TIME,
         "location" to Var.LOCATION, "local" to Var.LOCATION, "loc" to Var.LOCATION,
@@ -28,11 +29,25 @@ object Variables {
     /** The text with every variable filled, and the ones that had no value (left as typed). */
     data class Expansion(val text: String, val missing: Set<Var>)
 
-    fun expand(text: String, extras: CommandExtras): Expansion {
+    /** True when [name] is a word the bar already fills (or a placeholder of actions): a user variable cannot take it. */
+    fun isBuiltInName(name: String): Boolean {
+        val k = name.trim().foldAccents()
+        return k in NAMES || k in RESERVED
+    }
+
+    private val RESERVED = setOf("text", "number", "phone", "name", "1", "2", "3")
+
+    /**
+     * [includeUser] false leaves the user's own variables as typed. Templates of saved commands use
+     * it: a command that came in a pack must not be able to send `{CASA}` to a host unseen.
+     */
+    fun expand(text: String, extras: CommandExtras, includeUser: Boolean = true): Expansion {
         if ('{' !in text) return Expansion(text, emptySet())
         val missing = mutableSetOf<Var>()
         val result = pattern.replace(text) { m ->
-            val v = NAMES[m.groupValues[1].foldAccents()] ?: return@replace m.value
+            val name = m.groupValues[1]
+            val v = NAMES[name.foldAccents()]
+                ?: return@replace (if (includeUser) UserVariables.find(name, extras.variables)?.value else null) ?: m.value
             val value = valueOf(v, extras)
             if (value == null) {
                 missing += v

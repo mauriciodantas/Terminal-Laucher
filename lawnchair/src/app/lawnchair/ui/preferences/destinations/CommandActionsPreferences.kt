@@ -122,6 +122,7 @@ import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
 import app.lawnchair.ui.preferences.navigation.CommandGuide
 import app.lawnchair.ui.preferences.navigation.CommandProviders
+import app.lawnchair.ui.preferences.navigation.CommandVariables
 import app.lawnchair.util.foldAccents
 import com.android.launcher3.R
 import kotlinx.coroutines.Dispatchers
@@ -636,6 +637,13 @@ fun CommandActionsPreferences(openEdit: String = "") {
                         label = stringResource(R.string.cmd_pref_restore),
                         subtitle = stringResource(R.string.cmd_pref_restore_hint),
                         onClick = { confirmRestore = true },
+                    )
+                }
+                PreferenceGroup(heading = stringResource(R.string.cmd_variables_title)) {
+                    NavigationActionPreference(
+                        label = stringResource(R.string.cmd_variables_title),
+                        destination = CommandVariables,
+                        subtitle = stringResource(R.string.cmd_variables_entry),
                     )
                 }
                 PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_history)) {

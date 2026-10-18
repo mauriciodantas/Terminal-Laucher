@@ -20,6 +20,7 @@ object CommandHelp {
         val first = line.takeWhile { !it.isWhitespace() }
         if (first == "?") return help(Texts.get(R.string.cmd_help), R.string.cmd_help_general)
         if (first == BuiltInCommand.REPEAT) return help(BuiltInCommand.REPEAT, R.string.cmd_help_repeat)
+        if (first.startsWith(BuiltInCommand.RECALL) && first.length > 1) return help(BuiltInCommand.RECALL + "n", R.string.cmd_help_recall)
         // "em 30m: tema escuro" explains the command after the colon once it is being typed.
         val lead = first.foldAccents()
         if (TimeParse.isIn(lead) || TimeParse.isAt(lead) || TimeParse.isTomorrow(lead) || TimeParse.isWhen(lead)) {

@@ -155,11 +155,14 @@ class CommandActivity : ComponentActivity() {
 
         internal fun wantsRun(intent: Intent?): Boolean = isOwn(intent) && intent?.getBooleanExtra(EXTRA_RUN, false) == true
 
-        /** Text selected in another app and sent to the bar from its menu. */
-        internal fun selection(intent: Intent?): String? = if (intent?.action == Intent.ACTION_PROCESS_TEXT) {
-            intent.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT)?.toString()
-        } else {
-            null
+        /**
+         * Text selected in another app and sent to the bar from its menu, or shared to it: either
+         * way it waits as {sel}, so the command typed before it gets it ("mp" makes "mp {sel}").
+         */
+        internal fun selection(intent: Intent?): String? = when (intent?.action) {
+            Intent.ACTION_PROCESS_TEXT -> intent.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT)?.toString()
+            Intent.ACTION_SEND -> intent.getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString()?.takeIf { intent.type?.startsWith("text/") == true }
+            else -> null
         }
 
         fun voiceIntent(context: Context): Intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
@@ -178,7 +181,7 @@ class CommandActivity : ComponentActivity() {
         internal fun initialText(intent: Intent?): String = when {
             intent == null -> ""
 
-            intent.action == Intent.ACTION_PROCESS_TEXT -> " {sel}"
+            intent.action == Intent.ACTION_PROCESS_TEXT || intent.action == Intent.ACTION_SEND -> " {sel}"
 
             intent.action == Intent.ACTION_VIEW && intent.data?.scheme == LINK_SCHEME ->
                 intent.data?.let { it.getQueryParameter("text") ?: it.getQueryParameter("cmd") }.orEmpty()
@@ -292,6 +295,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                     custom = actions
                     aliases = names
                     extras = withContext(Dispatchers.IO) { with(CommandSources) { extras.withProviders(context) } }
+                        .copy(variables = withContext(Dispatchers.IO) { UserVariableStore.load(context) })
                 }
             }
         }
@@ -367,15 +371,24 @@ private fun CommandScreen(onClose: () -> Unit) {
         undoAction = null
     }
 
+    fun clearHistory() {
+        history = emptyList()
+        usual = emptyList()
+        historyIndex = -1
+        CommandActivity.clearHistory(context)
+    }
+
     val executedLabel = stringResource(R.string.command_executed)
     val failedLabel = stringResource(R.string.command_failed)
 
     fun record(action: CommandAction, command: String) {
         // "!!" is not kept: the command it repeated stays the last one.
-        if (command.trim() == BuiltInCommand.REPEAT) return
+        if (command.trim() == BuiltInCommand.REPEAT || command.trimStart().startsWith(BuiltInCommand.RECALL)) return
         if (action is CommandAction.ImportTheme || action is CommandAction.ImportWidget || action is CommandAction.ImportCommands) return
         // The line carries the key: it stays out of the history, the usage counts and the statistics.
         if (action is CommandAction.AiSetup) return
+        // A variable holds what the user chose to keep apart: an address, a code. It stays out of the history too.
+        if (action is CommandAction.SetVariable) return
         history = CommandEngine.pushHistory(history, command)
         CommandActivity.saveHistory(context, history)
         CommandUsage.record(context, CommandUsage.keysFor(action, command, aliases))
@@ -623,6 +636,36 @@ private fun CommandScreen(onClose: () -> Unit) {
                 return
             }
 
+            // Saved here and the bar stays: {NAME} works at once, and an undo puts the old value back.
+            is CommandAction.SetVariable, is CommandAction.UnsetVariable -> {
+                val before = UserVariableStore.load(context)
+                if (!CommandExecutor.execute(context, action)) {
+                    done = failedLabel
+                    return
+                }
+                val after = UserVariableStore.load(context)
+                extras = extras.copy(variables = after)
+                setText("")
+                undoAction = {
+                    UserVariableStore.save(context, before)
+                    extras = extras.copy(variables = before)
+                    done = context.getString(R.string.cmd_pref_undo)
+                }
+                done = when (action) {
+                    is CommandAction.SetVariable -> context.getString(CommandR.string.cmd_variable_saved, action.name, action.value)
+                    is CommandAction.UnsetVariable -> context.getString(CommandR.string.cmd_variable_removed, action.name)
+                    else -> executedLabel
+                }
+                return
+            }
+
+            is CommandAction.ClearHistory -> {
+                clearHistory()
+                setText("")
+                done = context.getString(CommandR.string.cmd_history_cleared)
+                return
+            }
+
             is CommandAction.SaveCommand -> {
                 val oldCustom = custom
                 val oldAliases = aliases
@@ -760,7 +803,8 @@ private fun CommandScreen(onClose: () -> Unit) {
             return
         }
         setText(suggestion.completion)
-        if (suggestion.completion.startsWith("${BuiltInCommand.ALIAS.word} ")) {
+        // Lines that only prepare an edit wait for Enter: "alias ..." and "export ..." from their lists.
+        if (suggestion.completion.startsWith("${BuiltInCommand.ALIAS.word} ") || suggestion.completion.startsWith("${BuiltInCommand.EXPORT.word} ")) {
             return
         }
         CommandEngine.analyze(suggestion.completion, apps, contacts, granted, custom, aliases, extras.copy(history = history)).action
@@ -798,13 +842,6 @@ private fun CommandScreen(onClose: () -> Unit) {
 
     fun complete() {
         top?.let { setText(it.completion) }
-    }
-
-    fun clearHistory() {
-        history = emptyList()
-        usual = emptyList()
-        historyIndex = -1
-        CommandActivity.clearHistory(context)
     }
 
     fun older() {

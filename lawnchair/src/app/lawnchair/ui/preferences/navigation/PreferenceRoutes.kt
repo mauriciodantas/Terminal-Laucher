@@ -168,6 +168,12 @@ data class CommandActions(val edit: String = "") :
 @Serializable
 data class CommandProviders(val open: String = "") : PreferenceRoute
 
+/** The command bar's own `{NAME}` texts: listed, added, changed and removed. */
+@Serializable
+data object CommandVariables : PreferenceRoute, PreferenceDeepLink {
+    override val deepLink = "$URI/command-variables"
+}
+
 /** Guide and technical specs for creating .tcmd packs manually or via AI. */
 @Serializable
 data object CommandGuide : PreferenceRoute, PreferenceDeepLink {

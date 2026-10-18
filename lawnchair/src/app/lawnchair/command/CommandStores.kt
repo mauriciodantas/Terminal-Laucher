@@ -26,6 +26,17 @@ object NoteStore {
     }
 }
 
+/** The user's `{NAME}` texts, set with "export" or in the settings. */
+object UserVariableStore {
+    private const val KEY = "command_variables"
+
+    fun load(context: Context): List<UserVariable> = prefs(context).getString(KEY, null)?.let { UserVariables.decode(it) }.orEmpty()
+
+    fun save(context: Context, variables: List<UserVariable>) {
+        prefs(context).edit().putString(KEY, UserVariables.encode(variables)).commit()
+    }
+}
+
 /** Reminders, scheduled commands and rules; [CommandScheduler] arms and runs them. */
 object JobStore {
     private const val KEY = "command_jobs"

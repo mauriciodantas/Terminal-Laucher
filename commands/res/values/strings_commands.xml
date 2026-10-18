@@ -619,4 +619,46 @@
     <string name="cmd_ai_setup_extra">TOO MANY WORDS · SERVICE, KEY, MODEL</string>
     <string name="cmd_ai_setup_saved">AI SET UP · %1$s</string>
     <string name="cmd_ai_setup_removed">AI KEY REMOVED</string>
+
+    <string name="cmd_word_export">export</string>
+    <string name="cmd_word_unset">unset</string>
+    <string name="cmd_word_echo">echo</string>
+    <string name="cmd_word_history">history</string>
+    <string name="cmd_usage_export">NAME=\"text\"</string>
+    <string name="cmd_usage_unset">NAME</string>
+    <string name="cmd_usage_echo">[command] · shows what it would do</string>
+    <string name="cmd_usage_history">[text | clear] · !n runs one</string>
+    <string name="cmd_help_export">Saves a text under a name; {NAME} then stands for it in any command, so a long address becomes one word. \"export\" alone lists them. They can also be set in the settings.\n› export HOME=\"Rua X, 123\"\n› route {HOME}</string>
+    <string name="cmd_help_unset">Forgets a variable.\n› unset HOME</string>
+    <string name="cmd_help_echo">Shows what a line would do, the intent or the request it builds, without running it. Enter takes the echo off and leaves the command ready to run.\n› echo w mom hi</string>
+    <string name="cmd_help_history">Lists the commands that ran, most recent first and numbered. A text narrows the list; \"history clear\" forgets them all.\n› !3 runs the third, !ab the last one that starts with ab, !! the last.</string>
+    <string name="cmd_help_recall">Runs a command of the history again: !3 is the third most recent, !ab the last one that starts with \"ab\". \"history\" lists them.</string>
+    <string name="cmd_err_var_empty">Give the variable a name.</string>
+    <string name="cmd_err_var_chars">A name has letters, digits and _, starts with a letter, up to %1$d characters.</string>
+    <string name="cmd_err_var_reserved">{%1$s} is already used by the bar.</string>
+    <string name="cmd_err_var_value_empty">Give the variable a text; \"unset\" forgets it.</string>
+    <string name="cmd_err_var_value_long">The text is too long (up to %1$d characters).</string>
+    <string name="cmd_err_var_many">Too many variables (up to %1$d).</string>
+    <string name="cmd_list_variables">VARIABLES</string>
+    <string name="cmd_list_history">HISTORY</string>
+    <string name="cmd_kind_variable">VARIABLE</string>
+    <string name="cmd_export_empty">No variables yet. export NAME=\"text\" saves one; {NAME} uses it in any command.</string>
+    <string name="cmd_export_hint">export NAME=\"text\" saves or changes one. Pick one to edit it.</string>
+    <string name="cmd_export_current">{%1$s} = %2$s</string>
+    <string name="cmd_export_value_missing">Now the text: export NAME=\"text\"</string>
+    <string name="cmd_export_ready">Enter saves · {%1$s} = %2$s</string>
+    <string name="cmd_export_replace">Enter replaces · {%1$s} = %2$s</string>
+    <string name="cmd_unset_empty">Which variable to forget?</string>
+    <string name="cmd_unset_not_found">There is no variable %1$s.</string>
+    <string name="cmd_unset_ready">Enter forgets {%1$s}</string>
+    <string name="cmd_echo_empty">Type a command after echo to see what it would do.</string>
+    <string name="cmd_echo_hint">Nothing ran. Enter takes the echo off.</string>
+    <string name="cmd_recall_none">Nothing in the history for %1$s.</string>
+    <string name="cmd_history_empty">The history is empty.</string>
+    <string name="cmd_history_clear_ready">Enter forgets %1$d commands</string>
+    <string name="cmd_history_no_match">Nothing in the history has that.</string>
+    <string name="cmd_history_hint">%1$d commands · tap one to run it, !n runs it by number</string>
+    <string name="cmd_history_cleared">History cleared.</string>
+    <string name="cmd_variable_saved">✓ {%1$s} = %2$s</string>
+    <string name="cmd_variable_removed">✓ {%1$s} forgotten</string>
 </resources>

@@ -202,7 +202,30 @@ object CommandExecutor {
                 )
             }
 
-            is CommandAction.Chain -> return action.steps.map { execute(context, it) }.all { it }
+            is CommandAction.Chain -> {
+                // A step joined with "&&" runs only if the one before it worked; ";" runs whatever happened.
+                var last = true
+                var all = true
+                action.steps.forEachIndexed { i, step ->
+                    if (action.andThen.getOrElse(i) { false } && !last) {
+                        all = false
+                        return@forEachIndexed
+                    }
+                    last = execute(context, step)
+                    if (!last) all = false
+                }
+                return all
+            }
+
+            is CommandAction.SetVariable -> {
+                UserVariableStore.save(context, UserVariables.set(UserVariableStore.load(context), action.name, action.value))
+            }
+
+            is CommandAction.UnsetVariable -> {
+                UserVariableStore.save(context, UserVariables.remove(UserVariableStore.load(context), action.name))
+            }
+
+            is CommandAction.ClearHistory -> CommandActivity.clearHistory(context)
 
             is CommandAction.Call -> {
                 val uri = Uri.fromParts("tel", action.contact.number, null)

@@ -113,8 +113,20 @@ sealed interface CommandAction {
      */
     data class Ai(val mode: AiMode, val prompt: String, val force: Boolean = false) : CommandAction
 
-    /** "tema escuro; silencio on; abrir kindle": [steps] run in order. */
-    data class Chain(val steps: List<CommandAction>, val lines: List<String>) : CommandAction
+    /**
+     * "tema escuro; silencio on; abrir kindle": [steps] run in order. [andThen] marks the steps
+     * joined to the one before with "&&": they run only if it worked.
+     */
+    data class Chain(val steps: List<CommandAction>, val lines: List<String>, val andThen: List<Boolean> = emptyList()) : CommandAction
+
+    /** "export CASA=...": saves a text that `{CASA}` stands for. */
+    data class SetVariable(val name: String, val value: String) : CommandAction
+
+    /** "unset CASA": forgets a variable. */
+    data class UnsetVariable(val name: String) : CommandAction
+
+    /** "history clear": forgets the typed commands. */
+    data object ClearHistory : CommandAction
 
     data class ImportTheme(val spec: ThemeSpec, val json: String) : CommandAction
     data class ImportWidget(val json: String, val name: String) : CommandAction
@@ -161,7 +173,7 @@ object CommandEngine {
     /** With nothing typed there is room to show more of what exists. */
     const val EMPTY_SUGGESTIONS = 6
     const val MAX_CHIPS = 3
-    const val MAX_HISTORY = 8
+    const val MAX_HISTORY = 200
 
     /** Name, usage line, in the app language, of every built-in command; "c" is a shortcut of calc. */
     val COMMANDS: List<Pair<String, String>>
@@ -182,6 +194,8 @@ object CommandEngine {
     ): Analysis {
         val ctx = CommandContext(apps, contacts, contactsGranted, custom, aliases, extras)
         val analysis = analyzeLine(typed, ctx, 0).copy(help = CommandHelp.of(typed, custom, aliases))
+        // "echo" has already worked out what the line asks for: its action only puts the line back.
+        if (analysis.intent.isNotEmpty()) return analysis
         return analysis.action?.let { analysis.copy(intent = describe(it, extras.providers)) } ?: analysis
     }
 
@@ -207,46 +221,190 @@ object CommandEngine {
             val again = analyzeLine(last, ctx, depth + 1)
             return again.copy(previewTitle = Texts.get(R.string.cmd_repeat_title) + " · " + again.previewTitle, suggestions = emptyList())
         }
+        // "!3" and "!ab" run an older command of the history.
+        val bang = typed.trim()
+        if (bang.length > 1 && bang.startsWith(BuiltInCommand.RECALL) && depth < MAX_DEPTH) return analyzeRecall(bang.substring(1), ctx, depth)
         // An alias typed in full stands for its command; a partial one is only suggested.
         val text = Aliases.resolve(typed, ctx.aliases).trimStart()
+        // "echo a; b" shows the whole line, not just "a".
+        val first = text.takeWhile { !it.isWhitespace() }
+        if (first.foldAccents() in BuiltInCommand.ECHO.words() && first.length < text.length) return dryRun(text.substring(first.length), ctx)
         if (depth == 0) Scheduling.schedule(text, ctx.extras) { analyzeLine(it, ctx, depth + 1) }?.let { return it }
-        val parts = splitChain(text)
+        val parts = chainParts(text)
         if (parts.size > 1 && depth < MAX_DEPTH) return analyzeChain(text, parts, ctx, depth)
         return analyzeText(text, ctx)
     }
 
-    /** The commands of "a; b; c", keeping an empty last one while it is being typed. */
-    fun splitChain(text: String): List<String> {
-        if (';' !in text) return listOf(text)
-        if (JsonImport.isPotentialJson(text)) return listOf(text)
-        val parts = text.split(';').map { it.trim() }
-        return parts.dropLast(1).filter { it.isNotEmpty() } + parts.last()
+    /** The commands the history keeps for "history" and "!n", most recent first. */
+    fun recallable(history: List<String>): List<String> = history.filter { it.trim() != BuiltInCommand.REPEAT && !it.trimStart().startsWith(BuiltInCommand.RECALL) }
+
+    /** The command "!3" (the third most recent) or "!ab" (the last one that starts with "ab") stands for. */
+    fun recall(spec: String, history: List<String>): String? {
+        val entries = recallable(history)
+        val s = spec.trim()
+        if (s.isEmpty()) return null
+        if (s.all { it.isDigit() }) return s.toIntOrNull()?.let { entries.getOrNull(it - 1) }
+        val k = s.foldAccents()
+        return entries.firstOrNull { it.trim().foldAccents().startsWith(k) }
     }
 
-    private fun analyzeChain(text: String, parts: List<String>, ctx: CommandContext, depth: Int): Analysis {
-        val results = parts.map { analyzeLine(it, ctx, depth + 1) }
+    private fun analyzeRecall(spec: String, ctx: CommandContext, depth: Int): Analysis {
+        val title = BuiltInCommand.RECALL + spec.trim()
+        val line = recall(spec, ctx.extras.history)
+            ?: return commandResult(title, Texts.get(R.string.cmd_recall_none, spec.trim()), Tone.ERROR, null)
+        val again = analyzeLine(line, ctx, depth + 1)
+        return again.copy(previewTitle = title + " · " + again.previewTitle, suggestions = emptyList())
+    }
+
+    /** The commands of "a; b && c", keeping an empty last one while it is being typed. */
+    fun splitChain(text: String): List<String> = chainParts(text).map { it.text }
+
+    /** One command of a chain; [andThen] when "&&" joins it to the one before, which has to work first. */
+    internal data class ChainPart(val text: String, val andThen: Boolean)
+
+    internal fun chainParts(text: String): List<ChainPart> {
+        if (';' !in text && "&&" !in text) return listOf(ChainPart(text, false))
+        if (JsonImport.isPotentialJson(text)) return listOf(ChainPart(text, false))
+        // A separator inside double quotes belongs to the text: export CASA="Rua X; ap 2".
+        val parts = mutableListOf<ChainPart>()
+        val current = StringBuilder()
+        var andThen = false
+        var quoted = false
+        var i = 0
+        while (i < text.length) {
+            val c = text[i]
+            when {
+                c == '"' -> {
+                    quoted = !quoted
+                    current.append(c)
+                }
+
+                !quoted && c == ';' -> {
+                    parts += ChainPart(current.toString().trim(), andThen)
+                    current.clear()
+                    andThen = false
+                }
+
+                !quoted && c == '&' && text.startsWith("&&", i) -> {
+                    parts += ChainPart(current.toString().trim(), andThen)
+                    current.clear()
+                    andThen = true
+                    i++
+                }
+
+                else -> current.append(c)
+            }
+            i++
+        }
+        parts += ChainPart(current.toString().trim(), andThen)
+        // An empty command in the middle is dropped; the last one stays while it is being typed.
+        val kept = parts.dropLast(1).filter { it.text.isNotEmpty() } + parts.last()
+        return kept.mapIndexed { index, part -> if (index == 0) part.copy(andThen = false) else part }
+    }
+
+    private fun analyzeChain(text: String, parts: List<ChainPart>, ctx: CommandContext, depth: Int): Analysis {
+        // A variable set by a step is already there for the steps after it: "export A=1; w ana {A}".
+        var stepCtx = ctx
+        val results = parts.map { part ->
+            analyzeLine(part.text, stepCtx, depth + 1).also { r ->
+                val variables = stepCtx.extras.variables
+                when (val a = r.action) {
+                    is CommandAction.SetVariable -> stepCtx = stepCtx.copy(extras = stepCtx.extras.copy(variables = UserVariables.set(variables, a.name, a.value)))
+                    is CommandAction.UnsetVariable -> stepCtx = stepCtx.copy(extras = stepCtx.extras.copy(variables = UserVariables.remove(variables, a.name)))
+                    else -> {}
+                }
+            }
+        }
         // A part the bar does not understand would only search the web: the chain waits for a fix.
         val stuck = results.indexOfFirst { it.action == null || it.tone == Tone.ERROR }
-        if (stuck >= 0) {
+        // A ";" at the end ends a command like any other; "&&" at the end still waits for the next one.
+        val trailing = stuck == parts.size - 1 && parts.size > 1 && parts.last().text.isEmpty() && !parts.last().andThen
+        val shown = if (trailing) parts.dropLast(1) else parts
+        val ready = if (trailing) results.dropLast(1) else results
+        if (stuck >= 0 && !(trailing && ready.none { it.action == null || it.tone == Tone.ERROR })) {
             val r = results[stuck]
             // While the last command is typed, its suggestions complete the whole line.
-            val prefix = text.substring(0, text.lastIndexOf(';') + 1) + " "
+            val cut = maxOf(text.lastIndexOf(';'), text.lastIndexOf("&&") + 1)
+            val prefix = text.substring(0, cut + 1) + " "
             return r.copy(
                 previewTitle = Texts.get(R.string.cmd_chain_step, stuck + 1, parts.size) + " · " + r.previewTitle,
                 action = null,
                 suggestions = if (stuck == parts.size - 1) r.suggestions.map { it.copy(completion = prefix + it.completion) } else emptyList(),
             )
         }
-        val steps = results.flatMap { (it.action as? CommandAction.Chain)?.steps ?: listOf(it.action!!) }
+        val steps = mutableListOf<CommandAction>()
+        val joined = mutableListOf<Boolean>()
+        ready.forEachIndexed { index, r ->
+            val inner = r.action as? CommandAction.Chain
+            if (inner == null) {
+                steps += r.action!!
+                joined += shown[index].andThen
+            } else {
+                steps += inner.steps
+                joined += inner.steps.indices.map { k -> if (k == 0) shown[index].andThen else inner.andThen.getOrElse(k) { false } }
+            }
+        }
+        val lines = shown.map { it.text }
+        // One command followed by a ";" is that command.
+        if (shown.size == 1) return ready.single().copy(suggestions = emptyList())
         return Analysis(
             suggestions = emptyList(),
             listTitle = Texts.get(R.string.cmd_list_suggestions),
             needsContacts = false,
             previewTitle = Texts.get(R.string.cmd_chain_title, steps.size),
-            preview = results.joinToString(" › ") { it.preview.lineSequence().first() },
+            preview = ready.joinToString(" › ") { it.preview.lineSequence().first() },
             tone = Tone.OK,
-            action = CommandAction.Chain(steps, parts),
+            action = CommandAction.Chain(steps, lines, joined),
         )
+    }
+
+    /**
+     * "echo ...": what the line would do, worked out as if it were run but never run. The line stays
+     * in the bar for Enter to take the "echo" off and run it for real.
+     */
+    internal fun dryRun(line: String, ctx: CommandContext): Analysis {
+        val word = BuiltInCommand.ECHO.word
+        val title = word.uppercase()
+        if (line.isBlank()) return commandResult(title, Texts.get(R.string.cmd_echo_empty), Tone.IDLE, null)
+        val inner = analyzeLine(line, ctx, 0)
+        val action = inner.action
+            ?: return inner.copy(
+                previewTitle = title + " · " + inner.previewTitle,
+                suggestions = inner.suggestions.map { it.copy(completion = "$word ${it.completion}") },
+            )
+        return inner.copy(
+            previewTitle = title + " · " + inner.previewTitle,
+            preview = inner.preview + "\n" + Texts.get(R.string.cmd_echo_hint),
+            intent = describeFull(action, ctx.extras.providers),
+            suggestions = emptyList(),
+            picksOnEnter = false,
+            action = CommandAction.FillLine(line.trim()),
+        )
+    }
+
+    /** [describe] and, for a request that sends something, what it sends. */
+    private fun describeFull(action: CommandAction, providers: List<ApiProvider>): String {
+        val steps = (action as? CommandAction.Chain)?.steps ?: listOf(action)
+        val lines = steps.map { step ->
+            val body = (step as? CommandAction.Custom)?.takeIf { it.action.kind == ActionKind.API }
+                ?.let { ApiCall.body(it.action, it.text, java.time.LocalDate.now()) }
+            describe(step, providers) + if (body.isNullOrBlank()) "" else "\n" + body
+        }
+        return if (action is CommandAction.Chain) {
+            lines.mapIndexed { i, l ->
+                (
+                    if (i == 0) {
+                        ""
+                    } else if (action.andThen.getOrElse(i) { false }) {
+                        "&& "
+                    } else {
+                        "; "
+                    }
+                    ) + l
+            }.joinToString("\n")
+        } else {
+            lines.single()
+        }
     }
 
     private fun analyzeText(typed: String, ctx: CommandContext): Analysis {
@@ -482,7 +640,23 @@ object CommandEngine {
             else -> "POST · " + action.mode.name.lowercase()
         }
 
-        is CommandAction.Chain -> action.steps.joinToString(" ; ") { describe(it, providers).substringBefore(" · ") }
+        is CommandAction.Chain -> action.steps.withIndex().joinToString("") { (i, step) ->
+            (
+                if (i == 0) {
+                    ""
+                } else if (action.andThen.getOrElse(i) { false }) {
+                    " && "
+                } else {
+                    " ; "
+                }
+                ) + describe(step, providers).substringBefore(" · ")
+        }
+
+        is CommandAction.SetVariable -> "variables[${action.name}] = \"${action.value.take(40)}\""
+
+        is CommandAction.UnsetVariable -> "variables -= ${action.name}"
+
+        is CommandAction.ClearHistory -> "history = []"
 
         is CommandAction.Calc -> Texts.get(R.string.cmd_desc_calc, action.result)
 
@@ -677,7 +851,7 @@ object CommandEngine {
         var result = text
         Regex("\\{([^{}\\s]+)\\}").findAll(text).forEach { m ->
             if (m.value in PLACEHOLDERS) return@forEach
-            val value = Variables.expand(m.value, extras)
+            val value = Variables.expand(m.value, extras, includeUser = false)
             if (value.missing.isEmpty() && value.text != m.value) result = result.replace(m.value, escape(value.text))
         }
         return result

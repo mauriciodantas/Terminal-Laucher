@@ -209,7 +209,7 @@ object AiPrompts {
 
     private const val RUN_RULES =
         "Turn the user's request into ONE line the bar can run, using only the commands above. " +
-            "Chain several commands with \";\" and schedule with the forms above when the request asks for it. " +
+            "Chain several commands with \";\" (or \"&&\" when the next one needs the previous to work) and schedule with the forms above when the request asks for it. " +
             "Keep contact names, texts and places exactly as the user wrote them; the bar finds the contact itself. " +
             "Reply with JSON only, no other text: {\"command\": \"<line>\", \"note\": \"<one short sentence of what it does>\"}. " +
             "When no command fits, reply {\"command\": null, \"note\": \"<why, in one short sentence>\"}."

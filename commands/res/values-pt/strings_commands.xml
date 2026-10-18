@@ -607,4 +607,46 @@
     <string name="cmd_ai_setup_extra">PALAVRAS DEMAIS · SERVIÇO, CHAVE, MODELO</string>
     <string name="cmd_ai_setup_saved">IA CONFIGURADA · %1$s</string>
     <string name="cmd_ai_setup_removed">CHAVE DE IA REMOVIDA</string>
+
+    <string name="cmd_word_export">exportar</string>
+    <string name="cmd_word_unset">esquecer</string>
+    <string name="cmd_word_echo">echo</string>
+    <string name="cmd_word_history">historico</string>
+    <string name="cmd_usage_export">NOME=\"texto\"</string>
+    <string name="cmd_usage_unset">NOME</string>
+    <string name="cmd_usage_echo">[comando] · mostra o que faria</string>
+    <string name="cmd_usage_history">[texto | limpar] · !n executa um</string>
+    <string name="cmd_help_export">Guarda um texto com um nome; {NOME} passa a valer por ele em qualquer comando, e um endereço longo vira uma palavra. \"exportar\" sozinho lista as variáveis. Também dá para cadastrar nas configurações.\n› exportar CASA=\"Rua X, 123\"\n› rota {CASA}</string>
+    <string name="cmd_help_unset">Esquece uma variável.\n› esquecer CASA</string>
+    <string name="cmd_help_echo">Mostra o que a linha faria, o intent ou a requisição montada, sem executar. Enter tira o echo e deixa o comando pronto para executar.\n› echo w mae oi</string>
+    <string name="cmd_help_history">Lista os comandos executados, do mais recente ao mais antigo e numerados. Um texto filtra a lista; \"historico limpar\" esquece todos.\n› !3 executa o terceiro, !ab o último que começa com ab, !! o último.</string>
+    <string name="cmd_help_recall">Executa de novo um comando do histórico: !3 é o terceiro mais recente, !ab o último que começa com \"ab\". \"historico\" lista todos.</string>
+    <string name="cmd_err_var_empty">Dê um nome à variável.</string>
+    <string name="cmd_err_var_chars">O nome tem letras, números e _, começa com letra e vai até %1$d caracteres.</string>
+    <string name="cmd_err_var_reserved">{%1$s} já é usada pela barra.</string>
+    <string name="cmd_err_var_value_empty">Dê um texto à variável; \"esquecer\" a apaga.</string>
+    <string name="cmd_err_var_value_long">O texto é longo demais (até %1$d caracteres).</string>
+    <string name="cmd_err_var_many">Variáveis demais (até %1$d).</string>
+    <string name="cmd_list_variables">VARIÁVEIS</string>
+    <string name="cmd_list_history">HISTÓRICO</string>
+    <string name="cmd_kind_variable">VARIÁVEL</string>
+    <string name="cmd_export_empty">Nenhuma variável ainda. exportar NOME=\"texto\" guarda uma; {NOME} usa em qualquer comando.</string>
+    <string name="cmd_export_hint">exportar NOME=\"texto\" guarda ou altera. Escolha uma para editar.</string>
+    <string name="cmd_export_current">{%1$s} = %2$s</string>
+    <string name="cmd_export_value_missing">Agora o texto: exportar NOME=\"texto\"</string>
+    <string name="cmd_export_ready">Enter guarda · {%1$s} = %2$s</string>
+    <string name="cmd_export_replace">Enter substitui · {%1$s} = %2$s</string>
+    <string name="cmd_unset_empty">Qual variável esquecer?</string>
+    <string name="cmd_unset_not_found">Não existe a variável %1$s.</string>
+    <string name="cmd_unset_ready">Enter esquece {%1$s}</string>
+    <string name="cmd_echo_empty">Digite um comando depois de echo para ver o que ele faria.</string>
+    <string name="cmd_echo_hint">Nada foi executado. Enter tira o echo.</string>
+    <string name="cmd_recall_none">Nada no histórico para %1$s.</string>
+    <string name="cmd_history_empty">O histórico está vazio.</string>
+    <string name="cmd_history_clear_ready">Enter esquece %1$d comandos</string>
+    <string name="cmd_history_no_match">Nada no histórico tem isso.</string>
+    <string name="cmd_history_hint">%1$d comandos · toque em um para executar, !n executa pelo número</string>
+    <string name="cmd_history_cleared">Histórico apagado.</string>
+    <string name="cmd_variable_saved">✓ {%1$s} = %2$s</string>
+    <string name="cmd_variable_removed">✓ {%1$s} esquecida</string>
 </resources>

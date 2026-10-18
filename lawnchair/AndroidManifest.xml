@@ -164,6 +164,19 @@
             </intent-filter>
         </activity-alias>
 
+        <!-- "Share → Terminal": the shared text opens the bar as {sel}, so "mp" makes "mp {sel}". -->
+        <activity-alias
+            android:name="app.lawnchair.command.CommandShare"
+            android:exported="true"
+            android:label="@string/cmd_selection_label"
+            android:targetActivity="app.lawnchair.command.CommandActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity-alias>
+
         <!-- terminal://cmd?text=... (an NFC tag, a link) opens the bar with the command typed, not run. -->
         <activity-alias
             android:name="app.lawnchair.command.CommandLink"

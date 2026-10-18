@@ -211,7 +211,8 @@ object AliasCommand : BuiltIn(BuiltInCommand.ALIAS, R.string.cmd_usage_alias, R.
                 "{location}" to Texts.get(R.string.cmd_sends_location),
                 "{maps}" to "coordenadas para mapa",
             )
-            val filtered = placeholders.filter { it.first.removePrefix("{").removeSuffix("}").startsWith(filter) }
+            val own = ctx.extras.variables.map { "{${it.name}}" to it.value.take(40) }
+            val filtered = (placeholders + own).filter { it.first.removePrefix("{").removeSuffix("}").startsWith(filter) }
             if (filtered.isNotEmpty()) {
                 return filtered.map { (ph, desc) ->
                     Suggestion(

@@ -320,9 +320,9 @@ class CommandEngineTest {
 
     @Test fun historyIsLimitedAndIgnoresBlank() {
         var h = listOf<String>()
-        repeat(12) { h = CommandEngine.pushHistory(h, "c $it") }
+        repeat(CommandEngine.MAX_HISTORY + 4) { h = CommandEngine.pushHistory(h, "c $it") }
         assertEquals(CommandEngine.MAX_HISTORY, h.size)
-        assertEquals("c 11", h.first())
+        assertEquals("c ${CommandEngine.MAX_HISTORY + 3}", h.first())
         assertEquals(h, CommandEngine.pushHistory(h, "   "))
     }
 

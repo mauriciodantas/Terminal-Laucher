@@ -113,6 +113,10 @@ class CommandRegistry(private val commands: List<Command>) {
                 UrlCommand,
                 AliasCommand,
                 UnaliasCommand,
+                ExportCommand,
+                UnsetCommand,
+                EchoCommand,
+                HistoryCommand,
             )
         }
 

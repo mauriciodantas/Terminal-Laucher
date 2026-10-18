@@ -44,6 +44,7 @@ object CommandSources {
             events = if (calendar) loadEvents(context) else null,
             calendarGranted = calendar,
             notes = NoteStore.load(context),
+            variables = UserVariableStore.load(context),
             jobs = JobStore.load(context),
             info = snapshot(context),
             taskApp = TaskApp.label(context),

@@ -44,6 +44,8 @@ data class CommandExtras(
     val fonts: List<String> = emptyList(),
     val now: LocalDateTime? = null,
     val zone: ZoneId? = null,
+    /** The user's own `{NAME}` texts, set with "export" or in the settings. */
+    val variables: List<UserVariable> = emptyList(),
     /** The API providers: the built-in ones and the user's. */
     val providers: List<ApiProvider> = Providers.BUILT_IN,
     /** Ids of the providers whose secret is saved. */
