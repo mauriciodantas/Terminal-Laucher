@@ -4,4 +4,4 @@
     branch = 16-dev
 [submodule "commands"]
 	path = commands
-	url = /Users/mauricio/Projetos/terminal-commands
+	url = git@github.com:mauriciodantas/terminal-commands.git
