@@ -76,7 +76,7 @@ class ShellFeaturesTest {
     // ---- chains ----
 
     @Test fun andThenMarksTheStepsThatNeedTheOneBefore() {
-        val chain = run("tema escuro && abrir kindle; abrir maps").action as CommandAction.Chain
+        val chain = run("lanterna liga && abrir kindle; abrir maps").action as CommandAction.Chain
         assertEquals(3, chain.steps.size)
         assertEquals(listOf(false, true, false), chain.andThen)
     }
@@ -84,10 +84,10 @@ class ShellFeaturesTest {
     @Test fun aSemicolonAtTheEndEndsTheCommand() {
         val a = run("export CASA=\"Rua X, 123\";")
         assertEquals(CommandAction.SetVariable("CASA", "Rua X, 123"), a.action)
-        val two = run("tema escuro; abrir kindle;").action as CommandAction.Chain
+        val two = run("lanterna liga; abrir kindle;").action as CommandAction.Chain
         assertEquals(2, two.steps.size)
         // "&&" at the end still waits for the next command.
-        assertNull(run("tema escuro &&").action)
+        assertNull(run("lanterna liga &&").action)
     }
 
     @Test fun separatorsInsideQuotesStay() {
@@ -104,8 +104,8 @@ class ShellFeaturesTest {
     }
 
     @Test fun echoOfAChainShowsEveryStep() {
-        val a = run("echo tema escuro && abrir kindle; abrir maps")
-        assertEquals(CommandAction.FillLine("tema escuro && abrir kindle; abrir maps"), a.action)
+        val a = run("echo lanterna liga && abrir kindle; abrir maps")
+        assertEquals(CommandAction.FillLine("lanterna liga && abrir kindle; abrir maps"), a.action)
         assertTrue(a.intent.contains("&&"))
         assertTrue(a.intent.contains("; "))
     }
@@ -117,7 +117,7 @@ class ShellFeaturesTest {
 
     // ---- history ----
 
-    private val history = listOf("abrir kindle", "tema escuro", "abrir maps")
+    private val history = listOf("abrir kindle", "lanterna liga", "abrir maps")
 
     @Test fun bangRunsAHistoryEntry() {
         val x = base.copy(history = history)

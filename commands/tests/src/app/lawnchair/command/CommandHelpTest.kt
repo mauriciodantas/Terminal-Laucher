@@ -33,7 +33,7 @@ class CommandHelpTest {
     }
 
     @Test fun chainsAndSchedules() {
-        assertEquals("BRILHO", help("tema escuro; brilho 40")?.title)
+        assertEquals("BRILHO", help("lanterna liga; brilho 40")?.title)
         assertTrue(help("em 30m")!!.text.contains("carregar"))
         assertEquals("SILÊNCIO", help("às 22h: silencio liga")?.title)
     }
@@ -41,10 +41,10 @@ class CommandHelpTest {
     @Test fun customLettersAndAliases() {
         val letter = CustomActions.DEFAULTS.first()
         assertTrue(help(letter.letter + " ")!!.text.contains(letter.usage))
-        val alias = CommandAlias("noite", "tema escuro")
+        val alias = CommandAlias("noite", "lanterna liga")
         val text = help("noite", listOf(alias))!!.text
-        assertTrue(text.contains("tema escuro"))
-        assertTrue(text.contains("inverter"))
+        assertTrue(text.contains("lanterna liga"))
+        assertTrue(text.contains("Liga ou desliga a lanterna"))
         // An alias that names itself does not loop.
         assertNotNull(help("x", listOf(CommandAlias("x", "x"))))
     }

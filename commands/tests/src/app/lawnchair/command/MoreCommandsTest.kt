@@ -112,10 +112,10 @@ class MoreCommandsTest {
     }
 
     @Test fun scheduledCommand() {
-        val a = run("em 30m: tema escuro")
+        val a = run("em 30m: lanterna liga")
         val job = (a.action as CommandAction.Schedule).job
         assertEquals(JobKind.COMMAND, job.kind)
-        assertEquals("tema escuro", job.text)
+        assertEquals("lanterna liga", job.text)
         assertEquals(millis(now.plusMinutes(30)), job.at)
         val b = run("às 22:30: silencio liga").action as CommandAction.Schedule
         assertEquals(millis(now.withHour(22).withMinute(30)), b.job.at)
@@ -238,20 +238,20 @@ class MoreCommandsTest {
     // ---- chains, history and repeat ----
 
     @Test fun chains() {
-        val a = run("tema escuro; silencio liga; abrir kindle")
+        val a = run("lanterna liga; silencio liga; abrir kindle")
         val chain = a.action as CommandAction.Chain
         assertEquals(3, chain.steps.size)
         assertEquals(CommandAction.OpenApp(apps[1]), chain.steps[2])
         assertEquals(Tone.OK, a.tone)
         // While the last one is typed, its suggestions complete the whole line.
-        val typing = run("tema escuro; abrir")
+        val typing = run("lanterna liga; abrir")
         assertNull(typing.action)
-        assertEquals("tema escuro; abrir ", typing.suggestions.first().completion)
-        assertNull(run("tema escuro; xyzzy abc").action)
+        assertEquals("lanterna liga; abrir ", typing.suggestions.first().completion)
+        assertNull(run("lanterna liga; xyzzy abc").action)
     }
 
     @Test fun aliasesHoldChains() {
-        val aliases = listOf(CommandAlias("noite", "tema escuro; silencio liga"))
+        val aliases = listOf(CommandAlias("noite", "lanterna liga; silencio liga"))
         val a = run("noite", aliases = aliases).action as CommandAction.Chain
         assertEquals(2, a.steps.size)
         val nested = run("noite; abrir maps", aliases = aliases).action as CommandAction.Chain
@@ -319,7 +319,7 @@ class MoreCommandsTest {
             assertEquals(CommandAction.SetTimer(600), run("timer 10m").action)
             assertEquals(CommandAction.Toggle(SystemToggle.TORCH, true), run("flashlight on").action)
             assertEquals(CommandAction.OpenSettings(SettingsPage.BATTERY), run("settings battery").action)
-            assertEquals(JobKind.COMMAND, (run("in 30m: theme dark").action as CommandAction.Schedule).job.kind)
+            assertEquals(JobKind.COMMAND, (run("in 30m: flashlight on").action as CommandAction.Schedule).job.kind)
             ResourceTexts.installLanguage("values-de")
             assertEquals(CommandAction.Toggle(SystemToggle.TORCH, true), run("taschenlampe an").action)
             assertEquals(CommandAction.Volume(30), run("lautstärke 30").action)

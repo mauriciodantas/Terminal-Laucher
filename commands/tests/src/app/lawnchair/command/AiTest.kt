@@ -73,7 +73,7 @@ class AiTest {
     }
 
     @Test fun offersTheModes() {
-        assertEquals(5, run("ia").suggestions.size)
+        assertEquals(3 + AppHost.aiModes.size, run("ia").suggestions.size)
         assertEquals(1, run("ia fa").suggestions.size)
     }
 
@@ -259,14 +259,14 @@ class AiTest {
     }
 
     @Test fun readsAProposedCommand() {
-        assertEquals(AiCommand("tema escuro", "escurece"), AiPrompts.command("```json\n{\"command\": \"tema escuro\", \"note\": \"escurece\"}\n```"))
+        assertEquals(AiCommand("lanterna liga", "escurece"), AiPrompts.command("```json\n{\"command\": \"lanterna liga\", \"note\": \"escurece\"}\n```"))
         assertEquals(AiCommand(null, "não dá"), AiPrompts.command("{\"command\": null, \"note\": \"não dá\"}"))
         assertNull(AiPrompts.command("sem json").command)
     }
 
     @Test fun readsANewCommandAsAPack() {
         val reply = """Aqui: {"actions": [{"letter": "imdb", "label": "IMDb", "kind": "INTENT", "template": "https://www.imdb.com/find/?q={text}",
-            "packages": [], "arg": "TEXT"}], "aliases": [{"name": "noite", "expansion": "tema escuro"}], "note": "busca"}"""
+            "packages": [], "arg": "TEXT"}], "aliases": [{"name": "noite", "expansion": "lanterna liga"}], "note": "busca"}"""
         val (text, note) = AiPrompts.pack(reply)!!
         assertEquals("busca", note)
         val pack = CommandPacks.decode(text)

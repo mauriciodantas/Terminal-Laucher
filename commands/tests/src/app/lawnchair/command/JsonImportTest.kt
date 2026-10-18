@@ -114,15 +114,6 @@ class JsonImportTest {
     }
 
     @Test
-    fun commandEngineAnalyzesImportKeyword() {
-        val json = "importar {\"name\": \"Retro\", \"accent\": \"#ffb000\", \"background\": \"#101010\"}"
-        val analysis = CommandEngine.analyze(json, emptyList(), emptyList(), false)
-        assertEquals(Tone.OK, analysis.tone)
-        assertTrue(analysis.action is ImportAction.Theme)
-        assertEquals("IMPORTAR TEMA", analysis.previewTitle)
-    }
-
-    @Test
     fun jsonWithSemicolonsNotSplitAsChain() {
         val json = "{\"name\": \"gh\", \"expansion\": \"theme dark; dnd on\"}"
         val parts = CommandEngine.splitChain(json)
