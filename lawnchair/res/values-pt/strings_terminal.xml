@@ -628,4 +628,6 @@
     <string name="cmd_pref_group_api_commands">Comandos de API</string>
     <string name="cmd_pref_default_launcher">Launcher padrão</string>
     <string name="cmd_pref_default_launcher_none">Nenhum escolhido · toque para escolher</string>
+    <string name="command_settings">Configurações</string>
+    <string name="command_close">Fechar</string>
 </resources>

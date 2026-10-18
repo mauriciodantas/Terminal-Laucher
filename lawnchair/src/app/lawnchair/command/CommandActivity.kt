@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -840,17 +841,33 @@ private fun CommandScreen(onClose: () -> Unit) {
                 .border(1.dp, line)
                 .padding(horizontal = 14.dp, vertical = 10.dp),
         ) {
+            // The way out and the way to the settings, always in reach: in the header, or on the
+            // command line when the header gives way.
+            val openSettings = {
+                context.startActivity(
+                    app.lawnchair.ui.preferences.PreferenceActivity.createIntent(
+                        context,
+                        app.lawnchair.ui.preferences.navigation.CommandActions(),
+                    ),
+                )
+            }
+            val settingsLabel = stringResource(R.string.command_settings)
+            val closeLabel = stringResource(R.string.command_close)
+            val barButtons: @Composable () -> Unit = {
+                BarButton("[CFG]", settingsLabel, phosphor, openSettings)
+                BarButton("[×]", closeLabel, phosphor, onClose)
+            }
             if (!compact) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Label("MU/TH/UR 6000", dim, 10.sp)
                     Label(stringResource(R.string.command_header_right), dim, 10.sp)
                 }
                 Spacer(Modifier.height(6.dp))
-                Box(
+                Row(
                     Modifier
                         .fillMaxWidth()
-                        .border(1.dp, line)
-                        .padding(vertical = 6.dp),
+                        .border(1.dp, line),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         stringResource(R.string.command_title),
@@ -859,8 +876,11 @@ private fun CommandScreen(onClose: () -> Unit) {
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 13.sp,
                         letterSpacing = 0.2.sp,
-                        modifier = Modifier.padding(start = 6.dp),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f).padding(start = 6.dp),
                     )
+                    barButtons()
                 }
                 Spacer(Modifier.height(4.dp))
                 Label(stringResource(R.string.command_subtitle), dim, 10.5.sp)
@@ -970,6 +990,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                             Text("[MIC]", color = phosphor, fontFamily = mono(), fontSize = 10.sp, letterSpacing = 0.5.sp)
                         }
                     }
+                    if (compact) barButtons()
                 }
             }
 
@@ -1549,5 +1570,19 @@ private fun QrImage(code: QrMatrix) {
                 if (code[x, y]) drawRect(Color.Black, Offset(x * cell, y * cell), Size(cell + 0.5f, cell + 0.5f))
             }
         }
+    }
+}
+
+/** A terminal-style button in the bar's frame, with a label for screen readers. */
+@Composable
+private fun BarButton(text: String, description: String, color: Color, onClick: () -> Unit) {
+    Box(
+        Modifier
+            .defaultMinSize(minWidth = 44.dp, minHeight = 44.dp)
+            .clickable(onClick = onClick)
+            .semantics { contentDescription = description },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(text, color = color, fontFamily = mono(), fontSize = 10.sp, letterSpacing = 0.5.sp)
     }
 }
