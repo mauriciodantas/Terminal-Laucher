@@ -48,6 +48,10 @@ class AiTest {
         // With a key saved, a service or a model alone keeps the key.
         assertEquals(CommandAction.AiSetup(AiProvider.OPENAI, null, null), run("ia provedor openai").action)
         assertEquals(CommandAction.AiSetup(null, null, "gpt-5"), run("ia provedor gpt-5").action)
+        // Another service than the saved one (Claude): the word after it is the key, whatever its prefix.
+        assertEquals(CommandAction.AiSetup(AiProvider.GEMINI, "AQ.Ab8RN6KabcdefghEXAMPLE", null), run("ia provider gemini AQ.Ab8RN6KabcdefghEXAMPLE").action)
+        // The same service as the saved one: an unmarked short word is the model.
+        assertEquals(CommandAction.AiSetup(AiProvider.ANTHROPIC, null, "claude-sonnet-5-5"), run("ia provider claude claude-sonnet-5-5").action)
         // The key is a secret: the action never prints it.
         assertFalse(CommandAction.AiSetup(null, "sk-secret", null).toString().contains("sk-secret"))
     }

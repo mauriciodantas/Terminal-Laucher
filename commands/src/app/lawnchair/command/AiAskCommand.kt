@@ -91,10 +91,11 @@ object AiAskCommand : BuiltIn(BuiltInCommand.AI, R.string.cmd_usage_ai, R.string
     data class Setup(val provider: AiProvider?, val key: String?, val model: String?, val remove: Boolean, val error: Int? = null)
 
     /**
-     * "[service] [key] [model]", each part optional: a key is told by its prefix, or is the word after
-     * the service while no key is saved; any other word is the model. A null part keeps what is saved.
+     * "[service] [key] [model]", each part optional: a key is told by its prefix or its length, or is
+     * the word after the service when the saved key cannot belong to that service (none saved, or
+     * another service); any other word is the model. A null part keeps what is saved.
      */
-    fun parseSetup(rest: String, hasKey: Boolean): Setup {
+    fun parseSetup(rest: String, saved: AiProvider?): Setup {
         val words = rest.split(Regex("\\s+")).filter { it.isNotEmpty() }
         if (words.firstOrNull()?.foldAccents() in removeWords) return Setup(null, null, null, remove = true)
         var provider: AiProvider? = null
@@ -104,13 +105,16 @@ object AiAskCommand : BuiltIn(BuiltInCommand.AI, R.string.cmd_usage_ai, R.string
             val named = if (i == 0) providerWords[word.foldAccents()] else null
             when {
                 named != null -> provider = named
-                key == null && model == null && (AiProvider.guess(word) != null || (provider != null && !hasKey)) -> key = word
+                key == null && model == null && (AiProvider.guess(word) != null || word.length >= LONG_KEY || (provider != null && provider != saved)) -> key = word
                 model == null -> model = word
                 else -> return Setup(provider, key, model, false, R.string.cmd_ai_setup_extra)
             }
         }
         return Setup(provider ?: key?.let { AiProvider.guess(it) }, key, model, false)
     }
+
+    /** A word this long is a key: model names are short, and newer keys carry no known prefix. */
+    private const val LONG_KEY = 32
 
     private fun mask(key: String): String = if (key.length > 8) key.take(4) + "…" + key.takeLast(2) else "…"
 
@@ -131,7 +135,8 @@ object AiAskCommand : BuiltIn(BuiltInCommand.AI, R.string.cmd_usage_ai, R.string
             val current = extras.ai?.let { Texts.get(R.string.cmd_ai_setup_current, it.uppercase()) } ?: Texts.get(R.string.cmd_ai_setup_none)
             return commandResult(title, current, Tone.IDLE, null, suggestions = offers)
         }
-        val setup = parseSetup(rest, hasKey)
+        val saved = extras.ai?.let { label -> AiProvider.entries.firstOrNull { label.startsWith(it.label) } }
+        val setup = parseSetup(rest, saved)
         if (setup.error != null) return commandResult(title, Texts.get(setup.error), Tone.ERROR, null, suggestions = offers)
         if (setup.remove) {
             if (!hasKey) return commandResult(title, Texts.get(R.string.cmd_ai_setup_nothing), Tone.WARN, null)
