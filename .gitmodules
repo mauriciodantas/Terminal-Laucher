@@ -2,3 +2,6 @@
 	path = platform_frameworks_libs_systemui
 	url = https://github.com/LawnchairLauncher/platform_frameworks_libs_systemui
     branch = 16-dev
+[submodule "commands"]
+	path = commands
+	url = /Users/mauricio/Projetos/terminal-commands
