@@ -1719,4 +1719,8 @@
     <string name="cmd_pref_api_advanced">Advanced configuration (JSON)</string>
     <string name="cmd_pref_api_advanced_hint">Fine-tune format, lists, limits and body in raw JSON.</string>
     <string name="cmd_pref_api_json_invalid">Invalid JSON</string>
+    <string name="cmd_guide_section_syntax">Command-line syntax</string>
+    <string name="cmd_pref_group_api_commands">API commands</string>
+    <string name="cmd_pref_default_launcher">Default launcher</string>
+    <string name="cmd_pref_default_launcher_none">None chosen · tap to choose</string>
 </resources>

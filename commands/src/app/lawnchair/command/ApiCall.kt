@@ -36,6 +36,7 @@ data class ApiSpec(
     val method: String = HttpMethods.GET,
     val body: String = "",
     val bodyType: BodyType = BodyType.JSON,
+    val headers: Map<String, String> = emptyMap(),
 ) {
     /** It changes something on the other side: the bar warns, and an import never ticks it for the user. */
     val writes: Boolean get() = method != HttpMethods.GET
@@ -46,6 +47,7 @@ data class ApiSpec(
         if (list.isNotEmpty()) put("list", list)
         if (max != 5) put("max", max)
         if (upcoming.isNotEmpty()) put("upcoming", upcoming)
+        if (headers.isNotEmpty()) put("headers", JSONObject(headers))
         if (writes) {
             if (body.isNotEmpty()) put("body", body)
             put("type", bodyType.name.lowercase())
@@ -58,6 +60,10 @@ data class ApiSpec(
         fun fromJson(o: JSONObject): ApiSpec {
             val rawMethod = o.optString("method", HttpMethods.GET).uppercase()
             val method = if (rawMethod in HttpMethods.ALL) rawMethod else HttpMethods.GET
+            val headersObj = o.optJSONObject("headers")
+            val headers = headersObj?.let { h ->
+                h.keys().asSequence().associateWith { h.getString(it) }
+            } ?: emptyMap()
             return ApiSpec(
                 format = o.optString("format", ""),
                 list = o.optString("list", ""),
@@ -66,6 +72,7 @@ data class ApiSpec(
                 method = method,
                 body = o.optString("body", ""),
                 bodyType = BodyType.entries.firstOrNull { it.name.equals(o.optString("type"), ignoreCase = true) } ?: BodyType.JSON,
+                headers = headers,
             )
         }
 
@@ -308,7 +315,7 @@ object ApiCall {
     ): String {
         val spec = action.api ?: return Texts.get(R.string.cmd_api_invalid)
         val provider = providerOf(action, providers) ?: return Texts.get(R.string.cmd_provider_missing, action.provider)
-        val result = HttpRunner.send(provider, path(action, text, today), secret(provider.id), spec.method, body(action, text, today), spec.bodyType)
+        val result = HttpRunner.send(provider, path(action, text, today), secret(provider.id), spec.method, body(action, text, today), spec.bodyType, spec.headers)
         return when (result) {
             is HttpResult.Answer -> outcome(spec, result.code, result.body, today)
             else -> HttpRunner.describe(result, provider)
@@ -350,6 +357,7 @@ object HttpRunner {
         method: String = HttpMethods.GET,
         body: String? = null,
         bodyType: BodyType = BodyType.JSON,
+        headers: Map<String, String> = emptyMap(),
     ): HttpResult {
         if (method !in HttpMethods.ALL) return HttpResult.Error("method $method")
         val request = when (val p = ProviderRequests.prepare(provider, path, secret)) {
@@ -357,10 +365,17 @@ object HttpRunner {
             is Prepared.NeedsSecret -> return HttpResult.NeedsSecret(p.provider)
             is Prepared.Blocked -> return HttpResult.Blocked(p.reason)
         }
-        return runCatching { exchange(provider, request, method, body, bodyType) }.getOrElse { HttpResult.Error(it.message ?: it.javaClass.simpleName) }
+        return runCatching { exchange(provider, request, method, body, bodyType, headers) }.getOrElse { HttpResult.Error(it.message ?: it.javaClass.simpleName) }
     }
 
-    private fun exchange(provider: ApiProvider, first: HttpRequest, method: String, body: String?, bodyType: BodyType): HttpResult {
+    private fun exchange(
+        provider: ApiProvider,
+        first: HttpRequest,
+        method: String,
+        body: String?,
+        bodyType: BodyType,
+        headers: Map<String, String> = emptyMap(),
+    ): HttpResult {
         var url = first.url
         repeat(MAX_REDIRECTS + 1) {
             val connection = URL(url).openConnection() as HttpURLConnection
@@ -372,6 +387,11 @@ object HttpRunner {
                 connection.setRequestProperty("Accept", "application/json")
                 connection.setRequestProperty("User-Agent", "TerminalLauncher")
                 first.headers.forEach { (k, v) -> connection.setRequestProperty(k, v) }
+                headers.forEach { (k, v) ->
+                    if (!k.equals("Authorization", ignoreCase = true) && !k.equals("Cookie", ignoreCase = true)) {
+                        connection.setRequestProperty(k, v)
+                    }
+                }
                 if (body != null) {
                     val bytes = body.toByteArray()
                     connection.doOutput = true

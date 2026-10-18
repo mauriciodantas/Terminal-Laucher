@@ -128,6 +128,21 @@ object UninstallCommand : BuiltIn(BuiltInCommand.UNINSTALL, R.string.cmd_usage_u
     ) { CommandAction.Uninstall(it) }
 }
 
+/** "detalhes jogo": the system settings page of an app, where its permissions and defaults are. */
+object AppInfoCommand : BuiltIn(BuiltInCommand.APP_INFO, R.string.cmd_usage_app_info, R.string.cmd_help_app_info) {
+
+    override val requiresArgument = true
+
+    override fun analyze(arg: String, ctx: CommandContext): Analysis = appCommand(
+        word,
+        arg,
+        ctx.apps,
+        Texts.get(R.string.cmd_app_info_title),
+        Texts.get(R.string.cmd_app_info_empty),
+        R.string.cmd_app_info_open,
+    ) { CommandAction.AppInfo(it) }
+}
+
 /** "atualizar whatsapp": the app's page in the Play Store; "atualizar" alone opens the store. */
 object UpdateCommand : BuiltIn(BuiltInCommand.UPDATE, R.string.cmd_usage_update, R.string.cmd_help_update) {
 

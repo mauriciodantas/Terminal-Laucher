@@ -1,46 +1,69 @@
 package app.lawnchair.ui.preferences.destinations
 
 import android.content.ComponentName
+import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.rounded.HelpOutline
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.SecondaryTabRow
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -48,17 +71,17 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import app.lawnchair.command.ACTION_VIEW
 import app.lawnchair.command.ActionKind
-import app.lawnchair.command.Aliases
 import app.lawnchair.command.ApiCall
 import app.lawnchair.command.ApiFormat
 import app.lawnchair.command.ApiProvider
@@ -68,26 +91,31 @@ import app.lawnchair.command.ArgKind
 import app.lawnchair.command.BodyType
 import app.lawnchair.command.CommandAction
 import app.lawnchair.command.CommandAlias
-import app.lawnchair.command.CommandEngine
-import app.lawnchair.command.CommandExecutor
-import app.lawnchair.command.CommandExtras
-import app.lawnchair.command.CommandPattern
+import app.lawnchair.command.CommandLine
 import app.lawnchair.command.ContactEntry
 import app.lawnchair.command.CustomAction
-import app.lawnchair.command.CustomActions
-import app.lawnchair.command.HttpMethods
+import app.lawnchair.command.ExtraType
 import app.lawnchair.command.HttpResult
 import app.lawnchair.command.HttpRunner
+import app.lawnchair.command.IntentCatalog
+import app.lawnchair.command.IntentExtra
+import app.lawnchair.command.ParseResult
+import app.lawnchair.command.ParsedCommand
 import app.lawnchair.command.ProviderStore
 import app.lawnchair.command.Providers
 import app.lawnchair.command.R as CommandR
 import app.lawnchair.command.SecretStore
 import app.lawnchair.ui.preferences.LocalNavController
-import app.lawnchair.ui.preferences.navigation.CommandGuide
+import app.lawnchair.ui.preferences.navigation.CommandProviders
 import com.android.launcher3.R
+import java.time.LocalDate
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
+import org.json.JSONObject
+import org.json.JSONTokener
 
 /** What the command editor opens on: a saved action, a saved alias, or nothing for a new command. */
 internal sealed interface EditorTarget {
@@ -96,27 +124,16 @@ internal sealed interface EditorTarget {
     data class Alias(val alias: CommandAlias) : EditorTarget
 }
 
-/** The two kinds of command the editor makes, one tab each. */
-private enum class EditorTab { ACTION, ALIAS }
-
-/** A list the editor opens over itself to fill the form. */
-private sealed interface EditorPicker {
-    data object Templates : EditorPicker
-    data class Functions(val app: AppEntry) : EditorPicker
-    data object Package : EditorPicker
+enum class CommandType(val label: String) {
+    LINK("Link"),
+    APP("App"),
+    INTENT("Intent"),
+    API("API"),
+    ALIAS("Apelido"),
 }
 
-private const val EXTRA_TEXT = "android.intent.extra.TEXT"
-
-/** How much of the raw answer the API test shows, enough to see the names of the fields. */
-private const val RAW_PREVIEW = 1500
-
-/**
- * What the user types after the letter, read from the template: `{text}` (or text sent as an extra)
- * asks for a text, `{name}`, `{phone}` or `{number}` for a contact, both for a contact and a message.
- */
-internal fun inferArg(template: String, textExtra: String?): ArgKind {
-    val text = "{text}" in template || textExtra != null
+internal fun inferArg(template: String, textExtra: String? = null): ArgKind {
+    val text = "{text}" in template || textExtra != null || (1..9).any { "{$it}" in template }
     val contact = listOf("{name}", "{phone}", "{number}").any { it in template }
     return when {
         text && contact -> ArgKind.CONTACT_AND_TEXT
@@ -127,11 +144,9 @@ internal fun inferArg(template: String, textExtra: String?): ArgKind {
 }
 
 /**
- * Creates or edits a command in one place: an action that opens a site or an app, or an alias for
- * commands that already exist. A ready-made recipe or an app's function only fills the form, so
- * everything stays editable afterwards, also for a saved action.
+ * Unified command editor screen with bidirectional line/fields synchronization.
  */
-@Suppress("ktlint:compose:modifier-missing-check")
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun CommandEditor(
     target: EditorTarget,
@@ -146,956 +161,1579 @@ internal fun CommandEditor(
     onDismiss: () -> Unit,
 ) {
     val context = LocalContext.current
+    val navController = LocalNavController.current
+    val scope = rememberCoroutineScope()
+
     val editingAction = (target as? EditorTarget.Action)?.action
     val editingAlias = (target as? EditorTarget.Alias)?.alias
-    val start = editingAction ?: CustomAction("", "", ActionKind.INTENT, "", emptyList(), ArgKind.TEXT)
 
-    var tab by remember { mutableStateOf(if (editingAlias != null) EditorTab.ALIAS else EditorTab.ACTION) }
-    var word by remember { mutableStateOf(editingAction?.letter ?: editingAlias?.name.orEmpty()) }
-    // A new command suggests its letter from the name until the user types one.
-    var wordTouched by remember { mutableStateOf(target != EditorTarget.New) }
-    var name by remember { mutableStateOf(start.label) }
-    // What the form does not show (the kind, a shortcut id, the MIME type) comes from here.
-    var base by remember { mutableStateOf(start) }
-    var template by remember { mutableStateOf(TextFieldValue(start.template)) }
-    var packages by remember { mutableStateOf(start.packages) }
-    var intentAction by remember { mutableStateOf(start.intentAction) }
-    var shareText by remember { mutableStateOf(start.textExtra != null) }
-    var smsFallback by remember { mutableStateOf(start.smsFallback) }
-    var pattern by remember { mutableStateOf(start.pattern) }
-    var help by remember { mutableStateOf(start.help) }
-    // "Consulta uma API": a provider, a path on it and what of the answer to show.
-    var apiMode by remember { mutableStateOf(start.kind == ActionKind.API) }
-    var provider by remember { mutableStateOf(start.provider) }
-    var apiSpec by remember { mutableStateOf(start.api ?: ApiSpec("")) }
-    var apiResult by remember { mutableStateOf<Pair<String, String>?>(null) }
-    var apiTesting by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
-    val providers by produceState(Providers.BUILT_IN) { value = withContext(Dispatchers.IO) { ProviderStore.all(context) } }
+    val providers by produceState(Providers.BUILT_IN) {
+        value = withContext(Dispatchers.IO) { ProviderStore.all(context) }
+    }
     val configured by produceState(emptySet<String>(), providers) {
         value = withContext(Dispatchers.IO) { SecretStore.configured(context, providers.map { it.id }) }
     }
+
+    // Determine initial type
+    val initialType = when {
+        editingAction?.kind == ActionKind.API -> CommandType.API
+        editingAction != null && editingAction.packages.isNotEmpty() && editingAction.template.isEmpty() -> CommandType.APP
+        editingAlias?.expansion?.startsWith("abrir ") == true -> CommandType.APP
+        editingAlias != null -> CommandType.ALIAS
+        editingAction != null && (editingAction.intentAction != ACTION_VIEW || editingAction.extras.isNotEmpty() || editingAction.target != "activity" || editingAction.mimeType != null) -> CommandType.INTENT
+        else -> CommandType.LINK
+    }
+
+    // Form fields state
+    var name by remember { mutableStateOf(editingAction?.letter ?: editingAlias?.name.orEmpty()) }
+    var label by remember { mutableStateOf(editingAction?.label ?: "") }
+    var type by remember { mutableStateOf(initialType) }
+
+    // Link & Intent & API fields
+    var template by remember { mutableStateOf(editingAction?.template ?: "") }
+    var smsFallback by remember { mutableStateOf(editingAction?.smsFallback ?: false) }
+
+    // App type
+    var selectedAppPackage by remember {
+        mutableStateOf(
+            editingAction?.packages?.firstOrNull()
+                ?: if (editingAlias?.expansion?.startsWith("abrir ") == true) {
+                    val appLabel = editingAlias.expansion.removePrefix("abrir ").trim()
+                    apps.firstOrNull { it.label.equals(appLabel, ignoreCase = true) }?.id.orEmpty()
+                } else {
+                    ""
+                },
+        )
+    }
+
+    // Intent fields
+    var intentAction by remember { mutableStateOf(editingAction?.intentAction ?: ACTION_VIEW) }
+    var intentTarget by remember { mutableStateOf(editingAction?.target ?: "activity") }
+    var intentPackages by remember { mutableStateOf(editingAction?.packages ?: emptyList()) }
+    var mimeType by remember { mutableStateOf(editingAction?.mimeType.orEmpty()) }
+    var extras by remember { mutableStateOf(editingAction?.extras ?: emptyList()) }
+    var categories by remember { mutableStateOf(editingAction?.categories ?: emptyList()) }
+    var component by remember { mutableStateOf(editingAction?.component.orEmpty()) }
+
+    // API fields
+    var provider by remember { mutableStateOf(editingAction?.provider.orEmpty()) }
+    var apiMethod by remember { mutableStateOf(editingAction?.api?.method ?: "GET") }
+    var apiHeaders by remember { mutableStateOf(editingAction?.api?.headers ?: emptyMap()) }
+    var apiBody by remember { mutableStateOf(editingAction?.api?.body.orEmpty()) }
+    var apiBodyType by remember { mutableStateOf(editingAction?.api?.bodyType ?: BodyType.JSON) }
+    var apiFormat by remember { mutableStateOf(editingAction?.api?.format.orEmpty()) }
+    var apiList by remember { mutableStateOf(editingAction?.api?.list.orEmpty()) }
+    var apiMax by remember { mutableIntStateOf(editingAction?.api?.max ?: 5) }
+    var apiUpcoming by remember { mutableStateOf(editingAction?.api?.upcoming.orEmpty()) }
+    var pattern by remember { mutableStateOf(editingAction?.pattern.orEmpty()) }
+
+    // Alias fields
     var expansion by remember { mutableStateOf(editingAlias?.expansion.orEmpty()) }
-    // The rare options start open only when the action uses one of them.
-    var moreOpen by remember {
-        mutableStateOf(
-            expandAction(start.intentAction) != expandAction("VIEW") ||
-                shareText ||
-                smsFallback ||
-                start.pattern.isNotEmpty() ||
-                start.api?.let { it.method != HttpMethods.GET || it.list.isNotEmpty() || it.upcoming.isNotEmpty() } == true,
-        )
-    }
-    var apiDetailsOpen by remember { mutableStateOf(target == EditorTarget.New) }
-    var picker by remember { mutableStateOf<EditorPicker?>(null) }
 
-    fun suggest(label: String) {
-        if (!wordTouched) word = suggestLetter(label, actions)
+    // Synchronization state
+    val initialLine = when {
+        editingAction != null -> CommandLine.serialize(editingAction)
+        editingAlias != null -> CommandLine.serialize(editingAlias)
+        else -> ""
     }
+    var line by remember { mutableStateOf(initialLine) }
+    var lineError by remember { mutableStateOf<String?>(null) }
+    var isSyncingFromFields by remember { mutableStateOf(false) }
+    var isSyncingFromLine by remember { mutableStateOf(false) }
 
-    /** A recipe or an app's function fills the form; the letter and the name follow it while untouched. */
-    fun fill(from: CustomAction) {
-        base = from
-        apiMode = false
-        template = TextFieldValue(from.template)
-        packages = from.packages
-        intentAction = from.intentAction
-        shareText = from.textExtra != null
-        smsFallback = from.smsFallback
-        name = from.label
-        if (!wordTouched) {
-            word = from.letter.takeIf { it.isNotEmpty() && CustomActions.validateLetter(it, actions, editingAction) == null }
-                ?: suggestLetter(from.label, actions)
-        }
-    }
-
-    val shortcut = !apiMode && base.kind == ActionKind.SHORTCUT
-    val arg = when {
-        apiMode -> (template.text + " " + (if (apiSpec.writes) apiSpec.body else "")).let { sent ->
-            // "{1}", "{2}": words of what is typed, so a text too.
-            inferArg(sent, null).let { if (it == ArgKind.NONE && ApiCall.usesWords(sent)) ArgKind.TEXT else it }
-        }
-
-        shortcut -> base.arg
-
-        else -> inferArg(template.text, if (shareText) EXTRA_TEXT else null)
-    }
-    val linkDraft = base.copy(
-        letter = word.trim().lowercase(),
-        label = name.trim(),
-        template = if (shortcut) base.template else template.text.trim(),
-        packages = packages,
-        arg = arg,
-        intentAction = expandAction(intentAction),
-        mimeType = when {
-            // An extra the action already had keeps its type, or lack of one ("Pix" matches no type).
-            shareText -> if (base.textExtra != null) base.mimeType else "text/plain"
-
-            base.textExtra != null -> null
-
-            else -> base.mimeType
-        },
-        textExtra = if (shareText) base.textExtra ?: EXTRA_TEXT else null,
-        smsFallback = smsFallback,
-        pattern = pattern.trim(),
-        help = help.trim(),
-    ).let { if (it.kind == ActionKind.API) it.copy(kind = ActionKind.INTENT, provider = "", api = null) else it }
-    val draft = if (apiMode) {
-        linkDraft.copy(
-            kind = ActionKind.API,
-            packages = emptyList(),
-            intentAction = ACTION_VIEW,
-            mimeType = null,
-            textExtra = null,
-            smsFallback = false,
-            provider = provider,
-            api = apiSpec,
-        )
-    } else {
-        linkDraft
-    }
-    val letterError = CustomActions.validateLetter(word, actions, editingAction)
-    val patternError = CommandPattern.validate(pattern.trim())
-    val hasTarget = if (apiMode) {
-        provider.isNotEmpty() && template.text.isNotBlank() && (apiSpec.format.isNotBlank() || apiSpec.writes)
-    } else {
-        shortcut || template.text.isNotBlank() || shareText
-    }
-    val actionValid = letterError == null && patternError == null && name.isNotBlank() && hasTarget
-    val aliasError = Aliases.validate(word, expansion, aliases, actions, editingAlias)
-    val canSave = if (tab == EditorTab.ACTION) actionValid else aliasError == null
-
-    val sampleText = stringResource(R.string.cmd_pref_sample_text)
-    val sampleContact = stringResource(R.string.cmd_pref_sample_contact)
-    val sampleBoth = stringResource(R.string.cmd_pref_sample_both)
-    var sample by remember(arg) {
-        mutableStateOf(
-            when (arg) {
-                ArgKind.NONE -> ""
-                ArgKind.TEXT -> sampleText
-                ArgKind.CONTACT -> sampleContact
-                ArgKind.CONTACT_AND_TEXT -> sampleBoth
-            },
-        )
-    }
-    // Same engine as the bar; without contacts access a sample contact stands in, and it is never run.
-    val pool = contacts.ifEmpty { listOf(DemoContact) }
-    val previewLetter = if (letterError == null) draft.letter else PREVIEW_LETTER
-    val actionAnalysis = if (tab == EditorTab.ACTION && hasTarget) {
-        CommandEngine.analyze(
-            previewLetter + if (sample.isBlank()) "" else " $sample",
-            emptyList(),
-            pool,
-            true,
-            listOf(draft.copy(letter = previewLetter)),
-            emptyList(),
-            CommandExtras(providers = providers, configuredProviders = configured),
-        )
-    } else {
-        null
-    }
-    val granted = remember { CommandExecutor.hasContactsPermission(context) }
-    val aliasAnalysis = if (tab == EditorTab.ALIAS && expansion.isNotBlank()) {
-        CommandEngine.analyze(expansion, apps, contacts, granted, actions, emptyList())
-    } else {
-        null
-    }
-    val runnable = if (tab == EditorTab.ACTION) {
-        (actionAnalysis?.action as? CommandAction.Custom)?.takeIf { it.contact !== DemoContact }
-    } else {
-        aliasAnalysis?.action
-    }
-
-    /** Asks the API with the sample, as the bar would, and keeps what came back to show it. */
-    fun testApi() {
-        val p = Providers.of(provider, providers) ?: return
-        val spec = draft.api ?: return
-        apiTesting = true
-        scope.launch {
-            val today = java.time.LocalDate.now()
-            val answer = withContext(Dispatchers.IO) {
-                HttpRunner.send(p, ApiCall.path(draft, sample, today), SecretStore.get(context, p.id), spec.method, ApiCall.body(draft, sample, today), spec.bodyType)
+    // Builder function for current form state
+    fun buildCommand(): ParsedCommand {
+        val cleanName = name.trim().lowercase()
+        val cleanLabel = label.trim()
+        return when (type) {
+            CommandType.LINK -> {
+                val cleanTemplate = template.trim()
+                val arg = inferArg(cleanTemplate)
+                val action = CustomAction(
+                    letter = cleanName,
+                    label = cleanLabel.ifEmpty { cleanName },
+                    kind = ActionKind.INTENT,
+                    template = cleanTemplate,
+                    packages = emptyList(),
+                    arg = arg,
+                    smsFallback = smsFallback,
+                    intentAction = ACTION_VIEW,
+                )
+                ParsedCommand.Action(cleanName, cleanLabel, action)
             }
-            apiResult = when (answer) {
-                is HttpResult.Answer -> {
-                    val shown = if (spec.format.isBlank() || answer.body.isBlank()) null else ApiFormat.render(answer.body, spec, today)
-                    val wentThrough = spec.writes && (spec.format.isBlank() || answer.body.isBlank())
-                    (shown ?: if (wentThrough) ApiCall.outcome(spec, answer.code, answer.body, today) else context.getString(R.string.cmd_pref_api_nothing)) to
-                        answer.body.take(RAW_PREVIEW)
+
+            CommandType.APP -> {
+                val app = apps.firstOrNull { it.id == selectedAppPackage }
+                val appLabel = app?.label ?: selectedAppPackage
+                val al = CommandAlias(name = cleanName, expansion = "abrir $appLabel")
+                ParsedCommand.Alias(cleanName, cleanLabel, al)
+            }
+
+            CommandType.INTENT -> {
+                val cleanTemplate = template.trim()
+                val allText = cleanTemplate + " " + extras.joinToString(" ") { it.value }
+                val arg = inferArg(allText)
+                val action = CustomAction(
+                    letter = cleanName,
+                    label = cleanLabel.ifEmpty { cleanName },
+                    kind = ActionKind.INTENT,
+                    template = cleanTemplate,
+                    packages = intentPackages,
+                    arg = arg,
+                    intentAction = intentAction.trim().ifEmpty { ACTION_VIEW },
+                    mimeType = mimeType.trim().ifEmpty { null },
+                    target = intentTarget,
+                    categories = categories,
+                    component = component.trim().ifEmpty { null },
+                    extras = extras,
+                )
+                ParsedCommand.Action(cleanName, cleanLabel, action)
+            }
+
+            CommandType.API -> {
+                val cleanTemplate = template.trim()
+                val spec = ApiSpec(
+                    format = apiFormat.trim(),
+                    method = apiMethod,
+                    headers = apiHeaders,
+                    body = apiBody,
+                    bodyType = apiBodyType,
+                    list = apiList.trim(),
+                    max = apiMax,
+                    upcoming = apiUpcoming.trim(),
+                )
+                val action = CustomAction(
+                    letter = cleanName,
+                    label = cleanLabel.ifEmpty { cleanName },
+                    kind = ActionKind.API,
+                    template = cleanTemplate,
+                    packages = emptyList(),
+                    arg = ArgKind.TEXT,
+                    provider = provider.trim(),
+                    api = spec,
+                    pattern = pattern.trim(),
+                )
+                ParsedCommand.Action(cleanName, cleanLabel, action)
+            }
+
+            CommandType.ALIAS -> {
+                val al = CommandAlias(name = cleanName, expansion = expansion.trim())
+                ParsedCommand.Alias(cleanName, cleanLabel, al)
+            }
+        }
+    }
+
+    // Sync from fields to line
+    fun syncFieldsToLine() {
+        if (isSyncingFromLine) return
+        val cmd = buildCommand()
+        val generated = CommandLine.serialize(cmd)
+        if (generated != line) {
+            isSyncingFromFields = true
+            line = generated
+            lineError = null
+            isSyncingFromFields = false
+        }
+    }
+
+    // Parse debounced from line to fields (300ms)
+    LaunchedEffect(line) {
+        if (isSyncingFromFields) return@LaunchedEffect
+        delay(300)
+        if (line.isBlank()) {
+            lineError = null
+            return@LaunchedEffect
+        }
+        val res = CommandLine.parse(line, actions, aliases)
+        when (res) {
+            is ParseResult.Success -> {
+                lineError = null
+                isSyncingFromLine = true
+                val cmd = res.command
+                name = cmd.name
+                label = cmd.label
+                when (cmd) {
+                    is ParsedCommand.Action -> {
+                        val a = cmd.action
+                        when {
+                            a.kind == ActionKind.API -> {
+                                type = CommandType.API
+                                provider = a.provider
+                                template = a.template
+                                apiMethod = a.api?.method ?: "GET"
+                                apiHeaders = a.api?.headers ?: emptyMap()
+                                apiBody = a.api?.body.orEmpty()
+                                apiBodyType = a.api?.bodyType ?: BodyType.JSON
+                                apiFormat = a.api?.format.orEmpty()
+                                apiList = a.api?.list.orEmpty()
+                                apiMax = a.api?.max ?: 5
+                                apiUpcoming = a.api?.upcoming.orEmpty()
+                                pattern = a.pattern
+                            }
+
+                            a.packages.isNotEmpty() && a.template.isEmpty() && a.intentAction in listOf(ACTION_VIEW, "android.intent.action.MAIN") -> {
+                                type = CommandType.APP
+                                selectedAppPackage = a.packages.firstOrNull().orEmpty()
+                            }
+
+                            a.intentAction == ACTION_VIEW && a.packages.isEmpty() && a.extras.isEmpty() && a.mimeType == null && a.target == "activity" -> {
+                                type = CommandType.LINK
+                                template = a.template
+                                smsFallback = a.smsFallback
+                            }
+
+                            else -> {
+                                type = CommandType.INTENT
+                                intentAction = a.intentAction
+                                intentTarget = a.target
+                                intentPackages = a.packages
+                                template = a.template
+                                mimeType = a.mimeType.orEmpty()
+                                extras = a.extras
+                                categories = a.categories
+                                component = a.component.orEmpty()
+                            }
+                        }
+                    }
+
+                    is ParsedCommand.Alias -> {
+                        val al = cmd.alias
+                        if (al.expansion.startsWith("abrir ")) {
+                            val targetLabel = al.expansion.removePrefix("abrir ").trim()
+                            val app = apps.firstOrNull { it.label.equals(targetLabel, ignoreCase = true) }
+                            if (app != null) {
+                                type = CommandType.APP
+                                selectedAppPackage = app.id
+                            } else {
+                                type = CommandType.ALIAS
+                                expansion = al.expansion
+                            }
+                        } else {
+                            type = CommandType.ALIAS
+                            expansion = al.expansion
+                        }
+                    }
                 }
-
-                else -> HttpRunner.describe(answer, p) to ""
+                isSyncingFromLine = false
             }
-            apiTesting = false
+
+            is ParseResult.Failure -> {
+                lineError = res.error.message
+            }
         }
     }
 
+    // Validation
+    val currentCmd = buildCommand()
+    val validation = remember(currentCmd, actions, aliases, providers) {
+        CommandLine.validate(
+            command = currentCmd,
+            existingActions = actions,
+            existingAliases = aliases,
+            providers = providers,
+            ignore = editingAction ?: editingAlias,
+        )
+    }
+    val canSave = validation.isValid && name.isNotBlank() && lineError == null
+
+    // Modals state
+    var appPickerOpen by remember { mutableStateOf(false) }
+    var catalogPickerOpen by remember { mutableStateOf(false) }
+    var confirmWriteAlert by remember { mutableStateOf<String?>(null) }
+    var confirmDeleteAlert by remember { mutableStateOf(false) }
+
+    // Test section state
+    var sampleArg by remember { mutableStateOf("") }
+    var testRunning by remember { mutableStateOf(false) }
+    var testResultText by remember { mutableStateOf<String?>(null) }
+    var testRawJson by remember { mutableStateOf<String?>(null) }
+    var testStatus by remember { mutableStateOf<String?>(null) }
+    var testLatency by remember { mutableStateOf<Long?>(null) }
+    var testError by remember { mutableStateOf<String?>(null) }
+
+    // Save action
     fun save() {
-        if (tab == EditorTab.ACTION) onSaveAction(draft) else onSaveAlias(CommandAlias(word.trim().lowercase(), expansion.trim()))
+        if (!canSave) return
+        when (val cmd = buildCommand()) {
+            is ParsedCommand.Action -> onSaveAction(cmd.action)
+            is ParsedCommand.Alias -> onSaveAlias(cmd.alias)
+        }
     }
 
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+    // Run test function
+    fun runTest() {
+        when (type) {
+            CommandType.LINK, CommandType.INTENT -> {
+                val cmd = buildCommand()
+                if (cmd is ParsedCommand.Action) {
+                    onTest(CommandAction.Custom(action = cmd.action, contact = null, text = sampleArg))
+                    testResultText = "Intent disparado com sucesso"
+                }
+            }
+
+            CommandType.APP -> {
+                val app = apps.firstOrNull { it.id == selectedAppPackage }
+                if (app != null) {
+                    val pkg = ComponentName.unflattenFromString(app.id)?.packageName ?: app.id
+                    val launchIntent = context.packageManager.getLaunchIntentForPackage(pkg)
+                    if (launchIntent != null) {
+                        context.startActivity(launchIntent)
+                        testResultText = "App ${app.label} aberto"
+                    } else {
+                        testError = "Não foi possível abrir o app"
+                    }
+                }
+            }
+
+            CommandType.ALIAS -> {
+                testResultText = "Apelido: $name → $expansion"
+            }
+
+            CommandType.API -> {
+                val cmd = buildCommand()
+                if (cmd !is ParsedCommand.Action) return
+                val action = cmd.action
+                val p = Providers.of(action.provider, providers)
+                if (p == null) {
+                    testError = "Provedor \"${action.provider}\" não encontrado"
+                    return
+                }
+                val spec = action.api ?: return
+                testRunning = true
+                testError = null
+                testResultText = null
+                testRawJson = null
+                scope.launch {
+                    val t0 = System.currentTimeMillis()
+                    val today = LocalDate.now()
+                    val answer = withContext(Dispatchers.IO) {
+                        HttpRunner.send(
+                            p,
+                            ApiCall.path(action, sampleArg, today),
+                            SecretStore.get(context, p.id),
+                            spec.method,
+                            ApiCall.body(action, sampleArg, today),
+                            spec.bodyType,
+                            spec.headers,
+                        )
+                    }
+                    val dt = System.currentTimeMillis() - t0
+                    testLatency = dt
+                    testRunning = false
+                    when (answer) {
+                        is HttpResult.Answer -> {
+                            testStatus = "HTTP ${answer.code}"
+                            testRawJson = answer.body
+                            val rendered = if (spec.format.isNotBlank() && answer.body.isNotBlank()) {
+                                ApiFormat.render(answer.body, spec, today)
+                            } else {
+                                null
+                            }
+                            testResultText = rendered ?: answer.body.take(500)
+                        }
+
+                        else -> {
+                            testStatus = "FALHOU"
+                            testError = HttpRunner.describe(answer, p)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
+    ) {
         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
-            Column(Modifier.fillMaxSize().systemBarsPadding().imePadding()) {
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(4.dp)) {
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .systemBarsPadding()
+                    .imePadding(),
+            ) {
+                // 1. Top Bar
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                ) {
                     IconButton(onClick = onDismiss) {
                         Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cmd_pref_cancel))
                     }
                     Text(
-                        stringResource(if (target == EditorTarget.New) R.string.cmd_pref_new_command else R.string.cmd_pref_edit_command),
-                        style = MaterialTheme.typography.titleLarge,
+                        text = stringResource(if (target == EditorTarget.New) R.string.cmd_pref_new_command else R.string.cmd_pref_edit_command),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.weight(1f),
                     )
-                    TextButton(enabled = canSave, onClick = ::save) { Text(stringResource(R.string.cmd_pref_save)) }
-                }
-                // A saved command keeps its kind: only a new one picks between the tabs.
-                SecondaryTabRow(selectedTabIndex = tab.ordinal) {
-                    EditorTab.entries.forEach {
-                        Tab(
-                            selected = tab == it,
-                            enabled = target == EditorTarget.New || tab == it,
-                            onClick = { tab = it },
-                            text = { Text(stringResource(if (it == EditorTab.ACTION) R.string.cmd_pref_tab_action else R.string.cmd_pref_tab_alias)) },
-                        )
+                    if (target != EditorTarget.New) {
+                        IconButton(onClick = { confirmDeleteAlert = true }) {
+                            Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.cmd_pref_remove), tint = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                    TextButton(enabled = canSave, onClick = ::save) {
+                        Text(stringResource(R.string.cmd_pref_save), fontWeight = FontWeight.Bold)
                     }
                 }
+
+                HorizontalDivider()
+
+                // Scrollable Content
                 Column(
                     Modifier
                         .weight(1f)
                         .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 20.dp, vertical = 12.dp),
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
                 ) {
+                    // 2. MONO LINE
+                    Text(
+                        "LINHA DE COMANDO",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Spacer(Modifier.height(4.dp))
                     OutlinedTextField(
-                        value = word,
-                        onValueChange = {
-                            word = if (tab == EditorTab.ALIAS) it.filter { c -> !c.isWhitespace() }.take(MAX_ALIAS) else it.take(MAX_LETTER)
-                            wordTouched = true
-                        },
-                        singleLine = true,
+                        value = line,
+                        onValueChange = { line = it },
+                        modifier = Modifier.fillMaxWidth(),
                         textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
-                        label = { Text(stringResource(if (tab == EditorTab.ACTION) R.string.cmd_pref_letter_label else R.string.cmd_pref_alias_label)) },
-                        isError = tab == EditorTab.ACTION && word.isNotEmpty() && letterError != null,
+                        isError = lineError != null,
                         supportingText = {
-                            when {
-                                tab == EditorTab.ALIAS -> Text(stringResource(R.string.cmd_pref_alias_hint))
-                                word.isNotEmpty() && letterError != null -> Text(letterError)
-                                else -> {}
+                            if (lineError != null) {
+                                Text(lineError!!, color = MaterialTheme.colorScheme.error)
                             }
                         },
-                        modifier = Modifier.fillMaxWidth(),
                     )
-                    if (tab == EditorTab.ACTION) {
-                        // The name first: it is the command, whatever it does.
+
+                    Spacer(Modifier.height(12.dp))
+
+                    // 3. TIPO (Segmented Control)
+                    Text(
+                        "TIPO",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                        CommandType.entries.forEachIndexed { index, option ->
+                            SegmentedButton(
+                                selected = type == option,
+                                onClick = {
+                                    type = option
+                                    syncFieldsToLine()
+                                },
+                                shape = SegmentedButtonDefaults.itemShape(index, CommandType.entries.size),
+                            ) {
+                                Text(option.label, style = MaterialTheme.typography.labelMedium)
+                            }
+                        }
+                    }
+
+                    Spacer(Modifier.height(16.dp))
+
+                    // Common fields: Nome & Rótulo
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedTextField(
                             value = name,
                             onValueChange = {
                                 name = it
-                                suggest(it)
+                                syncFieldsToLine()
                             },
+                            label = { Text("Nome (letra)") },
+                            modifier = Modifier.weight(1f),
                             singleLine = true,
-                            label = { Text(stringResource(R.string.cmd_pref_name_label)) },
-                            modifier = Modifier.fillMaxWidth(),
                         )
-                        // One option a line: side by side the longer label wrapped and the two fell out of line.
-                        // Only a new command chooses its kind: a saved command keeps it.
-                        if (target == EditorTarget.New) {
-                            Column(Modifier.fillMaxWidth().padding(top = 4.dp)) {
-                                listOf(false to R.string.cmd_pref_kind_open, true to R.string.cmd_pref_kind_api).forEach { (api, label) ->
-                                    Row(
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .heightIn(min = 44.dp)
-                                            .clickable {
-                                                apiMode = api
-                                                apiResult = null
+                        OutlinedTextField(
+                            value = label,
+                            onValueChange = {
+                                label = it
+                                syncFieldsToLine()
+                            },
+                            label = { Text("Rótulo (# comentário)") },
+                            modifier = Modifier.weight(1.5f),
+                            singleLine = true,
+                        )
+                    }
+
+                    Spacer(Modifier.height(16.dp))
+
+                    // 4. Campos por Tipo
+                    when (type) {
+                        CommandType.LINK -> {
+                            var phMenuOpen by remember { mutableStateOf(false) }
+                            OutlinedTextField(
+                                value = template,
+                                onValueChange = {
+                                    template = it
+                                    syncFieldsToLine()
+                                },
+                                label = { Text("Link ou URI") },
+                                modifier = Modifier.fillMaxWidth(),
+                                trailingIcon = {
+                                    Box {
+                                        IconButton(onClick = { phMenuOpen = true }) {
+                                            Text("{}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                        }
+                                        PlaceholderDropdown(
+                                            expanded = phMenuOpen,
+                                            onDismiss = { phMenuOpen = false },
+                                            onInsert = { ph ->
+                                                template += ph
+                                                phMenuOpen = false
+                                                syncFieldsToLine()
                                             },
-                                        verticalAlignment = Alignment.CenterVertically,
-                                    ) {
-                                        RadioButton(selected = apiMode == api, onClick = null, modifier = Modifier.padding(end = 6.dp))
-                                        Text(stringResource(label), style = MaterialTheme.typography.bodyMedium)
+                                        )
+                                    }
+                                },
+                                supportingText = { Text("{text} recebe o que vier depois do nome") },
+                            )
+                            if (template.contains("{number}") || template.contains("{phone}")) {
+                                Spacer(Modifier.height(8.dp))
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.fillMaxWidth(),
+                                ) {
+                                    Text(
+                                        "Abrir SMS se o app não estiver instalado",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        modifier = Modifier.weight(1f),
+                                    )
+                                    Switch(
+                                        checked = smsFallback,
+                                        onCheckedChange = {
+                                            smsFallback = it
+                                            syncFieldsToLine()
+                                        },
+                                    )
+                                }
+                            }
+                        }
+
+                        CommandType.APP -> {
+                            val currentApp = apps.firstOrNull { it.id == selectedAppPackage }
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { appPickerOpen = true },
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(16.dp),
+                                ) {
+                                    Column(Modifier.weight(1f)) {
+                                        Text(
+                                            currentApp?.label ?: "Nenhum app selecionado",
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            fontWeight = FontWeight.SemiBold,
+                                        )
+                                        if (currentApp != null) {
+                                            Text(
+                                                currentApp.id,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            )
+                                        }
+                                    }
+                                    Button(onClick = { appPickerOpen = true }) {
+                                        Text(if (currentApp == null) "Escolher App" else "Trocar")
                                     }
                                 }
                             }
                         }
-                    }
-                    if (tab == EditorTab.ACTION && apiMode) {
-                        ApiForm(
-                            providers = providers,
-                            configured = configured,
-                            provider = provider,
-                            onProvider = {
-                                provider = it
-                                apiResult = null
-                            },
-                            path = template,
-                            onPath = {
-                                template = it
-                                apiResult = null
-                            },
-                            apiSpec = apiSpec,
-                            onApiSpec = {
-                                apiSpec = it
-                                apiResult = null
-                            },
-                            pattern = pattern,
-                            onPattern = { pattern = it.take(CommandPattern.MAX_LENGTH) },
-                            patternError = patternError,
-                            detailsOpen = apiDetailsOpen,
-                            onDetailsOpen = { apiDetailsOpen = it },
-                            moreOpen = moreOpen,
-                            onMoreOpen = { moreOpen = it },
-                        )
-                    }
-                    if (tab == EditorTab.ACTION && !apiMode) {
-                        ActionForm(
-                            base = base,
-                            template = template,
-                            onTemplate = { template = it },
-                            arg = arg,
-                            packages = packages,
-                            apps = apps,
-                            intentAction = intentAction,
-                            onIntentAction = { intentAction = it },
-                            shareText = shareText,
-                            onShareText = { shareText = it },
-                            smsFallback = smsFallback,
-                            onSmsFallback = { smsFallback = it },
-                            pattern = pattern,
-                            onPattern = { pattern = it.take(CommandPattern.MAX_LENGTH) },
-                            patternError = patternError,
-                            moreOpen = moreOpen,
-                            onMoreOpen = { moreOpen = it },
-                            onPick = { picker = it },
-                        )
-                    }
-                    if (tab == EditorTab.ACTION) {
-                        OutlinedTextField(
-                            value = help,
-                            onValueChange = { help = it.take(CustomActions.MAX_HELP) },
-                            minLines = 1,
-                            maxLines = 4,
-                            label = { Text(stringResource(R.string.cmd_pref_help_label)) },
-                            supportingText = { Text(stringResource(R.string.cmd_pref_help_hint)) },
-                            modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-                        )
-                        if (arg != ArgKind.NONE && hasTarget) {
+
+                        CommandType.INTENT -> {
+                            // Action field + Catalog button
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                OutlinedTextField(
+                                    value = intentAction,
+                                    onValueChange = {
+                                        intentAction = it
+                                        syncFieldsToLine()
+                                    },
+                                    label = { Text("Ação da Intent") },
+                                    modifier = Modifier.weight(1f),
+                                    singleLine = true,
+                                )
+                                OutlinedButton(onClick = { catalogPickerOpen = true }) {
+                                    Text("Catálogo")
+                                }
+                            }
+
+                            Spacer(Modifier.height(8.dp))
+
+                            // Iniciar / Broadcast
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("Destino:", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(end = 8.dp))
+                                FilterChip(
+                                    selected = intentTarget == "activity",
+                                    onClick = {
+                                        intentTarget = "activity"
+                                        syncFieldsToLine()
+                                    },
+                                    label = { Text("Activity") },
+                                    modifier = Modifier.padding(end = 8.dp),
+                                )
+                                FilterChip(
+                                    selected = intentTarget == "broadcast",
+                                    onClick = {
+                                        intentTarget = "broadcast"
+                                        syncFieldsToLine()
+                                    },
+                                    label = { Text("Broadcast") },
+                                )
+                            }
+
+                            Spacer(Modifier.height(8.dp))
+
+                            // Abre com (Package)
+                            val openWithApp = apps.firstOrNull { it.id == intentPackages.firstOrNull() }
                             OutlinedTextField(
-                                value = sample,
-                                onValueChange = { sample = it },
-                                singleLine = true,
-                                textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
-                                prefix = { Text("$previewLetter ", fontFamily = FontFamily.Monospace) },
-                                label = { Text(stringResource(R.string.cmd_pref_try_label)) },
-                                modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                                value = openWithApp?.label ?: intentPackages.firstOrNull() ?: "Qualquer app",
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Abre com") },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { appPickerOpen = true },
+                                trailingIcon = {
+                                    IconButton(onClick = { appPickerOpen = true }) {
+                                        Icon(Icons.Default.ArrowDropDown, contentDescription = "Escolher")
+                                    }
+                                },
+                            )
+
+                            Spacer(Modifier.height(8.dp))
+
+                            // Data URI & MIME
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                var phMenuOpen by remember { mutableStateOf(false) }
+                                OutlinedTextField(
+                                    value = template,
+                                    onValueChange = {
+                                        template = it
+                                        syncFieldsToLine()
+                                    },
+                                    label = { Text("Dado (URI)") },
+                                    modifier = Modifier.weight(1.5f),
+                                    trailingIcon = {
+                                        Box {
+                                            IconButton(onClick = { phMenuOpen = true }) {
+                                                Text("{}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                            }
+                                            PlaceholderDropdown(
+                                                expanded = phMenuOpen,
+                                                onDismiss = { phMenuOpen = false },
+                                                onInsert = { ph ->
+                                                    template += ph
+                                                    phMenuOpen = false
+                                                    syncFieldsToLine()
+                                                },
+                                            )
+                                        }
+                                    },
+                                )
+                                OutlinedTextField(
+                                    value = mimeType,
+                                    onValueChange = {
+                                        mimeType = it
+                                        syncFieldsToLine()
+                                    },
+                                    label = { Text("Tipo MIME") },
+                                    modifier = Modifier.weight(1f),
+                                )
+                            }
+
+                            Spacer(Modifier.height(12.dp))
+
+                            // Extras Table
+                            Text(
+                                "EXTRAS",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            extras.forEachIndexed { idx, extra ->
+                                Row(
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    OutlinedTextField(
+                                        value = extra.key,
+                                        onValueChange = { k ->
+                                            extras = extras.toMutableList().also { it[idx] = extra.copy(key = k) }
+                                            syncFieldsToLine()
+                                        },
+                                        placeholder = { Text("Chave") },
+                                        modifier = Modifier.weight(1.2f),
+                                        singleLine = true,
+                                    )
+                                    // Type dropdown
+                                    var typeMenuOpen by remember { mutableStateOf(false) }
+                                    Box(Modifier.weight(0.9f)) {
+                                        OutlinedButton(onClick = { typeMenuOpen = true }, modifier = Modifier.fillMaxWidth()) {
+                                            Text(extra.type.id, maxLines = 1)
+                                        }
+                                        DropdownMenu(expanded = typeMenuOpen, onDismissRequest = { typeMenuOpen = false }) {
+                                            ExtraType.entries.forEach { et ->
+                                                DropdownMenuItem(
+                                                    text = { Text(et.id) },
+                                                    onClick = {
+                                                        extras = extras.toMutableList().also { it[idx] = extra.copy(type = et) }
+                                                        typeMenuOpen = false
+                                                        syncFieldsToLine()
+                                                    },
+                                                )
+                                            }
+                                        }
+                                    }
+                                    OutlinedTextField(
+                                        value = extra.value,
+                                        onValueChange = { v ->
+                                            extras = extras.toMutableList().also { it[idx] = extra.copy(value = v) }
+                                            syncFieldsToLine()
+                                        },
+                                        placeholder = { Text("Valor") },
+                                        modifier = Modifier.weight(1.2f),
+                                        singleLine = true,
+                                    )
+                                    IconButton(onClick = {
+                                        extras = extras.toMutableList().also { it.removeAt(idx) }
+                                        syncFieldsToLine()
+                                    }) {
+                                        Icon(Icons.Default.Delete, contentDescription = "Remover", tint = MaterialTheme.colorScheme.error)
+                                    }
+                                }
+                            }
+                            TextButton(
+                                onClick = {
+                                    extras = extras + IntentExtra("", ExtraType.STRING, "")
+                                    syncFieldsToLine()
+                                },
+                            ) {
+                                Icon(Icons.Default.Add, contentDescription = null)
+                                Spacer(Modifier.width(4.dp))
+                                Text("Adicionar extra")
+                            }
+                            Text(
+                                "Extras com valor vazio não vão na intent",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
-                        LetterPreview(previewLetter, sample, actionAnalysis, draft.smsFallback, draft.label)
-                        if (apiMode) ApiResult(apiTesting, apiResult)
-                    } else {
-                        AliasForm(word = word, expansion = expansion, onExpansion = { expansion = it }, error = aliasError, analysis = aliasAnalysis)
-                    }
-                }
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp)) {
-                    if (target != EditorTarget.New) {
-                        TextButton(onClick = onRemove) {
-                            Text(stringResource(R.string.cmd_pref_remove), color = MaterialTheme.colorScheme.error)
-                        }
-                    }
-                    Spacer(Modifier.weight(1f))
-                    TextButton(
-                        enabled = if (apiMode && tab == EditorTab.ACTION) hasTarget && !apiTesting else runnable != null,
-                        onClick = {
-                            if (apiMode && tab == EditorTab.ACTION) {
-                                testApi()
-                            } else {
-                                runnable?.let(onTest)
+
+                        CommandType.API -> {
+                            // Provedor
+                            var provMenuOpen by remember { mutableStateOf(false) }
+                            Box(Modifier.fillMaxWidth()) {
+                                OutlinedTextField(
+                                    value = provider.ifEmpty { "Selecione um provedor" },
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    label = { Text("Provedor") },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { provMenuOpen = true },
+                                    trailingIcon = {
+                                        IconButton(onClick = { provMenuOpen = true }) {
+                                            Icon(Icons.Default.ArrowDropDown, contentDescription = "Provedor")
+                                        }
+                                    },
+                                )
+                                DropdownMenu(expanded = provMenuOpen, onDismissRequest = { provMenuOpen = false }) {
+                                    providers.forEach { p ->
+                                        val hasKey = configured.contains(p.id)
+                                        DropdownMenuItem(
+                                            text = { Text("${p.name} (@${p.id}) · ${if (hasKey) "Chave salva" else "Sem chave"}") },
+                                            onClick = {
+                                                provider = p.id
+                                                provMenuOpen = false
+                                                syncFieldsToLine()
+                                            },
+                                        )
+                                    }
+                                    HorizontalDivider()
+                                    DropdownMenuItem(
+                                        text = { Text("+ Gerenciar Provedores") },
+                                        onClick = {
+                                            provMenuOpen = false
+                                            navController.navigate(CommandProviders())
+                                        },
+                                    )
+                                }
                             }
-                        },
-                    ) {
-                        Text(stringResource(R.string.cmd_pref_test))
-                    }
-                }
-            }
-        }
-    }
 
-    when (val p = picker) {
-        null -> Unit
+                            Spacer(Modifier.height(8.dp))
 
-        EditorPicker.Templates -> TemplatePicker(
-            apps = apps,
-            onRecipe = {
-                fill(it)
-                picker = null
-            },
-            onApp = { picker = EditorPicker.Functions(it) },
-            onDismiss = { picker = null },
-        )
+                            // Método & Caminho
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                var methodMenuOpen by remember { mutableStateOf(false) }
+                                Box(Modifier.weight(0.9f)) {
+                                    OutlinedTextField(
+                                        value = apiMethod,
+                                        onValueChange = {},
+                                        readOnly = true,
+                                        label = { Text("Método") },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable { methodMenuOpen = true },
+                                        trailingIcon = {
+                                            IconButton(onClick = { methodMenuOpen = true }) {
+                                                Icon(Icons.Default.ArrowDropDown, contentDescription = "Método")
+                                            }
+                                        },
+                                    )
+                                    DropdownMenu(expanded = methodMenuOpen, onDismissRequest = { methodMenuOpen = false }) {
+                                        listOf("GET", "POST", "PUT", "DELETE", "PATCH").forEach { m ->
+                                            DropdownMenuItem(
+                                                text = { Text(m) },
+                                                onClick = {
+                                                    apiMethod = m
+                                                    methodMenuOpen = false
+                                                    syncFieldsToLine()
+                                                },
+                                            )
+                                        }
+                                    }
+                                }
+                                var phMenuOpen by remember { mutableStateOf(false) }
+                                OutlinedTextField(
+                                    value = template,
+                                    onValueChange = {
+                                        template = it
+                                        syncFieldsToLine()
+                                    },
+                                    label = { Text("Caminho (ex: /v1/data/{text})") },
+                                    modifier = Modifier.weight(1.8f),
+                                    trailingIcon = {
+                                        Box {
+                                            IconButton(onClick = { phMenuOpen = true }) {
+                                                Text("{}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                            }
+                                            PlaceholderDropdown(
+                                                expanded = phMenuOpen,
+                                                onDismiss = { phMenuOpen = false },
+                                                onInsert = { ph ->
+                                                    template += ph
+                                                    phMenuOpen = false
+                                                    syncFieldsToLine()
+                                                },
+                                            )
+                                        }
+                                    },
+                                )
+                            }
 
-        is EditorPicker.Functions -> {
-            val pkg = ComponentName.unflattenFromString(p.app.id)?.packageName.orEmpty()
-            val found = remember(pkg) { CommandExecutor.loadIntegrations(context, pkg) }
-            if (found.isEmpty()) {
-                AlertDialog(
-                    onDismissRequest = { picker = null },
-                    confirmButton = { TextButton(onClick = { picker = EditorPicker.Templates }) { Text(stringResource(R.string.cmd_pref_back)) } },
-                    title = { Text(p.app.label) },
-                    text = { Text(stringResource(R.string.cmd_pref_no_functions)) },
-                )
-            } else {
-                val shortcutPrefix = stringResource(R.string.cmd_pref_kind_shortcut)
-                val recipePrefix = stringResource(R.string.cmd_pref_kind_recipe)
-                val intentPrefix = stringResource(R.string.cmd_pref_kind_intent)
-                PickerDialog(
-                    title = p.app.label,
-                    items = found,
-                    label = {
-                        when {
-                            it.kind == ActionKind.SHORTCUT -> shortcutPrefix
-                            it.letter.isNotEmpty() -> recipePrefix
-                            else -> intentPrefix
-                        } + it.label
-                    },
-                    onPick = {
-                        // A catalog recipe already carries the app's name; the others get it as a prefix.
-                        val label = if (it.label.startsWith(p.app.label, ignoreCase = true)) it.label else "${p.app.label} · ${it.label}"
-                        fill(it.copy(label = label))
-                        picker = null
-                    },
-                    onDismiss = { picker = null },
-                )
-            }
-        }
+                            Spacer(Modifier.height(8.dp))
 
-        EditorPicker.Package -> {
-            val anyApp = stringResource(R.string.cmd_pref_app_any)
-            PickerDialog(
-                title = stringResource(R.string.cmd_pref_app_label),
-                items = listOf<AppEntry?>(null) + apps.sortedBy { it.label.lowercase() },
-                label = { it?.label ?: anyApp },
-                onPick = { app ->
-                    packages = listOfNotNull(app?.let { ComponentName.unflattenFromString(it.id)?.packageName })
-                    picker = null
-                },
-                onDismiss = { picker = null },
-            )
-        }
-    }
-}
+                            // Headers (collapsible)
+                            var headersOpen by remember { mutableStateOf(false) }
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { headersOpen = !headersOpen }
+                                    .padding(vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Icon(if (headersOpen) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown, contentDescription = null)
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    "Cabeçalhos (${if (apiHeaders.isEmpty()) "nenhum · a chave vem do provedor" else "${apiHeaders.size} configurados"})",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                )
+                            }
+                            if (headersOpen) {
+                                apiHeaders.forEach { (hk, hv) ->
+                                    Row(
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 2.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        OutlinedTextField(
+                                            value = hk,
+                                            onValueChange = { newK ->
+                                                val m = apiHeaders.toMutableMap()
+                                                m.remove(hk)
+                                                m[newK] = hv
+                                                apiHeaders = m
+                                                syncFieldsToLine()
+                                            },
+                                            placeholder = { Text("Header") },
+                                            modifier = Modifier.weight(1f),
+                                        )
+                                        OutlinedTextField(
+                                            value = hv,
+                                            onValueChange = { newV ->
+                                                val m = apiHeaders.toMutableMap()
+                                                m[hk] = newV
+                                                apiHeaders = m
+                                                syncFieldsToLine()
+                                            },
+                                            placeholder = { Text("Valor") },
+                                            modifier = Modifier.weight(1.2f),
+                                        )
+                                        IconButton(onClick = {
+                                            val m = apiHeaders.toMutableMap()
+                                            m.remove(hk)
+                                            apiHeaders = m
+                                            syncFieldsToLine()
+                                        }) {
+                                            Icon(Icons.Default.Delete, contentDescription = "Remover", tint = MaterialTheme.colorScheme.error)
+                                        }
+                                    }
+                                }
+                                TextButton(onClick = {
+                                    apiHeaders = apiHeaders + ("X-Custom" to "valor")
+                                    syncFieldsToLine()
+                                }) {
+                                    Icon(Icons.Default.Add, contentDescription = null)
+                                    Text("Adicionar cabeçalho")
+                                }
+                            }
 
-/** The "opens a site or an app" tab: where the form comes from, the link, the app and the rare options. */
-@Composable
-private fun ActionForm(
-    base: CustomAction,
-    template: TextFieldValue,
-    onTemplate: (TextFieldValue) -> Unit,
-    arg: ArgKind,
-    packages: List<String>,
-    apps: List<AppEntry>,
-    intentAction: String,
-    onIntentAction: (String) -> Unit,
-    shareText: Boolean,
-    onShareText: (Boolean) -> Unit,
-    smsFallback: Boolean,
-    onSmsFallback: (Boolean) -> Unit,
-    pattern: String,
-    onPattern: (String) -> Unit,
-    patternError: String?,
-    moreOpen: Boolean,
-    onMoreOpen: (Boolean) -> Unit,
-    onPick: (EditorPicker) -> Unit,
-) {
-    val shortcut = base.kind == ActionKind.SHORTCUT
-    OutlinedButton(onClick = { onPick(EditorPicker.Templates) }, modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
-        Text(stringResource(R.string.cmd_pref_start_template))
-    }
-    if (shortcut) {
-        // An app's launcher shortcut has no link to edit: it is the shortcut of that app.
-        Text(
-            stringResource(CommandR.string.cmd_desc_shortcut, base.packages.firstOrNull().orEmpty()),
-            style = MaterialTheme.typography.bodyMedium,
-            fontFamily = FontFamily.Monospace,
-            modifier = Modifier.padding(top = 16.dp),
-        )
-    } else {
-        OutlinedTextField(
-            value = template,
-            onValueChange = onTemplate,
-            singleLine = true,
-            textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
-            label = { Text(stringResource(R.string.cmd_pref_link_label)) },
-            modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-        )
-        // Each chip puts its placeholder where the cursor is; what to type after the letter follows from them.
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
-            listOf(
-                R.string.cmd_pref_insert_text to "{text}",
-                R.string.cmd_pref_insert_name to "{name}",
-                R.string.cmd_pref_insert_phone to "{phone}",
-                R.string.cmd_pref_insert_number to "{number}",
-            ).forEach { (label, placeholder) ->
-                SuggestionChip(
-                    onClick = {
-                        val at = template.selection.end.coerceIn(0, template.text.length)
-                        val text = template.text.substring(0, at) + placeholder + template.text.substring(at)
-                        onTemplate(TextFieldValue(text, TextRange(at + placeholder.length)))
-                    },
-                    label = { Text(stringResource(label)) },
-                )
-            }
-        }
-        Text(
-            stringResource(R.string.cmd_pref_manual_arg) + ": " + stringResource(argLabel(arg)),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        val anyApp = stringResource(R.string.cmd_pref_app_any)
-        val appNames = packages.joinToString { pkg ->
-            apps.firstOrNull { ComponentName.unflattenFromString(it.id)?.packageName == pkg }?.label ?: pkg
-        }.ifEmpty { anyApp }
-        Box(Modifier.padding(top = 12.dp)) {
-            OutlinedTextField(
-                value = appNames,
-                onValueChange = {},
-                readOnly = true,
-                singleLine = true,
-                label = { Text(stringResource(R.string.cmd_pref_app_label)) },
-                trailingIcon = { Icon(Icons.Default.ArrowDropDown, contentDescription = null) },
-                modifier = Modifier.fillMaxWidth(),
-            )
-            // A read-only field swallows taps, so a transparent layer on top opens the list.
-            Box(Modifier.matchParentSize().clickable { onPick(EditorPicker.Package) })
-        }
-    }
-    TextButton(onClick = { onMoreOpen(!moreOpen) }, modifier = Modifier.padding(top = 8.dp)) {
-        Icon(if (moreOpen) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown, contentDescription = null)
-        Text(stringResource(R.string.cmd_pref_more_options))
-    }
-    if (moreOpen) {
-        if (!shortcut) {
-            ActionPicker(action = intentAction, onChange = onIntentAction)
-            CheckRow(stringResource(R.string.cmd_pref_manual_share), shareText, onShareText)
-        }
-        if (arg == ArgKind.CONTACT || arg == ArgKind.CONTACT_AND_TEXT) {
-            CheckRow(stringResource(R.string.cmd_pref_sms_option), smsFallback, onSmsFallback)
-        }
-        // Text typed alone that matches it runs the action, without the letter.
-        OutlinedTextField(
-            value = pattern,
-            onValueChange = onPattern,
-            singleLine = true,
-            textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
-            label = { Text(stringResource(R.string.cmd_pref_pattern_label)) },
-            isError = patternError != null,
-            supportingText = { Text(patternError ?: stringResource(R.string.cmd_pref_pattern_hint)) },
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-        )
-    }
-}
+                            Spacer(Modifier.height(8.dp))
 
-/** The "consulta uma API" form: the provider, the path on it, method, format, and optional advanced JSON spec. */
-@Composable
-private fun ApiForm(
-    providers: List<ApiProvider>,
-    configured: Set<String>,
-    provider: String,
-    onProvider: (String) -> Unit,
-    path: TextFieldValue,
-    onPath: (TextFieldValue) -> Unit,
-    apiSpec: ApiSpec,
-    onApiSpec: (ApiSpec) -> Unit,
-    pattern: String,
-    onPattern: (String) -> Unit,
-    patternError: String?,
-    detailsOpen: Boolean,
-    onDetailsOpen: (Boolean) -> Unit,
-    moreOpen: Boolean,
-    onMoreOpen: (Boolean) -> Unit,
-) {
-    var picking by remember { mutableStateOf(false) }
-    val chosen = Providers.of(provider, providers)
-    val noKey = stringResource(R.string.cmd_providers_key_missing)
-    val mono = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace)
-    Box(Modifier.padding(top = 12.dp)) {
-        OutlinedTextField(
-            value = chosen?.let { it.name + " · " + it.host } ?: provider,
-            onValueChange = {},
-            readOnly = true,
-            singleLine = true,
-            label = { Text(stringResource(R.string.cmd_pref_api_provider)) },
-            placeholder = { Text(stringResource(R.string.cmd_pref_api_pick_provider)) },
-            isError = provider.isNotEmpty() && chosen == null,
-            trailingIcon = { Icon(Icons.Default.ArrowDropDown, contentDescription = null) },
-            modifier = Modifier.fillMaxWidth(),
-        )
-        // A read-only field swallows taps, so a transparent layer on top opens the list.
-        Box(Modifier.matchParentSize().clickable { picking = true })
-    }
-    val note = when {
-        chosen == null -> stringResource(R.string.cmd_pref_api_where_providers)
-        chosen.auth.needsSecret && chosen.id !in configured -> stringResource(R.string.cmd_pref_api_no_key, chosen.name)
-        else -> null
-    }
-    note?.let {
-        Text(
-            it,
-            style = MaterialTheme.typography.bodySmall,
-            color = if (chosen != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 4.dp),
-        )
-    }
+                            // Body (if method != GET)
+                            if (apiMethod != "GET") {
+                                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                    Text("Tipo do corpo:", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(end = 8.dp))
+                                    BodyType.entries.forEach { bt ->
+                                        FilterChip(
+                                            selected = apiBodyType == bt,
+                                            onClick = {
+                                                apiBodyType = bt
+                                                syncFieldsToLine()
+                                            },
+                                            label = { Text(bt.name) },
+                                            modifier = Modifier.padding(end = 4.dp),
+                                        )
+                                    }
+                                }
+                                OutlinedTextField(
+                                    value = apiBody,
+                                    onValueChange = {
+                                        apiBody = it
+                                        syncFieldsToLine()
+                                    },
+                                    label = { Text("Corpo da requisição") },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(min = 80.dp),
+                                )
+                                Spacer(Modifier.height(8.dp))
+                            }
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 12.dp)
-            .clickable { onDetailsOpen(!detailsOpen) }
-            .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            if (detailsOpen) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(end = 6.dp),
-        )
-        Column(Modifier.weight(1f)) {
-            Text(
-                stringResource(R.string.cmd_pref_api_details),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
-            )
-            if (!detailsOpen && path.text.isNotBlank()) {
-                Text(
-                    "${apiSpec.method} · ${path.text.trim()}",
-                    style = MaterialTheme.typography.bodySmall,
-                    fontFamily = FontFamily.Monospace,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                )
-            }
-        }
-    }
+                            // Format
+                            OutlinedTextField(
+                                value = apiFormat,
+                                onValueChange = {
+                                    apiFormat = it
+                                    syncFieldsToLine()
+                                },
+                                label = { Text("Mostrar na barra (formato)") },
+                                modifier = Modifier.fillMaxWidth(),
+                                supportingText = { Text("Ex: {logradouro} · {bairro}") },
+                            )
 
-    if (detailsOpen) {
-        OutlinedTextField(
-            value = path,
-            onValueChange = onPath,
-            singleLine = true,
-            textStyle = mono,
-            label = { Text(stringResource(R.string.cmd_pref_api_path)) },
-            placeholder = { Text("/ws/{text}/json/", fontFamily = FontFamily.Monospace) },
-            supportingText = { Text(chosen?.let { stringResource(R.string.cmd_pref_api_path_hint, it.baseUrl) } ?: "") },
-            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-        )
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
-            listOf(R.string.cmd_pref_insert_text to "{text}", R.string.cmd_pref_insert_year to "{year}").forEach { (label, placeholder) ->
-                SuggestionChip(
-                    onClick = {
-                        val at = path.selection.end.coerceIn(0, path.text.length)
-                        onPath(TextFieldValue(path.text.substring(0, at) + placeholder + path.text.substring(at), TextRange(at + placeholder.length)))
-                    },
-                    label = { Text(stringResource(label)) },
-                )
-            }
-        }
-        OutlinedTextField(
-            value = apiSpec.format,
-            onValueChange = { onApiSpec(apiSpec.copy(format = it)) },
-            minLines = 2,
-            textStyle = mono,
-            label = { Text(stringResource(if (!apiSpec.writes) R.string.cmd_pref_api_format else R.string.cmd_pref_api_format_optional)) },
-            placeholder = { Text("{bairro} · {localidade}/{uf}", fontFamily = FontFamily.Monospace) },
-            supportingText = { Text(stringResource(R.string.cmd_pref_api_format_hint)) },
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-        )
+                            Spacer(Modifier.height(8.dp))
 
-        Text(
-            stringResource(R.string.cmd_pref_api_method),
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(top = 8.dp),
-        )
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
-            HttpMethods.ALL.forEach { m ->
-                FilterChip(
-                    selected = apiSpec.method == m,
-                    onClick = {
-                        val newWrites = m != HttpMethods.GET
-                        onApiSpec(apiSpec.copy(method = m, body = if (newWrites) apiSpec.body else ""))
-                    },
-                    label = { Text(m, fontFamily = FontFamily.Monospace) },
-                )
-            }
-        }
-        if (apiSpec.writes) {
-            Text(
-                stringResource(R.string.cmd_pref_api_method_writes, apiSpec.method),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(top = 4.dp),
-            )
-            var bodyText by remember(apiSpec.body) { mutableStateOf(TextFieldValue(apiSpec.body)) }
-            OutlinedTextField(
-                value = bodyText,
-                onValueChange = {
-                    bodyText = it
-                    onApiSpec(apiSpec.copy(body = it.text))
-                },
-                minLines = 3,
-                textStyle = mono,
-                label = { Text(stringResource(R.string.cmd_pref_api_body)) },
-                placeholder = { Text("{\"title\": \"{text}\"}", fontFamily = FontFamily.Monospace) },
-                supportingText = { Text(stringResource(R.string.cmd_pref_api_body_hint)) },
-                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-            )
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
-                listOf(R.string.cmd_pref_insert_text to "{text}", R.string.cmd_pref_insert_year to "{year}").forEach { (label, placeholder) ->
-                    SuggestionChip(
-                        onClick = {
-                            val at = bodyText.selection.end.coerceIn(0, bodyText.text.length)
-                            val newText = bodyText.text.substring(0, at) + placeholder + bodyText.text.substring(at)
-                            val updated = TextFieldValue(newText, TextRange(at + placeholder.length))
-                            bodyText = updated
-                            onApiSpec(apiSpec.copy(body = updated.text))
-                        },
-                        label = { Text(stringResource(label)) },
-                    )
-                }
-            }
-        }
-
-        TextButton(onClick = { onMoreOpen(!moreOpen) }, modifier = Modifier.padding(top = 8.dp)) {
-            Icon(if (moreOpen) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown, contentDescription = null)
-            Text(stringResource(R.string.cmd_pref_more_options))
-        }
-        if (moreOpen) {
-            OutlinedTextField(
-                value = pattern,
-                onValueChange = onPattern,
-                singleLine = true,
-                textStyle = mono,
-                label = { Text(stringResource(R.string.cmd_pref_pattern_label)) },
-                isError = patternError != null,
-                supportingText = { Text(patternError ?: stringResource(R.string.cmd_pref_pattern_hint)) },
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-            )
-
-            var advancedOpen by remember {
-                mutableStateOf(apiSpec.list.isNotEmpty() || apiSpec.upcoming.isNotEmpty() || apiSpec.max != 5 || apiSpec.bodyType != BodyType.JSON)
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 12.dp)
-                    .clickable { advancedOpen = !advancedOpen }
-                    .padding(vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    if (advancedOpen) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(end = 6.dp),
-                )
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        stringResource(R.string.cmd_pref_api_advanced),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                    Text(
-                        stringResource(R.string.cmd_pref_api_advanced_hint),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-            if (advancedOpen) {
-                var rawJson by remember { mutableStateOf(apiSpec.toJsonString()) }
-                var jsonError by remember { mutableStateOf<String?>(null) }
-                var lastParsedSpec by remember { mutableStateOf(apiSpec) }
-
-                androidx.compose.runtime.LaunchedEffect(apiSpec) {
-                    if (apiSpec != lastParsedSpec) {
-                        rawJson = apiSpec.toJsonString()
-                        lastParsedSpec = apiSpec
-                        jsonError = null
-                    }
-                }
-
-                val invalidJsonError = stringResource(R.string.cmd_pref_api_json_invalid)
-                OutlinedTextField(
-                    value = rawJson,
-                    onValueChange = {
-                        rawJson = it
-                        val parsed = ApiSpec.parse(it)
-                        if (parsed != null) {
-                            jsonError = null
-                            lastParsedSpec = parsed
-                            onApiSpec(parsed)
-                        } else {
-                            jsonError = invalidJsonError
+                            // Lista (collapsible)
+                            var listOpen by remember { mutableStateOf(apiList.isNotEmpty() || apiUpcoming.isNotEmpty()) }
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { listOpen = !listOpen }
+                                    .padding(vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Icon(if (listOpen) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown, contentDescription = null)
+                                Spacer(Modifier.width(8.dp))
+                                Text("Lista, Limite e Próximos", style = MaterialTheme.typography.bodyMedium)
+                            }
+                            if (listOpen) {
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    OutlinedTextField(
+                                        value = apiList,
+                                        onValueChange = {
+                                            apiList = it
+                                            syncFieldsToLine()
+                                        },
+                                        label = { Text("--list") },
+                                        modifier = Modifier.weight(1.5f),
+                                    )
+                                    OutlinedTextField(
+                                        value = apiMax.toString(),
+                                        onValueChange = {
+                                            apiMax = it.toIntOrNull() ?: 5
+                                            syncFieldsToLine()
+                                        },
+                                        label = { Text("--max") },
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        modifier = Modifier.weight(0.8f),
+                                    )
+                                }
+                                OutlinedTextField(
+                                    value = apiUpcoming,
+                                    onValueChange = {
+                                        apiUpcoming = it
+                                        syncFieldsToLine()
+                                    },
+                                    label = { Text("--upcoming") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
+                            }
                         }
-                    },
-                    minLines = 6,
-                    maxLines = 14,
-                    textStyle = mono,
-                    isError = jsonError != null,
-                    supportingText = {
-                        Text(
-                            jsonError ?: stringResource(R.string.cmd_pref_api_advanced_hint),
-                            color = if (jsonError != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+
+                        CommandType.ALIAS -> {
+                            OutlinedTextField(
+                                value = expansion,
+                                onValueChange = {
+                                    expansion = it
+                                    syncFieldsToLine()
+                                },
+                                label = { Text("Expansão do apelido") },
+                                modifier = Modifier.fillMaxWidth(),
+                                supportingText = { Text("Ex: abrir youtube, ou w ana {text}") },
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.height(20.dp))
+                    HorizontalDivider()
+                    Spacer(Modifier.height(16.dp))
+
+                    // 6. TESTAR Section
+                    Text(
+                        "TESTAR",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Spacer(Modifier.height(8.dp))
+
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        OutlinedTextField(
+                            value = sampleArg,
+                            onValueChange = { sampleArg = it },
+                            placeholder = { Text("Argumento de teste (opcional)") },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
                         )
-                    },
-                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-                )
-                val navController = LocalNavController.current
-                TextButton(
-                    onClick = { navController.navigate(CommandGuide) },
-                    modifier = Modifier.padding(top = 2.dp),
-                ) {
-                    Icon(Icons.Rounded.HelpOutline, contentDescription = null, modifier = Modifier.padding(end = 6.dp))
-                    Text(stringResource(R.string.cmd_guide_editor_hint))
+                        Button(
+                            onClick = {
+                                if (type == CommandType.API && apiMethod in listOf("POST", "PUT", "PATCH", "DELETE")) {
+                                    val p = Providers.of(provider, providers)
+                                    val host = p?.baseUrl ?: provider
+                                    confirmWriteAlert = "Isto vai enviar $apiMethod para $host. Deseja continuar?"
+                                } else {
+                                    runTest()
+                                }
+                            },
+                            enabled = !testRunning && canSave,
+                        ) {
+                            Icon(Icons.Default.PlayArrow, contentDescription = null)
+                            Spacer(Modifier.width(4.dp))
+                            Text(if (testRunning) "Executando..." else "EXECUTAR")
+                        }
+                    }
+
+                    // Test output
+                    if (testStatus != null || testResultText != null || testError != null) {
+                        Spacer(Modifier.height(12.dp))
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                        ) {
+                            Column(Modifier.padding(12.dp)) {
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Text(
+                                        testStatus ?: "RESULTADO",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (testError != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                                    )
+                                    if (testLatency != null) {
+                                        Text("${testLatency}ms", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                }
+
+                                if (testError != null) {
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(testError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
+                                }
+
+                                if (testResultText != null) {
+                                    Spacer(Modifier.height(6.dp))
+                                    Text("NA BARRA:", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(
+                                        testResultText!!,
+                                        fontFamily = FontFamily.Monospace,
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.primary,
+                                    )
+                                }
+
+                                // Interactive JSON Tree for API
+                                val raw = testRawJson
+                                if (raw != null) {
+                                    Spacer(Modifier.height(10.dp))
+                                    Text("RESPOSTA JSON (toque em + para adicionar campo ao formato):", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Spacer(Modifier.height(4.dp))
+                                    JsonTreeView(
+                                        rawJson = raw,
+                                        onInsertField = { fieldPath, arrayPath ->
+                                            if (arrayPath != null && apiList.isEmpty()) {
+                                                apiList = arrayPath
+                                                apiFormat += " {$fieldPath}"
+                                            } else {
+                                                apiFormat += " {$fieldPath}"
+                                            }
+                                            syncFieldsToLine()
+                                        },
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
     }
-    if (picking) {
-        PickerDialog(
-            title = stringResource(R.string.cmd_pref_api_provider),
-            items = providers,
-            label = { it.name + " · " + it.host + if (it.auth.needsSecret && it.id !in configured) " · $noKey" else "" },
-            onPick = {
-                onProvider(it.id)
-                picking = false
+
+    // App Picker Modal Dialog
+    if (appPickerOpen) {
+        AppPickerDialog(
+            apps = apps,
+            onSelect = { app ->
+                selectedAppPackage = app.id
+                if (intentPackages.isEmpty() || type == CommandType.INTENT) {
+                    intentPackages = listOf(app.id)
+                }
+                appPickerOpen = false
+                syncFieldsToLine()
             },
-            onDismiss = { picking = false },
+            onDismiss = { appPickerOpen = false },
+        )
+    }
+
+    // Intent Catalog Picker Modal Dialog
+    if (catalogPickerOpen) {
+        CatalogPickerDialog(
+            onSelect = { entry ->
+                intentAction = entry.action
+                if (!entry.data.isNullOrEmpty()) template = entry.data!!
+                if (!entry.mime.isNullOrEmpty()) mimeType = entry.mime!!
+                intentTarget = entry.target
+                if (entry.extras.isNotEmpty()) {
+                    val existingKeys = extras.map { it.key }.toSet()
+                    val newExtras = entry.extras.filterNot { it.key in existingKeys }.map {
+                        IntentExtra(it.key, it.type, "")
+                    }
+                    extras = extras + newExtras
+                }
+                catalogPickerOpen = false
+                syncFieldsToLine()
+            },
+            onDismiss = { catalogPickerOpen = false },
+        )
+    }
+
+    // Write confirmation dialog
+    confirmWriteAlert?.let { message ->
+        AlertDialog(
+            onDismissRequest = { confirmWriteAlert = null },
+            title = { Text("Confirmar execução") },
+            text = { Text(message) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        confirmWriteAlert = null
+                        runTest()
+                    },
+                ) {
+                    Text("Continuar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmWriteAlert = null }) {
+                    Text("Cancelar")
+                }
+            },
+        )
+    }
+
+    // Delete confirmation dialog
+    if (confirmDeleteAlert) {
+        AlertDialog(
+            onDismissRequest = { confirmDeleteAlert = false },
+            title = { Text(stringResource(R.string.cmd_pref_remove)) },
+            text = { Text("Deseja realmente remover o comando \"$name\"?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        confirmDeleteAlert = false
+                        onRemove()
+                    },
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                ) {
+                    Text(stringResource(R.string.cmd_pref_remove))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmDeleteAlert = false }) {
+                    Text(stringResource(R.string.cmd_pref_cancel))
+                }
+            },
         )
     }
 }
 
-/** What the API test brought: the text the bar would show, then the start of the raw answer. */
 @Composable
-private fun ApiResult(testing: Boolean, result: Pair<String, String>?) {
-    if (!testing && result == null) return
-    Column(Modifier.fillMaxWidth().padding(top = 12.dp)) {
-        Text(stringResource(R.string.cmd_pref_api_result), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-        Text(
-            if (testing) stringResource(R.string.command_running) else result?.first.orEmpty(),
-            style = MaterialTheme.typography.bodyMedium,
-            fontFamily = FontFamily.Monospace,
-            modifier = Modifier.padding(top = 4.dp),
-        )
-        val raw = result?.second.orEmpty()
-        if (!testing && raw.isNotEmpty()) {
-            Text(
-                stringResource(R.string.cmd_pref_api_raw),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(top = 10.dp),
+private fun PlaceholderDropdown(
+    expanded: Boolean,
+    onDismiss: () -> Unit,
+    onInsert: (String) -> Unit,
+) {
+    val items = listOf(
+        "{text}" to "o que vier depois",
+        "{1}" to "1ª palavra",
+        "{2}" to "2ª palavra",
+        "{number}" to "contato → nº com DDI",
+        "{name}" to "nome do contato",
+        "{phone}" to "telefone do contato",
+        "{date}" to "data atual",
+        "{time}" to "hora atual",
+        "{clip}" to "área de transferência",
+        "{location}" to "localização",
+        "{maps}" to "coordenadas para mapa",
+    )
+    DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
+        items.forEach { (ph, desc) ->
+            DropdownMenuItem(
+                text = { Text("$ph  ·  $desc") },
+                onClick = { onInsert(ph) },
             )
-            Text(raw, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, modifier = Modifier.padding(top = 4.dp))
         }
     }
 }
 
-/**
- * One list to start from: the ready-made recipes of the apps that are installed (and SMS, which
- * belongs to no app) first, then every app with something to bind, whose functions open next.
- */
 @Composable
-private fun TemplatePicker(apps: List<AppEntry>, onRecipe: (CustomAction) -> Unit, onApp: (AppEntry) -> Unit, onDismiss: () -> Unit) {
-    val context = LocalContext.current
-    val installed = remember(apps) { apps.mapNotNull { ComponentName.unflattenFromString(it.id)?.packageName }.toSet() }
-    // A recipe whose app is missing could not open, so it is left out.
-    val suggestions = remember(installed) {
-        CustomActions.CATALOG.filter { recipe -> recipe.packages.isEmpty() || recipe.packages.any { it in installed } }
-    }
-    // Scanning every installed app takes a moment, so it runs off the main thread.
-    val integrationApps by produceState<List<AppEntry>?>(initialValue = null) {
-        value = withContext(Dispatchers.Default) { CommandExecutor.loadIntegrationApps(context) }
-    }
-
-    @Composable
-    fun Header(text: Int) {
-        Text(
-            stringResource(text),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(top = 12.dp, bottom = 4.dp),
-        )
-    }
-
-    @Composable
-    fun Entry(text: String, onClick: () -> Unit) {
-        Text(
-            text,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 12.dp),
-        )
+private fun AppPickerDialog(
+    apps: List<AppEntry>,
+    onSelect: (AppEntry) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var search by remember { mutableStateOf("") }
+    val filtered = remember(search, apps) {
+        if (search.isBlank()) apps else apps.filter { it.label.contains(search, ignoreCase = true) || it.id.contains(search, ignoreCase = true) }
     }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cmd_pref_cancel)) } },
-        title = { Text(stringResource(R.string.cmd_pref_start_template)) },
+        title = { Text("Escolher aplicativo") },
         text = {
-            LazyColumn(Modifier.heightIn(max = 460.dp)) {
-                if (suggestions.isNotEmpty()) {
-                    item { Header(R.string.cmd_pref_suggestions) }
-                    items(suggestions) { recipe -> Entry("${recipe.label} · ${recipe.usage.substringBefore(" ·")}") { onRecipe(recipe) } }
+            Column(Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = search,
+                    onValueChange = { search = it },
+                    placeholder = { Text("Buscar app...") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                )
+                Spacer(Modifier.height(8.dp))
+                LazyColumn(Modifier.heightIn(max = 350.dp)) {
+                    items(filtered) { app ->
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable { onSelect(app) }
+                                .padding(vertical = 10.dp, horizontal = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column {
+                                Text(app.label, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+                                Text(app.id, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+                    }
                 }
-                item { Header(R.string.cmd_pref_apps_title) }
-                val list = integrationApps
-                when {
-                    list == null -> item { Text(stringResource(R.string.cmd_pref_searching_apps), style = MaterialTheme.typography.bodySmall) }
-                    list.isEmpty() -> item { Text(stringResource(R.string.cmd_pref_no_integrations), style = MaterialTheme.typography.bodySmall) }
-                    else -> items(list) { app -> Entry(app.label) { onApp(app) } }
-                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cmd_pref_cancel))
             }
         },
     )
 }
 
 @Composable
-private fun CheckRow(text: String, checked: Boolean, onChange: (Boolean) -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().clickable { onChange(!checked) }) {
-        Checkbox(checked = checked, onCheckedChange = onChange)
-        Text(text, style = MaterialTheme.typography.bodyMedium)
+private fun CatalogPickerDialog(
+    onSelect: (app.lawnchair.command.CatalogEntry) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var search by remember { mutableStateOf("") }
+    val filtered = remember(search) {
+        val q = search.trim().lowercase()
+        if (q.isBlank()) {
+            IntentCatalog.ENTRIES
+        } else {
+            IntentCatalog.ENTRIES.filter {
+                it.name.lowercase().contains(q) || it.action.lowercase().contains(q)
+            }
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Catálogo de Ações Comuns") },
+        text = {
+            Column(Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = search,
+                    onValueChange = { search = it },
+                    placeholder = { Text("Buscar ação...") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                )
+                Spacer(Modifier.height(8.dp))
+                LazyColumn(Modifier.heightIn(max = 380.dp)) {
+                    items(filtered) { entry ->
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable { onSelect(entry) }
+                                .padding(vertical = 10.dp, horizontal = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(Modifier.weight(1f)) {
+                                Text(entry.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+                                Text(entry.action, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                                if (entry.extras.isNotEmpty()) {
+                                    Text(
+                                        "Extras: " + entry.extras.joinToString(", ") { it.key.substringAfterLast('.') },
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cmd_pref_cancel))
+            }
+        },
+    )
+}
+
+/**
+ * Interactive expandable JSON Tree with "+" buttons to insert field paths into the format string.
+ */
+@Composable
+private fun JsonTreeView(
+    rawJson: String,
+    onInsertField: (fieldPath: String, arrayParentPath: String?) -> Unit,
+) {
+    val parsed = remember(rawJson) {
+        runCatching { JSONTokener(rawJson).nextValue() }.getOrNull()
+    }
+
+    if (parsed == null) {
+        Text("JSON inválido", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+        return
+    }
+
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(6.dp))
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(6.dp))
+            .padding(8.dp),
+    ) {
+        when (parsed) {
+            is JSONObject -> JsonObjectNode(obj = parsed, currentPath = "", arrayParentPath = null, onInsert = onInsertField)
+            is JSONArray -> JsonArrayNode(arr = parsed, currentPath = "", arrayParentPath = null, onInsert = onInsertField)
+            else -> Text(parsed.toString(), fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodySmall)
+        }
     }
 }
 
-/** The alias tab: the command the word stands for and what it resolves to now. */
 @Composable
-private fun AliasForm(word: String, expansion: String, onExpansion: (String) -> Unit, error: String?, analysis: app.lawnchair.command.Analysis?) {
-    OutlinedTextField(
-        value = expansion,
-        onValueChange = onExpansion,
-        singleLine = true,
-        label = { Text(stringResource(R.string.cmd_pref_alias_command)) },
-        supportingText = { Text(stringResource(R.string.cmd_pref_alias_command_hint)) },
-        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-    )
-    // An empty form needs no complaint; the error appears as soon as something is typed.
-    if (error != null && (word.isNotBlank() || expansion.isNotBlank())) {
-        Text(error, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 8.dp))
+private fun JsonObjectNode(
+    obj: JSONObject,
+    currentPath: String,
+    arrayParentPath: String?,
+    onInsert: (String, String?) -> Unit,
+) {
+    val keys = remember(obj) { obj.keys().asSequence().toList() }
+    Column {
+        keys.forEach { key ->
+            val value = obj.opt(key)
+            val path = if (currentPath.isEmpty()) key else "$currentPath.$key"
+            when (value) {
+                null, JSONObject.NULL -> {}
+
+                is JSONObject -> {
+                    var expanded by remember { mutableStateOf(false) }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { expanded = !expanded }
+                            .padding(vertical = 2.dp),
+                    ) {
+                        Icon(if (expanded) Icons.Default.KeyboardArrowDown else Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Text("$key: { ... }", fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+                    }
+                    if (expanded) {
+                        Box(Modifier.padding(start = 16.dp)) {
+                            JsonObjectNode(obj = value, currentPath = path, arrayParentPath = arrayParentPath, onInsert = onInsert)
+                        }
+                    }
+                }
+
+                is JSONArray -> {
+                    var expanded by remember { mutableStateOf(false) }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { expanded = !expanded }
+                            .padding(vertical = 2.dp),
+                    ) {
+                        Icon(if (expanded) Icons.Default.KeyboardArrowDown else Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Text("$key: [ ${value.length()} itens ]", fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+                    }
+                    if (expanded) {
+                        Box(Modifier.padding(start = 16.dp)) {
+                            JsonArrayNode(arr = value, currentPath = path, arrayParentPath = path, onInsert = onInsert)
+                        }
+                    }
+                }
+
+                else -> {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 2.dp),
+                    ) {
+                        Text(
+                            "$key: $value",
+                            fontFamily = FontFamily.Monospace,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.weight(1f),
+                            maxLines = 2,
+                        )
+                        IconButton(
+                            onClick = {
+                                val relPath = if (arrayParentPath != null && path.startsWith("$arrayParentPath.")) {
+                                    path.removePrefix("$arrayParentPath.").removePrefix("0.").removePrefix("1.").removePrefix("2.")
+                                } else {
+                                    path
+                                }
+                                onInsert(relPath, arrayParentPath)
+                            },
+                            modifier = Modifier.size(24.dp),
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = "Inserir campo", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                        }
+                    }
+                }
+            }
+        }
     }
-    PreviewBox(
-        analysis,
-        intro = word.trim().takeIf { it.isNotEmpty() }?.let { stringResource(R.string.cmd_pref_alias_typing, it.lowercase()) },
-    )
-    if (error == null && analysis != null) {
-        val alias = word.trim().lowercase()
-        Text(
-            stringResource(R.string.cmd_pref_alias_spoken, alias),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 8.dp),
-        )
-        Text(
-            stringResource(R.string.cmd_pref_alias_with_text, alias, expansion.trim()),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+}
+
+@Composable
+private fun JsonArrayNode(
+    arr: JSONArray,
+    currentPath: String,
+    arrayParentPath: String?,
+    onInsert: (String, String?) -> Unit,
+) {
+    Column {
+        val count = minOf(arr.length(), 5) // Show up to 5 items in preview
+        for (i in 0 until count) {
+            val item = arr.opt(i)
+            val path = if (currentPath.isEmpty()) "$i" else "$currentPath.$i"
+            when (item) {
+                is JSONObject -> {
+                    var expanded by remember { mutableStateOf(i == 0) }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { expanded = !expanded }
+                            .padding(vertical = 2.dp),
+                    ) {
+                        Icon(if (expanded) Icons.Default.KeyboardArrowDown else Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Text("[$i] { ... }", fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodySmall)
+                    }
+                    if (expanded) {
+                        Box(Modifier.padding(start = 16.dp)) {
+                            JsonObjectNode(obj = item, currentPath = path, arrayParentPath = arrayParentPath, onInsert = onInsert)
+                        }
+                    }
+                }
+
+                is JSONArray -> {
+                    var expanded by remember { mutableStateOf(false) }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { expanded = !expanded }
+                            .padding(vertical = 2.dp),
+                    ) {
+                        Icon(if (expanded) Icons.Default.KeyboardArrowDown else Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Text("[$i] [ ... ]", fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodySmall)
+                    }
+                    if (expanded) {
+                        Box(Modifier.padding(start = 16.dp)) {
+                            JsonArrayNode(arr = item, currentPath = path, arrayParentPath = arrayParentPath, onInsert = onInsert)
+                        }
+                    }
+                }
+
+                else -> {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 2.dp),
+                    ) {
+                        Text("[$i]: $item", fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
+                        IconButton(
+                            onClick = { onInsert(path, arrayParentPath) },
+                            modifier = Modifier.size(24.dp),
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = "Inserir campo", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                        }
+                    }
+                }
+            }
+        }
+        if (arr.length() > 5) {
+            Text("... e mais ${arr.length() - 5} itens", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
     }
 }

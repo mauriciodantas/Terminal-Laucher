@@ -11,6 +11,26 @@ enum class ArgKind { NONE, TEXT, CONTACT, CONTACT_AND_TEXT }
  */
 enum class ActionKind { INTENT, SHORTCUT, API }
 
+enum class ExtraType(val id: String) {
+    STRING("string"),
+    INT("int"),
+    BOOL("bool"),
+    LONG("long"),
+    FLOAT("float"),
+    URI("uri"),
+    ;
+
+    companion object {
+        fun of(raw: String): ExtraType = entries.firstOrNull { it.id.equals(raw, ignoreCase = true) } ?: STRING
+    }
+}
+
+data class IntentExtra(
+    val key: String,
+    val type: ExtraType = ExtraType.STRING,
+    val value: String = "",
+)
+
 /**
  * A command the user bound to a letter. "w ana oi" is the WhatsApp preset: the letter is `w`, the
  * [template] is a `VIEW` URI and the argument is a contact plus a message.
@@ -54,6 +74,11 @@ data class CustomAction(
     val pack: String = "",
     /** What the user wrote about the command (how to use it, what it needs), shown in its help; empty for none. */
     val help: String = "",
+    /** Whether this intent is an activity or broadcast: "activity" or "broadcast". */
+    val target: String = "activity",
+    val categories: List<String> = emptyList(),
+    val component: String? = null,
+    val extras: List<IntentExtra> = emptyList(),
 ) {
     /** "w [contato] [mensagem]" shown in the command list. */
     val usage: String
@@ -68,7 +93,16 @@ data class CustomAction(
 const val ACTION_VIEW = "android.intent.action.VIEW"
 
 /** Whether the action turns what is typed into a Pix code, so only a Pix key can be typed. */
-val CustomAction.takesPixKey: Boolean get() = "{pix}" in extraValue
+val CustomAction.takesPixKey: Boolean get() = "{pix}" in extraValue || extras.any { "{pix}" in it.value }
+
+/** All extras, including converted legacy textExtra if extras is empty. */
+fun CustomAction.effectiveExtras(): List<IntentExtra> = if (extras.isNotEmpty()) {
+    extras
+} else if (textExtra != null) {
+    listOf(IntentExtra(key = textExtra, type = ExtraType.STRING, value = extraValue.ifEmpty { "{text}" }))
+} else {
+    emptyList()
+}
 
 /** What [CustomAction.textExtra] carries for [text]; null when `{pix}` gets something that is not a Pix key. */
 fun CustomAction.extraFor(text: String): String? {

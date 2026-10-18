@@ -158,7 +158,9 @@ data object DockSearchProvider : PreferenceRoute, PreferenceDeepLink {
 }
 
 @Serializable
-data object CommandActions : PreferenceRootRoute, PreferenceDeepLink {
+data class CommandActions(val edit: String = "") :
+    PreferenceRootRoute,
+    PreferenceDeepLink {
     override val deepLink = "$URI/command-actions"
 }
 

@@ -9,7 +9,7 @@ import kotlinx.coroutines.withContext
  * A full command line run outside the command bar, as if it had been typed there and confirmed with
  * Enter: the same commands, custom actions and aliases. Used by widgets that run a command on a tap.
  */
-object CommandLine {
+object CommandLineRunner {
 
     /** What [text] does with the user's current apps, contacts, actions and aliases. */
     suspend fun analyze(context: Context, text: String): Analysis = withContext(Dispatchers.IO) {

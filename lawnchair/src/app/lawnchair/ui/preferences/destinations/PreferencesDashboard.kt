@@ -134,7 +134,7 @@ fun PreferencesDashboard(
                 label = stringResource(R.string.command_actions_title),
                 description = stringResource(R.string.command_actions_desc),
                 iconResource = R.drawable.ic_search,
-                onNavigate = { onNavigate(CommandActions) },
+                onNavigate = { onNavigate(CommandActions()) },
                 isSelected = currentRoute is CommandActions,
             )
 

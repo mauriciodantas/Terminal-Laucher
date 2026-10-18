@@ -156,8 +156,10 @@ fun PreferenceNavigation(
         ) { SearchProviderPreferences() }
 
         composable<CommandActions>(
-            deepLinks = getDeepLink(CommandActions),
-        ) { CommandActionsPreferences() }
+            deepLinks = getDeepLink(CommandActions()),
+        ) { backStackEntry ->
+            CommandActionsPreferences(openEdit = backStackEntry.toRoute<CommandActions>().edit)
+        }
         composable<CommandProviders> { backStackEntry ->
             CommandProvidersPreferences(open = backStackEntry.toRoute<CommandProviders>().open)
         }

@@ -335,6 +335,7 @@ private fun CommandScreen(onClose: () -> Unit) {
     var selected by remember { mutableIntStateOf(0) }
     var historyIndex by remember { mutableIntStateOf(-1) }
     var done by remember { mutableStateOf<String?>(null) }
+    var undoAction by remember { mutableStateOf<(() -> Unit)?>(null) }
     val focus = remember { FocusRequester() }
 
     val text = field.text
@@ -362,6 +363,7 @@ private fun CommandScreen(onClose: () -> Unit) {
         selected = 0
         done = null
         qr = null
+        undoAction = null
     }
 
     val executedLabel = stringResource(R.string.command_executed)
@@ -600,6 +602,56 @@ private fun CommandScreen(onClose: () -> Unit) {
                 return
             }
 
+            is CommandAction.SaveCommand -> {
+                val oldCustom = custom
+                val oldAliases = aliases
+                val ok = CommandExecutor.execute(context, action)
+                if (!ok) {
+                    done = failedLabel
+                    return
+                }
+                record(action, command)
+                historyIndex = -1
+                custom = CustomActionStore.load(context)
+                aliases = AliasStore.load(context)
+                val canonical = CommandLine.serialize(action.command)
+                setText("${action.command.name} ")
+                undoAction = {
+                    CustomActionStore.save(context, oldCustom)
+                    AliasStore.save(context, oldAliases)
+                    custom = CustomActionStore.load(context)
+                    aliases = AliasStore.load(context)
+                    done = context.getString(R.string.cmd_pref_undo)
+                }
+                done = "✓ " + context.getString(CommandR.string.cmd_alias_saved, canonical)
+                return
+            }
+
+            is CommandAction.RemoveCommand -> {
+                val oldCustom = custom
+                val oldAliases = aliases
+                val name = action.name.lowercase()
+                val ok = CommandExecutor.execute(context, action)
+                if (!ok) {
+                    done = failedLabel
+                    return
+                }
+                record(action, command)
+                historyIndex = -1
+                custom = CustomActionStore.load(context)
+                aliases = AliasStore.load(context)
+                setText("")
+                undoAction = {
+                    CustomActionStore.save(context, oldCustom)
+                    AliasStore.save(context, oldAliases)
+                    custom = CustomActionStore.load(context)
+                    aliases = AliasStore.load(context)
+                    done = context.getString(R.string.cmd_pref_undo)
+                }
+                done = context.getString(CommandR.string.cmd_unalias_done, name)
+                return
+            }
+
             else -> {}
         }
         val ok = CommandExecutor.execute(context, action)
@@ -675,7 +727,21 @@ private fun CommandScreen(onClose: () -> Unit) {
 
     /** A suggestion that is already a complete, runnable command runs on the tap, without Enter. */
     fun pick(suggestion: Suggestion) {
+        if (suggestion.kind == "API ›" && suggestion.completion.startsWith("${BuiltInCommand.ALIAS.word} ")) {
+            val name = suggestion.completion.removePrefix(BuiltInCommand.ALIAS.word).trim().substringBefore(' ')
+            context.startActivity(
+                app.lawnchair.ui.preferences.PreferenceActivity.createIntent(
+                    context,
+                    app.lawnchair.ui.preferences.navigation.CommandActions(edit = name),
+                ),
+            )
+            onClose()
+            return
+        }
         setText(suggestion.completion)
+        if (suggestion.completion.startsWith("${BuiltInCommand.ALIAS.word} ")) {
+            return
+        }
         CommandEngine.analyze(suggestion.completion, apps, contacts, granted, custom, aliases, extras.copy(history = history)).action
             ?.let { runAction(it, suggestion.completion.trim()) }
     }
@@ -1312,6 +1378,21 @@ private fun CommandScreen(onClose: () -> Unit) {
                             .heightIn(max = 360.dp)
                             .verticalScroll(rememberScrollState()),
                     )
+                    val undo = undoAction
+                    if (undo != null) {
+                        Text(
+                            text = "[" + stringResource(R.string.cmd_pref_undo).uppercase() + "]",
+                            color = Amber,
+                            fontFamily = mono(),
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier
+                                .padding(top = 4.dp)
+                                .clickable {
+                                    undo()
+                                    undoAction = null
+                                },
+                        )
+                    }
                     val code = qr
                     if (done != null && code != null) {
                         Box(Modifier.fillMaxWidth().padding(top = 8.dp), contentAlignment = Alignment.Center) {

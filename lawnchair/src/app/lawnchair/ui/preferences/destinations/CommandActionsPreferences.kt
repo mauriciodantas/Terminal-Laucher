@@ -1,12 +1,17 @@
 package app.lawnchair.ui.preferences.destinations
 
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,11 +23,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.rounded.Checklist
 import androidx.compose.material.icons.rounded.Close
@@ -33,7 +42,10 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
@@ -62,6 +74,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import app.lawnchair.command.ACTION_VIEW
@@ -81,6 +96,7 @@ import app.lawnchair.command.CommandActivity
 import app.lawnchair.command.CommandAlias
 import app.lawnchair.command.CommandEngine
 import app.lawnchair.command.CommandExecutor
+import app.lawnchair.command.CommandLine
 import app.lawnchair.command.CommandPack
 import app.lawnchair.command.CommandPacks
 import app.lawnchair.command.CommandPattern
@@ -90,7 +106,10 @@ import app.lawnchair.command.CustomAction
 import app.lawnchair.command.CustomActionStore
 import app.lawnchair.command.CustomActions
 import app.lawnchair.command.ImportCommandsActivity
+import app.lawnchair.command.ParseResult
+import app.lawnchair.command.ParsedCommand
 import app.lawnchair.command.ProviderStore
+import app.lawnchair.command.Providers
 import app.lawnchair.command.R as CommandR
 import app.lawnchair.command.StatsStore
 import app.lawnchair.command.TaskApp
@@ -118,7 +137,7 @@ internal val DemoContact = ContactEntry("Ana Souza", "+55 11 98765-4321")
  */
 @Suppress("ktlint:compose:modifier-missing-check")
 @Composable
-fun CommandActionsPreferences() {
+fun CommandActionsPreferences(openEdit: String = "") {
     val context = LocalContext.current
     val navController = LocalNavController.current
     val scope = rememberCoroutineScope()
@@ -127,6 +146,18 @@ fun CommandActionsPreferences() {
     var aliases by remember { mutableStateOf(AliasStore.load(context)) }
     // The command open in the editor; null when it is closed.
     var editor by remember { mutableStateOf<EditorTarget?>(null) }
+
+    androidx.compose.runtime.LaunchedEffect(openEdit) {
+        if (openEdit.isNotEmpty()) {
+            val act = actions.firstOrNull { it.letter.equals(openEdit, ignoreCase = true) }
+            val al = aliases.firstOrNull { it.name.equals(openEdit, ignoreCase = true) }
+            if (act != null) {
+                editor = EditorTarget.Action(act)
+            } else if (al != null) {
+                editor = EditorTarget.Alias(al)
+            }
+        }
+    }
     var query by remember { mutableStateOf("") }
     var backupOpen by remember { mutableStateOf(false) }
     var confirmRestore by remember { mutableStateOf(false) }
@@ -141,6 +172,10 @@ fun CommandActionsPreferences() {
     var selectedActions by remember { mutableStateOf(emptySet<CustomAction>()) }
     var selectedAliases by remember { mutableStateOf(emptySet<CommandAlias>()) }
     var confirmDeleteSelected by remember { mutableStateOf(false) }
+
+    var newCommandLine by remember { mutableStateOf("") }
+    var newLineError by remember { mutableStateOf<String?>(null) }
+    var pendingConflict by remember { mutableStateOf<ParsedCommand?>(null) }
 
     BackHandler(enabled = selectionMode) {
         selectionMode = false
@@ -175,6 +210,70 @@ fun CommandActionsPreferences() {
             snackbar.currentSnackbarData?.dismiss()
             val result = snackbar.showSnackbar(message, actionLabel = undoLabel, duration = SnackbarDuration.Long)
             if (result == SnackbarResult.ActionPerformed) restore()
+        }
+    }
+
+    fun saveFromLine() {
+        val line = newCommandLine.trim()
+        if (line.isEmpty()) return
+
+        val parseResult = CommandLine.parse(line, actions, aliases)
+        if (parseResult is ParseResult.Failure) {
+            newLineError = parseResult.error.message
+            return
+        }
+
+        val parsed = (parseResult as ParseResult.Success).command
+        val name = parsed.name
+        val existingAction = actions.firstOrNull { it.letter == name }
+        val existingAlias = aliases.firstOrNull { it.name.lowercase() == name }
+        val providers = ProviderStore.load(context)
+
+        val validation = CommandLine.validate(
+            command = parsed,
+            existingActions = actions,
+            existingAliases = aliases,
+            providers = providers,
+            ignore = existingAction ?: existingAlias,
+        )
+        if (!validation.isValid) {
+            newLineError = validation.errors.first()
+            return
+        }
+
+        val hasConflict = existingAction != null || existingAlias != null
+        if (hasConflict && pendingConflict != parsed) {
+            pendingConflict = parsed
+            val canonical = CommandLine.serialize(parsed)
+            newLineError = context.getString(CommandR.string.cmd_alias_conflict_preview) + " · " +
+                context.getString(CommandR.string.cmd_alias_conflict_new, canonical)
+            return
+        }
+
+        val beforeActions = actions
+        val beforeAliases = aliases
+        when (parsed) {
+            is ParsedCommand.Action -> {
+                val next = actions.filterNot { it.letter == parsed.action.letter } + parsed.action
+                update(next)
+                val nextAliases = aliases.filterNot { it.name.lowercase() == parsed.action.letter }
+                if (nextAliases.size != aliases.size) updateAliases(nextAliases)
+            }
+
+            is ParsedCommand.Alias -> {
+                val next = aliases.filterNot { it.name.lowercase() == parsed.alias.name.lowercase() } + parsed.alias
+                updateAliases(next)
+                val nextActions = actions.filterNot { it.letter == parsed.alias.name.lowercase() }
+                if (nextActions.size != actions.size) update(nextActions)
+            }
+        }
+        val canonical = CommandLine.serialize(parsed)
+        newCommandLine = ""
+        newLineError = null
+        pendingConflict = null
+        undoable(context.getString(CommandR.string.cmd_alias_saved, canonical)) {
+            update(beforeActions)
+            updateAliases(beforeAliases)
         }
     }
 
@@ -267,15 +366,36 @@ fun CommandActionsPreferences() {
         )
     }
 
-    val q = query.foldAccents().trim()
-    val shownActions = actions.filter {
-        q.isEmpty() || it.letter.foldAccents().contains(q) || it.label.foldAccents().contains(q)
-    }
-    val shownAliases = aliases.filter {
-        q.isEmpty() || it.name.foldAccents().contains(q) || it.expansion.foldAccents().contains(q)
+    val commandItems = remember(actions, aliases, usage) {
+        val nonApi = actions.filter { it.kind != ActionKind.API }.map { action ->
+            val count = usage[CommandUsage.actionKey(action.letter)] ?: 0
+            val dest = CommandLine.serialize(action).substringAfter(' ').substringBefore(" # ")
+            CommandItem.Action(action, dest, count)
+        }
+        val aliasItems = aliases.map { alias ->
+            val count = usage[CommandUsage.aliasKey(alias.name)] ?: 0
+            CommandItem.Alias(alias, count)
+        }
+        (nonApi + aliasItems).sortedWith(
+            compareByDescending<CommandItem> { it.usageCount }
+                .thenBy { it.name },
+        )
     }
 
-    fun usedLabel(key: String): String = CommandUsage.label(usage, key).let { if (it.isEmpty()) "" else " · $it" }
+    val apiItems = remember(actions, usage) {
+        actions.filter { it.kind == ActionKind.API }.map { action ->
+            val count = usage[CommandUsage.actionKey(action.letter)] ?: 0
+            val provider = if (action.provider.isNotEmpty()) "@${action.provider}" else ""
+            val dest = if (provider.isNotEmpty()) "$provider · ${action.template}" else action.template
+            CommandItem.Action(action, dest, count)
+        }.sortedWith(
+            compareByDescending<CommandItem.Action> { it.usageCount }
+                .thenBy { it.name },
+        )
+    }
+
+    val shownCommands = commandItems.filter { it.matches(query) }
+    val shownApiCommands = apiItems.filter { it.matches(query) }
 
     val selectedCount = selectedActions.size + selectedAliases.size
     val screenTitle = if (selectionMode) {
@@ -293,18 +413,29 @@ fun CommandActionsPreferences() {
             label = screenTitle,
             actions = {
                 if (selectionMode) {
-                    val allShownSelected = (shownActions.isNotEmpty() || shownAliases.isNotEmpty()) &&
-                        shownActions.all { it in selectedActions } &&
-                        shownAliases.all { it in selectedAliases }
+                    val allShownSelected = (shownCommands.isNotEmpty() || shownApiCommands.isNotEmpty()) &&
+                        shownCommands.all {
+                            when (it) {
+                                is CommandItem.Action -> it.action in selectedActions
+                                is CommandItem.Alias -> it.alias in selectedAliases
+                            }
+                        } &&
+                        shownApiCommands.all { it.action in selectedActions }
                     ClickableIcon(
                         imageVector = if (allShownSelected) Icons.Rounded.Deselect else Icons.Rounded.SelectAll,
                         onClick = {
                             if (allShownSelected) {
-                                selectedActions = selectedActions - shownActions.toSet()
-                                selectedAliases = selectedAliases - shownAliases.toSet()
+                                val actionsToDeselect = shownCommands.filterIsInstance<CommandItem.Action>().map { it.action } +
+                                    shownApiCommands.map { it.action }
+                                val aliasesToDeselect = shownCommands.filterIsInstance<CommandItem.Alias>().map { it.alias }
+                                selectedActions = selectedActions - actionsToDeselect.toSet()
+                                selectedAliases = selectedAliases - aliasesToDeselect.toSet()
                             } else {
-                                selectedActions = selectedActions + shownActions
-                                selectedAliases = selectedAliases + shownAliases
+                                val actionsToSelect = shownCommands.filterIsInstance<CommandItem.Action>().map { it.action } +
+                                    shownApiCommands.map { it.action }
+                                val aliasesToSelect = shownCommands.filterIsInstance<CommandItem.Alias>().map { it.alias }
+                                selectedActions = selectedActions + actionsToSelect
+                                selectedAliases = selectedAliases + aliasesToSelect
                             }
                         },
                     )
@@ -341,89 +472,147 @@ fun CommandActionsPreferences() {
                 placeholder = { Text(stringResource(R.string.cmd_pref_search)) },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             )
-            // Actions and aliases are both "my commands": one list, one way to add.
-            PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_commands)) {
-                if (!selectionMode) {
-                    ClickablePreference(
-                        label = stringResource(R.string.cmd_pref_new_command),
-                        subtitle = stringResource(R.string.cmd_pref_new_command_hint),
+            if (!selectionMode) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.Top,
+                ) {
+                    OutlinedTextField(
+                        value = newCommandLine,
+                        onValueChange = {
+                            newCommandLine = it
+                            newLineError = null
+                            pendingConflict = null
+                        },
+                        placeholder = { Text(stringResource(R.string.cmd_pref_new_command)) },
+                        singleLine = true,
+                        isError = newLineError != null,
+                        supportingText = newLineError?.let { { Text(it) } },
+                        keyboardOptions = KeyboardOptions(
+                            imeAction = ImeAction.Done,
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = { saveFromLine() },
+                        ),
+                        modifier = Modifier.weight(1f),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    FilledTonalIconButton(
                         onClick = { editor = EditorTarget.New },
-                    )
+                        modifier = Modifier.padding(top = 4.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = stringResource(R.string.cmd_pref_new_command),
+                        )
+                    }
                 }
-                if (q.isNotEmpty() && shownActions.isEmpty() && shownAliases.isEmpty()) {
-                    ClickablePreference(
-                        label = stringResource(R.string.cmd_pref_no_actions),
-                        subtitle = stringResource(R.string.cmd_pref_no_match),
-                        onClick = {},
-                    )
+            }
+            // Main commands group (actions and aliases merged, sorted by usage)
+            if (shownCommands.isNotEmpty() || (shownApiCommands.isEmpty() && (query.isNotEmpty() || (commandItems.isEmpty() && apiItems.isEmpty())))) {
+                PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_commands)) {
+                    if (query.isNotEmpty() && shownCommands.isEmpty() && shownApiCommands.isEmpty()) {
+                        ClickablePreference(
+                            label = stringResource(R.string.cmd_pref_no_actions),
+                            subtitle = stringResource(R.string.cmd_pref_no_match),
+                            onClick = {},
+                        )
+                    }
+                    shownCommands.forEach { item ->
+                        val isSelected = when (item) {
+                            is CommandItem.Action -> item.action in selectedActions
+                            is CommandItem.Alias -> item.alias in selectedAliases
+                        }
+                        CommandLinePreference(
+                            name = item.name,
+                            destination = item.destination,
+                            usageCount = item.usageCount,
+                            isSelected = isSelected,
+                            selectionMode = selectionMode,
+                            onClick = {
+                                if (selectionMode) {
+                                    when (item) {
+                                        is CommandItem.Action -> {
+                                            selectedActions = if (isSelected) selectedActions - item.action else selectedActions + item.action
+                                        }
+
+                                        is CommandItem.Alias -> {
+                                            selectedAliases = if (isSelected) selectedAliases - item.alias else selectedAliases + item.alias
+                                        }
+                                    }
+                                } else {
+                                    when (item) {
+                                        is CommandItem.Action -> editor = EditorTarget.Action(item.action)
+                                        is CommandItem.Alias -> editor = EditorTarget.Alias(item.alias)
+                                    }
+                                }
+                            },
+                            onLongClick = {
+                                if (selectionMode) {
+                                    when (item) {
+                                        is CommandItem.Action -> {
+                                            selectedActions = if (isSelected) selectedActions - item.action else selectedActions + item.action
+                                        }
+
+                                        is CommandItem.Alias -> {
+                                            selectedAliases = if (isSelected) selectedAliases - item.alias else selectedAliases + item.alias
+                                        }
+                                    }
+                                } else {
+                                    selectionMode = true
+                                    when (item) {
+                                        is CommandItem.Action -> selectedActions = setOf(item.action)
+                                        is CommandItem.Alias -> selectedAliases = setOf(item.alias)
+                                    }
+                                }
+                            },
+                        )
+                    }
                 }
-                shownActions.forEach { action ->
-                    val isSelected = action in selectedActions
-                    ClickablePreference(
-                        label = "${action.letter} · ${action.label}",
-                        subtitle = action.usage + usedLabel(CommandUsage.actionKey(action.letter)),
-                        startWidget = if (selectionMode) {
-                            {
-                                Checkbox(
-                                    checked = isSelected,
-                                    onCheckedChange = null,
-                                )
-                            }
-                        } else {
-                            null
-                        },
-                        onClick = {
-                            if (selectionMode) {
-                                selectedActions = if (isSelected) selectedActions - action else selectedActions + action
-                            } else {
-                                editor = EditorTarget.Action(action)
-                            }
-                        },
-                        onLongClick = {
-                            if (selectionMode) {
-                                selectedActions = if (isSelected) selectedActions - action else selectedActions + action
-                            } else {
-                                selectionMode = true
-                                selectedActions = setOf(action)
-                            }
-                        },
-                    )
-                }
-                shownAliases.forEach { alias ->
-                    val isSelected = alias in selectedAliases
-                    ClickablePreference(
-                        label = alias.name,
-                        subtitle = "→ ${alias.expansion}" + usedLabel(CommandUsage.aliasKey(alias.name)),
-                        startWidget = if (selectionMode) {
-                            {
-                                Checkbox(
-                                    checked = isSelected,
-                                    onCheckedChange = null,
-                                )
-                            }
-                        } else {
-                            null
-                        },
-                        onClick = {
-                            if (selectionMode) {
-                                selectedAliases = if (isSelected) selectedAliases - alias else selectedAliases + alias
-                            } else {
-                                editor = EditorTarget.Alias(alias)
-                            }
-                        },
-                        onLongClick = {
-                            if (selectionMode) {
-                                selectedAliases = if (isSelected) selectedAliases - alias else selectedAliases + alias
-                            } else {
-                                selectionMode = true
-                                selectedAliases = setOf(alias)
-                            }
-                        },
-                    )
+            }
+            // API commands group
+            if (shownApiCommands.isNotEmpty()) {
+                PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_api_commands)) {
+                    shownApiCommands.forEach { item ->
+                        val isSelected = item.action in selectedActions
+                        CommandLinePreference(
+                            name = item.name,
+                            destination = item.destination,
+                            usageCount = item.usageCount,
+                            isSelected = isSelected,
+                            selectionMode = selectionMode,
+                            onClick = {
+                                if (selectionMode) {
+                                    selectedActions = if (isSelected) selectedActions - item.action else selectedActions + item.action
+                                } else {
+                                    editor = EditorTarget.Action(item.action)
+                                }
+                            },
+                            onLongClick = {
+                                if (selectionMode) {
+                                    selectedActions = if (isSelected) selectedActions - item.action else selectedActions + item.action
+                                } else {
+                                    selectionMode = true
+                                    selectedActions = setOf(item.action)
+                                }
+                            },
+                        )
+                    }
                 }
             }
             if (!selectionMode) {
                 PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_default_apps)) {
+                    // Which launcher answers the home button is the system's choice; the screen opens from here.
+                    val defaultLauncher = remember { defaultLauncherLabel(context) }
+                    ClickablePreference(
+                        label = stringResource(R.string.cmd_pref_default_launcher),
+                        subtitle = defaultLauncher ?: stringResource(R.string.cmd_pref_default_launcher_none),
+                        onClick = {
+                            runCatching { context.startActivity(Intent(Settings.ACTION_HOME_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+                        },
+                    )
                     ClickablePreference(
                         label = stringResource(R.string.cmd_pref_task_app),
                         subtitle = taskApp ?: stringResource(R.string.cmd_pref_task_app_none),
@@ -1157,4 +1346,114 @@ private fun AiDialog(
             )
         },
     )
+}
+
+private sealed interface CommandItem {
+    val name: String
+    val destination: String
+    val usageCount: Int
+    fun matches(query: String): Boolean
+
+    data class Action(
+        val action: CustomAction,
+        override val destination: String,
+        override val usageCount: Int,
+    ) : CommandItem {
+        override val name: String get() = action.letter
+        override fun matches(query: String): Boolean {
+            val q = query.foldAccents().trim()
+            if (q.isEmpty()) return true
+            return action.letter.foldAccents().contains(q) ||
+                action.label.foldAccents().contains(q) ||
+                destination.foldAccents().contains(q)
+        }
+    }
+
+    data class Alias(
+        val alias: CommandAlias,
+        override val usageCount: Int,
+    ) : CommandItem {
+        override val name: String get() = alias.name
+        override val destination: String get() = alias.expansion
+        override fun matches(query: String): Boolean {
+            val q = query.foldAccents().trim()
+            if (q.isEmpty()) return true
+            return alias.name.foldAccents().contains(q) ||
+                alias.expansion.foldAccents().contains(q)
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun CommandLinePreference(
+    name: String,
+    destination: String,
+    usageCount: Int,
+    isSelected: Boolean,
+    selectionMode: Boolean,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+) {
+    ListItem(
+        headlineContent = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = buildAnnotatedString {
+                        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                            append(name)
+                        }
+                        append("  ")
+                        withStyle(SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant)) {
+                            append(destination)
+                        }
+                    },
+                    fontFamily = FontFamily.Monospace,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+                if (usageCount > 0) {
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "$usageCount×",
+                        fontFamily = FontFamily.Monospace,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        },
+        leadingContent = if (selectionMode) {
+            {
+                Checkbox(
+                    checked = isSelected,
+                    onCheckedChange = null,
+                )
+            }
+        } else {
+            null
+        },
+        colors = ListItemDefaults.colors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            headlineColor = MaterialTheme.colorScheme.onSurface,
+        ),
+        modifier = Modifier
+            .fillMaxWidth()
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick,
+            ),
+    )
+}
+
+/** The name of the app that answers the home button, or null when the system names none. */
+private fun defaultLauncherLabel(context: Context): String? {
+    val pm = context.packageManager
+    val home = pm.resolveActivity(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME), PackageManager.MATCH_DEFAULT_ONLY) ?: return null
+    if (home.activityInfo.packageName == "android") return null
+    return home.loadLabel(pm).toString()
 }

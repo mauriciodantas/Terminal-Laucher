@@ -25,7 +25,7 @@ class CommandRunActivity : ComponentActivity() {
             return
         }
         lifecycleScope.launch {
-            val result = CommandLine.run(this@CommandRunActivity, command)
+            val result = CommandLineRunner.run(this@CommandRunActivity, command)
             if (!result.ran) {
                 Toast.makeText(this@CommandRunActivity, getString(R.string.cmd_run_failed, command), Toast.LENGTH_SHORT).show()
             }

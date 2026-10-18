@@ -624,4 +624,8 @@
     <string name="cmd_pref_api_advanced">Configuração avançada (JSON)</string>
     <string name="cmd_pref_api_advanced_hint">Ajuste fino do formato, listas, limites e corpo em JSON bruto.</string>
     <string name="cmd_pref_api_json_invalid">JSON inválido</string>
+    <string name="cmd_guide_section_syntax">Sintaxe da linha de comando</string>
+    <string name="cmd_pref_group_api_commands">Comandos de API</string>
+    <string name="cmd_pref_default_launcher">Launcher padrão</string>
+    <string name="cmd_pref_default_launcher_none">Nenhum escolhido · toque para escolher</string>
 </resources>

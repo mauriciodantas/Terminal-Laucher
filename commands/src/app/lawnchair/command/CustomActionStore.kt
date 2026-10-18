@@ -37,9 +37,24 @@ object CustomActionStore {
                     .put("sms", it.smsFallback)
                     .put("action", it.intentAction)
                     .put("mime", it.mimeType ?: JSONObject.NULL)
-                    .put("extra", it.textExtra ?: JSONObject.NULL)
+                    .put("extra", it.textExtra ?: it.extras.firstOrNull()?.key ?: JSONObject.NULL)
                     .put("pattern", it.pattern)
                     .apply { if (it.extraValue.isNotEmpty()) put("extraValue", it.extraValue) }
+                    .apply {
+                        if (it.extras.isNotEmpty()) {
+                            put(
+                                "extras",
+                                JSONArray().apply {
+                                    it.extras.forEach { e ->
+                                        put(JSONObject().put("key", e.key).put("type", e.type.id).put("value", e.value))
+                                    }
+                                },
+                            )
+                        }
+                    }
+                    .apply { if (it.target != "activity") put("target", it.target) }
+                    .apply { if (it.categories.isNotEmpty()) put("categories", JSONArray(it.categories)) }
+                    .apply { if (!it.component.isNullOrEmpty()) put("component", it.component) }
                     .put("api", it.api?.let { api -> apiJson(api) } ?: JSONObject.NULL)
                     .put("pack", it.pack)
                     .put("provider", it.provider)
@@ -57,6 +72,21 @@ object CustomActionStore {
             runCatching {
                 val o = array.getJSONObject(i)
                 val packages = o.getJSONArray("packages")
+                val parsedExtras = if (o.has("extras")) {
+                    val arr = o.getJSONArray("extras")
+                    (0 until arr.length()).mapNotNull { idx ->
+                        runCatching {
+                            val item = arr.getJSONObject(idx)
+                            IntentExtra(
+                                key = item.getString("key"),
+                                type = ExtraType.of(item.optString("type", "string")),
+                                value = item.optString("value", ""),
+                            )
+                        }.getOrNull()
+                    }
+                } else {
+                    emptyList()
+                }
                 CustomAction(
                     letter = o.getString("letter"),
                     label = o.getString("label"),
@@ -74,6 +104,10 @@ object CustomActionStore {
                     pack = o.optString("pack", ""),
                     provider = o.optString("provider", ""),
                     help = o.optString("help", "").take(CustomActions.MAX_HELP),
+                    target = o.optString("target", "activity"),
+                    categories = o.optJSONArray("categories")?.let { arr -> (0 until arr.length()).map { arr.getString(it) } } ?: emptyList(),
+                    component = if (o.isNull("component")) null else o.optString("component"),
+                    extras = parsedExtras,
                 )
             }.getOrNull()
         }

@@ -143,7 +143,7 @@ object CommandScheduler {
     }
 
     private suspend fun run(app: Context, line: String, id: Long) {
-        val analysis = CommandLine.analyze(app, line)
+        val analysis = CommandLineRunner.analyze(app, line)
         val action = analysis.action
         when {
             action == null -> notify(app, id, app.getString(R.string.cmd_notify_failed), line, null)

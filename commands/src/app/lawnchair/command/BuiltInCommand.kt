@@ -56,9 +56,12 @@ enum class BuiltInCommand(
     WEATHER(R.string.cmd_word_weather, "clima", "weather", short = "tempo"),
     FREE_SPACE(R.string.cmd_word_free_space, "liberar", "cleanup"),
     UNINSTALL(R.string.cmd_word_uninstall, "desinstalar", "uninstall"),
+    APP_INFO(R.string.cmd_word_app_info, "detalhes", "appinfo"),
     UPDATE(R.string.cmd_word_update, "atualizar", "update"),
     PACK(R.string.cmd_word_pack, "pacote", "pack"),
     IMPORT(R.string.cmd_word_import, "importar", "import"),
+    ALIAS(R.string.cmd_word_alias, "alias", "alias"),
+    UNALIAS(R.string.cmd_word_unalias, "unalias", "unalias"),
     ;
 
     /** The word shown and suggested: "abrir" in Portuguese, "open" in English. */

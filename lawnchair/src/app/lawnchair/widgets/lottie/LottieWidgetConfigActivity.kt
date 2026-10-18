@@ -40,7 +40,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import app.lawnchair.command.Analysis
-import app.lawnchair.command.CommandLine
+import app.lawnchair.command.CommandLineRunner
 import app.lawnchair.command.Tone
 import app.lawnchair.ui.theme.LawnchairTheme
 import app.lawnchair.widgets.lottie.LottieWidgetStore.Playback
@@ -179,7 +179,7 @@ private fun ConfigDialog(
         if (command.isBlank()) return@LaunchedEffect
         // Waits for a pause in typing; looking up apps and contacts on every key is wasteful.
         delay(250)
-        analysis = CommandLine.analyze(context, command.trim())
+        analysis = CommandLineRunner.analyze(context, command.trim())
     }
 
     AlertDialog(

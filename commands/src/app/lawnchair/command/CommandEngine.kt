@@ -86,6 +86,9 @@ sealed interface CommandAction {
     /** Asks the system to uninstall [app]; it confirms first. */
     data class Uninstall(val app: AppEntry) : CommandAction
 
+    /** Opens the system settings page of [app] (permissions, notifications, defaults). */
+    data class AppInfo(val app: AppEntry) : CommandAction
+
     /** The Play Store page of [app], or the store itself when null. */
     data class UpdateApp(val app: AppEntry?) : CommandAction
 
@@ -108,6 +111,12 @@ sealed interface CommandAction {
     data class ImportTheme(val spec: ThemeSpec, val json: String) : CommandAction
     data class ImportWidget(val json: String, val name: String) : CommandAction
     data class ImportCommands(val pack: CommandPack, val json: String) : CommandAction
+
+    /** Saves a new or updated command or alias created via the command bar. */
+    data class SaveCommand(val command: ParsedCommand, val rawLine: String, val isReplacement: Boolean = false) : CommandAction
+
+    /** Removes a command or alias by name. */
+    data class RemoveCommand(val name: String) : CommandAction
 }
 
 /** Everything the screen needs for the text typed so far. [action] is null while it cannot run. */
@@ -448,6 +457,8 @@ object CommandEngine {
 
         is CommandAction.Uninstall -> "ACTION_DELETE · package:" + action.app.id.substringBefore('/')
 
+        is CommandAction.AppInfo -> "ACTION_APPLICATION_DETAILS_SETTINGS · package:" + action.app.id.substringBefore('/')
+
         is CommandAction.UpdateApp -> action.app?.let { "market://details?id=" + it.id.substringBefore('/') } ?: "com.android.vending"
 
         is CommandAction.InstallPack -> "actions += " + action.id
@@ -500,6 +511,10 @@ object CommandEngine {
         is CommandAction.ImportWidget -> "ImportWidgetActivity · " + action.name
 
         is CommandAction.ImportCommands -> "ImportCommandsActivity · " + action.pack.actions.size + " actions, " + action.pack.aliases.size + " aliases"
+
+        is CommandAction.SaveCommand -> "alias " + CommandLine.serialize(action.command)
+
+        is CommandAction.RemoveCommand -> "unalias " + action.name
 
         is CommandAction.Custom -> describeCustom(action, providers)
     }

@@ -100,6 +100,7 @@ class CommandRegistry(private val commands: List<Command>) {
                 InfoCommand(BuiltInCommand.STORAGE, R.string.cmd_help_storage),
                 FreeSpaceCommand,
                 UninstallCommand,
+                AppInfoCommand,
                 UpdateCommand,
                 InfoCommand(BuiltInCommand.IP, R.string.cmd_help_ip),
                 InfoCommand(BuiltInCommand.UPTIME, R.string.cmd_help_uptime),
@@ -110,6 +111,8 @@ class CommandRegistry(private val commands: List<Command>) {
                 PackCommand,
                 ImportCommand,
                 UrlCommand,
+                AliasCommand,
+                UnaliasCommand,
             )
         }
 

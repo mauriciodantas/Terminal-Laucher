@@ -18,7 +18,7 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.TextView
 import android.widget.Toast
-import app.lawnchair.command.CommandLine
+import app.lawnchair.command.CommandLineRunner
 import app.lawnchair.theme.color.tokens.PhosphorColorToken
 import app.lawnchair.util.repeatOnAttached
 import app.lawnchair.widgets.lottie.LottieWidgetStore.Playback
@@ -147,7 +147,7 @@ class LottieWidgetView(context: Context, private val appWidgetId: Int) : FrameLa
         }
         val scope = attachedScope ?: MainScope()
         scope.launch {
-            val result = CommandLine.run(context, command)
+            val result = CommandLineRunner.run(context, command)
             val durationSec = LottieWidgetStore.resultDurationSeconds(context, appWidgetId)
             val durationMs = durationSec * 1000L
             if (!result.ran) {

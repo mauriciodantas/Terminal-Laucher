@@ -12,6 +12,7 @@ import android.os.Process
 import android.provider.AlarmClock
 import android.provider.CalendarContract
 import android.provider.ContactsContract
+import android.provider.Settings
 import androidx.core.content.FileProvider
 import app.lawnchair.theme.SystemColorMode
 import app.lawnchair.widgets.lottie.ImportWidgetActivity
@@ -161,6 +162,11 @@ object CommandExecutor {
                 Intent(Intent.ACTION_DELETE, Uri.fromParts("package", packageOf(action.app) ?: return false, null)),
             )
 
+            is CommandAction.AppInfo -> start(
+                context,
+                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", packageOf(action.app) ?: return false, null)),
+            )
+
             is CommandAction.UpdateApp -> return openStore(context, action.app)
 
             is CommandAction.InstallPack -> return installPack(context, action.id) != null
@@ -178,7 +184,7 @@ object CommandExecutor {
                     context,
                     app.lawnchair.ui.preferences.PreferenceActivity.createIntent(
                         context,
-                        app.lawnchair.ui.preferences.navigation.CommandActions,
+                        app.lawnchair.ui.preferences.navigation.CommandActions(),
                     ),
                 )
             }
@@ -294,6 +300,32 @@ object CommandExecutor {
                 context,
                 Intent(Intent.ACTION_WEB_SEARCH).putExtra(SearchManager.QUERY, action.query),
             )
+
+            is CommandAction.SaveCommand -> {
+                when (val cmd = action.command) {
+                    is ParsedCommand.Action -> {
+                        val existing = CustomActionStore.load(context).filterNot { it.letter == cmd.action.letter }
+                        CustomActionStore.save(context, existing + cmd.action)
+                        val existingAliases = AliasStore.load(context).filterNot { it.name.lowercase() == cmd.action.letter }
+                        AliasStore.save(context, existingAliases)
+                    }
+
+                    is ParsedCommand.Alias -> {
+                        val existing = AliasStore.load(context).filterNot { it.name.lowercase() == cmd.alias.name.lowercase() }
+                        AliasStore.save(context, existing + cmd.alias)
+                        val existingActions = CustomActionStore.load(context).filterNot { it.letter == cmd.alias.name.lowercase() }
+                        CustomActionStore.save(context, existingActions)
+                    }
+                }
+            }
+
+            is CommandAction.RemoveCommand -> {
+                val name = action.name.lowercase()
+                val existingActions = CustomActionStore.load(context).filterNot { it.letter == name }
+                CustomActionStore.save(context, existingActions)
+                val existingAliases = AliasStore.load(context).filterNot { it.name.lowercase() == name }
+                AliasStore.save(context, existingAliases)
+            }
         }
         true
     }.getOrDefault(false)
@@ -397,6 +429,10 @@ object CommandExecutor {
         val targets = if (spec.packages.isEmpty()) listOf<String?>(null) else spec.packages
         for (pkg in targets) {
             val intent = buildIntent(spec, action.contact, action.text, pkg)
+            if (spec.target == "broadcast") {
+                context.sendBroadcast(intent)
+                return true
+            }
             if (context.packageManager.resolveActivity(intent, 0) != null) {
                 start(context, intent)
                 return true
@@ -423,7 +459,24 @@ object CommandExecutor {
         } else if (spec.mimeType != null) {
             intent.type = spec.mimeType
         }
-        spec.textExtra?.let { intent.putExtra(it, spec.extraFor(text) ?: text) }
+        spec.categories.forEach { intent.addCategory(it) }
+        spec.component?.let {
+            val comp = ComponentName.unflattenFromString(it)
+            if (comp != null) intent.component = comp
+        }
+        spec.effectiveExtras().forEach { extra ->
+            val filled = fillTemplate(extra.value, contact, text, ::normalizedNumber)
+            if (filled.isNotEmpty()) {
+                when (extra.type) {
+                    ExtraType.STRING -> intent.putExtra(extra.key, spec.extraFor(filled) ?: filled)
+                    ExtraType.INT -> filled.toIntOrNull()?.let { intent.putExtra(extra.key, it) }
+                    ExtraType.BOOL -> intent.putExtra(extra.key, filled.toBooleanStrictOrNull() ?: (filled == "1" || filled.equals("true", ignoreCase = true)))
+                    ExtraType.LONG -> filled.toLongOrNull()?.let { intent.putExtra(extra.key, it) }
+                    ExtraType.FLOAT -> filled.toFloatOrNull()?.let { intent.putExtra(extra.key, it) }
+                    ExtraType.URI -> intent.putExtra(extra.key, Uri.parse(filled))
+                }
+            }
+        }
         pkg?.let { intent.setPackage(it) }
         return intent
     }

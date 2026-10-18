@@ -106,7 +106,7 @@ fun DockSearchPreference(
                             )
                             NavigationActionPreference(
                                 label = stringResource(R.string.command_actions_title),
-                                destination = CommandActions,
+                                destination = CommandActions(),
                                 subtitle = stringResource(R.string.command_actions_desc),
                             )
                             NavigationActionPreference(

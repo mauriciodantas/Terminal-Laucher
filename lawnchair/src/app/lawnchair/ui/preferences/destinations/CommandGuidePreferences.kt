@@ -49,7 +49,22 @@ private const val GITHUB_GUIDE_URL =
     "https://github.com/mauriciodantas/Terminal-Laucher/blob/16-dev/docs/gerar-comando-api-provedor.md"
 
 internal const val AI_MASTER_PROMPT = """Você é um especialista em automação e comandos do Terminal Launcher para Android.
-Sua tarefa é gerar um pacote de comandos no formato .tcmd (arquivo JSON) a partir da documentação de API fornecida pelo usuário.
+Sua tarefa é gerar comandos para a barra e pacotes no formato .tcmd (arquivo JSON).
+
+SINTAXE DA LINHA DE COMANDO:
+1. Links:
+   NOME https://exemplo.com/busca?q={text} # Rótulo
+2. Abrir apps e atalhos:
+   NOME am start -p com.pacote.app # Rótulo
+   NOME am start -p com.pacote.app --shortcut id_do_atalho # Rótulo
+3. Disparar intents e broadcasts:
+   NOME am start -a android.intent.action.VIEW -d geo:0,0?q={text} # Mapa
+   NOME am start -a android.intent.action.SET_ALARM --ei android.intent.extra.alarm.HOUR {1} --ei android.intent.extra.alarm.MINUTES {2} --ez android.intent.extra.alarm.SKIP_UI true # Despertar
+   NOME am broadcast -a com.exemplo.ACAO --es chave valor # Broadcast
+4. Consultar APIs:
+   NOME curl @provedor/caminho [-X METHOD] [-H "Header: Valor"] [-d corpo] [--type json|form|text] [--list items] [--max 5] [--upcoming data] | FORMATO # Rótulo
+5. Apelidos:
+   alias NOME EXPANSÃO
 
 REGRAS OBRIGATÓRIAS DO PACOTE .tcmd:
 1. ESTRUTURA GERAL:
@@ -104,7 +119,10 @@ O Terminal Launcher solicita a chave ao usuário durante a importação do pacot
     "format": "{campo.subcampo} · {0.titulo}\n{outro}",
     "list": "items",
     "max": 5,
-    "upcoming": ""
+    "upcoming": "",
+    "headers": {},
+    "body": "",
+    "bodyType": "JSON"
   }
 }
 - "letter": Palavra do comando na barra (apenas letras e dígitos, minúsculas). Não use palavras reservadas do sistema (calc, clima, tempo, abrir, wifi, bluetooth, lanterna, silencio, brilho, volume, tocar, copiar, colar, config, agenda, nota, cancelar, bateria, armazenamento, ip, ping, rede, fast, ia, qr, etc.).
@@ -112,24 +130,37 @@ O Terminal Launcher solicita a chave ao usuário durante a importação do pacot
 - "provider": Deve coincidir com o "id" de um provedor em providers[].
 - "arg": "TEXT" se o comando usa o que for digitado ({text}), ou "NONE" se roda sozinho.
 - "packages": Deve ser obrigatoriamente [] em API.
-- "api.method": "GET" ou "POST" (PUT/PATCH/DELETE não são suportados).
+- "api.method": "GET", "POST", "PUT", "PATCH" ou "DELETE".
 - "api.format": String de formatação da resposta. Chaves {campo} apontam para o JSON da resposta (com pontos para aninhamento: {main.temp}, {weather.0.description}).
   * Suporta {campo|date} para converter datas ISO em data amigável local.
   * Partes separadas por ' · ' (espaço, ponto médio, espaço) são omitidas se os campos estiverem vazios.
 - "api.list": Caminho do array se a resposta for uma lista (ex: "results").
 - "api.max": Quantidade de itens mostrados (1 a 20, padrão 5).
 - "api.upcoming": Nome do campo de data ISO para omitir eventos passados (opcional).
-- "api.body": Corpo da requisição se method for "POST" (opcional).
+- "api.headers": Cabeçalhos específicos desta chamada (opcional).
+- "api.body": Corpo da requisição quando method != GET (opcional).
+- "api.bodyType": "JSON", "FORM" ou "TEXT" (opcional).
 
-5. DEFINIÇÃO DE COMANDO PARA ABRIR APPS/SITES (kind: "VIEW"):
+5. DEFINIÇÃO DE COMANDO INTENT / APP / SHORTCUT (actions[]):
 {
   "letter": "w",
   "label": "WhatsApp",
-  "kind": "VIEW",
+  "kind": "INTENT",
   "template": "https://api.whatsapp.com/send?text={text}",
   "packages": ["com.whatsapp"],
-  "arg": "TEXT"
+  "arg": "TEXT",
+  "target": "activity",
+  "categories": [],
+  "component": null,
+  "extras": [
+    { "key": "android.intent.extra.TEXT", "type": "string", "value": "{text}" }
+  ]
 }
+- "kind": "INTENT", "APP" ou "SHORTCUT".
+- "target": "activity" (padrão) ou "broadcast".
+- "categories": Lista de categorias de Intent (ex: ["android.intent.category.BROWSABLE"]).
+- "component": Componente explícito "pacote/classe" (opcional).
+- "extras": Lista de extras com "key", "type" ("string"|"int"|"boolean"|"long"|"float"|"uri") e "value".
 
 DOCUMENTAÇÃO DA API A INTEGRAR:
 [Forneça aqui a documentação da API, URL base, endpoint desejado e estrutura de resposta JSON]"""
@@ -246,6 +277,19 @@ fun CommandGuidePreferences(
             )
         }
 
+        // Section: Command-line Syntax
+        PreferenceGroup(heading = stringResource(R.string.cmd_guide_section_syntax)) {
+            GuideTextCard(
+                text = "Você pode cadastrar e editar comandos na barra usando sintaxe de linha ou no arquivo .tcmd:\n\n" +
+                    "• Links diretos:\n  g https://www.google.com/search?q={text} # Google\n\n" +
+                    "• Abrir apps e atalhos:\n  w am start -p com.whatsapp # WhatsApp\n  lanterna am start -p com.android.systemui --shortcut torch # Lanterna\n\n" +
+                    "• Intents e Broadcasts:\n  alarme am start -a android.intent.action.SET_ALARM --ei android.intent.extra.alarm.HOUR {1} --ei android.intent.extra.alarm.MINUTES {2} --ez android.intent.extra.alarm.SKIP_UI true # Despertar\n  notif am broadcast -a com.exemplo.AVISO --es msg \"{text}\" # Notificar\n\n" +
+                    "• Consultar APIs (curl):\n  cep curl @viacep/ws/{text}/json/ | {logradouro} · {bairro} · {localidade}/{uf} # CEP\n\n" +
+                    "• Apelidos (aliases):\n  alias casa rota casa\n\n" +
+                    "Flags suportadas: -a (ação), -d (URI/dados), -t (MIME), -c (categoria), -n (componente), -p (pacote), --shortcut, --sms e extras (--es, --ei, --ez, --el, --ef, --eu).",
+            )
+        }
+
         // Section 2: Providers
         PreferenceGroup(heading = stringResource(R.string.cmd_guide_section_providers)) {
             GuideTextCard(
@@ -293,35 +337,56 @@ fun CommandGuidePreferences(
     "method": "GET",
     "format": "{title} · {release_date|date} · ★ {vote_average}",
     "list": "results",
-    "max": 5
+    "max": 5,
+    "headers": {
+      "Accept": "application/json"
+    }
   }
 }""",
             )
             GuideTextCard(
                 text = "Campos e regras de formatação (api):\n" +
-                    "• method: Apenas GET ou POST.\n" +
+                    "• method: GET, POST, PUT, PATCH ou DELETE.\n" +
                     "• format: Template com {campo} para extrair dados. Suporta objetos {a.b}, arrays {items.0.nome} e filtro de data {campo|date}.\n" +
                     "• Partes separadas por ' · ' são automaticamente omitidas quando os dados estão vazios.\n" +
                     "• list: Nome do array na resposta JSON.\n" +
                     "• max: Limite de itens na barra (1 a 20).\n" +
-                    "• upcoming: Campo de data ISO para omitir eventos passados.",
+                    "• upcoming: Campo de data ISO para omitir eventos passados.\n" +
+                    "• headers: Cabeçalhos específicos desta chamada HTTP.\n" +
+                    "• body e bodyType: Corpo da requisição para métodos POST/PUT/PATCH (JSON, FORM ou TEXT).",
             )
         }
 
-        // Section 4: VIEW Actions
+        // Section 4: VIEW / INTENT Actions
         PreferenceGroup(heading = stringResource(R.string.cmd_guide_section_view_actions)) {
             GuideTextCard(
-                text = "Ações normais (kind: \"VIEW\") abrem aplicativos instalados ou URLs de navegadores usando intents do Android.",
+                text = "Ações do tipo INTENT, APP ou SHORTCUT abrem aplicativos instalados, atalhos ou URLs usando intents do Android.",
             )
             JsonCodeCard(
                 json = """{
-  "letter": "w",
-  "label": "WhatsApp",
-  "kind": "VIEW",
-  "template": "https://api.whatsapp.com/send?text={text}",
-  "packages": ["com.whatsapp"],
-  "arg": "TEXT"
+  "letter": "despertar",
+  "label": "Alarme",
+  "kind": "INTENT",
+  "template": "",
+  "action": "android.intent.action.SET_ALARM",
+  "packages": [],
+  "arg": "TEXT",
+  "target": "activity",
+  "categories": [],
+  "component": null,
+  "extras": [
+    { "key": "android.intent.extra.alarm.HOUR", "type": "int", "value": "{1}" },
+    { "key": "android.intent.extra.alarm.MINUTES", "type": "int", "value": "{2}" },
+    { "key": "android.intent.extra.alarm.SKIP_UI", "type": "boolean", "value": "true" }
+  ]
 }""",
+            )
+            GuideTextCard(
+                text = "Campos de intents:\n" +
+                    "• target: \"activity\" (padrão) para abrir telas ou \"broadcast\" para mensagens em segundo plano.\n" +
+                    "• categories: Lista de categorias do intent (ex: [\"android.intent.category.DEFAULT\"]).\n" +
+                    "• component: Componente explícito \"pacote/classe\" (opcional).\n" +
+                    "• extras: Lista de extras tipados (tipos: string, int, boolean, long, float, uri).",
             )
         }
 
