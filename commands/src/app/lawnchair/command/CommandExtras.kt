@@ -34,14 +34,6 @@ data class CommandExtras(
     val ai: String? = null,
     /** The connection in use; null while it is not read yet. */
     val network: NetworkSnapshot? = null,
-    /** The theme on screen now, every element set; null when unknown. */
-    val theme: ThemeSpec? = null,
-    /** The themes the user saved, by name. */
-    val themes: List<ThemeSpec> = emptyList(),
-    /** The ready-made looks of Appearance, by name. */
-    val themePresets: List<ThemeSpec> = emptyList(),
-    /** Google Fonts families "tema fonte" can pick; empty until the list loads. */
-    val fonts: List<String> = emptyList(),
     val now: LocalDateTime? = null,
     val zone: ZoneId? = null,
     /** The user's own `{NAME}` texts, set with "export" or in the settings. */
@@ -50,6 +42,8 @@ data class CommandExtras(
     val providers: List<ApiProvider> = Providers.BUILT_IN,
     /** Ids of the providers whose secret is saved. */
     val configuredProviders: Set<String> = emptySet(),
+    /** What only this app has to offer the commands (see [CommandHost]). */
+    val host: HostData = HostData(),
 ) {
     fun clock(): LocalDateTime = now ?: LocalDateTime.now(zone())
 

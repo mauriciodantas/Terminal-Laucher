@@ -15,13 +15,13 @@ object ResourceTexts {
         R.string::class.java.fields.associate { it.getInt(null) to it.name }
     }
 
-    private val defaults: Map<String, String> by lazy { read(File(resDir(), "values/$FILE")) }
+    private val defaults: Map<String, String> by lazy { readBoth("values") }
 
     fun install() = installLanguage("values-pt")
 
     /** [folder] is a resource folder such as "values-de"; null keeps the English defaults. */
     fun installLanguage(folder: String?) {
-        val strings = defaults + (folder?.let { read(File(resDir(), "$it/$FILE")) } ?: emptyMap())
+        val strings = defaults + (folder?.let { readBoth(it) } ?: emptyMap())
         Texts.install { id, args ->
             val name = names[id] ?: error("No string resource with id $id")
             val value = strings[name] ?: error("No text for string $name")
@@ -30,6 +30,16 @@ object ResourceTexts {
     }
 
     private const val FILE = "strings_commands.xml"
+
+    /** The strings of the app around the engine (see CommandHost) have their own file in command-host/res. */
+    private const val HOST_FILE = "strings_host.xml"
+
+    private fun readBoth(folder: String): Map<String, String> = read(File(resDir(), "$folder/$FILE")) +
+        (hostResDir()?.let { read(File(it, "$folder/$HOST_FILE")) } ?: emptyMap())
+
+    private fun hostResDir(): File? = generateSequence(File("").absoluteFile) { it.parentFile }
+        .map { File(it, "command-host/res") }
+        .firstOrNull { it.isDirectory }
 
     /** The commands/res folder, looked up from the working directory Gradle runs the tests in. */
     private fun resDir(): File = generateSequence(File("").absoluteFile) { it.parentFile }

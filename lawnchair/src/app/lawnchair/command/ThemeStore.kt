@@ -224,7 +224,7 @@ object ThemeStore {
     /** The theme "tema compartilhar [nome]" sends: a saved one, a ready-made one or, with no name, the one on screen. */
     fun named(context: Context, name: String): ThemeSpec? {
         if (name.isBlank()) return current(context)
-        val extras = CommandExtras(themes = load(context), themePresets = presets(context))
+        val extras = CommandExtras(host = HostData(themes = load(context), themePresets = presets(context)))
         return ThemeCommand.named(name, extras)?.first
     }
 

@@ -3,7 +3,7 @@ package app.lawnchair.command
 import app.lawnchair.util.Texts
 
 /**
- * Imports a theme, a widget, or a command pack from a JSON string typed or pasted into the command bar.
+ * Imports a command pack (or what only the app has, like a theme) from a JSON string typed or pasted into the command bar.
  * Also runs on "importar {...}" or "import {...}".
  */
 object ImportCommand : BuiltIn(
@@ -35,35 +35,6 @@ object ImportCommand : BuiltIn(
         }
 
         return when (target) {
-            is JsonImportTarget.Theme -> {
-                val name = target.spec.name.ifBlank { "tema" }
-                Analysis(
-                    suggestions = listOf(
-                        Suggestion(arg.trim(), Texts.get(R.string.cmd_import_action_theme), Texts.get(R.string.cmd_kind_import)),
-                    ),
-                    listTitle = Texts.get(R.string.cmd_list_suggestions),
-                    needsContacts = false,
-                    previewTitle = Texts.get(R.string.cmd_import_theme_title),
-                    preview = Texts.get(R.string.cmd_import_theme_preview, name),
-                    tone = Tone.OK,
-                    action = CommandAction.ImportTheme(target.spec, target.rawJson),
-                )
-            }
-
-            is JsonImportTarget.Widget -> {
-                Analysis(
-                    suggestions = listOf(
-                        Suggestion(arg.trim(), Texts.get(R.string.cmd_import_action_widget), Texts.get(R.string.cmd_kind_import)),
-                    ),
-                    listTitle = Texts.get(R.string.cmd_list_suggestions),
-                    needsContacts = false,
-                    previewTitle = Texts.get(R.string.cmd_import_widget_title),
-                    preview = Texts.get(R.string.cmd_import_widget_preview, target.name),
-                    tone = Tone.OK,
-                    action = CommandAction.ImportWidget(target.rawJson, target.name),
-                )
-            }
-
             is JsonImportTarget.Commands -> {
                 val count = target.pack.actions.size + target.pack.aliases.size
                 Analysis(
@@ -95,6 +66,8 @@ object ImportCommand : BuiltIn(
                     action = null,
                 )
             }
+
+            else -> AppHost.importAnalysis(target, arg) ?: CommandEngine.unknown(arg)
         }
     }
 

@@ -34,18 +34,6 @@ sealed interface CommandAction {
     data class SplitScreen(val first: AppEntry, val second: AppEntry) : CommandAction
     data class NewTask(val title: String) : CommandAction
 
-    /** Inverts the theme colors, lays them light or dark, or makes them follow the system mode. */
-    data class Theme(val change: ThemeChange) : CommandAction
-
-    /** Sets what [spec] has: one element ("tema fundo #000"), a saved theme or a ready-made look. */
-    data class ThemeApply(val spec: ThemeSpec) : CommandAction
-
-    /** Keeps the theme on screen now under [name]. */
-    data class ThemeSave(val name: String) : CommandAction
-
-    /** Sends the theme called [name] as a file; an empty name sends the one on screen. */
-    data class ThemeShare(val name: String) : CommandAction
-    data class ThemeDelete(val name: String) : CommandAction
     data class WebSearch(val query: String) : CommandAction
 
     /** A web address typed on its own: it opens in the browser instead of being searched. */
@@ -128,8 +116,6 @@ sealed interface CommandAction {
     /** "history clear": forgets the typed commands. */
     data object ClearHistory : CommandAction
 
-    data class ImportTheme(val spec: ThemeSpec, val json: String) : CommandAction
-    data class ImportWidget(val json: String, val name: String) : CommandAction
     data class ImportCommands(val pack: CommandPack, val json: String) : CommandAction
 
     /** Saves a new or updated command or alias created via the command bar. */
@@ -670,29 +656,9 @@ object CommandEngine {
 
         is CommandAction.NewTask -> Texts.get(R.string.cmd_desc_task)
 
-        is CommandAction.Theme -> when (action.change) {
-            ThemeChange.INVERT -> "accent ⇄ background"
-            ThemeChange.LIGHT -> "background = lighter"
-            ThemeChange.DARK -> "background = darker"
-            ThemeChange.SYSTEM -> "follow_system_color_mode = true"
-            ThemeChange.RESET -> "appearance = default"
-        }
-
-        is CommandAction.ThemeApply -> ThemeCommand.describe(action.spec)
-
-        is CommandAction.ThemeSave -> "themes += \"${action.name}\""
-
-        is CommandAction.ThemeShare -> "ACTION_SEND " + ThemeSpecs.MIME
-
-        is CommandAction.ThemeDelete -> "themes -= \"${action.name}\""
-
         is CommandAction.WebSearch -> "ACTION_WEB_SEARCH · \"${action.query}\""
 
         is CommandAction.OpenUrl -> "ACTION_VIEW · " + action.url
-
-        is CommandAction.ImportTheme -> "ImportThemeActivity · " + action.spec.name.ifBlank { "tema" }
-
-        is CommandAction.ImportWidget -> "ImportWidgetActivity · " + action.name
 
         is CommandAction.ImportCommands -> "ImportCommandsActivity · " + action.pack.actions.size + " actions, " + action.pack.aliases.size + " aliases"
 
@@ -701,6 +667,8 @@ object CommandEngine {
         is CommandAction.RemoveCommand -> "unalias " + action.name
 
         is CommandAction.Custom -> describeCustom(action, providers)
+
+        else -> AppHost.describe(action) ?: action.toString()
     }
 
     private fun describeCustom(action: CommandAction.Custom, providers: List<ApiProvider>): String {

@@ -515,7 +515,7 @@ spotless {
         removeUnusedImports()
     }
     kotlin {
-        target("lawnchair/src/**/*.kt", "commands/src/**/*.kt")
+        target("lawnchair/src/**/*.kt", "commands/src/**/*.kt", "command-host/src/**/*.kt")
         ktlint(libs.ktlint.get().version).customRuleSets([
             libs.composeRules.get().toString()
         ]).editorConfigOverride([

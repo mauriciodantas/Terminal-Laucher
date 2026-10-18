@@ -32,7 +32,7 @@ enum class SettingsPage(@StringRes private val wordsRes: Int, private val fixed:
     LANGUAGE(R.string.cmd_cfg_language, "idioma,language", "android.settings.LOCALE_SETTINGS"),
     DEVELOPER(R.string.cmd_cfg_developer, "desenvolvedor,developer,dev", "android.settings.APPLICATION_DEVELOPMENT_SETTINGS"),
     ABOUT(R.string.cmd_cfg_about, "sobre,about", "android.settings.DEVICE_INFO_SETTINGS"),
-    LAUNCHER(R.string.cmd_cfg_launcher, "launcher,terminal", ""),
+    LAUNCHER(R.string.cmd_cfg_launcher, "launcher,terminal,terminalbar", ""),
     ;
 
     /** The word shown and suggested: "bateria" in Portuguese. */

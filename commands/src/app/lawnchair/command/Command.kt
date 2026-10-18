@@ -72,7 +72,7 @@ class CommandRegistry(private val commands: List<Command>) {
                 TaskCommand,
                 CalcCommand,
                 SplitCommand,
-                ThemeCommand,
+                *AppHost.commands.toTypedArray(),
                 TimerCommand,
                 RemindCommand,
                 NoteCommand,

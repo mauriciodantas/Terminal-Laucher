@@ -117,7 +117,7 @@ object ThemeCommand : BuiltIn(BuiltInCommand.THEME, null, R.string.cmd_help_them
             }
         }
         ThemeChange.of(word)?.takeIf { rest.isEmpty() }?.let { change ->
-            return result(Texts.get(R.string.cmd_theme_title), change.preview, Tone.OK, CommandAction.Theme(change))
+            return result(Texts.get(R.string.cmd_theme_title), change.preview, Tone.OK, ThemeAction.Change(change))
         }
         ThemeElement.of(word)?.let { return element(it, rest, extras) }
         ThemeVerb.of(word)?.let { return verb(it, rest, extras) }
@@ -160,7 +160,7 @@ object ThemeCommand : BuiltIn(BuiltInCommand.THEME, null, R.string.cmd_help_them
         val tone = if (ThemeSpecs.weak(spec, extras.theme)) Tone.WARN else Tone.OK
         // A ready-made look says so; the user's own is just its name.
         val heading = if (builtIn) title + " · " + Texts.get(R.string.cmd_theme_kind_preset) else title
-        return result(heading, preview + weakNote(spec, extras), tone, CommandAction.ThemeApply(spec))
+        return result(heading, preview + weakNote(spec, extras), tone, ThemeAction.Apply(spec))
     }
 
     // ---- one element ----
@@ -203,7 +203,7 @@ object ThemeCommand : BuiltIn(BuiltInCommand.THEME, null, R.string.cmd_help_them
         }
         if (ThemeSpecs.unreadable(spec, extras.theme)) return result(title, Texts.get(R.string.cmd_theme_unreadable), Tone.ERROR, null)
         val tone = if (ThemeSpecs.weak(spec, extras.theme)) Tone.WARN else Tone.OK
-        return result(title, "→ " + colorText(color) + weakNote(spec, extras), tone, CommandAction.ThemeApply(spec))
+        return result(title, "→ " + colorText(color) + weakNote(spec, extras), tone, ThemeAction.Apply(spec))
     }
 
     private fun font(rest: String, title: String, current: String?, extras: CommandExtras): Analysis {
@@ -235,7 +235,7 @@ object ThemeCommand : BuiltIn(BuiltInCommand.THEME, null, R.string.cmd_help_them
                 suggestions,
             )
         }
-        return result(title, "→ " + font.label, Tone.OK, CommandAction.ThemeApply(ThemeSpec(font = font)), suggestions.filter { it.label != font.label })
+        return result(title, "→ " + font.label, Tone.OK, ThemeAction.Apply(ThemeSpec(font = font)), suggestions.filter { it.label != font.label })
     }
 
     private fun switch(element: ThemeElement, rest: String, title: String, current: String?, extras: CommandExtras): Analysis {
@@ -260,14 +260,14 @@ object ThemeCommand : BuiltIn(BuiltInCommand.THEME, null, R.string.cmd_help_them
             val hint = if (element.value == ThemeValue.EFFECT) R.string.cmd_theme_effect_hint else R.string.cmd_state_invalid
             return result(title, Texts.get(hint) + currentLine(current), if (rest.isEmpty()) Tone.IDLE else Tone.ERROR, null, suggestions)
         }
-        return result(title, "→ " + element.valueIn(spec).orEmpty(), Tone.OK, CommandAction.ThemeApply(spec), suggestions)
+        return result(title, "→ " + element.valueIn(spec).orEmpty(), Tone.OK, ThemeAction.Apply(spec), suggestions)
     }
 
     private fun percent(element: ThemeElement, rest: String, title: String, current: String?): Analysis {
         if (rest.isEmpty()) return result(title, Texts.get(R.string.cmd_theme_percent_hint) + currentLine(current), Tone.IDLE, null)
         val percent = percentOf(rest) ?: return result(title, Texts.get(R.string.cmd_percent_invalid), Tone.ERROR, null)
         val spec = ThemeSpec(wallpaperDim = percent / 100f)
-        return result(title, "→ " + element.valueIn(spec).orEmpty(), Tone.OK, CommandAction.ThemeApply(spec))
+        return result(title, "→ " + element.valueIn(spec).orEmpty(), Tone.OK, ThemeAction.Apply(spec))
     }
 
     private fun percentOf(text: String): Int? = text.trim().removeSuffix("%").trim().toIntOrNull()?.takeIf { it in 0..100 }
@@ -328,16 +328,16 @@ object ThemeCommand : BuiltIn(BuiltInCommand.THEME, null, R.string.cmd_help_them
                         result(title, Texts.get(R.string.cmd_theme_name_taken), Tone.ERROR, null)
 
                     extras.themes.any { it.name.foldAccents() == name.foldAccents() } ->
-                        result(title, Texts.get(R.string.cmd_theme_save_replace, name), Tone.WARN, CommandAction.ThemeSave(name), suggestions)
+                        result(title, Texts.get(R.string.cmd_theme_save_replace, name), Tone.WARN, ThemeAction.Save(name), suggestions)
 
-                    else -> result(title, Texts.get(R.string.cmd_theme_save_preview, name), Tone.OK, CommandAction.ThemeSave(name), suggestions)
+                    else -> result(title, Texts.get(R.string.cmd_theme_save_preview, name), Tone.OK, ThemeAction.Save(name), suggestions)
                 }
             }
 
             ThemeVerb.SHARE -> {
-                if (rest.isEmpty()) return result(title, Texts.get(R.string.cmd_theme_share_preview, Texts.get(R.string.cmd_theme_current)), Tone.OK, CommandAction.ThemeShare(""), suggestions)
+                if (rest.isEmpty()) return result(title, Texts.get(R.string.cmd_theme_share_preview, Texts.get(R.string.cmd_theme_current)), Tone.OK, ThemeAction.Share(""), suggestions)
                 val (spec, _) = named(rest, extras) ?: return result(title, Texts.get(R.string.cmd_theme_not_found), if (suggestions.isEmpty()) Tone.ERROR else Tone.IDLE, null, suggestions)
-                result(title, Texts.get(R.string.cmd_theme_share_preview, spec.name), Tone.OK, CommandAction.ThemeShare(spec.name))
+                result(title, Texts.get(R.string.cmd_theme_share_preview, spec.name), Tone.OK, ThemeAction.Share(spec.name))
             }
 
             ThemeVerb.DELETE -> {
@@ -350,7 +350,7 @@ object ThemeCommand : BuiltIn(BuiltInCommand.THEME, null, R.string.cmd_help_them
                         null,
                         suggestions,
                     )
-                result(title, Texts.get(R.string.cmd_theme_delete_preview, spec.name), Tone.WARN, CommandAction.ThemeDelete(spec.name))
+                result(title, Texts.get(R.string.cmd_theme_delete_preview, spec.name), Tone.WARN, ThemeAction.Delete(spec.name))
             }
         }
     }

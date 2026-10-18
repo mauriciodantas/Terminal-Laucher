@@ -237,7 +237,7 @@ object CommandExecutor {
 
             is CommandAction.SplitScreen -> return launchSplit(context, action)
 
-            is CommandAction.Theme -> when (action.change) {
+            is ThemeAction.Change -> when (action.change) {
                 ThemeChange.INVERT -> SystemColorMode.pin(context, SystemColorMode.Pin.INVERTED)
                 ThemeChange.LIGHT -> SystemColorMode.pin(context, SystemColorMode.Pin.LIGHT)
                 ThemeChange.DARK -> SystemColorMode.pin(context, SystemColorMode.Pin.DARK)
@@ -245,13 +245,13 @@ object CommandExecutor {
                 ThemeChange.RESET -> ThemeStore.reset(context)
             }
 
-            is CommandAction.ThemeApply -> return ThemeStore.apply(context, action.spec)
+            is ThemeAction.Apply -> return ThemeStore.apply(context, action.spec)
 
-            is CommandAction.ThemeSave -> ThemeStore.saveCurrent(context, action.name)
+            is ThemeAction.Save -> ThemeStore.saveCurrent(context, action.name)
 
-            is CommandAction.ThemeDelete -> ThemeStore.remove(context, action.name)
+            is ThemeAction.Delete -> ThemeStore.remove(context, action.name)
 
-            is CommandAction.ThemeShare -> {
+            is ThemeAction.Share -> {
                 val spec = ThemeStore.named(context, action.name) ?: return false
                 start(context, ThemeStore.shareIntent(context, spec) ?: return false)
             }
@@ -268,9 +268,9 @@ object CommandExecutor {
                 Intent(Intent.ACTION_VIEW, Uri.parse(action.url)).addCategory(Intent.CATEGORY_BROWSABLE),
             )
 
-            is CommandAction.ImportTheme -> return ThemeStore.review(context, action.spec)
+            is ImportAction.Theme -> return ThemeStore.review(context, action.spec)
 
-            is CommandAction.ImportWidget -> {
+            is ImportAction.Widget -> {
                 val dir = File(context.cacheDir, "widgets").apply { mkdirs() }
                 val file = File(dir, "import.${LottieWidgetPacks.EXTENSION}")
                 val json = action.json.trim()
@@ -371,7 +371,7 @@ object CommandExecutor {
      * something instead of opening a screen, which Android blocks from the background.
      */
     fun runsInBackground(context: Context, action: CommandAction): Boolean = when (action) {
-        is CommandAction.Theme, is CommandAction.ThemeApply, is CommandAction.ThemeSave, is CommandAction.ThemeDelete, is CommandAction.Calc, is CommandAction.Copy, is CommandAction.Schedule,
+        is ThemeAction.Change, is ThemeAction.Apply, is ThemeAction.Save, is ThemeAction.Delete, is CommandAction.Calc, is CommandAction.Copy, is CommandAction.Schedule,
         is CommandAction.CancelJob, is CommandAction.Volume, is CommandAction.Media, is CommandAction.AddNote, is CommandAction.AiSetup,
         -> true
 

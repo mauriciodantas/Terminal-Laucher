@@ -4,26 +4,37 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 sealed interface JsonImportTarget {
-    data class Theme(val spec: ThemeSpec, val rawJson: String) : JsonImportTarget
-    data class Widget(val name: String, val rawJson: String) : JsonImportTarget
     data class Commands(val pack: CommandPack, val rawJson: String) : JsonImportTarget
     data class Invalid(val incomplete: Boolean = false) : JsonImportTarget
 }
 
 object JsonImport {
 
+    /**
+     * [text] with the spaces JSON does not take made plain: copied from a chat on the phone, the
+     * indentation often comes as no-break spaces, and a BOM or zero-width marks come along.
+     */
+    fun clean(text: String): String = buildString(text.length) {
+        for (c in text) {
+            when (c) {
+                '\u200B', '\u200C', '\u200D', '\u2060', '\uFEFF' -> Unit
+                else -> append(if (c != '\n' && Character.isSpaceChar(c)) ' ' else c)
+            }
+        }
+    }
+
     /** True when [text] looks like it starts a JSON object or array. */
     fun isPotentialJson(text: String): Boolean {
-        val t = text.trim()
+        val t = clean(text).trim()
         return t.startsWith("{") || t.startsWith("[")
     }
 
     /**
-     * Tries to classify [text] into a theme, widget, or commands pack.
+     * Tries to classify [text] into a commands pack, or into what only the app has (see [CommandHost]).
      * Returns null if [text] does not start with JSON notation.
      */
     fun classify(text: String): JsonImportTarget? {
-        val trimmed = text.trim()
+        val trimmed = clean(text).trim()
         if (!isPotentialJson(trimmed)) return null
 
         val (obj, array) = try {
@@ -52,16 +63,8 @@ object JsonImport {
     private fun classifyObject(o: JSONObject, raw: String): JsonImportTarget {
         val format = o.optString("format")
 
-        // 1. Explicit formats
-        if (format == ThemeSpecs.FORMAT) {
-            val spec = runCatching { ThemeSpecs.decode(raw) }.getOrNull()
-                ?: ThemeSpecs.fromJson(o)
-            return JsonImportTarget.Theme(spec, raw)
-        }
-        if (format == "terminal-widget") {
-            val name = o.optString("name").ifBlank { "widget.json" }
-            return JsonImportTarget.Widget(name, raw)
-        }
+        // What only the app has (a theme, a widget) comes first: its formats are explicit.
+        if (format != CommandPacks.FORMAT) AppHost.classifyObject(o, raw, format)?.let { return it }
         if (format == CommandPacks.FORMAT) {
             val pack = runCatching { CommandPacks.decode(raw) }.getOrNull()
             if (pack != null && !pack.isEmpty) {
@@ -69,38 +72,7 @@ object JsonImport {
             }
         }
 
-        // 2. Widget (Lottie animation or widget with animation)
-        val isLottie = o.has("layers") && (o.has("v") || (o.has("ip") && o.has("op")) || o.has("fr"))
-        if (isLottie) {
-            val name = o.optString("nm").ifBlank { o.optString("name").ifBlank { "widget.json" } }
-            return JsonImportTarget.Widget(name, raw)
-        }
-        if (o.has("animation") && (o.optJSONObject("animation") != null || o.optString("animation").isNotBlank())) {
-            val name = o.optString("name").ifBlank { "widget.json" }
-            return JsonImportTarget.Widget(name, raw)
-        }
-
-        // 3. Theme
-        if (o.has("theme")) {
-            val themeObj = o.optJSONObject("theme") ?: o
-            val spec = runCatching { ThemeSpecs.fromJson(themeObj) }.getOrNull()
-            if (spec != null && !spec.isEmpty) {
-                return JsonImportTarget.Theme(spec, raw)
-            }
-        }
-        val hasThemeProps = listOf(
-            "accent", "background", "secondary", "outline", "dock", "folder",
-            "followSystem", "pixelClock", "iconEffect", "widgetEffect", "crtEffect",
-            "showWallpaper", "colorAsWallpaper", "wallpaper", "lockWallpaper",
-        ).any { o.has(it) }
-        if (hasThemeProps) {
-            val spec = runCatching { ThemeSpecs.fromJson(o) }.getOrNull()
-            if (spec != null && !spec.isEmpty) {
-                return JsonImportTarget.Theme(spec, raw)
-            }
-        }
-
-        // 4. Commands (pack, actions, aliases, providers)
+        // Commands (pack, actions, aliases, providers)
         val hasCommandPackProps = o.has("actions") || o.has("aliases") || o.has("providers")
         if (hasCommandPackProps) {
             val actions = o.optJSONArray("actions")?.let { CustomActionStore.fromJson(it) }.orEmpty()
@@ -142,10 +114,7 @@ object JsonImport {
             return JsonImportTarget.Commands(CommandPack(emptyList(), aliases), raw)
         }
 
-        val themes = runCatching { ThemeSpecs.decodeList(raw) }.getOrNull().orEmpty()
-        if (themes.isNotEmpty()) {
-            return JsonImportTarget.Theme(themes.first(), raw)
-        }
+        AppHost.classifyArray(array, raw)?.let { return it }
 
         return JsonImportTarget.Invalid()
     }

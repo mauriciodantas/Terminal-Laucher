@@ -95,7 +95,7 @@ class AiFoldersTest {
     @Test fun promptListsOnlyAppsOutsideFolders() {
         val system = AiPrompts.system(
             AiMode.FOLDERS,
-            AiContext(apps = listOf("WhatsApp", "Nubank", "Maps"), folders = listOf("Finanças" to listOf("Nubank"))),
+            AiContext(apps = listOf("WhatsApp", "Nubank", "Maps"), host = HostAiData(folders = listOf("Finanças" to listOf("Nubank")))),
         )
         val outside = system.substringAfter("APPS WITHOUT A FOLDER: ").substringBefore("\n")
         assertEquals("WhatsApp, Maps", outside)
@@ -147,7 +147,7 @@ class AiFoldersTest {
     @Test fun forcePromptListsEveryApp() {
         val system = AiPrompts.system(
             AiMode.FOLDERS,
-            AiContext(apps = listOf("WhatsApp", "Nubank"), folders = listOf("Finanças" to listOf("Nubank")), forceFolders = true),
+            AiContext(apps = listOf("WhatsApp", "Nubank"), host = HostAiData(folders = listOf("Finanças" to listOf("Nubank")), forceFolders = true)),
         )
         assertEquals("WhatsApp, Nubank", system.substringAfter("ALL APPS: ").substringBefore("\n"))
         assertTrue(system.contains("you may reorganize them"))

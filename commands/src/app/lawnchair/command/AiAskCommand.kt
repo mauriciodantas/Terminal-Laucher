@@ -28,7 +28,7 @@ object AiAskCommand : BuiltIn(BuiltInCommand.AI, R.string.cmd_usage_ai, R.string
         // "ia criar tema de halloween" asks for a theme, not for a command.
         val next = prompt.takeWhile { !it.isWhitespace() }
         val nextWord = next.foldAccents()
-        if (chosen == AiMode.CREATE && nextWord.isNotEmpty() && (nextWord in AiMode.THEME.words() || nextWord in BuiltInCommand.THEME.words())) {
+        if (chosen == AiMode.CREATE && AiMode.THEME in AppHost.aiModes && nextWord.isNotEmpty() && (nextWord in AiMode.THEME.words() || nextWord in BuiltInCommand.THEME.words())) {
             chosen = AiMode.THEME
             prompt = prompt.substring(next.length).trim()
         }
@@ -41,17 +41,7 @@ object AiAskCommand : BuiltIn(BuiltInCommand.AI, R.string.cmd_usage_ai, R.string
             emptyList()
         }
         val heading = title + " · " + modeLabel(chosen) + " · " + service.substringBefore(" · ").uppercase()
-        if (chosen == AiMode.THEME) {
-            // A theme needs no request either: Enter alone asks for a surprise.
-            return commandResult(heading, prompt.ifEmpty { Texts.get(R.string.cmd_ai_theme_empty) }, Tone.OK, CommandAction.Ai(chosen, prompt), suggestions = offers)
-        }
-        if (chosen == AiMode.FOLDERS) {
-            // Folders need no request: Enter alone sorts the apps the AI's way.
-            val (request, force) = AiFolders.splitForce(prompt)
-            val hint = request.ifEmpty { Texts.get(R.string.cmd_ai_folders_empty) }
-            val text = if (force) hint + " · " + Texts.get(R.string.cmd_ai_folders_force) else hint
-            return commandResult(heading, text, if (force) Tone.WARN else Tone.OK, CommandAction.Ai(chosen, request, force), suggestions = offers)
-        }
+        if (chosen in AppHost.aiModes) AppHost.aiAnalyze(chosen, prompt, heading, offers)?.let { return it }
         return when {
             prompt.isEmpty() -> commandResult(heading, Texts.get(emptyHint(chosen)), Tone.IDLE, null, suggestions = offers)
             else -> commandResult(heading, prompt, Tone.OK, CommandAction.Ai(chosen, prompt), suggestions = offers)

@@ -384,7 +384,7 @@ private fun CommandScreen(onClose: () -> Unit) {
     fun record(action: CommandAction, command: String) {
         // "!!" is not kept: the command it repeated stays the last one.
         if (command.trim() == BuiltInCommand.REPEAT || command.trimStart().startsWith(BuiltInCommand.RECALL)) return
-        if (action is CommandAction.ImportTheme || action is CommandAction.ImportWidget || action is CommandAction.ImportCommands) return
+        if (action is ImportAction.Theme || action is ImportAction.Widget || action is CommandAction.ImportCommands) return
         // The line carries the key: it stays out of the history, the usage counts and the statistics.
         if (action is CommandAction.AiSetup) return
         // A variable holds what the user chose to keep apart: an address, a code. It stays out of the history too.
@@ -426,9 +426,11 @@ private fun CommandScreen(onClose: () -> Unit) {
                 aliases = aliases,
                 apps = apps.map { it.label },
                 now = now.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm, EEEE", java.util.Locale.getDefault())) + " (" + now.zone + ")",
-                folders = FolderOrganizer.describe(folders, apps),
-                forceFolders = action.force,
-                theme = if (action.mode == AiMode.THEME) extras.theme else null,
+                host = HostAiData(
+                    folders = FolderOrganizer.describe(folders, apps),
+                    forceFolders = action.force,
+                    theme = if (action.mode == AiMode.THEME) extras.theme else null,
+                ),
             )
             val system = AiPrompts.system(action.mode, aiContext)
             // Only the conversation is shown as it comes: a command or a pack is read once complete.
@@ -466,7 +468,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                 AiMode.CREATE -> {
                     val pack = AiPrompts.pack(reply.text)
                     // Asked for a theme in other words ("ia create theme for halloween"), the AI sends one: it is reviewed as a theme.
-                    val theme = AiPrompts.createdTheme(reply.text)
+                    val theme = LauncherAiPrompts.createdTheme(reply.text)
                     if (theme != null) {
                         if (ThemeStore.review(context, ThemeImages.embed(context, theme.first))) onClose() else done = failedLabel
                     } else if (pack == null) {
@@ -489,7 +491,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                 }
 
                 AiMode.THEME -> {
-                    val theme = AiPrompts.theme(reply.text)
+                    val theme = LauncherAiPrompts.theme(reply.text)
                     when {
                         theme == null -> done = context.getString(R.string.cmd_ai_theme_failed)
 
