@@ -154,9 +154,15 @@ public class LauncherAppWidgetHostView extends BaseLauncherAppWidgetHostView
     @Override
     public void setAppWidget(int appWidgetId, AppWidgetProviderInfo info) {
         super.setAppWidget(appWidgetId, info);
-        if (!app.lawnchair.widgets.lottie.LottieWidgetView.isFor(mLocalContent, appWidgetId)) {
+        if (!app.lawnchair.widgets.lottie.LottieWidgetView.isFor(mLocalContent, appWidgetId)
+                && !app.lawnchair.widgets.command.CommandWidgetView.isFor(
+                        mLocalContent, appWidgetId)) {
             mLocalContent = app.lawnchair.widgets.lottie.LottieWidgetView.create(
                     getContext(), appWidgetId, info);
+            if (mLocalContent == null) {
+                mLocalContent = app.lawnchair.widgets.command.CommandWidgetView.create(
+                        getContext(), appWidgetId, info);
+            }
             if (mLocalContent != null) {
                 // Shown as the default view, so it stays when AppWidgetHostView reapplies views.
                 super.updateAppWidget(null);

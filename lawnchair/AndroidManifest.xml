@@ -288,6 +288,29 @@
         </activity>
 
         <activity
+            android:name="app.lawnchair.widgets.command.CommandWidgetConfigActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.Transparent">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
+        <receiver
+            android:name="app.lawnchair.widgets.command.CommandAppWidgetProvider"
+            android:exported="false"
+            android:label="@string/command_widget">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/command_appwidget_info" />
+        </receiver>
+
+        <activity
             android:name="app.lawnchair.widgets.lottie.ImportWidgetActivity"
             android:exported="true"
             android:excludeFromRecents="true"

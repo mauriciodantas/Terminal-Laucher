@@ -212,8 +212,12 @@ object CommandSources {
     /** Runs ping and gives its summary lines, or the error. */
     fun ping(host: String): String = runCatching {
         val process = ProcessBuilder("ping", "-c", "3", "-W", "2", host).redirectErrorStream(true).start()
+        // The watchdog ends a ping that never answers; reading the output would otherwise block past the timeout.
+        val watchdog = kotlin.concurrent.thread(isDaemon = true) {
+            if (!process.waitFor(PING_TIMEOUT_S, java.util.concurrent.TimeUnit.SECONDS)) process.destroyForcibly()
+        }
         val output = process.inputStream.bufferedReader().use { it.readText() }
-        if (!process.waitFor(PING_TIMEOUT_S, java.util.concurrent.TimeUnit.SECONDS)) process.destroy()
+        watchdog.interrupt()
         val lines = output.lines().filter { it.isNotBlank() }
         // The statistics at the end say all that matters; the replies before are shown when they are few.
         lines.takeLast(2).joinToString("\n").ifEmpty { output.trim() }

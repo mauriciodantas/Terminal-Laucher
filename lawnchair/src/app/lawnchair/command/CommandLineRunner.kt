@@ -86,6 +86,26 @@ object CommandLineRunner {
         }
     }
 
+    /**
+     * Reads what [text] shows without opening anything: commands that produce an output (ping,
+     * weather, calc, scripts, API calls and chains of those) run, and any other line only gives
+     * its preview, so a widget refreshing in the background never starts an app or a screen.
+     */
+    suspend fun read(context: Context, text: String): Result {
+        val analysis = analyze(context, text)
+        val action = analysis.action
+        if (action != null && producesOutput(action)) return run(context, text)
+        val preview = analysis.preview.ifBlank { analysis.previewTitle }
+        return Result(analysis, ran = action != null && preview.isNotBlank(), output = preview.ifBlank { null })
+    }
+
+    private fun producesOutput(action: CommandAction): Boolean = when (action) {
+        is CommandAction.Ping, is CommandAction.Weather -> true
+        is CommandAction.Custom -> action.action.kind == ActionKind.SCRIPT || action.action.kind == ActionKind.API
+        is CommandAction.Chain -> action.steps.all { producesOutput(it) }
+        else -> false
+    }
+
     private suspend fun <T> withSteps(context: Context, block: suspend (StepExecutor) -> T): T {
         val scripts = ScriptRunner(context)
         val extras = CommandSources.load(context, CommandActivity.loadHistory(context))
