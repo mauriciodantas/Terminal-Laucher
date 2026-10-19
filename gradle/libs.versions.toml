@@ -48,6 +48,7 @@ androidx-concurrent-futures = "androidx.concurrent:concurrent-futures:1.3.0"
 androidx-constraintlayout = "androidx.constraintlayout:constraintlayout:2.2.2"
 androidx-core-animation = "androidx.core:core-animation:1.0.0"
 androidx-core-ktx = "androidx.core:core-ktx:1.19.1"
+androidx-javascriptengine = "androidx.javascriptengine:javascriptengine:1.1.1"
 androidx-appfunctions = { module = "androidx.appfunctions:appfunctions", version.ref = "appfunctions" }
 androidx-appfunctions-compiler = { module = "androidx.appfunctions:appfunctions-compiler", version.ref = "appfunctions" }
 androidx-datastore-preferences = "androidx.datastore:datastore-preferences:1.2.1"

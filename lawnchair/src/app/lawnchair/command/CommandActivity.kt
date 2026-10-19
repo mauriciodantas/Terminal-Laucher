@@ -343,6 +343,14 @@ private fun CommandScreen(onClose: () -> Unit) {
     var undoAction by remember { mutableStateOf<(() -> Unit)?>(null) }
     val focus = remember { FocusRequester() }
 
+    // The JavaScript sandbox, connected on the first script and let go when the bar closes.
+    val scripts = remember { ScriptRunner(context) }
+    DisposableEffect(Unit) { onDispose { scripts.close() } }
+    val steps = remember { StepExecutor(context, scripts, { extras.providers }, { extras }) }
+
+    // How many "run" actions of scripts are running one inside the other; Enter starts again from 0.
+    var runDepth by remember { mutableIntStateOf(0) }
+
     val text = field.text
     val analysis = remember(text, apps, contacts, granted, custom, aliases, extras, history) {
         CommandEngine.analyze(text, apps, contacts, granted, custom, aliases, extras.copy(history = history))
@@ -527,6 +535,23 @@ private fun CommandScreen(onClose: () -> Unit) {
         }
     }
 
+    // Set once runAction exists: what the bar does with the action a script ended with.
+    var onStepAction: (StepAction) -> Unit = {}
+
+    /** The end of a command that went through [steps]: its text, or why it failed, and then its action. */
+    fun finish(result: StepResult, failure: () -> String = { result.failure() }) {
+        if (!result.ok) {
+            done = failure()
+            return
+        }
+        val action = result.action
+        if (action != null) {
+            onStepAction(action)
+            return
+        }
+        done = if (result.text != null || result.data != null) result.shown() else executedLabel
+    }
+
     fun commit(action: CommandAction, command: String) {
         when (action) {
             is CommandAction.Ai -> if (action.mode != AiMode.SETUP) {
@@ -591,8 +616,40 @@ private fun CommandScreen(onClose: () -> Unit) {
             is CommandAction.Custom -> if (action.action.kind == ActionKind.API) {
                 record(action, command)
                 done = context.getString(R.string.command_running)
-                val providers = extras.providers
-                scope.launch { done = withContext(Dispatchers.IO) { ApiCall.run(action.action, action.text, providers, SecretStore.lookup(context)) } }
+                scope.launch { done = steps.run(action, null).shown() }
+                return
+            } else if (action.action.kind == ActionKind.SCRIPT) {
+                record(action, command)
+                done = context.getString(R.string.command_running)
+                scope.launch { finish(steps.run(action, null)) }
+                return
+            }
+
+            // Run here, step by step, so "|" passes outputs on and requests and scripts show their answer.
+            is CommandAction.Chain -> {
+                record(action, command)
+                done = context.getString(R.string.command_running)
+                scope.launch {
+                    val outcome = ChainRunner.run(action, steps)
+                    if (!outcome.ok) {
+                        finish(outcome.result) { ChainRunner.failure(action, outcome) }
+                        return@launch
+                    }
+                    if (action.steps.any { it is CommandAction.Schedule || it is CommandAction.CancelJob || it is CommandAction.AddNote || it is CommandAction.SetVariable || it is CommandAction.UnsetVariable }) {
+                        reloadExtras()
+                    }
+                    val result = outcome.result
+                    when {
+                        result.action != null -> finish(result)
+
+                        result.text != null || result.data != null -> done = result.shown()
+
+                        else -> {
+                            done = executedLabel
+                            onClose()
+                        }
+                    }
+                }
                 return
             }
 
@@ -791,9 +848,52 @@ private fun CommandScreen(onClose: () -> Unit) {
         commit(action, command)
     }
 
+    // What a script asked for once the chain ended: open, copy, share or run a line. A line that
+    // sends or changes something waits on the bar for Enter, as if it were typed.
+    onStepAction = { stepAction ->
+        val problem = StepActions.problem(stepAction, runDepth)
+        when {
+            problem != null -> done = problem
+
+            stepAction is StepAction.Open -> {
+                val ok = runCatching {
+                    context.startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(stepAction.uri)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                }.isSuccess
+                if (ok) onClose() else done = failedLabel
+            }
+
+            stepAction is StepAction.Copy -> {
+                CommandExecutor.execute(context, CommandAction.Copy(stepAction.text))
+                done = context.getString(R.string.command_copied, stepAction.text.lineSequence().first())
+            }
+
+            stepAction is StepAction.Share -> {
+                if (CommandExecutor.execute(context, CommandAction.ShareNotes(stepAction.text))) onClose() else done = failedLabel
+            }
+
+            stepAction is StepAction.Run -> {
+                val line = stepAction.line
+                val next = CommandEngine.analyze(line, apps, contacts, granted, custom, aliases, extras.copy(history = history))
+                val nextAction = next.action
+                when {
+                    nextAction == null -> done = next.preview.ifBlank { failedLabel }
+
+                    // Confirmations stay: a request that writes or sends what the user copied waits for Enter.
+                    next.tone == Tone.WARN -> setText(line)
+
+                    else -> {
+                        runDepth += 1
+                        runAction(nextAction, line)
+                    }
+                }
+            }
+        }
+    }
+
     /** A suggestion that is already a complete, runnable command runs on the tap, without Enter. */
     fun pick(suggestion: Suggestion) {
-        if (suggestion.kind == "API ›" && suggestion.completion.startsWith("${BuiltInCommand.ALIAS.word} ")) {
+        val opensEditor = suggestion.kind == "API ›" || suggestion.kind == context.getString(app.lawnchair.command.R.string.cmd_kind_script)
+        if (opensEditor && suggestion.completion.startsWith("${BuiltInCommand.ALIAS.word} ")) {
             val name = suggestion.completion.removePrefix(BuiltInCommand.ALIAS.word).trim().substringBefore(' ')
             context.startActivity(
                 app.lawnchair.ui.preferences.PreferenceActivity.createIntent(
@@ -816,6 +916,8 @@ private fun CommandScreen(onClose: () -> Unit) {
     /** Enter runs the command; among options, which have none of their own, it picks the highlighted one. */
     fun run() {
         val action = analysis.action
+        // Enter is the user's: only "run" actions that follow each other on their own are counted.
+        runDepth = 0
         if (action != null) {
             runAction(action, text)
         } else if (analysis.picksOnEnter) {

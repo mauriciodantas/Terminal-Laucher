@@ -44,8 +44,19 @@ object CommandLineRunner {
                 Result(analysis, ran = weather.isNotEmpty(), output = weather)
             }
 
+            // A script and a chain run as in the bar, with a sandbox of their own for this run.
+            is CommandAction.Chain -> withSteps(context) { steps ->
+                val outcome = ChainRunner.run(action, steps)
+                Result(analysis, ran = outcome.ok, output = if (outcome.ok) outcome.result.shown().ifBlank { null } else ChainRunner.failure(action, outcome))
+            }
+
             is CommandAction.Custom -> {
-                if (action.action.kind == ActionKind.API) {
+                if (action.action.kind == ActionKind.SCRIPT) {
+                    withSteps(context) { steps ->
+                        val result = steps.run(action, null)
+                        Result(analysis, ran = result.ok, output = result.shown().ifBlank { null })
+                    }
+                } else if (action.action.kind == ActionKind.API) {
                     val providers = ProviderStore.load(context)
                     val out = withContext(Dispatchers.IO) {
                         ApiCall.run(action.action, action.text, providers, SecretStore.lookup(context))
@@ -72,6 +83,16 @@ object CommandLineRunner {
                 val out = if (ran) analysis.preview.ifBlank { analysis.previewTitle } else null
                 Result(analysis, ran = ran, output = out)
             }
+        }
+    }
+
+    private suspend fun <T> withSteps(context: Context, block: suspend (StepExecutor) -> T): T {
+        val scripts = ScriptRunner(context)
+        val extras = CommandSources.load(context, CommandActivity.loadHistory(context))
+        return try {
+            block(StepExecutor(context, scripts, { extras.providers }, { extras }))
+        } finally {
+            scripts.close()
         }
     }
 

@@ -95,7 +95,19 @@ object CommandExecutor {
         android.content.pm.PackageManager.PERMISSION_GRANTED
 
     /** True when the action was handed to the system, false when nothing could handle it. */
-    fun execute(context: Context, action: CommandAction): Boolean = runCatching {
+    fun execute(context: Context, action: CommandAction): Boolean = executeStep(context, action).ok
+
+    /**
+     * [action] run, as the envelope a chain reads: an error when nothing could handle it or the
+     * system threw (no activity, a broadcast refused), with what it said.
+     */
+    fun executeStep(context: Context, action: CommandAction): StepResult = try {
+        if (perform(context, action)) StepResult.ok() else StepResult.error(context.getString(com.android.launcher3.R.string.command_failed))
+    } catch (e: Exception) {
+        StepResult.error(e.message ?: e.javaClass.simpleName)
+    }
+
+    private fun perform(context: Context, action: CommandAction): Boolean {
         when (action) {
             is CommandAction.OpenApp -> {
                 val component = ComponentName.unflattenFromString(action.app.id) ?: return false
@@ -202,19 +214,11 @@ object CommandExecutor {
                 )
             }
 
+            // Outside the bar (a scheduled chain) each step runs here; the bar runs requests and
+            // scripts itself, through its StepExecutor. "&&", "||" and "|" follow the shell.
             is CommandAction.Chain -> {
-                // A step joined with "&&" runs only if the one before it worked; ";" runs whatever happened.
-                var last = true
-                var all = true
-                action.steps.forEachIndexed { i, step ->
-                    if (action.andThen.getOrElse(i) { false } && !last) {
-                        all = false
-                        return@forEachIndexed
-                    }
-                    last = execute(context, step)
-                    if (!last) all = false
-                }
-                return all
+                val outcome = kotlinx.coroutines.runBlocking { ChainRunner.run(action) { step, _ -> executeStep(context, step) } }
+                return outcome.ok
             }
 
             is CommandAction.SetVariable -> {
@@ -363,8 +367,8 @@ object CommandExecutor {
                 AliasStore.save(context, existingAliases)
             }
         }
-        true
-    }.getOrDefault(false)
+        return true
+    }
 
     /**
      * True when [action] works without the command bar in front: it changes a setting or saves
@@ -444,12 +448,13 @@ object CommandExecutor {
     }
 
     /** Fills the placeholders of [template]; an empty `?text=` style parameter is dropped. */
-    fun fillTemplate(template: String, contact: ContactEntry?, text: String, normalize: (String) -> String): String {
+    fun fillTemplate(template: String, contact: ContactEntry?, text: String, normalize: (String) -> String, stdin: String = ""): String {
         val values = mapOf(
             "{number}" to contact?.let { normalize(it.number) }.orEmpty(),
             "{phone}" to Uri.encode(contact?.number.orEmpty()),
             "{name}" to Uri.encode(contact?.name.orEmpty()),
             "{text}" to Uri.encode(text),
+            StdinFeed.PLACEHOLDER to Uri.encode(stdin),
         )
         var result = template
         values.forEach { (key, value) -> result = result.replace(key, value) }
@@ -460,11 +465,11 @@ object CommandExecutor {
     private fun runCustom(context: Context, action: CommandAction.Custom): Boolean {
         val spec = action.action
         if (spec.kind == ActionKind.SHORTCUT) return startShortcut(context, spec)
-        // Its answer is shown in the command bar, which fetches it.
-        if (spec.kind == ActionKind.API) return false
+        // Its answer is shown in the command bar, which fetches it; a script runs in the bar too.
+        if (spec.kind == ActionKind.API || spec.kind == ActionKind.SCRIPT) return false
         val targets = if (spec.packages.isEmpty()) listOf<String?>(null) else spec.packages
         for (pkg in targets) {
-            val intent = buildIntent(spec, action.contact, action.text, pkg)
+            val intent = buildIntent(spec, action.contact, action.text, pkg, action.stdin)
             if (spec.target == "broadcast") {
                 context.sendBroadcast(intent)
                 return true
@@ -487,10 +492,10 @@ object CommandExecutor {
     }
 
     /** The intent of [spec] filled with what was typed, aimed at [pkg] when given. */
-    fun buildIntent(spec: CustomAction, contact: ContactEntry?, text: String, pkg: String?): Intent {
+    fun buildIntent(spec: CustomAction, contact: ContactEntry?, text: String, pkg: String?, stdin: String = ""): Intent {
         val intent = Intent(spec.intentAction)
         if (spec.template.isNotEmpty()) {
-            val uri = Uri.parse(fillTemplate(spec.template, contact, text, ::normalizedNumber))
+            val uri = Uri.parse(fillTemplate(spec.template, contact, text, ::normalizedNumber, stdin))
             if (spec.mimeType != null) intent.setDataAndType(uri, spec.mimeType) else intent.data = uri
         } else if (spec.mimeType != null) {
             intent.type = spec.mimeType
@@ -501,7 +506,7 @@ object CommandExecutor {
             if (comp != null) intent.component = comp
         }
         spec.effectiveExtras().forEach { extra ->
-            val filled = fillTemplate(extra.value, contact, text, ::normalizedNumber)
+            val filled = fillTemplate(extra.value, contact, text, ::normalizedNumber, stdin)
             if (filled.isNotEmpty()) {
                 when (extra.type) {
                     ExtraType.STRING -> intent.putExtra(extra.key, spec.extraFor(filled) ?: filled)

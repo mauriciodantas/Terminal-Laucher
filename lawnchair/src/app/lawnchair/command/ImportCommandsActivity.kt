@@ -133,7 +133,12 @@ private fun ImportDialog(
     // What fits starts ticked; a clash starts unticked and, when ticked, comes in under another name.
     // An action that sends the location or the clipboard out, or changes data, is never ticked for the user.
     var actionsOn by remember {
-        mutableStateOf(preview.actions.indices.filter { preview.actions[it].conflict == null && preview.sends.getOrNull(it)?.needsTrust != true }.toSet())
+        // A script runs somebody else's code: it is never ticked for the user either.
+        mutableStateOf(
+            preview.actions.indices.filter {
+                preview.actions[it].conflict == null && preview.sends.getOrNull(it)?.needsTrust != true && !PackRules.isScript(preview.actions[it].item)
+            }.toSet(),
+        )
     }
     var aliasesOn by remember { mutableStateOf(preview.aliases.indices.filter { preview.aliases[it].conflict == null }.toSet()) }
     val count = actionsOn.size + aliasesOn.size
