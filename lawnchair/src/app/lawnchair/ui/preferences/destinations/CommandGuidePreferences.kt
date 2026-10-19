@@ -62,9 +62,14 @@ SINTAXE DA LINHA DE COMANDO:
    NOME am start -a android.intent.action.SET_ALARM --ei android.intent.extra.alarm.HOUR {1} --ei android.intent.extra.alarm.MINUTES {2} --ez android.intent.extra.alarm.SKIP_UI true # Despertar
    NOME am broadcast -a com.exemplo.ACAO --es chave valor # Broadcast
 4. Consultar APIs:
-   NOME curl @provedor/caminho [-X METHOD] [-H "Header: Valor"] [-d corpo] [--type json|form|text] [--list items] [--max 5] [--upcoming data] | FORMATO # Rótulo
-5. Apelidos:
+   NOME curl @provedor/caminho [-X METHOD] [-H "Header: Valor"] [-d corpo] [--type json|form|text] [--list items] [--max 5] [--upcoming data] [--format 'FORMATO'] # Rótulo
+   (o FORMATO vai entre aspas simples em --format; "|" fora de aspas encadeia comandos e não é mais o formato)
+5. Scripts (JavaScript isolado, sem rede nem acesso ao aparelho):
+   NOME node -p 'EXPRESSÃO' # Rótulo
+   NOME node -e 'function main(input, ctx) { return input.text; }' # Rótulo
+6. Apelidos:
    alias NOME EXPANSÃO
+   Uma expansão pode encadear comandos: alias cepmae cep {text} | w mae
 
 REGRAS OBRIGATÓRIAS DO PACOTE .tcmd:
 1. ESTRUTURA GERAL:
@@ -125,10 +130,11 @@ O Terminal Launcher solicita a chave ao usuário durante a importação do pacot
     "bodyType": "JSON"
   }
 }
-- "letter": Palavra do comando na barra (apenas letras e dígitos, minúsculas). Não use palavras reservadas do sistema (calc, clima, tempo, abrir, wifi, bluetooth, lanterna, silencio, brilho, volume, tocar, copiar, colar, config, agenda, nota, cancelar, bateria, armazenamento, ip, ping, rede, fast, ia, qr, etc.).
+- "letter": Palavra do comando na barra (apenas letras e dígitos, minúsculas). Não use palavras reservadas do sistema (calc, clima, tempo, abrir, wifi, bluetooth, lanterna, silencio, brilho, volume, tocar, copiar, colar, config, agenda, nota, cancelar, bateria, armazenamento, ip, ping, rede, fast, ia, qr, am, curl, node, etc.).
 - "kind": "API".
 - "provider": Deve coincidir com o "id" de um provedor em providers[].
 - "arg": "TEXT" se o comando usa o que for digitado ({text}), ou "NONE" se roda sozinho.
+- "template" e "api.body" aceitam {stdin}: a saída do comando anterior quando o comando vem depois de um "|" na barra (vazio fora disso). Um comando que só usa {stdin} tem "arg": "NONE".
 - "packages": Deve ser obrigatoriamente [] em API.
 - "api.method": "GET", "POST", "PUT", "PATCH" ou "DELETE".
 - "api.format": String de formatação da resposta. Chaves {campo} apontam para o JSON da resposta (com pontos para aninhamento: {main.temp}, {weather.0.description}).
@@ -161,6 +167,33 @@ O Terminal Launcher solicita a chave ao usuário durante a importação do pacot
 - "categories": Lista de categorias de Intent (ex: ["android.intent.category.BROWSABLE"]).
 - "component": Componente explícito "pacote/classe" (opcional).
 - "extras": Lista de extras com "key", "type" ("string"|"int"|"boolean"|"long"|"float"|"uri") e "value".
+- "template" e os valores de "extras" aceitam {stdin} como nas APIs.
+
+6. DEFINIÇÃO DE COMANDO SCRIPT (actions[]), JavaScript isolado:
+{
+  "letter": "dias",
+  "label": "dias até uma data",
+  "kind": "SCRIPT",
+  "template": "",
+  "packages": [],
+  "arg": "TEXT",
+  "script": { "source": "function main(input, ctx) {\n  const d = Math.ceil((new Date(input.args[0]) - Date.now()) / 864e5);\n  return d + ' dias';\n}" }
+}
+- "script" tem exatamente um dos campos: "expr" (uma expressão, como em node -p: { "expr": "input.text.toUpperCase()" }) ou "source" (um programa, como em node -e, que declara function main(input, ctx)). Até 64 KB.
+- "arg": sempre "TEXT" (o texto pode vir vazio). "template": "" e "packages": [].
+- Entrada: input.text (o que veio depois do nome), input.args (input.text em palavras), input.stdin ({ text, data } do comando anterior num "|", ou null), ctx.vars (só date e time), ctx.locale e ctx.command.
+- Retorno de main: texto, número ou booleano viram o texto mostrado; um objeto com "text", "data" ou "action" usa esses campos; outro objeto ou lista vira "data"; null ou nada é sucesso sem texto; throw é erro. main pode ser async.
+- "action" (só vale no último comando de uma cadeia): { "open": "https://..." }, { "copy": "texto" }, { "share": "texto" } ou { "run": "linha da barra" }. Quem executa é a barra, com as confirmações dela.
+- O script NÃO tem rede, arquivos, DOM, fetch, setTimeout nem acesso ao Android: só ECMAScript. Para buscar dados, use um comando API antes dele com "|".
+- Limites: 2 s de execução, 16 MB de memória, 256 KB de entrada, 64 KB de texto e 256 KB de dados na saída.
+- Um Script importado entra desmarcado: o usuário lê o código antes de habilitar.
+
+7. APELIDOS E ENCADEAMENTO (aliases[]):
+{ "name": "cepmae", "expansion": "cep {text} | w mae" }
+- Na expansão, {text} recebe o que for digitado depois do apelido (sem {text}, o texto vai para o fim).
+- Operadores, como no shell: "a ; b" (sempre), "a && b" (só se a deu certo), "a || b" (só se a falhou), "a | b" (b recebe a saída de a). "|" liga mais forte que "&&" e "||", que ligam mais forte que ";". Entre aspas, são texto.
+- Depois de um "|", um comando digitado sem texto recebe a saída anterior em {text}; com texto, o digitado ganha e a saída fica em {stdin}.
+- "alias" e "unalias" não podem fazer parte de uma cadeia.
 
 DOCUMENTAÇÃO DA API A INTEGRAR:
 [Forneça aqui a documentação da API, URL base, endpoint desejado e estrutura de resposta JSON]"""
@@ -284,8 +317,11 @@ fun CommandGuidePreferences(
                     "• Links diretos:\n  g https://www.google.com/search?q={text} # Google\n\n" +
                     "• Abrir apps e atalhos:\n  w am start -p com.whatsapp # WhatsApp\n  lanterna am start -p com.android.systemui --shortcut torch # Lanterna\n\n" +
                     "• Intents e Broadcasts:\n  alarme am start -a android.intent.action.SET_ALARM --ei android.intent.extra.alarm.HOUR {1} --ei android.intent.extra.alarm.MINUTES {2} --ez android.intent.extra.alarm.SKIP_UI true # Despertar\n  notif am broadcast -a com.exemplo.AVISO --es msg \"{text}\" # Notificar\n\n" +
-                    "• Consultar APIs (curl):\n  cep curl @viacep/ws/{text}/json/ | {logradouro} · {bairro} · {localidade}/{uf} # CEP\n\n" +
-                    "• Apelidos (aliases):\n  alias casa rota casa\n\n" +
+                    "• Consultar APIs (curl):\n  cep curl @viacep/ws/{text}/json/ --format '{logradouro} · {bairro} · {localidade}/{uf}' # CEP\n  O formato vai em --format, entre aspas simples; \\n quebra a linha. O \"|\" fora de aspas encadeia comandos.\n\n" +
+                    "• Scripts (node):\n  conta node -p 'eval(input.text)' # Calculadora\n  maiusc node -e 'function main(input) { return input.text.toUpperCase(); }'\n\n" +
+                    "• Apelidos (aliases):\n  alias casa rota casa\n  alias cepmae cep {text} | w mae\n\n" +
+                    "Aspas: dentro de aspas simples só \\' (uma aspa) e \\\\ (uma barra) são escapes; as outras barras ficam como estão, para o código ler como foi escrito. Isso difere do shell POSIX de propósito. Dentro de aspas a linha pode ter quebras.\n\n" +
+                    "Palavras reservadas: am, curl e node não podem ser nome de comando. Os operadores |, &&, || e ; fora de aspas só valem num apelido.\n\n" +
                     "Flags suportadas: -a (ação), -d (URI/dados), -t (MIME), -c (categoria), -n (componente), -p (pacote), --shortcut, --sms e extras (--es, --ei, --ez, --el, --ef, --eu).",
             )
         }
@@ -390,11 +426,58 @@ fun CommandGuidePreferences(
             )
         }
 
+        // Section: Scripts
+        PreferenceGroup(heading = "Scripts (JavaScript)") {
+            GuideTextCard(
+                text = "Um Script roda JavaScript num sandbox isolado do aparelho (o V8 do WebView, em outro processo): só ECMAScript, sem rede, arquivos, DOM, fetch ou setTimeout. Ele só calcula e devolve dados.\n\n" +
+                    "Todo script define function main(input, ctx). node -p 'EXPRESSÃO' vira main que devolve a expressão; node -e 'PROGRAMA' precisa declarar main.\n" +
+                    "• input.text: o que veio depois do nome (\"\" se nada)\n" +
+                    "• input.args: input.text em palavras, como {1}…{9}\n" +
+                    "• input.stdin: { text, data } do comando anterior num \"|\", ou null\n" +
+                    "• ctx.vars: só variáveis não sensíveis ({date}, {time}); {clip}, {sel} e {location} nunca entram\n" +
+                    "• ctx.locale (ex. pt-BR) e ctx.command (o nome)\n\n" +
+                    "main pode ser async quando o aparelho permite. O que ela devolve vira o resultado:\n" +
+                    "• nada ou null: sucesso sem texto\n" +
+                    "• texto, número ou booleano: o texto mostrado\n" +
+                    "• objeto com text, data ou action: esses campos\n" +
+                    "• outro objeto ou lista: data\n" +
+                    "• throw: erro, com a mensagem e a linha\n\n" +
+                    "action pede à barra, no fim da cadeia: { open: URI }, { copy: texto }, { share: texto } ou { run: linha }. Quem executa é a barra, com as confirmações de sempre; run não aceita alias/unalias e encadeia no máximo 3 vezes.\n\n" +
+                    "Limites: 2 s de execução, 16 MB de memória, 64 KB de código, 256 KB de entrada, 64 KB de texto e 256 KB de dados na saída. Sem o sandbox no aparelho o script é salvo, mas não roda.\n\n" +
+                    "No .tcmd, kind SCRIPT, script e {stdin} são opcionais e o pacote continua version 1. Uma versão antiga do app ignora só os comandos SCRIPT (descarta o kind que não conhece) e importa o resto. Na importação, um Script entra desmarcado: toque em Ver código antes de marcá-lo.",
+            )
+            JsonCodeCard(
+                json = """{
+  "letter": "dias",
+  "label": "dias até uma data",
+  "kind": "SCRIPT",
+  "arg": "TEXT",
+  "template": "",
+  "packages": [],
+  "script": { "source": "function main(input, ctx) {\n  const d = Math.ceil((new Date(input.args[0]) - Date.now()) / 864e5);\n  return `${'$'}{d} dias`;\n}" }
+}""",
+            )
+        }
+
+        // Section: Chains
+        PreferenceGroup(heading = "Encadeamento") {
+            GuideTextCard(
+                text = "Na barra, como no shell:\n" +
+                    "• a ; b  executa b sempre\n" +
+                    "• a && b  executa b só se a deu certo\n" +
+                    "• a || b  executa b só se a falhou (clima || w mae sem internet)\n" +
+                    "• a | b  b recebe a saída de a (cep 88101000 | w mae)\n\n" +
+                    "| liga mais forte que && e ||, que ligam mais forte que ;. Numa sequência de |, a primeira falha para tudo. Operadores entre aspas são texto.\n\n" +
+                    "Depois de um |, o comando recebe a saída anterior em {text} quando foi digitado sem texto, e sempre em {stdin}; o que foi digitado ganha. Um Script lê input.stdin. Só o último comando pode terminar com uma action. Se um passo altera dados (POST...), a prévia fica amarela e o Enter vale para a cadeia inteira.",
+            )
+        }
+
         // Section 5: Placeholders
         PreferenceGroup(heading = "Placeholders e Variáveis") {
             GuideTextCard(
                 text = "Você pode usar variáveis no template da URL:\n" +
                     "• {text}: Texto digitado após o comando (codificado para URL)\n" +
+                    "• {stdin}: Saída do comando anterior num \"|\" (vazio sem ele); um destino que só usa {stdin} não pede argumento\n" +
                     "• {year}: Ano corrente (ex: 2026)\n" +
                     "• {date}: Data atual\n" +
                     "• {time}: Hora atual\n" +
