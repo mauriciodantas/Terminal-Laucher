@@ -1737,4 +1737,6 @@
     <string name="cmd_variables_value">Text</string>
     <string name="cmd_variables_save">Save</string>
     <string name="cmd_variables_remove">Remove</string>
+    <string name="cmd_imp_view_code">View code</string>
+    <string name="cmd_imp_code_seen">Got it</string>
 </resources>

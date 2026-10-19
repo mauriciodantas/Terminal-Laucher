@@ -133,12 +133,28 @@ private fun ImportDialog(
     // What fits starts ticked; a clash starts unticked and, when ticked, comes in under another name.
     // An action that sends the location or the clipboard out, or changes data, is never ticked for the user.
     var actionsOn by remember {
-        // A script runs somebody else's code: it is never ticked for the user either.
+        // A script runs somebody else's code: it starts unticked, and can be ticked once its code was seen.
         mutableStateOf(
             preview.actions.indices.filter {
                 preview.actions[it].conflict == null && preview.sends.getOrNull(it)?.needsTrust != true && !PackRules.isScript(preview.actions[it].item)
             }.toSet(),
         )
+    }
+    var codeSeen by remember { mutableStateOf(emptySet<Int>()) }
+    var codeShown by remember { mutableStateOf<Int?>(null) }
+    // The sandbox checks each script; one that does not compile still comes in if ticked, marked.
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val scripts = remember { ScriptRunner(context) }
+    androidx.compose.runtime.DisposableEffect(Unit) { onDispose { scripts.close() } }
+    var scriptErrors by remember { mutableStateOf(emptyMap<Int, String>()) }
+    androidx.compose.runtime.LaunchedEffect(preview) {
+        val found = mutableMapOf<Int, String>()
+        preview.actions.forEachIndexed { i, entry ->
+            val spec = entry.item.script?.takeIf { PackRules.isScript(entry.item) } ?: return@forEachIndexed
+            val check = scripts.check(spec)
+            if (!check.ok) found[i] = check.line?.let { l -> context.getString(app.lawnchair.command.R.string.cmd_script_line, l, check.message.orEmpty()) } ?: check.message.orEmpty()
+        }
+        scriptErrors = found
     }
     var aliasesOn by remember { mutableStateOf(preview.aliases.indices.filter { preview.aliases[it].conflict == null }.toSet()) }
     val count = actionsOn.size + aliasesOn.size
@@ -182,11 +198,24 @@ private fun ImportDialog(
                     )
                 }
                 preview.actions.forEachIndexed { index, entry ->
+                    val script = PackRules.isScript(entry.item)
                     EntryRow(
                         title = "${entry.item.letter} · ${entry.item.label}",
                         entry = entry,
                         checked = index in actionsOn,
                         onChange = { actionsOn = if (it) actionsOn + index else actionsOn - index },
+                        enabled = !script || index in codeSeen,
+                        error = scriptErrors[index],
+                        extra = if (script) {
+                            {
+                                TextButton(onClick = {
+                                    codeShown = index
+                                    codeSeen = codeSeen + index
+                                }) { Text(stringResource(R.string.cmd_imp_view_code)) }
+                            }
+                        } else {
+                            null
+                        },
                     )
                 }
                 if (preview.aliases.isNotEmpty()) {
@@ -288,12 +317,37 @@ private fun ImportDialog(
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cmd_pref_cancel)) } },
     )
+    codeShown?.let { index ->
+        val action = preview.actions[index].item
+        AlertDialog(
+            onDismissRequest = { codeShown = null },
+            title = { Text("${action.letter} · ${action.label}") },
+            text = {
+                Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) {
+                    Text(
+                        (if (action.script?.expr != null) "node -p\n" else "node -e\n") + action.script?.code.orEmpty(),
+                        style = MaterialTheme.typography.bodySmall,
+                        fontFamily = FontFamily.Monospace,
+                    )
+                }
+            },
+            confirmButton = { TextButton(onClick = { codeShown = null }) { Text(stringResource(R.string.cmd_imp_code_seen)) } },
+        )
+    }
 }
 
 @Composable
-private fun <T> EntryRow(title: String, entry: PackEntry<T>, checked: Boolean, onChange: (Boolean) -> Unit) {
+private fun <T> EntryRow(
+    title: String,
+    entry: PackEntry<T>,
+    checked: Boolean,
+    onChange: (Boolean) -> Unit,
+    enabled: Boolean = true,
+    error: String? = null,
+    extra: (@Composable () -> Unit)? = null,
+) {
     // A clash with no free name cannot be imported at all.
-    val selectable = entry.conflict == null || entry.suggestion != null
+    val selectable = (entry.conflict == null || entry.suggestion != null) && enabled
     Row(
         verticalAlignment = Alignment.Top,
         modifier = Modifier
@@ -328,6 +382,10 @@ private fun <T> EntryRow(title: String, entry: PackEntry<T>, checked: Boolean, o
             entry.caution?.let {
                 Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary)
             }
+            error?.let {
+                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+            }
+            extra?.invoke()
         }
     }
 }

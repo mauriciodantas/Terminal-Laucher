@@ -642,4 +642,6 @@
     <string name="cmd_variables_value">Texto</string>
     <string name="cmd_variables_save">Salvar</string>
     <string name="cmd_variables_remove">Remover</string>
+    <string name="cmd_imp_view_code">Ver código</string>
+    <string name="cmd_imp_code_seen">Entendi</string>
 </resources>

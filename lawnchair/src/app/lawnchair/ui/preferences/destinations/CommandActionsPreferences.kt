@@ -370,7 +370,11 @@ fun CommandActionsPreferences(openEdit: String = "") {
     val commandItems = remember(actions, aliases, usage) {
         val nonApi = actions.filter { it.kind != ActionKind.API }.map { action ->
             val count = usage[CommandUsage.actionKey(action.letter)] ?: 0
-            val dest = CommandLine.serialize(action).substringAfter(' ').substringBefore(" # ")
+            val dest = if (action.kind == ActionKind.SCRIPT) {
+                scriptSummary(action)
+            } else {
+                CommandLine.serialize(action).substringAfter(' ').substringBefore(" # ")
+            }
             CommandItem.Action(action, dest, count)
         }
         val aliasItems = aliases.map { alias ->
@@ -1464,4 +1468,12 @@ private fun defaultLauncherLabel(context: Context): String? {
     val home = pm.resolveActivity(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME), PackageManager.MATCH_DEFAULT_ONLY) ?: return null
     if (home.activityInfo.packageName == "android") return null
     return home.loadLabel(pm).toString()
+}
+
+/** "JS › node -e function main(input, ctx) { …": a script in one line, cut short, for the lists. */
+internal fun scriptSummary(action: CustomAction): String {
+    val script = action.script
+    val code = script?.code.orEmpty().trim()
+    val first = code.lineSequence().first().take(48)
+    return "JS › " + (if (script?.expr != null) "node -p " else "node -e ") + first + if (first.length < code.length) " …" else ""
 }

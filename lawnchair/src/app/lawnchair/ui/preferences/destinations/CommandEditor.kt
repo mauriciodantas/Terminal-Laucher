@@ -60,6 +60,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -77,6 +78,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -104,6 +106,9 @@ import app.lawnchair.command.ParsedCommand
 import app.lawnchair.command.ProviderStore
 import app.lawnchair.command.Providers
 import app.lawnchair.command.R as CommandR
+import app.lawnchair.command.ScriptCheck
+import app.lawnchair.command.ScriptRunner
+import app.lawnchair.command.ScriptSpec
 import app.lawnchair.command.SecretStore
 import app.lawnchair.ui.preferences.LocalNavController
 import app.lawnchair.ui.preferences.navigation.CommandProviders
@@ -129,6 +134,7 @@ enum class CommandType(val label: String) {
     APP("App"),
     INTENT("Intent"),
     API("API"),
+    SCRIPT("Script"),
     ALIAS("Apelido"),
 }
 
@@ -177,6 +183,7 @@ internal fun CommandEditor(
     // Determine initial type
     val initialType = when {
         editingAction?.kind == ActionKind.API -> CommandType.API
+        editingAction?.kind == ActionKind.SCRIPT -> CommandType.SCRIPT
         editingAction != null && editingAction.packages.isNotEmpty() && editingAction.template.isEmpty() -> CommandType.APP
         editingAlias?.expansion?.startsWith("abrir ") == true -> CommandType.APP
         editingAlias != null -> CommandType.ALIAS
@@ -229,6 +236,14 @@ internal fun CommandEditor(
 
     // Alias fields
     var expansion by remember { mutableStateOf(editingAlias?.expansion.orEmpty()) }
+
+    // Script fields: the code is an expression ("node -p") or a program ("node -e").
+    var scriptIsExpr by remember { mutableStateOf(editingAction?.script?.expr != null) }
+    var scriptCode by remember { mutableStateOf(TextFieldValue(editingAction?.script?.code ?: ScriptSpec.TEMPLATE)) }
+    val scripts = remember { ScriptRunner(context) }
+    DisposableEffect(Unit) { onDispose { scripts.close() } }
+    var scriptCheck by remember { mutableStateOf(ScriptCheck.OK) }
+    var scriptErrorLine by remember { mutableStateOf<Int?>(null) }
 
     // Synchronization state
     val initialLine = when {
@@ -316,6 +331,20 @@ internal fun CommandEditor(
                 ParsedCommand.Action(cleanName, cleanLabel, action)
             }
 
+            CommandType.SCRIPT -> {
+                val code = scriptCode.text
+                val action = CustomAction(
+                    letter = cleanName,
+                    label = cleanLabel.ifEmpty { cleanName },
+                    kind = ActionKind.SCRIPT,
+                    template = "",
+                    packages = emptyList(),
+                    arg = ArgKind.TEXT,
+                    script = if (scriptIsExpr) ScriptSpec(expr = code) else ScriptSpec(source = code),
+                )
+                ParsedCommand.Action(cleanName, cleanLabel, action)
+            }
+
             CommandType.ALIAS -> {
                 val al = CommandAlias(name = cleanName, expansion = expansion.trim())
                 ParsedCommand.Alias(cleanName, cleanLabel, al)
@@ -356,6 +385,13 @@ internal fun CommandEditor(
                     is ParsedCommand.Action -> {
                         val a = cmd.action
                         when {
+                            a.kind == ActionKind.SCRIPT -> {
+                                type = CommandType.SCRIPT
+                                scriptIsExpr = a.script?.expr != null
+                                val code = a.script?.code.orEmpty()
+                                if (code != scriptCode.text) scriptCode = TextFieldValue(code)
+                            }
+
                             a.kind == ActionKind.API -> {
                                 type = CommandType.API
                                 provider = a.provider
@@ -434,7 +470,17 @@ internal fun CommandEditor(
             ignore = editingAction ?: editingAlias,
         )
     }
-    val canSave = validation.isValid && name.isNotBlank() && lineError == null
+    // The sandbox checks the syntax of a script as it is typed; without a sandbox it saves with a warning.
+    LaunchedEffect(type, scriptCode.text, scriptIsExpr) {
+        if (type != CommandType.SCRIPT) return@LaunchedEffect
+        delay(500)
+        val cmd = buildCommand() as? ParsedCommand.Action ?: return@LaunchedEffect
+        val spec = cmd.action.script ?: return@LaunchedEffect
+        scriptCheck = scripts.check(spec)
+        scriptErrorLine = scriptCheck.line
+    }
+    val scriptOk = type != CommandType.SCRIPT || scriptCheck.ok
+    val canSave = validation.isValid && name.isNotBlank() && lineError == null && scriptOk
 
     // Modals state
     var appPickerOpen by remember { mutableStateOf(false) }
@@ -488,6 +534,9 @@ internal fun CommandEditor(
             CommandType.ALIAS -> {
                 testResultText = "Apelido: $name → $expansion"
             }
+
+            // Tested in its own panel (ScriptTestPanel).
+            CommandType.SCRIPT -> Unit
 
             CommandType.API -> {
                 val cmd = buildCommand()
@@ -628,8 +677,10 @@ internal fun CommandEditor(
                                     syncFieldsToLine()
                                 },
                                 shape = SegmentedButtonDefaults.itemShape(index, CommandType.entries.size),
+                                // Six kinds share the row: no check mark, one line each.
+                                icon = {},
                             ) {
-                                Text(option.label, style = MaterialTheme.typography.labelMedium)
+                                Text(option.label, style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
                             }
                         }
                     }
@@ -1195,6 +1246,46 @@ internal fun CommandEditor(
                             }
                         }
 
+                        CommandType.SCRIPT -> {
+                            ScriptCodeField(
+                                code = scriptCode,
+                                onCodeChange = {
+                                    scriptCode = it
+                                    scriptErrorLine = null
+                                    syncFieldsToLine()
+                                },
+                                isExpression = scriptIsExpr,
+                                errorLine = scriptErrorLine,
+                                onConvert = {
+                                    val program = ScriptSpec(expr = scriptCode.text).asProgram().source.orEmpty()
+                                    scriptIsExpr = false
+                                    scriptCode = TextFieldValue(program)
+                                    syncFieldsToLine()
+                                },
+                            )
+                            if (!scriptCheck.ok) {
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    scriptCheck.line?.let { "linha $it: ${scriptCheck.message}" } ?: scriptCheck.message.orEmpty(),
+                                    color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                                scriptCheck.line?.let { l ->
+                                    TextButton(onClick = { scriptCode = atLine(scriptCode, l) }) { Text("Ir para a linha $l") }
+                                }
+                            } else if (!scripts.isSupported) {
+                                Spacer(Modifier.height(4.dp))
+                                Text(stringResource(CommandR.string.cmd_warn_script_unsupported), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                            }
+                            Text(
+                                "main(input, ctx): input.text, input.args, input.stdin { text, data } · ctx.vars, ctx.locale, ctx.command. " +
+                                    "Devolva um texto, dados ou { text, data, action }. Sem rede nem acesso ao aparelho.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 4.dp),
+                            )
+                        }
+
                         CommandType.ALIAS -> {
                             OutlinedTextField(
                                 value = expansion,
@@ -1222,87 +1313,102 @@ internal fun CommandEditor(
                     )
                     Spacer(Modifier.height(8.dp))
 
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        OutlinedTextField(
-                            value = sampleArg,
-                            onValueChange = { sampleArg = it },
-                            placeholder = { Text("Argumento de teste (opcional)") },
-                            modifier = Modifier.weight(1f),
-                            singleLine = true,
-                        )
-                        Button(
-                            onClick = {
-                                if (type == CommandType.API && apiMethod in listOf("POST", "PUT", "PATCH", "DELETE")) {
-                                    val p = Providers.of(provider, providers)
-                                    val host = p?.baseUrl ?: provider
-                                    confirmWriteAlert = "Isto vai enviar $apiMethod para $host. Deseja continuar?"
-                                } else {
-                                    runTest()
-                                }
+                    if (type == CommandType.SCRIPT) {
+                        val scriptSpec = (currentCmd as? ParsedCommand.Action)?.action?.script ?: ScriptSpec(expr = "")
+                        ScriptTestPanel(
+                            spec = scriptSpec,
+                            name = name.trim().lowercase(),
+                            runner = scripts,
+                            canRun = scriptOk,
+                            onGoToLine = { l ->
+                                scriptErrorLine = l
+                                scriptCode = atLine(scriptCode, l)
                             },
-                            enabled = !testRunning && canSave,
-                        ) {
-                            Icon(Icons.Default.PlayArrow, contentDescription = null)
-                            Spacer(Modifier.width(4.dp))
-                            Text(if (testRunning) "Executando..." else "EXECUTAR")
-                        }
-                    }
-
-                    // Test output
-                    if (testStatus != null || testResultText != null || testError != null) {
-                        Spacer(Modifier.height(12.dp))
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                        ) {
-                            Column(Modifier.padding(12.dp)) {
-                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Text(
-                                        testStatus ?: "RESULTADO",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (testError != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                                    )
-                                    if (testLatency != null) {
-                                        Text("${testLatency}ms", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            onRunAction = onTest,
+                        )
+                    } else {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                            OutlinedTextField(
+                                value = sampleArg,
+                                onValueChange = { sampleArg = it },
+                                placeholder = { Text("Argumento de teste (opcional)") },
+                                modifier = Modifier.weight(1f),
+                                singleLine = true,
+                            )
+                            Button(
+                                onClick = {
+                                    if (type == CommandType.API && apiMethod in listOf("POST", "PUT", "PATCH", "DELETE")) {
+                                        val p = Providers.of(provider, providers)
+                                        val host = p?.baseUrl ?: provider
+                                        confirmWriteAlert = "Isto vai enviar $apiMethod para $host. Deseja continuar?"
+                                    } else {
+                                        runTest()
                                     }
-                                }
+                                },
+                                enabled = !testRunning && canSave,
+                            ) {
+                                Icon(Icons.Default.PlayArrow, contentDescription = null)
+                                Spacer(Modifier.width(4.dp))
+                                Text(if (testRunning) "Executando..." else "EXECUTAR")
+                            }
+                        }
 
-                                if (testError != null) {
-                                    Spacer(Modifier.height(4.dp))
-                                    Text(testError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
-                                }
+                        // Test output
+                        if (testStatus != null || testResultText != null || testError != null) {
+                            Spacer(Modifier.height(12.dp))
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                            ) {
+                                Column(Modifier.padding(12.dp)) {
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text(
+                                            testStatus ?: "RESULTADO",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (testError != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                                        )
+                                        if (testLatency != null) {
+                                            Text("${testLatency}ms", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                    }
 
-                                if (testResultText != null) {
-                                    Spacer(Modifier.height(6.dp))
-                                    Text("NA BARRA:", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    Text(
-                                        testResultText!!,
-                                        fontFamily = FontFamily.Monospace,
-                                        fontWeight = FontWeight.Bold,
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = MaterialTheme.colorScheme.primary,
-                                    )
-                                }
+                                    if (testError != null) {
+                                        Spacer(Modifier.height(4.dp))
+                                        Text(testError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
+                                    }
 
-                                // Interactive JSON Tree for API
-                                val raw = testRawJson
-                                if (raw != null) {
-                                    Spacer(Modifier.height(10.dp))
-                                    Text("RESPOSTA JSON (toque em + para adicionar campo ao formato):", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    Spacer(Modifier.height(4.dp))
-                                    JsonTreeView(
-                                        rawJson = raw,
-                                        onInsertField = { fieldPath, arrayPath ->
-                                            if (arrayPath != null && apiList.isEmpty()) {
-                                                apiList = arrayPath
-                                                apiFormat += " {$fieldPath}"
-                                            } else {
-                                                apiFormat += " {$fieldPath}"
-                                            }
-                                            syncFieldsToLine()
-                                        },
-                                    )
+                                    if (testResultText != null) {
+                                        Spacer(Modifier.height(6.dp))
+                                        Text("NA BARRA:", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Text(
+                                            testResultText!!,
+                                            fontFamily = FontFamily.Monospace,
+                                            fontWeight = FontWeight.Bold,
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = MaterialTheme.colorScheme.primary,
+                                        )
+                                    }
+
+                                    // Interactive JSON Tree for API
+                                    val raw = testRawJson
+                                    if (raw != null) {
+                                        Spacer(Modifier.height(10.dp))
+                                        Text("RESPOSTA JSON (toque em + para adicionar campo ao formato):", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Spacer(Modifier.height(4.dp))
+                                        JsonTreeView(
+                                            rawJson = raw,
+                                            onInsertField = { fieldPath, arrayPath ->
+                                                if (arrayPath != null && apiList.isEmpty()) {
+                                                    apiList = arrayPath
+                                                    apiFormat += " {$fieldPath}"
+                                                } else {
+                                                    apiFormat += " {$fieldPath}"
+                                                }
+                                                syncFieldsToLine()
+                                            },
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -1548,9 +1654,10 @@ private fun CatalogPickerDialog(
  * Interactive expandable JSON Tree with "+" buttons to insert field paths into the format string.
  */
 @Composable
-private fun JsonTreeView(
+internal fun JsonTreeView(
     rawJson: String,
-    onInsertField: (fieldPath: String, arrayParentPath: String?) -> Unit,
+    /** Null for a tree that is only read (the data of a script), without the "+" buttons. */
+    onInsertField: ((fieldPath: String, arrayParentPath: String?) -> Unit)?,
 ) {
     val parsed = remember(rawJson) {
         runCatching { JSONTokener(rawJson).nextValue() }.getOrNull()
@@ -1581,7 +1688,7 @@ private fun JsonObjectNode(
     obj: JSONObject,
     currentPath: String,
     arrayParentPath: String?,
-    onInsert: (String, String?) -> Unit,
+    onInsert: ((String, String?) -> Unit)?,
 ) {
     val keys = remember(obj) { obj.keys().asSequence().toList() }
     Column {
@@ -1643,18 +1750,20 @@ private fun JsonObjectNode(
                             modifier = Modifier.weight(1f),
                             maxLines = 2,
                         )
-                        IconButton(
-                            onClick = {
-                                val relPath = if (arrayParentPath != null && path.startsWith("$arrayParentPath.")) {
-                                    path.removePrefix("$arrayParentPath.").removePrefix("0.").removePrefix("1.").removePrefix("2.")
-                                } else {
-                                    path
-                                }
-                                onInsert(relPath, arrayParentPath)
-                            },
-                            modifier = Modifier.size(24.dp),
-                        ) {
-                            Icon(Icons.Default.Add, contentDescription = "Inserir campo", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                        if (onInsert != null) {
+                            IconButton(
+                                onClick = {
+                                    val relPath = if (arrayParentPath != null && path.startsWith("$arrayParentPath.")) {
+                                        path.removePrefix("$arrayParentPath.").removePrefix("0.").removePrefix("1.").removePrefix("2.")
+                                    } else {
+                                        path
+                                    }
+                                    onInsert(relPath, arrayParentPath)
+                                },
+                                modifier = Modifier.size(24.dp),
+                            ) {
+                                Icon(Icons.Default.Add, contentDescription = "Inserir campo", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                            }
                         }
                     }
                 }
@@ -1668,7 +1777,7 @@ private fun JsonArrayNode(
     arr: JSONArray,
     currentPath: String,
     arrayParentPath: String?,
-    onInsert: (String, String?) -> Unit,
+    onInsert: ((String, String?) -> Unit)?,
 ) {
     Column {
         val count = minOf(arr.length(), 5) // Show up to 5 items in preview
@@ -1722,11 +1831,13 @@ private fun JsonArrayNode(
                             .padding(vertical = 2.dp),
                     ) {
                         Text("[$i]: $item", fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
-                        IconButton(
-                            onClick = { onInsert(path, arrayParentPath) },
-                            modifier = Modifier.size(24.dp),
-                        ) {
-                            Icon(Icons.Default.Add, contentDescription = "Inserir campo", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                        if (onInsert != null) {
+                            IconButton(
+                                onClick = { onInsert(path, arrayParentPath) },
+                                modifier = Modifier.size(24.dp),
+                            ) {
+                                Icon(Icons.Default.Add, contentDescription = "Inserir campo", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                            }
                         }
                     }
                 }
