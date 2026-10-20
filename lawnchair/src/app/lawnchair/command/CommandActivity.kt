@@ -72,6 +72,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
@@ -85,6 +86,7 @@ import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
@@ -1547,8 +1549,17 @@ private fun CommandScreen(onClose: () -> Unit) {
                         .padding(horizontal = 10.dp, vertical = 7.dp),
                 ) {
                     Label(previewTitle, dim, 10.sp)
+                    // Each line of the answer is a paragraph whose wrapped part is indented, so a long
+                    // line ("Title (2024) · ★ 5,7 · HBO Max") is not taken for two items.
+                    val previewLines = remember(previewText) {
+                        buildAnnotatedString {
+                            previewText.split('\n').forEach { line ->
+                                withStyle(ParagraphStyle(textIndent = TextIndent(firstLine = 0.sp, restLine = 16.sp))) { append(line) }
+                            }
+                        }
+                    }
                     Text(
-                        previewText,
+                        previewLines,
                         color = previewColor,
                         fontFamily = mono(),
                         fontWeight = FontWeight.SemiBold,

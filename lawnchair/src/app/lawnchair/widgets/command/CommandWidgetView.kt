@@ -6,8 +6,11 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.text.SpannableString
+import android.text.Spanned
 import android.text.TextUtils
 import android.text.format.DateUtils
+import android.text.style.LeadingMarginSpan
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.ViewGroup
@@ -123,6 +126,20 @@ class CommandWidgetView(context: Context, private val appWidgetId: Int) : Linear
         render(command)
     }
 
+    /** [text] with the wrapped part of each line indented, so a long line is not taken for two. */
+    private fun indentWrapped(text: String): CharSequence {
+        val out = SpannableString(text)
+        val indent = (12 * density).toInt()
+        var start = 0
+        while (start <= text.length) {
+            val end = text.indexOf('\n', start).let { if (it < 0) text.length else it + 1 }
+            if (end > start) out.setSpan(LeadingMarginSpan.Standard(0, indent), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            if (end >= text.length) break
+            start = end
+        }
+        return out
+    }
+
     private fun render(command: String) {
         if (command.isBlank()) {
             header.text = "$"
@@ -134,7 +151,7 @@ class CommandWidgetView(context: Context, private val appWidgetId: Int) : Linear
         header.text = "$ $command"
         val result = CommandWidgetStore.result(context, appWidgetId)
         val failed = CommandWidgetStore.failed(context, appWidgetId)
-        body.text = result ?: "…"
+        body.text = result?.let(::indentWrapped) ?: "…"
         body.setTextColor(if (failed) Color.rgb(255, 107, 107) else accent)
         val at = CommandWidgetStore.resultAt(context, appWidgetId)
         val schedule = CommandWidgetStore.schedule(context, appWidgetId)
