@@ -51,6 +51,11 @@ class StepExecutor(
         else -> withContext(Dispatchers.Main) { CommandExecutor.executeStep(context, step) }
     }
 
+    /** What "more" adds to the answer of the paginated API [step]: the next items and where to go on from. */
+    suspend fun more(step: CommandAction.Custom, state: PageMore): MoreText = withContext(Dispatchers.IO) {
+        ApiCall.more(step.action, step.text, providers(), SecretStore.lookup(context), state, stdin = step.stdin)
+    }
+
     /** What a script gets as `ctx`: the date and time (never the clipboard or the location), the language, its name. */
     fun scriptContext(command: String): ScriptContext = ScriptContext(Variables.plain(extras()), Locale.getDefault().toLanguageTag(), command)
 }

@@ -101,6 +101,8 @@ import app.lawnchair.command.HttpResult
 import app.lawnchair.command.HttpRunner
 import app.lawnchair.command.IntentCatalog
 import app.lawnchair.command.IntentExtra
+import app.lawnchair.command.PageSpec
+import app.lawnchair.command.PageStyle
 import app.lawnchair.command.ParseResult
 import app.lawnchair.command.ParsedCommand
 import app.lawnchair.command.ProviderStore
@@ -232,6 +234,10 @@ internal fun CommandEditor(
     var apiList by remember { mutableStateOf(editingAction?.api?.list.orEmpty()) }
     var apiMax by remember { mutableIntStateOf(editingAction?.api?.max ?: 5) }
     var apiUpcoming by remember { mutableStateOf(editingAction?.api?.upcoming.orEmpty()) }
+    var apiPaginate by remember { mutableStateOf(editingAction?.api?.page?.style?.key.orEmpty()) }
+    var apiPageParam by remember { mutableStateOf(editingAction?.api?.page?.param.orEmpty()) }
+    var apiPageNext by remember { mutableStateOf(editingAction?.api?.page?.next.orEmpty()) }
+    var apiPages by remember { mutableIntStateOf(editingAction?.api?.page?.pages ?: PageSpec.DEFAULT_PAGES) }
     var pattern by remember { mutableStateOf(editingAction?.pattern.orEmpty()) }
 
     // Alias fields
@@ -316,6 +322,7 @@ internal fun CommandEditor(
                     list = apiList.trim(),
                     max = apiMax,
                     upcoming = apiUpcoming.trim(),
+                    page = PageStyle.of(apiPaginate)?.let { PageSpec(it, apiPageParam.trim(), apiPageNext.trim(), apiPages.coerceIn(2, PageSpec.MAX_PAGES)) },
                 )
                 val action = CustomAction(
                     letter = cleanName,
@@ -404,6 +411,10 @@ internal fun CommandEditor(
                                 apiList = a.api?.list.orEmpty()
                                 apiMax = a.api?.max ?: 5
                                 apiUpcoming = a.api?.upcoming.orEmpty()
+                                apiPaginate = a.api?.page?.style?.key.orEmpty()
+                                apiPageParam = a.api?.page?.param.orEmpty()
+                                apiPageNext = a.api?.page?.next.orEmpty()
+                                apiPages = a.api?.page?.pages ?: PageSpec.DEFAULT_PAGES
                                 pattern = a.pattern
                             }
 
@@ -1200,7 +1211,7 @@ internal fun CommandEditor(
                             Spacer(Modifier.height(8.dp))
 
                             // Lista (collapsible)
-                            var listOpen by remember { mutableStateOf(apiList.isNotEmpty() || apiUpcoming.isNotEmpty()) }
+                            var listOpen by remember { mutableStateOf(apiList.isNotEmpty() || apiUpcoming.isNotEmpty() || apiPaginate.isNotEmpty()) }
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -1243,6 +1254,50 @@ internal fun CommandEditor(
                                     label = { Text("--upcoming") },
                                     modifier = Modifier.fillMaxWidth(),
                                 )
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    OutlinedTextField(
+                                        value = apiPaginate,
+                                        onValueChange = {
+                                            apiPaginate = it
+                                            syncFieldsToLine()
+                                        },
+                                        label = { Text("--paginate") },
+                                        placeholder = { Text("cursor | next-url | offset | page | link") },
+                                        modifier = Modifier.weight(1.5f),
+                                    )
+                                    OutlinedTextField(
+                                        value = apiPages.toString(),
+                                        onValueChange = {
+                                            apiPages = it.toIntOrNull() ?: PageSpec.DEFAULT_PAGES
+                                            syncFieldsToLine()
+                                        },
+                                        label = { Text("--pages") },
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        modifier = Modifier.weight(0.8f),
+                                    )
+                                }
+                                if (apiPaginate.isNotEmpty()) {
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        OutlinedTextField(
+                                            value = apiPageParam,
+                                            onValueChange = {
+                                                apiPageParam = it
+                                                syncFieldsToLine()
+                                            },
+                                            label = { Text("--page-param") },
+                                            modifier = Modifier.weight(1f),
+                                        )
+                                        OutlinedTextField(
+                                            value = apiPageNext,
+                                            onValueChange = {
+                                                apiPageNext = it
+                                                syncFieldsToLine()
+                                            },
+                                            label = { Text("--page-next") },
+                                            modifier = Modifier.weight(1f),
+                                        )
+                                    }
+                                }
                             }
                         }
 

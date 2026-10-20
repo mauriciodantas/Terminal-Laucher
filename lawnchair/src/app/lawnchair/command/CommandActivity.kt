@@ -343,6 +343,10 @@ private fun CommandScreen(onClose: () -> Unit) {
     var historyIndex by remember { mutableIntStateOf(-1) }
     var done by remember { mutableStateOf<String?>(null) }
     var undoAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+
+    // "More" of a paginated API: asks for the next items and adds them to the answer. A new line ends it.
+    var loadMore by remember { mutableStateOf<(() -> Unit)?>(null) }
+    var lineVersion by remember { mutableIntStateOf(0) }
     val focus = remember { FocusRequester() }
 
     // The JavaScript sandbox, connected on the first script and let go when the bar closes.
@@ -379,6 +383,24 @@ private fun CommandScreen(onClose: () -> Unit) {
         done = null
         qr = null
         undoAction = null
+        loadMore = null
+        lineVersion++
+    }
+
+    fun offerMore(step: CommandAction.Custom, state: PageMore?) {
+        loadMore = state?.let { st ->
+            {
+                val version = lineVersion
+                loadMore = null
+                scope.launch {
+                    val brought = steps.more(step, st)
+                    // The line changed while it was asked: the answer is no longer on screen.
+                    if (version != lineVersion) return@launch
+                    done = done.orEmpty() + "\n" + brought.text
+                    offerMore(step, brought.more)
+                }
+            }
+        }
     }
 
     fun clearHistory() {
@@ -618,7 +640,12 @@ private fun CommandScreen(onClose: () -> Unit) {
             is CommandAction.Custom -> if (action.action.kind == ActionKind.API) {
                 record(action, command)
                 done = context.getString(R.string.command_running)
-                scope.launch { done = steps.run(action, null).shown() }
+                val version = lineVersion
+                scope.launch {
+                    val result = steps.run(action, null)
+                    done = result.shown()
+                    if (version == lineVersion) offerMore(action, result.more)
+                }
                 return
             } else if (action.action.kind == ActionKind.SCRIPT) {
                 record(action, command)
@@ -1584,6 +1611,18 @@ private fun CommandScreen(onClose: () -> Unit) {
                                     undo()
                                     undoAction = null
                                 },
+                        )
+                    }
+                    val more = loadMore
+                    if (done != null && more != null) {
+                        Text(
+                            text = "[" + stringResource(CommandR.string.cmd_api_more).uppercase() + "]",
+                            color = Amber,
+                            fontFamily = mono(),
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier
+                                .padding(top = 4.dp)
+                                .clickable { more() },
                         )
                     }
                     val code = qr

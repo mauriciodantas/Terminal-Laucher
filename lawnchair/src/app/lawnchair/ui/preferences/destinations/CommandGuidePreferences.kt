@@ -62,7 +62,7 @@ SINTAXE DA LINHA DE COMANDO:
    NOME am start -a android.intent.action.SET_ALARM --ei android.intent.extra.alarm.HOUR {1} --ei android.intent.extra.alarm.MINUTES {2} --ez android.intent.extra.alarm.SKIP_UI true # Despertar
    NOME am broadcast -a com.exemplo.ACAO --es chave valor # Broadcast
 4. Consultar APIs:
-   NOME curl @provedor/caminho [-X METHOD] [-H "Header: Valor"] [-d corpo] [--type json|form|text] [--list items] [--max 5] [--upcoming data] [--format 'FORMATO'] # Rótulo
+   NOME curl @provedor/caminho [-X METHOD] [-H "Header: Valor"] [-d corpo] [--type json|form|text] [--list items] [--max 5] [--upcoming data] [--paginate cursor|next-url|offset|page|link] [--page-param nome] [--page-next caminho] [--pages 3] [--format 'FORMATO'] # Rótulo
    (o FORMATO vai entre aspas simples em --format; "|" fora de aspas encadeia comandos e não é mais o formato)
 5. Scripts (JavaScript isolado, sem rede nem acesso ao aparelho):
    NOME node -p 'EXPRESSÃO' # Rótulo
@@ -125,6 +125,7 @@ O Terminal Launcher solicita a chave ao usuário durante a importação do pacot
     "list": "items",
     "max": 5,
     "upcoming": "",
+    "page": {"type": "cursor", "param": "cursor", "next": "meta.next", "pages": 3},
     "headers": {},
     "body": "",
     "bodyType": "JSON"
@@ -143,6 +144,7 @@ O Terminal Launcher solicita a chave ao usuário durante a importação do pacot
 - "api.list": Caminho do array se a resposta for uma lista (ex: "results").
 - "api.max": Quantidade de itens mostrados (1 a 20, padrão 5).
 - "api.upcoming": Nome do campo de data ISO para omitir eventos passados (opcional).
+- "api.page": Lê várias páginas da resposta e as junta numa lista só (opcional; omita se a API não pagina). "type": "cursor" (a resposta traz o cursor da próxima página em "next"; é enviado como query "param"), "next-url" (a resposta traz em "next" o endereço da próxima), "offset" (envia em "param" a quantidade de itens já lidos), "page" (envia em "param" o número da página, começando em 2) ou "link" (usa o cabeçalho Link rel="next"). "pages": no máximo de páginas, de 2 a 10 (padrão 3). Em "offset" e "page", "next" é opcional: um caminho que fica vazio ou false na última página. Para GraphQL (POST), escreva {cursor} no corpo, entre aspas se for texto, e use "cursor", "offset" ou "page". Para de ler quando já há "max" itens a mostrar (aumente "max" para juntar mais páginas de uma vez); na barra, o botão [MAIS] lê o próximo lote de "max" itens e o põe depois dos já mostrados. Exige "list" (ou resposta que seja um array).
 - "api.headers": Cabeçalhos específicos desta chamada (opcional).
 - "api.body": Corpo da requisição quando method != GET (opcional).
 - "api.bodyType": "JSON", "FORM" ou "TEXT" (opcional).
@@ -388,6 +390,7 @@ fun CommandGuidePreferences(
                     "• list: Nome do array na resposta JSON.\n" +
                     "• max: Limite de itens na barra (1 a 20).\n" +
                     "• upcoming: Campo de data ISO para omitir eventos passados.\n" +
+                    "• page: Paginação (type cursor, next-url, offset, page ou link; param, next e pages de 2 a 10). Na linha: --paginate, --page-param, --page-next e --pages. Para em max itens; [MAIS] na barra traz o próximo lote.\n" +
                     "• headers: Cabeçalhos específicos desta chamada HTTP.\n" +
                     "• body e bodyType: Corpo da requisição para métodos POST/PUT/PATCH (JSON, FORM ou TEXT).",
             )
