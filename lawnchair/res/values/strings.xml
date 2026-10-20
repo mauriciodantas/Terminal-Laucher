@@ -1749,8 +1749,6 @@
     <string name="command_widget_missed">A run missed while the widget was off screen happens when it shows again</string>
     <string name="command_widget_running">running…</string>
     <string name="command_widget_open">[OPEN]</string>
-    <string name="command_widget_no_result">no result</string>
-    <string name="command_widget_timeout">took too long</string>
     <string name="command_widget_share">Share widget</string>
     <string name="command_widget_share_subject">Terminal widget</string>
     <string name="command_widget_share_failed">Could not create the widget file</string>

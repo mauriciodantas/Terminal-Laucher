@@ -18,8 +18,10 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import app.lawnchair.command.CommandActivity
 import app.lawnchair.command.CommandLineRunner
+import app.lawnchair.command.CommandWidgetRun
 import app.lawnchair.command.CommandWidgetSchedule
 import app.lawnchair.command.CommandWidgetTexts
+import app.lawnchair.command.WidgetBody
 import app.lawnchair.theme.color.tokens.PhosphorColorToken
 import app.lawnchair.util.repeatOnAttached
 import com.android.launcher3.R
@@ -109,7 +111,7 @@ class CommandWidgetView(context: Context, private val appWidgetId: Int) : Linear
     private suspend fun loop() {
         val command = CommandWidgetStore.command(context, appWidgetId)
         val schedule = CommandWidgetStore.schedule(context, appWidgetId)
-        render(command)
+        render()
         if (command.isBlank()) return
         var tapped = false
         while (true) {
@@ -121,7 +123,7 @@ class CommandWidgetView(context: Context, private val appWidgetId: Int) : Linear
             while (!tapped && System.currentTimeMillis() < until) {
                 val step = minOf(60_000L, until - System.currentTimeMillis()).coerceAtLeast(250L)
                 tapped = withTimeoutOrNull(step) { taps.receive() } != null
-                if (!tapped) render(command)
+                if (!tapped) render()
             }
         }
     }
@@ -134,21 +136,21 @@ class CommandWidgetView(context: Context, private val appWidgetId: Int) : Linear
             // The command runs apart from this view, so a slow one neither blocks a new configuration nor a tap.
             val read = CoroutineScope(Dispatchers.Default).async { CommandLineRunner.read(context, command) }
             val result = withTimeoutOrNull(RUN_TIMEOUT_MS) { read.await() }
-            if (result == null) {
-                CommandWidgetStore.saveResult(context, appWidgetId, context.getString(R.string.command_widget_timeout), failed = true)
+            val outcome = if (result == null) {
+                CommandWidgetRun.timeout()
             } else {
-                val text = result.output?.takeIf { it.isNotBlank() }
-                    ?: result.analysis.preview.ifBlank { result.analysis.previewTitle }.ifBlank { context.getString(R.string.command_widget_no_result) }
-                CommandWidgetStore.saveResult(context, appWidgetId, text.trim(), failed = !result.ran)
+                CommandWidgetRun.outcome(result.ran, result.output, result.analysis.preview, result.analysis.previewTitle, command)
             }
+            CommandWidgetStore.saveResult(context, appWidgetId, outcome.text, outcome.failed)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            CommandWidgetStore.saveResult(context, appWidgetId, e.message ?: e.javaClass.simpleName, failed = true)
+            val outcome = CommandWidgetRun.error(e)
+            CommandWidgetStore.saveResult(context, appWidgetId, outcome.text, outcome.failed)
         } finally {
             running = false
         }
-        render(command)
+        render()
     }
 
     /** [text] with the wrapped part of each line indented, so a long line is not taken for two. */
@@ -165,8 +167,10 @@ class CommandWidgetView(context: Context, private val appWidgetId: Int) : Linear
         return out
     }
 
-    private fun render(command: String) {
-        if (command.isBlank()) {
+    private fun render() {
+        val snapshot = CommandWidgetStore.snapshot(context, appWidgetId)
+        val content = snapshot.body
+        if (content is WidgetBody.Empty) {
             header.text = "$"
             body.text = context.getString(R.string.command_widget_empty)
             body.setTextColor(dim)
@@ -175,21 +179,18 @@ class CommandWidgetView(context: Context, private val appWidgetId: Int) : Linear
             return
         }
         open.visibility = VISIBLE
-        header.text = "$ $command"
-        val result = CommandWidgetStore.result(context, appWidgetId)
-        val failed = CommandWidgetStore.failed(context, appWidgetId)
-        body.text = result?.let(::indentWrapped) ?: "…"
+        header.text = "$ ${snapshot.title}"
+        val failed = content is WidgetBody.Result && content.failed
+        body.text = if (content is WidgetBody.Result) indentWrapped(content.text) else "…"
         body.setTextColor(if (failed) Color.rgb(255, 107, 107) else accent)
-        val at = CommandWidgetStore.resultAt(context, appWidgetId)
-        val schedule = CommandWidgetStore.schedule(context, appWidgetId)
-        val read = if (at > 0) {
-            DateUtils.getRelativeTimeSpanString(at, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS, DateUtils.FORMAT_ABBREV_RELATIVE).toString()
+        val read = if (snapshot.lastRun > 0) {
+            DateUtils.getRelativeTimeSpanString(snapshot.lastRun, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS, DateUtils.FORMAT_ABBREV_RELATIVE).toString()
         } else {
             ""
         }
         footer.text = listOf(
             read,
-            describe(context, schedule),
+            describe(context, snapshot.schedule),
         ).filter { it.isNotEmpty() }.joinToString(" · ")
     }
 

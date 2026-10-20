@@ -2,7 +2,11 @@ package app.lawnchair.widgets.command
 
 import android.content.Context
 import androidx.core.content.edit
+import app.lawnchair.command.CommandWidgetData
+import app.lawnchair.command.CommandWidgetModel
 import app.lawnchair.command.CommandWidgetSchedule
+import app.lawnchair.command.CommandWidgetSnapshot
+import app.lawnchair.command.WidgetRunState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,11 +21,7 @@ object CommandWidgetStore {
 
     private const val PREFS = "command_widgets"
     private const val KEY_COMMAND = "command_"
-    private const val KEY_INTERVAL = "interval_"
     private const val KEY_SCHEDULE = "schedule_"
-    private const val KEY_RESULT = "result_"
-    private const val KEY_RESULT_AT = "result_at_"
-    private const val KEY_FAILED = "failed_"
     private const val PENDING = "pending"
     private const val KEY_PENDING_AT = "pending_at"
 
@@ -36,48 +36,43 @@ object CommandWidgetStore {
     /** Bumped every time a widget's command or schedule changes. */
     val changes: StateFlow<Int> = _changes.asStateFlow()
 
+    /** What each widget keeps is the shared rules over this app's own keys, so what was saved before still reads. */
+    private val KEYS = CommandWidgetData.Keys(
+        command = KEY_COMMAND,
+        schedule = KEY_SCHEDULE,
+        result = "result_",
+        resultAt = "result_at_",
+        interval = "interval_",
+        failed = "failed_",
+    )
+
     private fun prefs(context: Context) = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
-    fun command(context: Context, id: Int): String = prefs(context).getString(KEY_COMMAND + id, null).orEmpty()
+    private fun data(context: Context) = CommandWidgetData(prefs(context), KEYS)
+
+    /** What widget [id] draws: its command, its body, when it was read and its schedule. */
+    fun snapshot(context: Context, id: Int): CommandWidgetSnapshot = CommandWidgetModel.snapshot(data(context), id)
+
+    fun command(context: Context, id: Int): String = data(context).command(id)
 
     /** The schedule; a widget saved when only an interval existed keeps it. */
-    fun schedule(context: Context, id: Int): CommandWidgetSchedule {
-        val prefs = prefs(context)
-        prefs.getString(KEY_SCHEDULE + id, null)?.let { return CommandWidgetSchedule.decode(it) }
-        val minutes = prefs.getInt(KEY_INTERVAL + id, 0)
-        return if (minutes > 0) CommandWidgetSchedule(CommandWidgetSchedule.Kind.INTERVAL, intervalMinutes = minutes.coerceAtLeast(CommandWidgetSchedule.MIN_INTERVAL_MINUTES)) else CommandWidgetSchedule()
-    }
+    fun schedule(context: Context, id: Int): CommandWidgetSchedule = data(context).schedule(id)
 
-    fun result(context: Context, id: Int): String? = prefs(context).getString(KEY_RESULT + id, null)
+    fun result(context: Context, id: Int): String? = data(context).result(id)
 
     /** When [result] was read, in ms; 0 when it never was. */
-    fun resultAt(context: Context, id: Int): Long = prefs(context).getLong(KEY_RESULT_AT + id, 0L)
+    fun resultAt(context: Context, id: Int): Long = data(context).resultAt(id)
 
     /** Whether the last run failed, so the widget shows [result] as an error. */
-    fun failed(context: Context, id: Int): Boolean = prefs(context).getBoolean(KEY_FAILED + id, false)
+    fun failed(context: Context, id: Int): Boolean = data(context).state(id) == WidgetRunState.ERROR
 
     fun saveResult(context: Context, id: Int, result: String, failed: Boolean) {
-        prefs(context).edit {
-            putString(KEY_RESULT + id, result)
-            putLong(KEY_RESULT_AT + id, System.currentTimeMillis())
-            putBoolean(KEY_FAILED + id, failed)
-        }
+        data(context).saveResult(id, result, failed)
     }
 
     /** Keeps the configuration; a different command drops the result of the old one. */
     fun save(context: Context, id: Int, command: String, schedule: CommandWidgetSchedule) {
-        val line = command.trim()
-        val changed = line != command(context, id)
-        prefs(context).edit {
-            if (line.isEmpty()) remove(KEY_COMMAND + id) else putString(KEY_COMMAND + id, line)
-            putString(KEY_SCHEDULE + id, schedule.encode())
-            remove(KEY_INTERVAL + id)
-            if (changed) {
-                remove(KEY_RESULT + id)
-                remove(KEY_RESULT_AT + id)
-                remove(KEY_FAILED + id)
-            }
-        }
+        data(context).save(id, command, schedule)
         _changes.update { it + 1 }
     }
 
@@ -117,38 +112,13 @@ object CommandWidgetStore {
     }
 
     fun delete(context: Context, ids: IntArray) {
-        prefs(context).edit {
-            ids.forEach {
-                remove(KEY_COMMAND + it)
-                remove(KEY_INTERVAL + it)
-                remove(KEY_SCHEDULE + it)
-                remove(KEY_RESULT + it)
-                remove(KEY_RESULT_AT + it)
-                remove(KEY_FAILED + it)
-            }
-        }
+        data(context).delete(ids)
         _changes.update { it + 1 }
     }
 
     /** Backup restore hands out new widget ids, so each command follows its widget. */
     fun move(context: Context, oldIds: IntArray, newIds: IntArray) {
-        val prefs = prefs(context)
-        prefs.edit {
-            oldIds.zip(newIds).forEach { (old, new) ->
-                prefs.getString(KEY_COMMAND + old, null)?.let { putString(KEY_COMMAND + new, it) }
-                if (prefs.contains(KEY_INTERVAL + old)) putInt(KEY_INTERVAL + new, prefs.getInt(KEY_INTERVAL + old, 0))
-                prefs.getString(KEY_SCHEDULE + old, null)?.let { putString(KEY_SCHEDULE + new, it) }
-                prefs.getString(KEY_RESULT + old, null)?.let { putString(KEY_RESULT + new, it) }
-                if (prefs.contains(KEY_RESULT_AT + old)) putLong(KEY_RESULT_AT + new, prefs.getLong(KEY_RESULT_AT + old, 0L))
-                if (prefs.contains(KEY_FAILED + old)) putBoolean(KEY_FAILED + new, prefs.getBoolean(KEY_FAILED + old, false))
-                remove(KEY_COMMAND + old)
-                remove(KEY_INTERVAL + old)
-                remove(KEY_SCHEDULE + old)
-                remove(KEY_RESULT + old)
-                remove(KEY_RESULT_AT + old)
-                remove(KEY_FAILED + old)
-            }
-        }
+        data(context).move(oldIds, newIds)
         _changes.update { it + 1 }
     }
 }
