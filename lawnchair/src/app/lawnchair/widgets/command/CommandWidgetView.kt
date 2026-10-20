@@ -18,6 +18,8 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import app.lawnchair.command.CommandActivity
 import app.lawnchair.command.CommandLineRunner
+import app.lawnchair.command.CommandWidgetSchedule
+import app.lawnchair.command.CommandWidgetTexts
 import app.lawnchair.theme.color.tokens.PhosphorColorToken
 import app.lawnchair.util.repeatOnAttached
 import com.android.launcher3.R
@@ -202,28 +204,11 @@ class CommandWidgetView(context: Context, private val appWidgetId: Int) : Linear
                     set(Calendar.MINUTE, schedule.minute)
                 }.time,
             )
-            return when (schedule.kind) {
-                CommandWidgetSchedule.Kind.MANUAL -> context.getString(R.string.command_widget_tap_to_run)
-
-                CommandWidgetSchedule.Kind.INTERVAL -> context.getString(R.string.command_widget_every, intervalLabel(context, schedule.intervalMinutes))
-
-                CommandWidgetSchedule.Kind.DAILY -> context.getString(R.string.command_widget_daily_at, time)
-
-                CommandWidgetSchedule.Kind.WEEKLY -> {
-                    val names = java.text.DateFormatSymbols.getInstance().shortWeekdays
-                    context.getString(R.string.command_widget_weekly_at, schedule.weekdays.sorted().joinToString(", ") { names[it] }, time)
-                }
-
-                CommandWidgetSchedule.Kind.MONTHLY -> context.getString(R.string.command_widget_monthly_at, schedule.dayOfMonth, time)
-            }
+            return CommandWidgetTexts.describe(schedule, time, java.text.DateFormatSymbols.getInstance().shortWeekdays)
         }
 
         /** "5 min", "1 h". */
-        fun intervalLabel(context: Context, minutes: Int): String = if (minutes % 60 == 0) {
-            context.getString(R.string.command_widget_hours, minutes / 60)
-        } else {
-            context.getString(R.string.command_widget_minutes, minutes)
-        }
+        fun intervalLabel(context: Context, minutes: Int): String = CommandWidgetTexts.interval(minutes)
 
         @JvmStatic
         fun isFor(view: android.view.View?, appWidgetId: Int): Boolean = view is CommandWidgetView && view.appWidgetId == appWidgetId

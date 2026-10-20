@@ -41,9 +41,11 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import app.lawnchair.command.Analysis
 import app.lawnchair.command.CommandLineRunner
+import app.lawnchair.command.CommandWidgetSchedule
+import app.lawnchair.command.CommandWidgetSchedule.Kind
+import app.lawnchair.command.R as CommandR
 import app.lawnchair.command.Tone
 import app.lawnchair.ui.theme.LawnchairTheme
-import app.lawnchair.widgets.command.CommandWidgetSchedule.Kind
 import com.android.launcher3.R
 import java.text.DateFormatSymbols
 import java.util.Calendar
@@ -188,11 +190,11 @@ private fun ScheduleChoice(schedule: CommandWidgetSchedule, onChange: (CommandWi
                 Choice(
                     label = stringResource(
                         when (kind) {
-                            Kind.MANUAL -> R.string.command_widget_kind_manual
-                            Kind.INTERVAL -> R.string.command_widget_kind_interval
-                            Kind.DAILY -> R.string.command_widget_kind_daily
-                            Kind.WEEKLY -> R.string.command_widget_kind_weekly
-                            Kind.MONTHLY -> R.string.command_widget_kind_monthly
+                            Kind.MANUAL -> CommandR.string.cmd_widget_kind_manual
+                            Kind.INTERVAL -> CommandR.string.cmd_widget_kind_interval
+                            Kind.DAILY -> CommandR.string.cmd_widget_kind_daily
+                            Kind.WEEKLY -> CommandR.string.cmd_widget_kind_weekly
+                            Kind.MONTHLY -> CommandR.string.cmd_widget_kind_monthly
                         },
                     ),
                     selected = kind == schedule.kind,
@@ -204,7 +206,7 @@ private fun ScheduleChoice(schedule: CommandWidgetSchedule, onChange: (CommandWi
             Column(modifier = Modifier.selectableGroup().padding(start = 24.dp, top = 4.dp)) {
                 CommandWidgetStore.INTERVALS.forEach { minutes ->
                     Choice(
-                        label = stringResource(R.string.command_widget_every, CommandWidgetView.intervalLabel(context, minutes)),
+                        label = stringResource(CommandR.string.cmd_widget_every, CommandWidgetView.intervalLabel(context, minutes)),
                         selected = minutes == schedule.intervalMinutes,
                         onClick = { onChange(schedule.copy(intervalMinutes = minutes)) },
                     )
@@ -212,7 +214,7 @@ private fun ScheduleChoice(schedule: CommandWidgetSchedule, onChange: (CommandWi
             }
         }
         if (schedule.kind == Kind.WEEKLY) {
-            Text(stringResource(R.string.command_widget_weekdays), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 12.dp))
+            Text(stringResource(CommandR.string.cmd_widget_weekdays), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 12.dp))
             val names = DateFormatSymbols.getInstance().shortWeekdays
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 (Calendar.SUNDAY..Calendar.SATURDAY).forEach { day ->
@@ -229,9 +231,9 @@ private fun ScheduleChoice(schedule: CommandWidgetSchedule, onChange: (CommandWi
         if (schedule.kind == Kind.MONTHLY) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 12.dp)) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(stringResource(R.string.command_widget_day_of_month), style = MaterialTheme.typography.titleSmall)
+                    Text(stringResource(CommandR.string.cmd_widget_day_of_month), style = MaterialTheme.typography.titleSmall)
                     Text(
-                        stringResource(R.string.command_widget_day_of_month_short),
+                        stringResource(CommandR.string.cmd_widget_day_of_month_short),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -243,7 +245,7 @@ private fun ScheduleChoice(schedule: CommandWidgetSchedule, onChange: (CommandWi
         }
         if (schedule.isCalendar) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
-                Text(stringResource(R.string.command_widget_time), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+                Text(stringResource(CommandR.string.cmd_widget_time), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
                 TextButton(
                     onClick = {
                         TimePickerDialog(

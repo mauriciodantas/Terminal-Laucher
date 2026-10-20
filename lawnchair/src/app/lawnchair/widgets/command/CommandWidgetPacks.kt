@@ -8,6 +8,7 @@ import androidx.core.content.FileProvider
 import app.lawnchair.command.AliasStore
 import app.lawnchair.command.CommandPack
 import app.lawnchair.command.CommandPacks
+import app.lawnchair.command.CommandWidgetSchedule
 import app.lawnchair.command.CustomActionStore
 import app.lawnchair.widgets.lottie.LottieWidgetPacks
 import app.lawnchair.widgets.lottie.LottieWidgetPacks.readLimited

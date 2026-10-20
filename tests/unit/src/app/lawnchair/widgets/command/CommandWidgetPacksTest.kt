@@ -2,8 +2,9 @@ package app.lawnchair.widgets.command
 
 import app.lawnchair.command.CommandAlias
 import app.lawnchair.command.CommandPack
+import app.lawnchair.command.CommandWidgetSchedule
 import app.lawnchair.util.ResourceTexts
-import app.lawnchair.widgets.command.CommandWidgetSchedule.Kind
+import app.lawnchair.command.CommandWidgetSchedule.Kind
 import app.lawnchair.widgets.lottie.LottieWidgetPack
 import app.lawnchair.widgets.lottie.LottieWidgetPacks
 import app.lawnchair.widgets.lottie.LottieWidgetStore.Playback
