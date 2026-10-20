@@ -271,6 +271,9 @@ private fun CommandScreen(onClose: () -> Unit) {
     var extras by remember { mutableStateOf(CommandExtras(selection = selection)) }
     var usual by remember { mutableStateOf<List<String>>(emptyList()) }
 
+    // The commands, aliases and providers the first line is read against have loaded.
+    var loaded by remember { mutableStateOf(false) }
+
     suspend fun reloadExtras() {
         val clip = extras.clipboard
         extras = withContext(Dispatchers.IO) { CommandSources.load(context, history, selection) }.copy(clipboard = clip)
@@ -285,6 +288,7 @@ private fun CommandScreen(onClose: () -> Unit) {
             apps = CommandExecutor.loadApps(context)
         }
         reloadExtras()
+        loaded = true
         RatesStore.refresh(context)?.let { rates -> extras = extras.copy(rates = rates) }
     }
     // Back from the settings, what changed there counts: a key saved, a command added or removed.
@@ -999,8 +1003,9 @@ private fun CommandScreen(onClose: () -> Unit) {
     // A scheduled command tapped in its notification runs once everything it needs has loaded.
     val runAtStart = remember { CommandActivity.wantsRun(startIntent) && text.isNotBlank() }
     var ranAtStart by remember { mutableStateOf(false) }
-    LaunchedEffect(analysis.action, apps) {
-        if (runAtStart && !ranAtStart && apps.isNotEmpty()) {
+    // Before that, a command of the user's own is still unknown and would be taken for a web search.
+    LaunchedEffect(analysis.action, apps, loaded) {
+        if (runAtStart && !ranAtStart && apps.isNotEmpty() && loaded) {
             analysis.action?.let {
                 ranAtStart = true
                 runAction(it, text.trim())
