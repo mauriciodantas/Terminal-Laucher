@@ -138,9 +138,9 @@ class CommandActivity : ComponentActivity() {
          * [voice] opens the speech recognizer right away, for the microphone on the home screen.
          * [text] starts the command line with what was typed on a hardware keyboard at home.
          */
-        fun start(context: Context, voice: Boolean = false, text: String = "") {
+        fun start(context: Context, voice: Boolean = false, text: String = "", run: Boolean = false) {
             CommandExecutor.prewarm(context)
-            context.startActivity(intent(context, voice, text))
+            context.startActivity(intent(context, voice, text, run))
         }
 
         /** [run] runs [text] right away, for a scheduled command tapped in its notification. */

@@ -1764,6 +1764,7 @@
     <string name="command_widget_hours">%1$d h</string>
     <string name="command_widget_tap_to_run">tap to run</string>
     <string name="command_widget_running">running…</string>
+    <string name="command_widget_open">[OPEN]</string>
     <string name="command_widget_no_result">no result</string>
     <string name="command_widget_timeout">took too long</string>
     <string name="command_widget_share">Share widget</string>

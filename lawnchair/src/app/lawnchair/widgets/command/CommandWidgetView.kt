@@ -16,6 +16,7 @@ import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
+import app.lawnchair.command.CommandActivity
 import app.lawnchair.command.CommandLineRunner
 import app.lawnchair.theme.color.tokens.PhosphorColorToken
 import app.lawnchair.util.repeatOnAttached
@@ -46,6 +47,20 @@ class CommandWidgetView(context: Context, private val appWidgetId: Int) : Linear
     private val body = text(13f, accent).apply { maxLines = 12 }
     private val footer = text(10f, dim).apply { maxLines = 1 }
 
+    /** Opens the command in the bar, which runs it and offers "more" for a paginated answer. */
+    private val open = text(10f, accent).apply {
+        maxLines = 1
+        text = context.getString(R.string.command_widget_open)
+        setTypeface(Typeface.MONOSPACE, Typeface.BOLD)
+        setPadding((10 * density).toInt(), 0, 0, 0)
+        setOnClickListener {
+            val command = CommandWidgetStore.command(context, appWidgetId)
+            if (command.isNotBlank()) {
+                CommandActivity.start(context, text = command, run = true)
+            }
+        }
+    }
+
     init {
         orientation = VERTICAL
         val pad = (12 * density).toInt()
@@ -57,7 +72,15 @@ class CommandWidgetView(context: Context, private val appWidgetId: Int) : Linear
         }
         addView(header, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
         addView(body, LayoutParams(LayoutParams.MATCH_PARENT, 0, 1f).apply { topMargin = (6 * density).toInt() })
-        addView(footer, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (6 * density).toInt() })
+        addView(
+            LinearLayout(context).apply {
+                orientation = HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                addView(footer, LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f))
+                addView(open, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT))
+            },
+            LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (6 * density).toInt() },
+        )
         setOnClickListener { taps.trySend(Unit) }
         repeatOnAttached {
             CommandWidgetStore.changes.collectLatest { loop() }
@@ -146,8 +169,10 @@ class CommandWidgetView(context: Context, private val appWidgetId: Int) : Linear
             body.text = context.getString(R.string.command_widget_empty)
             body.setTextColor(dim)
             footer.text = ""
+            open.visibility = GONE
             return
         }
+        open.visibility = VISIBLE
         header.text = "$ $command"
         val result = CommandWidgetStore.result(context, appWidgetId)
         val failed = CommandWidgetStore.failed(context, appWidgetId)
