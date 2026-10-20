@@ -36,6 +36,8 @@ import app.lawnchair.command.CustomActionStore
 import app.lawnchair.command.PackPreview
 import app.lawnchair.command.PackRules
 import app.lawnchair.ui.theme.LawnchairTheme
+import app.lawnchair.widgets.command.CommandWidgetPacks
+import app.lawnchair.widgets.command.ImportCommandWidgetActivity
 import app.lawnchair.widgets.lottie.LottieWidgetStore.Playback
 import com.airbnb.lottie.LottieAnimationView
 import com.airbnb.lottie.LottieComposition
@@ -56,6 +58,18 @@ class ImportWidgetActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val uri = incomingUri(intent)
         lifecycleScope.launch {
+            // Command widgets share this file type and this screen's entry points; they have their own.
+            val kind = uri?.let { withContext(Dispatchers.IO) { LottieWidgetPacks.kindOf(applicationContext, it) } }
+            if (kind == CommandWidgetPacks.KIND) {
+                startActivity(
+                    Intent(this@ImportWidgetActivity, ImportCommandWidgetActivity::class.java)
+                        .setAction(Intent.ACTION_VIEW)
+                        .setData(uri)
+                        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION),
+                )
+                finish()
+                return@launch
+            }
             val loaded = withContext(Dispatchers.IO) {
                 val pack = uri?.let { LottieWidgetPacks.read(applicationContext, it) } ?: return@withContext null
                 // Parsed without a cache key, as on a normal import, so a bad file leaves nothing behind.

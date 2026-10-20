@@ -56,15 +56,15 @@ object LottieWidgetPacks {
     const val MIME = "application/x-terminal-widget"
     const val EXTENSION = "twgt"
 
-    private const val FORMAT = "terminal-widget"
-    private const val VERSION = 1
+    internal const val FORMAT = "terminal-widget"
+    internal const val VERSION = 1
     private const val KIND = "lottie"
-    private const val MANIFEST = "widget.json"
+    internal const val MANIFEST = "widget.json"
     private const val ANIMATION = "animation"
 
     /** Lottie files are rarely more than a few MB; this keeps a hostile zip from filling memory. */
     private const val MAX_ANIMATION_BYTES = 16 * 1024 * 1024
-    private const val MAX_MANIFEST_BYTES = 512 * 1024
+    internal const val MAX_MANIFEST_BYTES = 512 * 1024
 
     /** How deep aliases that name other aliases are followed when collecting what a command needs. */
     private const val MAX_DEPTH = 4
@@ -125,6 +125,25 @@ object LottieWidgetPacks {
     fun read(context: Context, uri: Uri): LottieWidgetPack? = runCatching {
         context.contentResolver.openInputStream(uri)?.use { read(it) }
     }.onFailure { android.util.Log.w("LottieWidgetPacks", "could not read $uri", it) }.getOrNull()
+
+    /**
+     * The kind of widget the pack in [uri] holds ("lottie", "command"), read from its manifest only,
+     * or null when the file is not a widget pack. Packs written before the kind existed are Lottie.
+     */
+    fun kindOf(context: Context, uri: Uri): String? = runCatching {
+        context.contentResolver.openInputStream(uri)?.use { input ->
+            ZipInputStream(input).use { zip ->
+                while (true) {
+                    val entry = zip.nextEntry ?: break
+                    if (entry.name != MANIFEST) continue
+                    val o = JSONObject(zip.readLimited(MAX_MANIFEST_BYTES).decodeToString())
+                    if (o.optString("format") != FORMAT) return@use null
+                    return@use o.optString("kind", KIND)
+                }
+                null
+            }
+        }
+    }.getOrNull()
 
     /** True when [uri] starts like a zip, so a file that is not a command pack may be a widget. */
     fun looksLikePack(context: Context, uri: Uri): Boolean = runCatching {
@@ -195,7 +214,7 @@ object LottieWidgetPacks {
         Intent.createChooser(send, context.getString(R.string.lottie_widget_share)).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }.onFailure { android.util.Log.w("LottieWidgetPacks", "could not share", it) }.getOrNull()
 
-    private fun InputStream.readLimited(max: Int): ByteArray {
+    internal fun InputStream.readLimited(max: Int): ByteArray {
         val out = ByteArrayOutputStream()
         val buffer = ByteArray(8 * 1024)
         while (true) {

@@ -21,6 +21,11 @@ object CommandWidgetStore {
     private const val KEY_RESULT = "result_"
     private const val KEY_RESULT_AT = "result_at_"
     private const val KEY_FAILED = "failed_"
+    private const val PENDING = "pending"
+    private const val KEY_PENDING_AT = "pending_at"
+
+    /** An imported widget waits this long for the home screen to add it; later it is left unused. */
+    private const val PENDING_MAX_AGE = 30 * 60 * 1000L
 
     /** Minutes between runs the configuration offers for the interval schedule. */
     val INTERVALS = listOf(15, 30, 60, 180)
@@ -73,6 +78,41 @@ object CommandWidgetStore {
             }
         }
         _changes.update { it + 1 }
+    }
+
+    /**
+     * Keeps an imported [pack] for the next command widget added to the home screen, which takes it
+     * in [applyPending] instead of asking for a command. A later import replaces it.
+     */
+    fun setPending(context: Context, pack: CommandWidgetPack) {
+        prefs(context).edit {
+            putString(KEY_COMMAND + PENDING, pack.command)
+            putString(KEY_SCHEDULE + PENDING, pack.schedule.encode())
+            putLong(KEY_PENDING_AT, System.currentTimeMillis())
+        }
+    }
+
+    /**
+     * Gives [id] the imported widget waiting in [setPending], when there is one and the widget has
+     * no command yet. Returns true when it did. The home screen may report a new widget twice (its
+     * configuration and the pin callback), and only the first one takes it.
+     */
+    @Synchronized
+    fun applyPending(context: Context, id: Int): Boolean {
+        if (command(context, id).isNotEmpty()) return false
+        val prefs = prefs(context)
+        val command = prefs.getString(KEY_COMMAND + PENDING, null)
+        val fresh = System.currentTimeMillis() - prefs.getLong(KEY_PENDING_AT, 0) <= PENDING_MAX_AGE
+        if (command.isNullOrEmpty() || !fresh) return false
+        prefs.edit {
+            putString(KEY_COMMAND + id, command)
+            prefs.getString(KEY_SCHEDULE + PENDING, null)?.let { putString(KEY_SCHEDULE + id, it) }
+            remove(KEY_COMMAND + PENDING)
+            remove(KEY_SCHEDULE + PENDING)
+            remove(KEY_PENDING_AT)
+        }
+        _changes.update { it + 1 }
+        return true
     }
 
     fun delete(context: Context, ids: IntArray) {

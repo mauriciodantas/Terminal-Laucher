@@ -298,6 +298,17 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name="app.lawnchair.widgets.command.ImportCommandWidgetActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:label="@string/lottie_widget_import_title"
+            android:theme="@style/Theme.Transparent" />
+
+        <receiver
+            android:name="app.lawnchair.widgets.command.CommandWidgetPinReceiver"
+            android:exported="false" />
+
         <receiver
             android:name="app.lawnchair.widgets.command.CommandAppWidgetProvider"
             android:exported="false"

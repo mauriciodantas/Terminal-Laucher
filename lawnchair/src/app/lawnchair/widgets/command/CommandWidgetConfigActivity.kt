@@ -5,6 +5,7 @@ import android.appwidget.AppWidgetManager
 import android.content.Intent
 import android.os.Bundle
 import android.text.format.DateFormat
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
@@ -66,6 +67,12 @@ class CommandWidgetConfigActivity : ComponentActivity() {
             finish()
             return
         }
+        // A widget the home screen adds right after a widget file was imported comes ready.
+        if (CommandWidgetStore.applyPending(this, appWidgetId)) {
+            setResult(RESULT_OK, resultIntent())
+            finish()
+            return
+        }
         val command = CommandWidgetStore.command(this, appWidgetId)
         val schedule = CommandWidgetStore.schedule(this, appWidgetId)
         setContent {
@@ -77,6 +84,10 @@ class CommandWidgetConfigActivity : ComponentActivity() {
                         CommandWidgetStore.save(applicationContext, appWidgetId, line, chosen)
                         setResult(RESULT_OK, resultIntent())
                         finish()
+                    },
+                    onShare = { line, chosen ->
+                        val intent = CommandWidgetPacks.shareIntent(applicationContext, line, chosen)
+                        if (intent != null) startActivity(intent) else Toast.makeText(applicationContext, R.string.command_widget_share_failed, Toast.LENGTH_LONG).show()
                     },
                     onDismiss = ::finish,
                 )
@@ -92,6 +103,7 @@ private fun ConfigDialog(
     initialCommand: String,
     initialSchedule: CommandWidgetSchedule,
     onSave: (String, CommandWidgetSchedule) -> Unit,
+    onShare: (String, CommandWidgetSchedule) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -121,6 +133,13 @@ private fun ConfigDialog(
                 )
                 Preview(command = command, analysis = analysis)
                 ScheduleChoice(schedule = schedule, onChange = { schedule = it })
+                TextButton(
+                    onClick = { onShare(command, schedule) },
+                    enabled = command.isNotBlank(),
+                    modifier = Modifier.padding(top = 8.dp),
+                ) {
+                    Text(stringResource(R.string.command_widget_share))
+                }
             }
         },
         confirmButton = {
