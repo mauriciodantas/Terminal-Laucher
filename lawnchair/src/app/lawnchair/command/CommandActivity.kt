@@ -662,8 +662,14 @@ private fun CommandScreen(onClose: () -> Unit) {
             is CommandAction.Chain -> {
                 record(action, command)
                 done = context.getString(R.string.command_running)
+                val version = lineVersion
                 scope.launch {
-                    val outcome = ChainRunner.run(action, steps)
+                    // The last command that ran as it ran (its text filled from the pipe), so "more" can ask it for the next page.
+                    var lastRan: CommandAction? = null
+                    val outcome = ChainRunner.run(action) { step, stdin ->
+                        lastRan = step
+                        steps.run(step, stdin)
+                    }
                     if (!outcome.ok) {
                         finish(outcome.result) { ChainRunner.failure(action, outcome) }
                         return@launch
@@ -675,7 +681,11 @@ private fun CommandScreen(onClose: () -> Unit) {
                     when {
                         result.action != null -> finish(result)
 
-                        result.text != null || result.data != null -> done = result.shown()
+                        result.text != null || result.data != null -> {
+                            done = result.shown()
+                            val paged = lastRan as? CommandAction.Custom
+                            if (version == lineVersion && paged != null && paged.action.kind == ActionKind.API) offerMore(paged, result.more)
+                        }
 
                         else -> {
                             done = executedLabel
