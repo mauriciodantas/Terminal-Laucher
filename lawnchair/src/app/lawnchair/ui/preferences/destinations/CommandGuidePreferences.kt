@@ -482,6 +482,7 @@ fun CommandGuidePreferences(
                     "• {text}: Texto digitado após o comando (codificado para URL)\n" +
                     "• {stdin}: Saída do comando anterior num \"|\" (vazio sem ele); um destino que só usa {stdin} não pede argumento\n" +
                     "• {year}: Ano corrente (ex: 2026)\n" +
+                    "• {isodate}: Data de hoje no formato ISO (ex: 2026-10-20)\n" +
                     "• {date}: Data atual\n" +
                     "• {time}: Hora atual\n" +
                     "• {clip}: Conteúdo da área de transferência (sensível)\n" +

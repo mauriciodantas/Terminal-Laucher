@@ -122,6 +122,7 @@ Pesquise na documentação oficial da API: URL base, endpoint, **tipo de autenti
 
 - `{text}`: o que o usuário digitou, codificado para URL (espaço vira `%20`).
 - `{year}`: ano atual.
+- `{isodate}`: data de hoje no formato ISO (`2026-10-20`), para APIs que pedem `yyyy-MM-dd`.
 - Variáveis (preenchidas e codificadas): `{date}`/`{data}`, `{time}`/`{hora}`, `{clip}`/`{copiado}` (área de transferência), `{sel}`/`{selecao}` (texto selecionado), `{location}`/`{local}` (coordenadas), `{maps}` (link do mapa). Clip, seleção e localização são **sensíveis**: a ação entra **desmarcada** na importação com aviso. Use só se a consulta precisar mesmo.
 
 ### 5.1 Comando de Abertura de Apps ou Sites (`kind: "VIEW"`)
