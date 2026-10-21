@@ -1752,6 +1752,7 @@
     <string name="command_widget_share">Share widget</string>
     <string name="command_widget_share_subject">Terminal widget</string>
     <string name="command_widget_share_failed">Could not create the widget file</string>
+    <string name="command_widget_import_keys_pending">%1$d providers wait for a key: Commands › Advanced</string>
     <string name="command_widget_import_place">Add the Command widget from the widget list: it comes ready</string>
     <string name="command_widget_import_warning">The command runs by itself on the schedule, and the first time as soon as the widget is added. Only add widgets from people you trust.</string>
     <string name="command_widget_empty">No command set. Long press the widget and choose Configure</string>

@@ -23,6 +23,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
@@ -30,14 +34,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.lifecycleScope
 import app.lawnchair.command.AliasStore
-import app.lawnchair.command.CommandPack
-import app.lawnchair.command.CommandPacks
 import app.lawnchair.command.CustomActionStore
 import app.lawnchair.command.PackPreview
 import app.lawnchair.command.PackRules
+import app.lawnchair.command.ProviderStore
+import app.lawnchair.command.WidgetPacks
 import app.lawnchair.ui.theme.LawnchairTheme
-import app.lawnchair.widgets.command.CommandWidgetPacks
 import app.lawnchair.widgets.command.ImportCommandWidgetActivity
+import app.lawnchair.widgets.command.WidgetCommandsList
 import app.lawnchair.widgets.lottie.LottieWidgetStore.Playback
 import com.airbnb.lottie.LottieAnimationView
 import com.airbnb.lottie.LottieComposition
@@ -49,8 +53,8 @@ import kotlinx.coroutines.withContext
 
 /**
  * Opens a widget file the user received and, once confirmed, asks the home screen to add it with
- * everything set: the animation, the command, how it plays, the theme colors and the letters and
- * aliases the command needs. The command runs on every tap, so it is shown before anything is added.
+ * everything set: the animation, the command, how it plays, the theme colors and the letters,
+ * aliases and API providers the command needs. The command runs on every tap, so it is shown before anything is added.
  */
 class ImportWidgetActivity : ComponentActivity() {
 
@@ -60,7 +64,7 @@ class ImportWidgetActivity : ComponentActivity() {
         lifecycleScope.launch {
             // Command widgets share this file type and this screen's entry points; they have their own.
             val kind = uri?.let { withContext(Dispatchers.IO) { LottieWidgetPacks.kindOf(applicationContext, it) } }
-            if (kind == CommandWidgetPacks.KIND) {
+            if (kind == WidgetPacks.KIND_COMMAND) {
                 startActivity(
                     Intent(this@ImportWidgetActivity, ImportCommandWidgetActivity::class.java)
                         .setAction(Intent.ACTION_VIEW)
@@ -84,15 +88,17 @@ class ImportWidgetActivity : ComponentActivity() {
                 return@launch
             }
             val (pack, composition) = loaded
-            val commands = newCommands(pack.commands)
-            val preview = PackRules.preview(CustomActionStore.load(applicationContext), AliasStore.load(applicationContext), commands)
+            val actions = CustomActionStore.load(applicationContext)
+            val aliases = AliasStore.load(applicationContext)
+            val commands = WidgetPacks.newCommands(pack.commands, actions, aliases)
+            val preview = PackRules.preview(actions, aliases, commands, ProviderStore.load(applicationContext))
             setContent {
                 LawnchairTheme {
                     ImportDialog(
                         pack = pack,
                         composition = composition,
                         preview = preview,
-                        onAdd = { add(pack.copy(commands = commands)) },
+                        onAdd = { secrets -> add(pack.copy(commands = commands), secrets) },
                         onDismiss = ::finish,
                     )
                 }
@@ -100,23 +106,13 @@ class ImportWidgetActivity : ComponentActivity() {
         }
     }
 
-    /** The letters and aliases the user does not have yet; those already the same are left out. */
-    private fun newCommands(pack: CommandPack): CommandPack {
-        val actions = CustomActionStore.load(this)
-        val aliases = AliasStore.load(this)
-        return CommandPack(
-            pack.actions.filter { it !in actions },
-            pack.aliases.filter { it !in aliases },
-        )
-    }
-
-    private fun add(pack: LottieWidgetPack) {
-        // The user's own letters and aliases win a clash; renaming would break the command.
-        val merge = CommandPacks.merge(CustomActionStore.load(this), AliasStore.load(this), pack.commands)
-        CustomActionStore.save(this, merge.actions)
-        AliasStore.save(this, merge.aliases)
-        if (merge.skipped > 0) {
-            Toast.makeText(this, getString(R.string.lottie_widget_import_skipped, merge.skipped), Toast.LENGTH_LONG).show()
+    private fun add(pack: LottieWidgetPack, secrets: Map<String, String>) {
+        val installed = WidgetPacks.install(this, pack.commands, secrets)
+        if (installed.merge.skipped > 0) {
+            Toast.makeText(this, getString(R.string.lottie_widget_import_skipped, installed.merge.skipped), Toast.LENGTH_LONG).show()
+        }
+        if (installed.keysPending > 0) {
+            Toast.makeText(this, getString(R.string.command_widget_import_keys_pending, installed.keysPending), Toast.LENGTH_LONG).show()
         }
         LottieWidgetStore.setPending(this, pack)
         val manager = AppWidgetManager.getInstance(this)
@@ -150,10 +146,11 @@ private fun ImportDialog(
     pack: LottieWidgetPack,
     composition: LottieComposition,
     preview: PackPreview,
-    onAdd: () -> Unit,
+    onAdd: (secrets: Map<String, String>) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val dim = MaterialTheme.colorScheme.onSurfaceVariant
+    var secrets by remember { mutableStateOf(emptyMap<String, String>()) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.lottie_widget_import_title)) },
@@ -199,15 +196,7 @@ private fun ImportDialog(
                 if (pack.themeColors) {
                     Text(stringResource(R.string.lottie_widget_theme_colors), style = MaterialTheme.typography.bodySmall, color = dim)
                 }
-                if (preview.actions.isNotEmpty() || preview.aliases.isNotEmpty()) {
-                    Text(
-                        stringResource(R.string.lottie_widget_import_includes),
-                        style = MaterialTheme.typography.titleSmall,
-                        modifier = Modifier.padding(top = 12.dp),
-                    )
-                    preview.actions.forEach { CommandRow("${it.item.letter} · ${it.item.label}", it.detail, it.conflict) }
-                    preview.aliases.forEach { CommandRow("${it.item.name} → ${it.item.expansion}", null, it.conflict) }
-                }
+                WidgetCommandsList(preview, secrets, onSecret = { id, secret -> secrets = secrets + (id to secret) })
                 if (pack.command.isNotEmpty()) {
                     Text(
                         stringResource(R.string.lottie_widget_import_warning),
@@ -218,25 +207,7 @@ private fun ImportDialog(
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onAdd) { Text(stringResource(R.string.lottie_widget_import_add)) } },
+        confirmButton = { TextButton(onClick = { onAdd(secrets) }) { Text(stringResource(R.string.lottie_widget_import_add)) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cmd_pref_cancel)) } },
     )
-}
-
-@Composable
-private fun CommandRow(title: String, detail: String?, conflict: String?) {
-    Column(modifier = Modifier.padding(top = 6.dp)) {
-        Text(title, style = MaterialTheme.typography.bodyMedium)
-        detail?.let {
-            Text(it, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        // A clash keeps the user's own: the widget's command then runs theirs.
-        conflict?.let {
-            Text(
-                it + " · " + stringResource(R.string.lottie_widget_import_kept),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.error,
-            )
-        }
-    }
 }

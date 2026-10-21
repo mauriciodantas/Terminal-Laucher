@@ -18,6 +18,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -25,11 +29,12 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import app.lawnchair.command.AliasStore
-import app.lawnchair.command.CommandPack
-import app.lawnchair.command.CommandPacks
+import app.lawnchair.command.CommandWidgetPack
 import app.lawnchair.command.CustomActionStore
 import app.lawnchair.command.PackPreview
 import app.lawnchair.command.PackRules
+import app.lawnchair.command.ProviderStore
+import app.lawnchair.command.WidgetPacks
 import app.lawnchair.ui.theme.LawnchairTheme
 import com.android.launcher3.R
 import kotlinx.coroutines.Dispatchers
@@ -38,7 +43,8 @@ import kotlinx.coroutines.withContext
 
 /**
  * Opens a command widget file the user received and, once confirmed, asks the home screen to add
- * it with everything set: the command, its schedule and the letters and aliases the command needs.
+ * it with everything set: the command, its schedule and the letters, aliases and API providers the
+ * command needs, with a field for the key of each provider that comes in.
  * The command runs by itself on the schedule, so it is shown before anything is added. Reached
  * from the widget import screen, which tells the kinds of widget files apart.
  */
@@ -48,20 +54,22 @@ class ImportCommandWidgetActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val uri = incomingUri(intent)
         lifecycleScope.launch {
-            val pack = withContext(Dispatchers.IO) { uri?.let { CommandWidgetPacks.read(applicationContext, it) } }
+            val pack = withContext(Dispatchers.IO) { uri?.let { WidgetPacks.read(applicationContext, it) } }
             if (pack == null) {
                 Toast.makeText(applicationContext, R.string.lottie_widget_import_invalid, Toast.LENGTH_LONG).show()
                 finish()
                 return@launch
             }
-            val commands = newCommands(pack.commands)
-            val preview = PackRules.preview(CustomActionStore.load(applicationContext), AliasStore.load(applicationContext), commands)
+            val actions = CustomActionStore.load(applicationContext)
+            val aliases = AliasStore.load(applicationContext)
+            val commands = WidgetPacks.newCommands(pack.commands, actions, aliases)
+            val preview = PackRules.preview(actions, aliases, commands, ProviderStore.load(applicationContext))
             setContent {
                 LawnchairTheme {
                     ImportDialog(
                         pack = pack,
                         preview = preview,
-                        onAdd = { add(pack.copy(commands = commands)) },
+                        onAdd = { secrets -> add(pack.copy(commands = commands), secrets) },
                         onDismiss = ::finish,
                     )
                 }
@@ -69,23 +77,13 @@ class ImportCommandWidgetActivity : ComponentActivity() {
         }
     }
 
-    /** The letters and aliases the user does not have yet; those already the same are left out. */
-    private fun newCommands(pack: CommandPack): CommandPack {
-        val actions = CustomActionStore.load(this)
-        val aliases = AliasStore.load(this)
-        return CommandPack(
-            pack.actions.filter { it !in actions },
-            pack.aliases.filter { it !in aliases },
-        )
-    }
-
-    private fun add(pack: CommandWidgetPack) {
-        // The user's own letters and aliases win a clash; renaming would break the command.
-        val merge = CommandPacks.merge(CustomActionStore.load(this), AliasStore.load(this), pack.commands)
-        CustomActionStore.save(this, merge.actions)
-        AliasStore.save(this, merge.aliases)
-        if (merge.skipped > 0) {
-            Toast.makeText(this, getString(R.string.lottie_widget_import_skipped, merge.skipped), Toast.LENGTH_LONG).show()
+    private fun add(pack: CommandWidgetPack, secrets: Map<String, String>) {
+        val installed = WidgetPacks.install(this, pack.commands, secrets)
+        if (installed.merge.skipped > 0) {
+            Toast.makeText(this, getString(R.string.lottie_widget_import_skipped, installed.merge.skipped), Toast.LENGTH_LONG).show()
+        }
+        if (installed.keysPending > 0) {
+            Toast.makeText(this, getString(R.string.command_widget_import_keys_pending, installed.keysPending), Toast.LENGTH_LONG).show()
         }
         CommandWidgetStore.setPending(this, pack)
         val manager = AppWidgetManager.getInstance(this)
@@ -115,8 +113,9 @@ class ImportCommandWidgetActivity : ComponentActivity() {
 }
 
 @Composable
-private fun ImportDialog(pack: CommandWidgetPack, preview: PackPreview, onAdd: () -> Unit, onDismiss: () -> Unit) {
+private fun ImportDialog(pack: CommandWidgetPack, preview: PackPreview, onAdd: (secrets: Map<String, String>) -> Unit, onDismiss: () -> Unit) {
     val context = LocalContext.current
+    var secrets by remember { mutableStateOf(emptyMap<String, String>()) }
     val dim = MaterialTheme.colorScheme.onSurfaceVariant
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -131,15 +130,7 @@ private fun ImportDialog(pack: CommandWidgetPack, preview: PackPreview, onAdd: (
                     color = dim,
                     modifier = Modifier.padding(top = 8.dp),
                 )
-                if (preview.actions.isNotEmpty() || preview.aliases.isNotEmpty()) {
-                    Text(
-                        stringResource(R.string.lottie_widget_import_includes),
-                        style = MaterialTheme.typography.titleSmall,
-                        modifier = Modifier.padding(top = 12.dp),
-                    )
-                    preview.actions.forEach { CommandRow("${it.item.letter} · ${it.item.label}", it.detail, it.conflict) }
-                    preview.aliases.forEach { CommandRow("${it.item.name} → ${it.item.expansion}", null, it.conflict) }
-                }
+                WidgetCommandsList(preview, secrets, onSecret = { id, secret -> secrets = secrets + (id to secret) })
                 Text(
                     stringResource(R.string.command_widget_import_warning),
                     style = MaterialTheme.typography.bodySmall,
@@ -148,25 +139,7 @@ private fun ImportDialog(pack: CommandWidgetPack, preview: PackPreview, onAdd: (
                 )
             }
         },
-        confirmButton = { TextButton(onClick = onAdd) { Text(stringResource(R.string.lottie_widget_import_add)) } },
+        confirmButton = { TextButton(onClick = { onAdd(secrets) }) { Text(stringResource(R.string.lottie_widget_import_add)) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cmd_pref_cancel)) } },
     )
-}
-
-@Composable
-private fun CommandRow(title: String, detail: String?, conflict: String?) {
-    Column(modifier = Modifier.padding(top = 6.dp)) {
-        Text(title, style = MaterialTheme.typography.bodyMedium)
-        detail?.let {
-            Text(it, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        // A clash keeps the user's own: the widget's command then runs theirs.
-        conflict?.let {
-            Text(
-                it + " · " + stringResource(R.string.lottie_widget_import_kept),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.error,
-            )
-        }
-    }
 }

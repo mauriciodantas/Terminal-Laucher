@@ -1,45 +1,46 @@
 package app.lawnchair.widgets.lottie
 
-import app.lawnchair.command.CommandAlias
-import app.lawnchair.command.CustomActions
+import app.lawnchair.command.ApiProvider
+import app.lawnchair.command.CommandPack
+import app.lawnchair.command.CommandWidgetPack
+import app.lawnchair.command.CommandWidgetSchedule
+import app.lawnchair.command.WidgetPacks
 import app.lawnchair.util.ResourceTexts
+import app.lawnchair.widgets.lottie.LottieWidgetStore.Playback
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-/** A shared widget carries the user's own letters and aliases that its command runs. */
+/** A shared Lottie widget keeps how it plays, and the commands it needs travel with it. */
 class LottieWidgetPacksTest {
 
     @Before
     fun installTexts() = ResourceTexts.install()
 
-    private val actions = CustomActions.DEFAULTS
-    private val letter = actions.first()
+    private val noCommands = CommandPack(emptyList(), emptyList())
 
-    @Test fun builtInCommandsNeedNothing() {
-        val pack = LottieWidgetPacks.dependencies("tema escuro; lanterna", actions, emptyList())
-        assertTrue(pack.actions.isEmpty() && pack.aliases.isEmpty())
+    @Test fun theProvidersTheCommandNeedsTravelWithTheAnimation() {
+        val provider = ApiProvider(id = "jw", name = "JustWatch", baseUrl = "https://apis.justwatch.com")
+        val pack = LottieWidgetPack("a.json", "{}".toByteArray(), "novos", Playback.LOOP, false, CommandPack(emptyList(), emptyList(), providers = listOf(provider)))
+        val out = ByteArrayOutputStream().also { LottieWidgetPacks.write(pack, it) }.toByteArray()
+        assertEquals(listOf(provider), LottieWidgetPacks.read(ByteArrayInputStream(out)).commands.providers)
     }
 
-    @Test fun lettersAndAliasesAreCollected() {
-        val night = CommandAlias("noite", "tema escuro; ${letter.letter} oi")
-        val bed = CommandAlias("cama", "noite")
-        val other = CommandAlias("outro", "lanterna")
-        val pack = LottieWidgetPacks.dependencies("cama", actions, listOf(night, bed, other))
-        assertEquals(listOf(bed, night), pack.aliases)
-        assertEquals(listOf(letter), pack.actions)
+    @Test fun aLottiePackIsNotACommandWidget() {
+        val lottie = LottieWidgetPack("a.json", "{}".toByteArray(), "lanterna", Playback.LOOP, false, noCommands)
+        val out = ByteArrayOutputStream().also { LottieWidgetPacks.write(lottie, it) }.toByteArray()
+        assertThrows(IllegalArgumentException::class.java) { WidgetPacks.read(ByteArrayInputStream(out)) }
+        assertEquals(WidgetPacks.KIND_LOTTIE, WidgetPacks.kindOf(ByteArrayInputStream(out)))
     }
 
-    @Test fun scheduledCommandsCount() {
-        val pack = LottieWidgetPacks.dependencies("em 30m: ${letter.letter} oi", actions, emptyList())
-        assertEquals(listOf(letter), pack.actions)
-    }
-
-    @Test fun aliasLoopsEnd() {
-        val a = CommandAlias("a", "b")
-        val b = CommandAlias("b", "a")
-        assertEquals(2, LottieWidgetPacks.dependencies("a", actions, listOf(a, b)).aliases.size)
+    @Test fun aCommandPackIsNotALottieWidget() {
+        val pack = CommandWidgetPack("clima recife", CommandWidgetSchedule(), noCommands)
+        val out = ByteArrayOutputStream().also { WidgetPacks.write(pack, it) }.toByteArray()
+        assertThrows(IllegalArgumentException::class.java) { LottieWidgetPacks.read(ByteArrayInputStream(out)) }
     }
 
     @Test fun packPreservesShowResult() {

@@ -1,9 +1,9 @@
 package app.lawnchair.widgets.command
 
 import android.content.Context
-import androidx.core.content.edit
 import app.lawnchair.command.CommandWidgetData
 import app.lawnchair.command.CommandWidgetModel
+import app.lawnchair.command.CommandWidgetPack
 import app.lawnchair.command.CommandWidgetSchedule
 import app.lawnchair.command.CommandWidgetSnapshot
 import app.lawnchair.command.WidgetRunState
@@ -22,11 +22,6 @@ object CommandWidgetStore {
     private const val PREFS = "command_widgets"
     private const val KEY_COMMAND = "command_"
     private const val KEY_SCHEDULE = "schedule_"
-    private const val PENDING = "pending"
-    private const val KEY_PENDING_AT = "pending_at"
-
-    /** An imported widget waits this long for the home screen to add it; later it is left unused. */
-    private const val PENDING_MAX_AGE = 30 * 60 * 1000L
 
     /** Minutes between runs the configuration offers for the interval schedule. */
     val INTERVALS = listOf(15, 30, 60, 180)
@@ -81,32 +76,13 @@ object CommandWidgetStore {
      * in [applyPending] instead of asking for a command. A later import replaces it.
      */
     fun setPending(context: Context, pack: CommandWidgetPack) {
-        prefs(context).edit {
-            putString(KEY_COMMAND + PENDING, pack.command)
-            putString(KEY_SCHEDULE + PENDING, pack.schedule.encode())
-            putLong(KEY_PENDING_AT, System.currentTimeMillis())
-        }
+        data(context).setPending(pack.command, pack.schedule)
     }
 
-    /**
-     * Gives [id] the imported widget waiting in [setPending], when there is one and the widget has
-     * no command yet. Returns true when it did. The home screen may report a new widget twice (its
-     * configuration and the pin callback), and only the first one takes it.
-     */
+    /** Gives [id] the imported widget waiting in [setPending]; true when it did (see [CommandWidgetData.applyPending]). */
     @Synchronized
     fun applyPending(context: Context, id: Int): Boolean {
-        if (command(context, id).isNotEmpty()) return false
-        val prefs = prefs(context)
-        val command = prefs.getString(KEY_COMMAND + PENDING, null)
-        val fresh = System.currentTimeMillis() - prefs.getLong(KEY_PENDING_AT, 0) <= PENDING_MAX_AGE
-        if (command.isNullOrEmpty() || !fresh) return false
-        prefs.edit {
-            putString(KEY_COMMAND + id, command)
-            prefs.getString(KEY_SCHEDULE + PENDING, null)?.let { putString(KEY_SCHEDULE + id, it) }
-            remove(KEY_COMMAND + PENDING)
-            remove(KEY_SCHEDULE + PENDING)
-            remove(KEY_PENDING_AT)
-        }
+        if (!data(context).applyPending(id)) return false
         _changes.update { it + 1 }
         return true
     }

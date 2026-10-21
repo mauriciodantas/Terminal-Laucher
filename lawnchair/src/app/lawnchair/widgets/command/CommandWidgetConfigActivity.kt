@@ -39,12 +39,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import app.lawnchair.command.AliasStore
 import app.lawnchair.command.Analysis
 import app.lawnchair.command.CommandLineRunner
+import app.lawnchair.command.CommandWidgetPack
 import app.lawnchair.command.CommandWidgetSchedule
 import app.lawnchair.command.CommandWidgetSchedule.Kind
+import app.lawnchair.command.CustomActionStore
+import app.lawnchair.command.ProviderStore
 import app.lawnchair.command.R as CommandR
 import app.lawnchair.command.Tone
+import app.lawnchair.command.WidgetPacks
 import app.lawnchair.ui.theme.LawnchairTheme
 import com.android.launcher3.R
 import java.text.DateFormatSymbols
@@ -88,7 +93,7 @@ class CommandWidgetConfigActivity : ComponentActivity() {
                         finish()
                     },
                     onShare = { line, chosen ->
-                        val intent = CommandWidgetPacks.shareIntent(applicationContext, line, chosen)
+                        val intent = shareIntent(line.trim(), chosen)
                         if (intent != null) startActivity(intent) else Toast.makeText(applicationContext, R.string.command_widget_share_failed, Toast.LENGTH_LONG).show()
                     },
                     onDismiss = ::finish,
@@ -98,6 +103,16 @@ class CommandWidgetConfigActivity : ComponentActivity() {
     }
 
     private fun resultIntent() = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+
+    /** A share sheet for the widget file: the command, its schedule and the letters, aliases and providers it needs. */
+    private fun shareIntent(line: String, schedule: CommandWidgetSchedule): Intent? {
+        if (line.isEmpty()) return null
+        val commands = WidgetPacks.dependencies(line, CustomActionStore.load(this), AliasStore.load(this), ProviderStore.load(this))
+        val pack = CommandWidgetPack(line, schedule, commands)
+        return WidgetPacks.shareIntent(this, WidgetPacks.fileName(line), getString(R.string.command_widget_share_subject), getString(R.string.command_widget_share)) {
+            WidgetPacks.write(pack, it)
+        }
+    }
 }
 
 @Composable
