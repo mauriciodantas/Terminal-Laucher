@@ -37,6 +37,7 @@ import app.lawnchair.ui.preferences.components.reorderable.rememberPositionalLis
 import app.lawnchair.util.App
 import app.lawnchair.util.appsState
 import com.android.launcher3.R
+import com.android.launcher3.util.ComponentKey
 
 @Composable
 fun SelectAppsForDrawerFolder(
@@ -75,8 +76,13 @@ fun SelectAppsForDrawerFolder(
 ) {
     var filterNonUniqueItems by remember { mutableStateOf(true) }
 
-    val activeIds = remember(folderEntry) {
-        folderEntry?.itemComponentKeys ?: emptyList()
+    // The folder keeps the app by package: every launcher activity of a stored package counts as active,
+    // even when an update renamed the one saved in the folder.
+    val activeIds = remember(folderEntry, apps) {
+        val stored = folderEntry?.itemComponentKeys?.mapNotNull { ComponentKey.fromString(it) } ?: emptyList()
+        stored.flatMap { saved ->
+            apps.filter { it.key.user == saved.user && it.key.componentName.packageName == saved.componentName.packageName }
+        }.map { it.key.toString() }.distinct()
     }
 
     val (positionalItems, activeCount) = remember(apps, activeIds, filterNonUniqueItems, allFolderPackages) {

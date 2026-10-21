@@ -116,10 +116,14 @@ class LawnchairAlphabeticalAppsList<T>(
             }
         } else {
             folderList.forEach { folderEntry ->
-                val resolvedApps = folderEntry.itemComponentKeys.mapNotNull { keyString ->
-                    val componentKey = ComponentKey.fromString(keyString) ?: return@mapNotNull null
-                    appsStore.getApp(componentKey) as? AppInfo
-                }
+                // A folder holds the whole app: it is matched by package, so an update that renames or adds
+                // a launcher activity does not drop the app out of its folder.
+                val folderPackages = folderEntry.itemComponentKeys
+                    .mapNotNull { ComponentKey.fromString(it) }
+                    .map { it.componentName.packageName to it.user }
+                val resolvedApps = folderPackages.flatMap { (packageName, user) ->
+                    appsStore.apps.filter { it.user == user && it.componentName?.packageName == packageName }
+                }.distinct()
 
                 if (resolvedApps.size > 1) {
                     val folderInfo = FolderInfo().apply {
