@@ -18,7 +18,7 @@ package com.android.launcher3.folder
 
 import com.android.launcher3.folder.LargeFolderMath.Grid
 import com.android.launcher3.folder.LargeFolderMath.Origin
-import com.android.launcher3.folder.LargeFolderMath.Plan
+import com.android.launcher3.folder.LargeFolderMath.Page
 import com.android.launcher3.folder.LargeFolderMath.Size
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -81,29 +81,6 @@ class LargeFolderMathTest {
         }
     }
 
-    // ---- what a tap on the folder does ----
-
-    @Test
-    fun opensOnTap_aSmallFolderAlwaysOpens() {
-        assertTrue(LargeFolderMath.opensOnTap(isLarge = false, hasHiddenApps = false, forced = false))
-        assertTrue(LargeFolderMath.opensOnTap(isLarge = false, hasHiddenApps = true, forced = false))
-    }
-
-    @Test
-    fun opensOnTap_aLargeFolderWithEveryAppVisibleDoesNotOpen() {
-        assertFalse(LargeFolderMath.opensOnTap(isLarge = true, hasHiddenApps = false, forced = false))
-    }
-
-    @Test
-    fun opensOnTap_aLargeFolderOpensWhenSomeAppsAreHidden() {
-        assertTrue(LargeFolderMath.opensOnTap(isLarge = true, hasHiddenApps = true, forced = false))
-    }
-
-    @Test
-    fun opensOnTap_aLargeFolderOpensWhenTheUserAsksForIt() {
-        assertTrue(LargeFolderMath.opensOnTap(isLarge = true, hasHiddenApps = false, forced = true))
-    }
-
     // ---- grid of app slots ----
 
     @Test
@@ -151,15 +128,15 @@ class LargeFolderMathTest {
         val fit = LargeFolderMath.fit(474, 387, 24, 72, 156, 94, totalApps = 6)
         assertTrue(fit.slot < 156)
         assertTrue(fit.grid.capacity >= 6)
-        assertFalse(LargeFolderMath.plan(6, fit.grid).showOverflowMarker)
+        assertEquals(1, LargeFolderMath.page(6, fit.grid.capacity, 0).pages)
     }
 
     @Test
     fun fit_neverShrinksBelowTheMinimumSlot() {
         val fit = LargeFolderMath.fit(474, 387, 24, 72, 156, 94, totalApps = 40)
         assertEquals(94, fit.slot)
-        // Too many apps even at the smallest size: the plan reports the overflow.
-        assertTrue(LargeFolderMath.plan(40, fit.grid).showOverflowMarker)
+        // Too many apps even at the smallest size: the rest goes on more pages.
+        assertTrue(LargeFolderMath.page(40, fit.grid.capacity, 0).pages > 1)
     }
 
     @Test
@@ -181,48 +158,52 @@ class LargeFolderMathTest {
         assertTrue(fit.slot in 1..100)
     }
 
-    // ---- what to draw ----
+    // ---- pages ----
 
     @Test
-    fun plan_showsEveryAppWhenTheyFit() {
-        assertEquals(Plan(6, 0, false), LargeFolderMath.plan(6, Grid(3, 2)))
-        assertEquals(Plan(2, 0, false), LargeFolderMath.plan(2, Grid(3, 2)))
+    fun page_showsEveryAppOnOnePageWhenTheyFit() {
+        assertEquals(Page(0, 1, 0, 6), LargeFolderMath.page(6, 6, 0))
+        assertEquals(Page(0, 1, 0, 2), LargeFolderMath.page(2, 6, 0))
     }
 
     @Test
-    fun plan_withNoApps_drawsNothing() {
-        assertEquals(Plan(0, 0, false), LargeFolderMath.plan(0, Grid(3, 2)))
-        assertEquals(Plan(0, 0, false), LargeFolderMath.plan(-2, Grid(3, 2)))
+    fun page_withNoApps_hasOneEmptyPage() {
+        assertEquals(Page(0, 1, 0, 0), LargeFolderMath.page(0, 6, 0))
+        assertEquals(Page(0, 1, 0, 0), LargeFolderMath.page(-2, 6, 3))
     }
 
     @Test
-    fun plan_whenAppsOverflow_reservesTheLastSlotForTheCounter() {
-        // 8 apps in 6 slots: 5 icons plus a "+3" marker.
-        assertEquals(Plan(5, 3, true), LargeFolderMath.plan(8, Grid(3, 2)))
+    fun page_splitsOverflowingAppsAcrossPagesWithoutACounter() {
+        assertEquals(Page(0, 2, 0, 6), LargeFolderMath.page(8, 6, 0))
+        assertEquals(Page(1, 2, 6, 8), LargeFolderMath.page(8, 6, 1))
     }
 
     @Test
-    fun plan_whenExactlyOneAppOverflows_stillShowsTheMarker() {
-        assertEquals(Plan(5, 2, true), LargeFolderMath.plan(7, Grid(3, 2)))
+    fun page_keepsThePageInRangeWhenTheFolderShrinks() {
+        assertEquals(Page(0, 1, 0, 4), LargeFolderMath.page(4, 6, 2))
+        assertEquals(Page(0, 1, 0, 1), LargeFolderMath.page(1, 0, 5))
     }
 
     @Test
-    fun plan_withASingleSlot_showsAnAppInsteadOfACounter() {
-        // The failure seen on device: with one slot and three apps nothing was drawn but "+2".
-        val plan = LargeFolderMath.plan(3, Grid(1, 1))
-        assertEquals(1, plan.shown)
-        assertFalse(plan.showOverflowMarker)
-    }
-
-    @Test
-    fun plan_neverDrawsMoreThanTheGridHolds() {
+    fun page_coversEveryAppExactlyOnce() {
         for (total in 0..40) {
-            val grid = Grid(3, 2)
-            val plan = LargeFolderMath.plan(total, grid)
-            val slotsUsed = plan.shown + if (plan.showOverflowMarker) 1 else 0
-            assertTrue("total=$total", slotsUsed <= grid.capacity)
-            assertEquals("total=$total", total, plan.shown + plan.hidden)
+            val pages = LargeFolderMath.page(total, 6, 0).pages
+            var covered = 0
+            for (p in 0 until pages) {
+                val slice = LargeFolderMath.page(total, 6, p)
+                assertTrue("total=$total", slice.end - slice.start <= 6)
+                assertEquals("total=$total", covered, slice.start)
+                covered = slice.end
+            }
+            assertEquals("total=$total", total, covered)
         }
+    }
+
+    @Test
+    fun nextPage_wrapsAroundToTheFirst() {
+        assertEquals(1, LargeFolderMath.nextPage(0, 3))
+        assertEquals(0, LargeFolderMath.nextPage(2, 3))
+        assertEquals(0, LargeFolderMath.nextPage(0, 1))
     }
 
     // ---- growing a folder on the workspace grid ----
@@ -246,5 +227,18 @@ class LargeFolderMathTest {
     fun resolveOrigin_returnsNullWhenTheGridIsTooSmall() {
         assertNull(LargeFolderMath.resolveOrigin(0, 0, 4, 2, 3, 5))
         assertNull(LargeFolderMath.resolveOrigin(0, 0, 2, 2, 4, 1))
+    }
+
+    @Test
+    fun candidateOrigins_listsTheNearestFirst() {
+        val origins = LargeFolderMath.candidateOrigins(1, 2, 2, 2, 4, 5)
+        assertEquals(Origin(1, 2), origins.first())
+        assertEquals(3 * 4, origins.size)
+        assertTrue(origins.all { it.x in 0..2 && it.y in 0..3 })
+    }
+
+    @Test
+    fun candidateOrigins_isEmptyWhenTheGridIsTooSmall() {
+        assertTrue(LargeFolderMath.candidateOrigins(0, 0, 4, 2, 3, 5).isEmpty())
     }
 }

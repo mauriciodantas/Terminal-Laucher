@@ -17,17 +17,22 @@
 package com.android.launcher3.folder;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.text.InputType;
 import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -50,8 +55,9 @@ import java.util.List;
  * The content of a large folder: a folder that spans several workspace cells and shows its apps
  * directly on the home screen instead of a small preview.
  *
- * Tapping an app launches it. Tapping the panel or the title opens the regular folder, and a long
- * press anywhere drags the whole folder.
+ * It is the folder itself, never a launcher to the regular overlay {@link Folder}: tapping an app
+ * launches it, the title renames the folder, the size button resizes it, and when the apps do not
+ * fit the page counter flips to the next page. A long press anywhere drags the whole folder.
  */
 public class LargeFolderView extends ViewGroup {
 
@@ -65,7 +71,7 @@ public class LargeFolderView extends ViewGroup {
     private final FolderIcon mFolderIcon;
     private final ActivityContext mActivity;
     private final TextView mTitle;
-    private final TextView mMore;
+    private final TextView mPageLabel;
     private final List<BubbleTextView> mIcons = new ArrayList<>();
     private final Paint mFillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint mStrokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -80,7 +86,11 @@ public class LargeFolderView extends ViewGroup {
     private int mColumns = 1;
     private int mRows = 1;
     private float mIconScale = 1f;
-    private boolean mHasHiddenApps;
+    private int mPage = 0;
+    private int mPages = 1;
+    private int mShownStart = 0;
+    private int mShownEnd = 0;
+    private FolderInfo mInfo;
     private final ImageButton mSizeButton;
 
     public LargeFolderView(Context context, FolderIcon folderIcon, ActivityContext activity) {
@@ -114,16 +124,17 @@ public class LargeFolderView extends ViewGroup {
         mTitle.setLetterSpacing(0.06f);
         addView(mTitle);
 
-        mMore = new TextView(context);
-        mMore.setTextColor(textColor);
-        mMore.setTypeface(Typeface.MONOSPACE);
-        mMore.setGravity(Gravity.CENTER);
-        mMore.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+        mPageLabel = new TextView(context);
+        mPageLabel.setTextColor(textColor);
+        mPageLabel.setTypeface(Typeface.MONOSPACE);
+        mPageLabel.setGravity(Gravity.CENTER);
+        mPageLabel.setTextSize(TypedValue.COMPLEX_UNIT_PX,
                 activity.getDeviceProfile().folderLabelTextSizePx);
-        addView(mMore);
+        mPageLabel.setOnClickListener(view -> showPage(LargeFolderMath.nextPage(mPage, mPages)));
+        addView(mPageLabel);
 
-        // The title opens the folder (to rename it); the button picks its size.
-        mTitle.setOnClickListener(view -> mFolderIcon.openFolder());
+        // The title renames the folder; the button picks its size.
+        mTitle.setOnClickListener(view -> showRenameDialog());
 
         mSizeButton = new ImageButton(context);
         mSizeButton.setImageResource(R.drawable.ic_folder_resize);
@@ -137,9 +148,47 @@ public class LargeFolderView extends ViewGroup {
         refreshColors();
     }
 
-    /** True when some apps do not fit in the panel, so opening the folder shows more. */
-    public boolean hasHiddenApps() {
-        return mHasHiddenApps;
+    private void showPage(int page) {
+        if (page == mPage) return;
+        mPage = page;
+        requestLayout();
+    }
+
+    /** Asks for a new name and applies it to the folder. */
+    private void showRenameDialog() {
+        if (mInfo == null) return;
+        Context context = getContext();
+        EditText input = new EditText(context);
+        input.setSingleLine(true);
+        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_WORDS
+                | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+        input.setHint(R.string.folder_hint_text);
+        input.setText(mInfo.title);
+        input.selectAll();
+        int pad = Math.round(20 * context.getResources().getDisplayMetrics().density);
+        FrameLayout box = new FrameLayout(context);
+        box.setPadding(pad, pad / 2, pad, 0);
+        box.addView(input);
+        AlertDialog dialog = new AlertDialog.Builder(context,
+                android.R.style.Theme_DeviceDefault_Dialog_Alert)
+                .setTitle(R.string.folder_rename_label)
+                .setView(box)
+                .setPositiveButton(android.R.string.ok, (d, which) -> rename(input.getText()))
+                .setNegativeButton(android.R.string.cancel, null)
+                .create();
+        dialog.setOnShowListener(d -> {
+            input.requestFocus();
+            InputMethodManager imm = context.getSystemService(InputMethodManager.class);
+            if (imm != null) imm.showSoftInput(input, InputMethodManager.SHOW_IMPLICIT);
+        });
+        dialog.show();
+    }
+
+    private void rename(CharSequence title) {
+        String newTitle = title.toString().trim();
+        mInfo.setTitle(newTitle, mActivity.getModelWriter());
+        mFolderIcon.onTitleChanged(newTitle);
+        bind(mInfo);
     }
 
     /** Re-reads the folder colors and opacity from the user preferences. */
@@ -157,6 +206,7 @@ public class LargeFolderView extends ViewGroup {
     /** Rebuilds the app icons from the folder contents. */
     @SuppressLint("InflateParams")
     public void bind(FolderInfo info) {
+        mInfo = info;
         for (BubbleTextView icon : mIcons) {
             removeView(icon);
         }
@@ -204,20 +254,23 @@ public class LargeFolderView extends ViewGroup {
         mRows = grid.getRows();
         mIconScale = Math.min(1f, fit.getSlot() / (float) natural);
 
-        LargeFolderMath.Plan plan = LargeFolderMath.plan(mTotalApps, grid);
-        boolean overflow = plan.getShowOverflowMarker();
-        int shown = plan.getShown();
-        mHasHiddenApps = plan.getHidden() > 0;
+        LargeFolderMath.Page page = LargeFolderMath.page(mTotalApps, grid.getCapacity(), mPage);
+        mPage = page.getPage();
+        mPages = page.getPages();
+        mShownStart = page.getStart();
+        mShownEnd = page.getEnd();
 
         mSizeButton.measure(MeasureSpec.makeMeasureSpec(mTitleHeight * 2, MeasureSpec.EXACTLY),
                 MeasureSpec.makeMeasureSpec(mTitleHeight * 2, MeasureSpec.EXACTLY));
+        int pageWidth = mPages > 1 ? mTitleHeight * 2 : 0;
         mTitle.measure(
-                MeasureSpec.makeMeasureSpec(Math.max(0, width - 2 * mPadding - mTitleHeight * 2), MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(Math.max(0,
+                        width - 2 * mPadding - mTitleHeight * 2 - pageWidth), MeasureSpec.EXACTLY),
                 MeasureSpec.makeMeasureSpec(mTitleHeight, MeasureSpec.EXACTLY));
         int slotSpec = MeasureSpec.makeMeasureSpec(natural, MeasureSpec.EXACTLY);
         for (int i = 0; i < mIcons.size(); i++) {
             BubbleTextView icon = mIcons.get(i);
-            if (i < shown) {
+            if (i >= mShownStart && i < mShownEnd) {
                 icon.setVisibility(VISIBLE);
                 icon.measure(slotSpec, slotSpec);
                 icon.setScaleX(mIconScale);
@@ -226,12 +279,13 @@ public class LargeFolderView extends ViewGroup {
                 icon.setVisibility(GONE);
             }
         }
-        if (overflow) {
-            mMore.setVisibility(VISIBLE);
-            mMore.setText("+" + plan.getHidden());
-            mMore.measure(slotSpec, slotSpec);
+        if (mPages > 1) {
+            mPageLabel.setVisibility(VISIBLE);
+            mPageLabel.setText((mPage + 1) + "/" + mPages);
+            mPageLabel.measure(MeasureSpec.makeMeasureSpec(mTitleHeight * 2, MeasureSpec.EXACTLY),
+                    MeasureSpec.makeMeasureSpec(mTitleHeight, MeasureSpec.EXACTLY));
         } else {
-            mMore.setVisibility(GONE);
+            mPageLabel.setVisibility(GONE);
         }
     }
 
@@ -239,8 +293,12 @@ public class LargeFolderView extends ViewGroup {
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         int width = r - l;
         int height = b - t;
-        mTitle.layout(mPadding, mPadding, width - mPadding - mTitleHeight * 2, mPadding + mTitleHeight);
         int buttonSize = mTitleHeight * 2;
+        int pageWidth = mPageLabel.getVisibility() == GONE ? 0 : buttonSize;
+        mTitle.layout(mPadding, mPadding, width - mPadding - buttonSize - pageWidth,
+                mPadding + mTitleHeight);
+        mPageLabel.layout(width - buttonSize - pageWidth, mPadding,
+                width - buttonSize, mPadding + mTitleHeight);
         mSizeButton.layout(width - buttonSize, mPadding + mTitleHeight / 2 - buttonSize / 2,
                 width, mPadding + mTitleHeight / 2 + buttonSize / 2);
 
@@ -254,9 +312,6 @@ public class LargeFolderView extends ViewGroup {
         for (BubbleTextView icon : mIcons) {
             if (icon.getVisibility() == GONE) continue;
             placeInCell(icon, index++, cellW, cellH, top);
-        }
-        if (mMore.getVisibility() != GONE) {
-            placeInCell(mMore, index, cellW, cellH, top);
         }
     }
 

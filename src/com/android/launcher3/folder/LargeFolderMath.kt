@@ -31,13 +31,10 @@ object LargeFolderMath {
     }
 
     /**
-     * What to draw for [totalApps] apps in a [Grid].
-     *
-     * @property shown how many app icons are drawn
-     * @property hidden how many apps do not fit
-     * @property showOverflowMarker whether the last slot shows "+N" in place of an app
+     * The apps one page of a large folder shows: [start] until [end] (exclusive) of [pages] pages,
+     * with [page] the one being shown.
      */
-    data class Plan(val shown: Int, val hidden: Int, val showOverflowMarker: Boolean)
+    data class Page(val page: Int, val pages: Int, val start: Int, val end: Int)
 
     /** The [grid] that results from slots of [slot] pixels. */
     data class Fit(val grid: Grid, val slot: Int)
@@ -70,15 +67,6 @@ object LargeFolderMath {
         val covering = PRESETS.indexOfFirst { it.spanX * it.spanY >= area }
         return if (covering >= 0) covering else PRESETS.lastIndex
     }
-
-    /**
-     * Whether tapping a folder on the home screen opens it. A small folder always does. A large one
-     * shows its apps in place, so opening it would only repeat them: it opens only when some apps
-     * do not fit, or when the user asks for it explicitly (the title).
-     */
-    @JvmStatic
-    fun opensOnTap(isLarge: Boolean, hasHiddenApps: Boolean, forced: Boolean): Boolean =
-        !isLarge || hasHiddenApps || forced
 
     /**
      * How many square slots of [slot] pixels fit in a folder of [width] x [height] pixels, after
@@ -123,19 +111,22 @@ object LargeFolderMath {
     }
 
     /**
-     * Decides how many icons to draw. When the apps do not fit, the last slot becomes a "+N"
-     * marker, unless there is a single slot, where an app is more useful than a counter.
+     * Splits [totalApps] into pages of [capacity] apps and returns the one asked for, with [page]
+     * kept inside the range that exists (a folder that lost apps may have fewer pages than before).
+     * A large folder never opens the regular folder: what does not fit goes on the next page.
      */
     @JvmStatic
-    fun plan(totalApps: Int, grid: Grid): Plan {
+    fun page(totalApps: Int, capacity: Int, page: Int): Page {
         val total = totalApps.coerceAtLeast(0)
-        val capacity = grid.capacity
-        return when {
-            total <= capacity -> Plan(shown = total, hidden = 0, showOverflowMarker = false)
-            capacity <= 1 -> Plan(shown = capacity, hidden = total - capacity, showOverflowMarker = false)
-            else -> Plan(shown = capacity - 1, hidden = total - (capacity - 1), showOverflowMarker = true)
-        }
+        val size = capacity.coerceAtLeast(1)
+        val pages = ((total + size - 1) / size).coerceAtLeast(1)
+        val current = page.coerceIn(0, pages - 1)
+        return Page(current, pages, current * size, minOf(total, (current + 1) * size))
     }
+
+    /** The page after [page], wrapping around to the first. */
+    @JvmStatic
+    fun nextPage(page: Int, pages: Int): Int = if (pages <= 1) 0 else (page + 1) % pages
 
     /**
      * Where a folder of [spanX] x [spanY] cells goes when it grows from [cellX], [cellY] in a grid
@@ -147,5 +138,25 @@ object LargeFolderMath {
         val x = minOf(cellX, countX - spanX)
         val y = minOf(cellY, countY - spanY)
         return if (x < 0 || y < 0) null else Origin(x, y)
+    }
+
+    /**
+     * Every origin where a folder of [spanX] x [spanY] cells fits in the grid, the closest to
+     * [cellX], [cellY] first, so a folder that cannot grow in place moves to the nearest free room.
+     */
+    @JvmStatic
+    fun candidateOrigins(
+        cellX: Int,
+        cellY: Int,
+        spanX: Int,
+        spanY: Int,
+        countX: Int,
+        countY: Int,
+    ): List<Origin> {
+        val all = mutableListOf<Origin>()
+        for (y in 0..(countY - spanY)) {
+            for (x in 0..(countX - spanX)) all.add(Origin(x, y))
+        }
+        return all.sortedBy { Math.abs(it.x - cellX) + Math.abs(it.y - cellY) }
     }
 }

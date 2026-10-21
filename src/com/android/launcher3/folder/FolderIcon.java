@@ -144,7 +144,6 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
     @Nullable private LargeFolderView mLargeView;
     private boolean mLargeMode = false;
     private boolean mDirectoryRow = false;
-    private boolean mOpenForced = false;
 
     private float mScaleForReorderBounce = 1f;
 
@@ -703,17 +702,22 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         }
         CellLayout cl = (CellLayout) getParent().getParent();
         CellLayoutLayoutParams lp = (CellLayoutLayoutParams) getLayoutParams();
-        LargeFolderMath.Origin origin = LargeFolderMath.resolveOrigin(
-                lp.getCellX(), lp.getCellY(), spanX, spanY, cl.getCountX(), cl.getCountY());
-        if (origin == null) return false;
-        int x = origin.getX();
-        int y = origin.getY();
-
+        // Prefer the current cell; when it is taken, move to the nearest region that is free.
         cl.markCellsAsUnoccupiedForView(this);
-        if (!cl.isRegionVacant(x, y, spanX, spanY)) {
+        LargeFolderMath.Origin origin = null;
+        for (LargeFolderMath.Origin candidate : LargeFolderMath.candidateOrigins(
+                lp.getCellX(), lp.getCellY(), spanX, spanY, cl.getCountX(), cl.getCountY())) {
+            if (cl.isRegionVacant(candidate.getX(), candidate.getY(), spanX, spanY)) {
+                origin = candidate;
+                break;
+            }
+        }
+        if (origin == null) {
             cl.markCellsAsOccupiedForView(this);
             return false;
         }
+        int x = origin.getX();
+        int y = origin.getY();
         int modelX = mInfo.cellX + (x - lp.getCellX());
         int modelY = mInfo.cellY + (y - lp.getCellY());
         lp.setCellX(x);
@@ -727,20 +731,12 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         return true;
     }
 
-    /** Whether a tap on this folder opens it. See {@link LargeFolderMath#opensOnTap}. */
+    /**
+     * Whether a tap on this folder opens the {@link Folder} overlay. A large folder shows and
+     * manages its apps in place, so it never does.
+     */
     public boolean opensOnTap() {
-        return LargeFolderMath.opensOnTap(mLargeMode,
-                mLargeView != null && mLargeView.hasHiddenApps(), mOpenForced);
-    }
-
-    /** Opens the folder even though a tap on its panel would not (a tap on the title). */
-    public void openFolder() {
-        mOpenForced = true;
-        try {
-            performClick();
-        } finally {
-            mOpenForced = false;
-        }
+        return !mLargeMode;
     }
 
     /**
