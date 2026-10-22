@@ -1607,9 +1607,11 @@ private fun CommandScreen(onClose: () -> Unit) {
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 14.sp,
                         letterSpacing = 0.9.sp,
-                        // A long answer (a list of 40 moves) scrolls instead of pushing the keys away.
+                        // A long answer (a list of 40 moves) scrolls instead of pushing the keys away,
+                        // and gives way to [MAIS] and [DESFAZER] when the keyboard leaves little room.
                         modifier = Modifier
                             .padding(top = 3.dp)
+                            .weight(1f, fill = false)
                             .heightIn(max = 360.dp)
                             .verticalScroll(rememberScrollState()),
                     )
