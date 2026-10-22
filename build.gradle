@@ -537,6 +537,8 @@ licensee {
     allowUrl("https://github.com/patrykmichalik/opto/blob/master/LICENSE")
     allowUrl("https://github.com/RikkaApps/HiddenApiRefinePlugin/blob/main/LICENSE")
     allowUrl("https://opensource.org/licenses/mit-license.php")
+    // jsoup (MIT), which reads the pages of `curl --select`.
+    allowUrl("https://jsoup.org/license")
 
     bundleAndroidAsset = true
     androidAssetReportPath = 'licenses.json'

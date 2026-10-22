@@ -66,9 +66,7 @@ internal fun PageTestPanel(
     Column(Modifier.fillMaxWidth()) {
         Text(
             buildList {
-                add("HTTP ${answer.code}")
-                elapsedMs?.let { add("${it}ms") }
-                add("${bytes / 1024} KB baixados")
+                add(if (bytes < 1024) "$bytes B baixados" else "${bytes / 1024} KB baixados")
                 add(answer.contentType?.substringBefore(';')?.trim() ?: "sem Content-Type")
                 add("charset $charset")
             }.joinToString(" · "),
