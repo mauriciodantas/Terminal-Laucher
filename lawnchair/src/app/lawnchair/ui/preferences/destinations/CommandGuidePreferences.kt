@@ -62,8 +62,9 @@ SINTAXE DA LINHA DE COMANDO:
    NOME am start -a android.intent.action.SET_ALARM --ei android.intent.extra.alarm.HOUR {1} --ei android.intent.extra.alarm.MINUTES {2} --ez android.intent.extra.alarm.SKIP_UI true # Despertar
    NOME am broadcast -a com.exemplo.ACAO --es chave valor # Broadcast
 4. Consultar APIs:
-   NOME curl @provedor/caminho [-X METHOD] [-H "Header: Valor"] [-d corpo] [--type json|form|text] [--list items] [--max 5] [--upcoming data] [--paginate cursor|next-url|offset|page|link] [--page-param nome] [--page-next caminho] [--pages 3] [--format 'FORMATO'] # Rótulo
+   NOME curl @provedor/caminho [-X METHOD] [-H "Header: Valor"] [-d corpo] [--type json|form|text] [--list items] [--max 5] [--upcoming data] [--paginate cursor|next-url|offset|page|link] [--page-param nome] [--page-next caminho] [--pages 3] [--raw | --select 'CSS[@atributo]'] [--format 'FORMATO'] # Rótulo
    (o FORMATO vai entre aspas simples em --format; "|" fora de aspas encadeia comandos e não é mais o formato)
+   Páginas da web: NOME curl https://exemplo.com/pagina --select 'span.valor' --max 1 (HTML ou XML, só GET, sem provedor e sem chave) ou --raw (a página inteira, até 64 KB). --raw e --select não combinam entre si nem com --list, --upcoming e --paginate; --select aceita --format por elemento ({text}, {attrs.href}, {tag}, {html}).
 5. Scripts (JavaScript isolado, sem rede nem acesso ao aparelho):
    NOME node -p 'EXPRESSÃO' # Rótulo
    NOME node -e 'function main(input, ctx) { return input.text; }' # Rótulo
@@ -325,6 +326,28 @@ fun CommandGuidePreferences(
                     "Aspas: dentro de aspas simples só \\' (uma aspa) e \\\\ (uma barra) são escapes; as outras barras ficam como estão, para o código ler como foi escrito. Isso difere do shell POSIX de propósito. Dentro de aspas a linha pode ter quebras.\n\n" +
                     "Palavras reservadas: am, curl e node não podem ser nome de comando. Os operadores |, &&, || e ; fora de aspas só valem num apelido.\n\n" +
                     "Flags suportadas: -a (ação), -d (URI/dados), -t (MIME), -c (categoria), -n (componente), -p (pacote), --shortcut, --sms e extras (--es, --ei, --ez, --el, --ef, --eu).",
+            )
+        }
+
+        // Section: Advanced mode and pages
+        PreferenceGroup(heading = "Modo avançado e páginas da web") {
+            GuideTextCard(
+                text = "O modo avançado esconde a complexidade, não concede permissão. Com ele desligado, o editor oferece Link, App e Apelido; ligado, também Intent, API e Script, mais o autocompletar de ações, flags, @provedores, --raw e --select. A linha de comando aceita todos os tipos nos dois estados, e importar, executar, exportar e fazer backup funcionam igual. Limites, confirmações de requisições que alteram dados e avisos de variáveis sensíveis também.\n\n" +
+                    "Entra no modo avançado o que exige entender HTTP, intents do Android, seletores CSS ou JavaScript. O que se entende pelo nome (abrir um link, abrir um app, um atalho para outro comando) fica sempre visível.\n\n" +
+                    "Como ativar: toque 7 vezes no número da versão em Sobre (a contagem aparece a partir do 4º toque, e cada toque tem 3 s para o próximo), ou digite dev on na barra. dev off desliga, dev mostra o estado. Com o modo ligado, Configurações › Ações da barra › Avançado também desliga. Quem já tinha comandos avançados encontra o modo ligado depois da atualização.\n\n" +
+                    "Um comando avançado abre em leitura com o modo desligado: os campos do tipo não mudam, mas a linha é editável e o TESTAR funciona.",
+            )
+            GuideTextCard(
+                text = "Páginas da web (curl com --raw ou --select):\n\n" +
+                    "  dolar curl https://exemplo.com/cotacao --select 'span.valor' --max 1\n" +
+                    "  manchetes curl https://exemplo.com --select 'h2.titulo' --max 5\n" +
+                    "  links curl https://exemplo.com/blog --select 'article a@href' --format '{text}'\n" +
+                    "  feed curl https://exemplo.com/rss.xml --select 'item > title' --max 10\n" +
+                    "  pagina curl https://exemplo.com/{text} --raw | node -e 'function main(input) { const m = input.stdin.text.match(/<title>([^<]*)</i); return m && m[1].trim(); }'\n\n" +
+                    "--raw manda a página inteira para a saída (até 64 KB). --select 'CSS' lê a resposta como HTML ou XML (RSS e Atom) e entrega os elementos, na ordem do documento, até --max (padrão 50). 'CSS@atributo' mostra o valor do atributo (a.titulo@href); o @ dentro de colchetes continua sendo CSS. --format vale para cada elemento: {text}, {attrs.href}, {tag}, {html}. Nenhum elemento achado não é erro: o resultado fica vazio e a barra avisa.\n\n" +
+                    "Sem provedor, o endereço precisa ser https e a consulta é um GET simples: sem -X, -H nem -d, e nenhuma chave é enviada. Se o endereço for de um provedor que você cadastrou, ele passa a usar o provedor. http:// não é aceito. A página é pedida como um navegador de celular, com redirecionamentos (até 5), sem cookies, com no máximo 2 MB; passou disso, o resultado é marcado como cortado.\n\n" +
+                    "Um comando sem provedor é importado desmarcado: use Ver URL para conferir o endereço. Versões antigas do app não entendem --raw nem --select: o comando é ignorado na importação.\n\n" +
+                    "Você é responsável por respeitar os termos dos sites que consulta. O app não executa o JavaScript da página: páginas montadas por JavaScript (SPA) chegam quase vazias.",
             )
         }
 

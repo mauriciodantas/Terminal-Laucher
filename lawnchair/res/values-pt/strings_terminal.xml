@@ -537,6 +537,8 @@
     <string name="command_secret_needed">ESTE COMANDO PRECISA DE UMA CHAVE DE API.</string>
     <string name="command_configure">CONFIGURAR</string>
     <string name="cmd_pref_group_advanced">Avançado</string>
+    <string name="cmd_pref_advanced_mode">Modo avançado</string>
+    <string name="cmd_pref_advanced_mode_hint">Mostra no editor os tipos Intent, API e Script. Não muda nada do que um comando pode fazer.</string>
     <string name="cmd_providers_title">Provedores de API</string>
     <string name="cmd_providers_entry">Serviços que os comandos de API usam, e suas chaves</string>
     <string name="cmd_guide_title">Guia de criação de comandos (.tcmd)</string>

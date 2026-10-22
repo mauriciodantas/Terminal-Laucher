@@ -48,6 +48,10 @@ class StepExecutor(
 
         is CommandAction.Chain -> ChainRunner.run(step, this).result
 
+        // The line of what changed is the text of the step, so a sequence ("dev on; ...") shows it too.
+        is CommandAction.SetAdvancedMode -> withContext(Dispatchers.Main) { CommandExecutor.executeStep(context, step) }
+            .let { if (it.ok) StepResult.ok(text = DevCommand.done(step, AdvancedMode.isOn)) else it }
+
         else -> withContext(Dispatchers.Main) { CommandExecutor.executeStep(context, step) }
     }
 

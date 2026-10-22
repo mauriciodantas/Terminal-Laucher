@@ -56,6 +56,7 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -81,6 +82,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import app.lawnchair.command.ACTION_VIEW
 import app.lawnchair.command.ActionKind
+import app.lawnchair.command.AdvancedMode
+import app.lawnchair.command.AdvancedModeStore
 import app.lawnchair.command.AiClient
 import app.lawnchair.command.AiConfig
 import app.lawnchair.command.AiProvider
@@ -117,6 +120,7 @@ import app.lawnchair.command.Tone
 import app.lawnchair.ui.preferences.LocalNavController
 import app.lawnchair.ui.preferences.components.NavigationActionPreference
 import app.lawnchair.ui.preferences.components.controls.ClickablePreference
+import app.lawnchair.ui.preferences.components.controls.SwitchPreference
 import app.lawnchair.ui.preferences.components.layout.ClickableIcon
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
@@ -159,6 +163,11 @@ fun CommandActionsPreferences(openEdit: String = "") {
             }
         }
     }
+    // The advanced mode shows the providers and the toggle to turn it off; what the line accepts does not change.
+    val advanced by remember {
+        AdvancedModeStore.load(context)
+        AdvancedMode.enabled
+    }.collectAsState()
     var query by remember { mutableStateOf("") }
     var backupOpen by remember { mutableStateOf(false) }
     var confirmRestore by remember { mutableStateOf(false) }
@@ -218,7 +227,8 @@ fun CommandActionsPreferences(openEdit: String = "") {
         val line = newCommandLine.trim()
         if (line.isEmpty()) return
 
-        val parseResult = CommandLine.parse(line, actions, aliases)
+        val providers = ProviderStore.all(context)
+        val parseResult = CommandLine.parse(line, actions, aliases, providers)
         if (parseResult is ParseResult.Failure) {
             newLineError = parseResult.error.message
             return
@@ -228,7 +238,6 @@ fun CommandActionsPreferences(openEdit: String = "") {
         val name = parsed.name
         val existingAction = actions.firstOrNull { it.letter == name }
         val existingAlias = aliases.firstOrNull { it.name.lowercase() == name }
-        val providers = ProviderStore.load(context)
 
         val validation = CommandLine.validate(
             command = parsed,
@@ -663,11 +672,20 @@ fun CommandActionsPreferences(openEdit: String = "") {
                 }
                 // Rarely needed, so kept apart: what API commands go through and their keys.
                 PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_advanced)) {
-                    NavigationActionPreference(
-                        label = stringResource(R.string.cmd_providers_title),
-                        destination = CommandProviders(),
-                        subtitle = stringResource(R.string.cmd_providers_entry),
-                    )
+                    // Only once the mode is on, and then it can be turned off here without the bar.
+                    if (advanced) {
+                        SwitchPreference(
+                            checked = true,
+                            onCheckedChange = { AdvancedModeStore.set(context, it) },
+                            label = stringResource(R.string.cmd_pref_advanced_mode),
+                            description = stringResource(R.string.cmd_pref_advanced_mode_hint),
+                        )
+                        NavigationActionPreference(
+                            label = stringResource(R.string.cmd_providers_title),
+                            destination = CommandProviders(),
+                            subtitle = stringResource(R.string.cmd_providers_entry),
+                        )
+                    }
                     NavigationActionPreference(
                         label = stringResource(R.string.cmd_guide_title),
                         destination = CommandGuide,

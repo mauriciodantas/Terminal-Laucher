@@ -142,6 +142,8 @@ private fun ImportDialog(
     }
     var codeSeen by remember { mutableStateOf(emptySet<Int>()) }
     var codeShown by remember { mutableStateOf<Int?>(null) }
+    // An address without a provider reaches any host with no key: it starts unticked and is ticked after its URL was seen.
+    var urlShown by remember { mutableStateOf<Int?>(null) }
     // The sandbox checks each script; one that does not compile still comes in if ticked, marked.
     val context = androidx.compose.ui.platform.LocalContext.current
     val scripts = remember { ScriptRunner(context) }
@@ -199,12 +201,13 @@ private fun ImportDialog(
                 }
                 preview.actions.forEachIndexed { index, entry ->
                     val script = PackRules.isScript(entry.item)
+                    val publicUrl = preview.sends.getOrNull(index)?.publicUrl == true
                     EntryRow(
                         title = "${entry.item.letter} · ${entry.item.label}",
                         entry = entry,
                         checked = index in actionsOn,
                         onChange = { actionsOn = if (it) actionsOn + index else actionsOn - index },
-                        enabled = !script || index in codeSeen,
+                        enabled = !(script || publicUrl) || index in codeSeen,
                         error = scriptErrors[index],
                         extra = if (script) {
                             {
@@ -212,6 +215,13 @@ private fun ImportDialog(
                                     codeShown = index
                                     codeSeen = codeSeen + index
                                 }) { Text(stringResource(R.string.cmd_imp_view_code)) }
+                            }
+                        } else if (publicUrl) {
+                            {
+                                TextButton(onClick = {
+                                    urlShown = index
+                                    codeSeen = codeSeen + index
+                                }) { Text(stringResource(app.lawnchair.command.R.string.cmd_import_view_url)) }
                             }
                         } else {
                             null
@@ -317,6 +327,32 @@ private fun ImportDialog(
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cmd_pref_cancel)) } },
     )
+    urlShown?.let { index ->
+        val action = preview.actions[index].item
+        val host = app.lawnchair.command.ApiCall.host(action)
+        AlertDialog(
+            onDismissRequest = { urlShown = null },
+            title = { Text(stringResource(app.lawnchair.command.R.string.cmd_import_public_title)) },
+            text = {
+                Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) {
+                    Text(host, style = MaterialTheme.typography.titleMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                    Text(
+                        action.template,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontFamily = FontFamily.Monospace,
+                        modifier = Modifier.padding(top = 6.dp),
+                    )
+                    Text(
+                        stringResource(app.lawnchair.command.R.string.cmd_import_public_note, host),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 8.dp),
+                    )
+                }
+            },
+            confirmButton = { TextButton(onClick = { urlShown = null }) { Text(stringResource(R.string.cmd_imp_code_seen)) } },
+        )
+    }
     codeShown?.let { index ->
         val action = preview.actions[index].item
         AlertDialog(

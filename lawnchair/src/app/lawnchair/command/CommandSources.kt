@@ -50,6 +50,7 @@ object CommandSources {
             taskApp = TaskApp.label(context),
             ai = AiStore.load(context)?.label,
             network = network(context),
+            advancedMode = AdvancedModeStore.load(context),
             host = HostData(
                 theme = runCatching { ThemeStore.current(context) }.getOrNull(),
                 themes = ThemeStore.load(context),

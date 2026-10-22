@@ -6,6 +6,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -62,6 +63,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
@@ -72,7 +74,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
@@ -84,6 +88,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import app.lawnchair.command.ACTION_VIEW
 import app.lawnchair.command.ActionKind
+import app.lawnchair.command.AdvancedMode
+import app.lawnchair.command.AdvancedModeStore
 import app.lawnchair.command.ApiCall
 import app.lawnchair.command.ApiFormat
 import app.lawnchair.command.ApiProvider
@@ -97,6 +103,7 @@ import app.lawnchair.command.CommandLine
 import app.lawnchair.command.ContactEntry
 import app.lawnchair.command.CustomAction
 import app.lawnchair.command.ExtraType
+import app.lawnchair.command.HtmlSelect
 import app.lawnchair.command.HttpResult
 import app.lawnchair.command.HttpRunner
 import app.lawnchair.command.IntentCatalog
@@ -130,6 +137,9 @@ internal sealed interface EditorTarget {
     data class Action(val action: CustomAction) : EditorTarget
     data class Alias(val alias: CommandAlias) : EditorTarget
 }
+
+/** The kinds anyone understands by their name; the others need the advanced mode to be offered (see [AdvancedMode]). */
+private val BASIC_TYPES = setOf(CommandType.LINK, CommandType.APP, CommandType.ALIAS)
 
 enum class CommandType(val label: String) {
     LINK("Link"),
@@ -181,6 +191,11 @@ internal fun CommandEditor(
     val configured by produceState(emptySet<String>(), providers) {
         value = withContext(Dispatchers.IO) { SecretStore.configured(context, providers.map { it.id }) }
     }
+    // The mode changes what the editor offers, never what the line accepts or what a command may do.
+    val advanced by remember {
+        AdvancedModeStore.load(context)
+        AdvancedMode.enabled
+    }.collectAsState()
 
     // Determine initial type
     val initialType = when {
@@ -238,6 +253,8 @@ internal fun CommandEditor(
     var apiPageParam by remember { mutableStateOf(editingAction?.api?.page?.param.orEmpty()) }
     var apiPageNext by remember { mutableStateOf(editingAction?.api?.page?.next.orEmpty()) }
     var apiPages by remember { mutableIntStateOf(editingAction?.api?.page?.pages ?: PageSpec.DEFAULT_PAGES) }
+    var apiSelect by remember { mutableStateOf(editingAction?.api?.select.orEmpty()) }
+    var apiShow by remember { mutableStateOf(ApiShow.of(editingAction?.api)) }
     var pattern by remember { mutableStateOf(editingAction?.pattern.orEmpty()) }
 
     // Alias fields
@@ -312,17 +329,30 @@ internal fun CommandEditor(
             }
 
             CommandType.API -> {
-                val cleanTemplate = template.trim()
+                var cleanTemplate = template.trim()
+                var cleanProvider = provider.trim()
+                // An address of a provider the user has is that provider's, key included; any other has none.
+                if (cleanProvider.isEmpty()) {
+                    Providers.bind(cleanTemplate, providers)?.let { (id, path) ->
+                        cleanProvider = id
+                        cleanTemplate = path
+                    }
+                }
+                val ownAddress = cleanProvider.isEmpty()
+                val json = apiShow == ApiShow.JSON
                 val spec = ApiSpec(
-                    format = apiFormat.trim(),
-                    method = apiMethod,
-                    headers = apiHeaders,
-                    body = apiBody,
+                    format = if (apiShow == ApiShow.RAW) "" else apiFormat.trim(),
+                    // An address without a provider is a plain GET: no headers, no body.
+                    method = if (ownAddress) "GET" else apiMethod,
+                    headers = if (ownAddress) emptyMap() else apiHeaders,
+                    body = if (ownAddress) "" else apiBody,
                     bodyType = apiBodyType,
-                    list = apiList.trim(),
+                    list = if (json) apiList.trim() else "",
                     max = apiMax,
-                    upcoming = apiUpcoming.trim(),
-                    page = PageStyle.of(apiPaginate)?.let { PageSpec(it, apiPageParam.trim(), apiPageNext.trim(), apiPages.coerceIn(2, PageSpec.MAX_PAGES)) },
+                    upcoming = if (json) apiUpcoming.trim() else "",
+                    page = if (json) PageStyle.of(apiPaginate)?.let { PageSpec(it, apiPageParam.trim(), apiPageNext.trim(), apiPages.coerceIn(2, PageSpec.MAX_PAGES)) } else null,
+                    raw = apiShow == ApiShow.RAW,
+                    select = if (apiShow == ApiShow.HTML) apiSelect.trim() else "",
                 )
                 val action = CustomAction(
                     letter = cleanName,
@@ -331,7 +361,7 @@ internal fun CommandEditor(
                     template = cleanTemplate,
                     packages = emptyList(),
                     arg = ArgKind.TEXT,
-                    provider = provider.trim(),
+                    provider = cleanProvider,
                     api = spec,
                     pattern = pattern.trim(),
                 )
@@ -380,7 +410,7 @@ internal fun CommandEditor(
             lineError = null
             return@LaunchedEffect
         }
-        val res = CommandLine.parse(line, actions, aliases)
+        val res = CommandLine.parse(line, actions, aliases, providers)
         when (res) {
             is ParseResult.Success -> {
                 lineError = null
@@ -415,6 +445,8 @@ internal fun CommandEditor(
                                 apiPageParam = a.api?.page?.param.orEmpty()
                                 apiPageNext = a.api?.page?.next.orEmpty()
                                 apiPages = a.api?.page?.pages ?: PageSpec.DEFAULT_PAGES
+                                apiSelect = a.api?.select.orEmpty()
+                                apiShow = ApiShow.of(a.api)
                                 pattern = a.pattern
                             }
 
@@ -492,6 +524,8 @@ internal fun CommandEditor(
     }
     val scriptOk = type != CommandType.SCRIPT || scriptCheck.ok
     val canSave = validation.isValid && name.isNotBlank() && lineError == null && scriptOk
+    // A command only the advanced mode would offer opens read-only with the mode off: it runs, tests and edits by the line.
+    val locked = !advanced && (type !in BASIC_TYPES || AdvancedMode.isAdvanced(currentCmd))
 
     // Modals state
     var appPickerOpen by remember { mutableStateOf(false) }
@@ -504,6 +538,8 @@ internal fun CommandEditor(
     var testRunning by remember { mutableStateOf(false) }
     var testResultText by remember { mutableStateOf<String?>(null) }
     var testRawJson by remember { mutableStateOf<String?>(null) }
+    // The last page asked, kept while the editor is open: a new selector or format is applied to it with no new request.
+    var testPage by remember { mutableStateOf<HttpResult.Answer?>(null) }
     var testStatus by remember { mutableStateOf<String?>(null) }
     var testLatency by remember { mutableStateOf<Long?>(null) }
     var testError by remember { mutableStateOf<String?>(null) }
@@ -553,7 +589,7 @@ internal fun CommandEditor(
                 val cmd = buildCommand()
                 if (cmd !is ParsedCommand.Action) return
                 val action = cmd.action
-                val p = Providers.of(action.provider, providers)
+                val p = ApiCall.providerOf(action, providers)
                 if (p == null) {
                     testError = "Provedor \"${action.provider}\" não encontrado"
                     return
@@ -563,6 +599,7 @@ internal fun CommandEditor(
                 testError = null
                 testResultText = null
                 testRawJson = null
+                testPage = null
                 scope.launch {
                     val t0 = System.currentTimeMillis()
                     val today = LocalDate.now()
@@ -570,11 +607,13 @@ internal fun CommandEditor(
                         HttpRunner.send(
                             p,
                             ApiCall.path(action, sampleArg, today),
-                            SecretStore.get(context, p.id),
+                            // An address of its own never carries a key.
+                            if (action.provider.isEmpty()) null else SecretStore.get(context, p.id),
                             spec.method,
                             ApiCall.body(action, sampleArg, today),
                             spec.bodyType,
                             spec.headers,
+                            page = spec.html,
                         )
                     }
                     val dt = System.currentTimeMillis() - t0
@@ -583,6 +622,11 @@ internal fun CommandEditor(
                     when (answer) {
                         is HttpResult.Answer -> {
                             testStatus = "HTTP ${answer.code}"
+                            if (spec.html) {
+                                // Shown by PageTestPanel, which reads the page again whenever the selector changes.
+                                testPage = answer
+                                return@launch
+                            }
                             testRawJson = answer.body
                             val rendered = if (spec.format.isNotBlank() && answer.body.isNotBlank()) {
                                 ApiFormat.render(answer.body, spec, today)
@@ -648,6 +692,19 @@ internal fun CommandEditor(
                         .verticalScroll(rememberScrollState())
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                 ) {
+                    if (locked) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+                        ) {
+                            Text(
+                                "Comando avançado. Edite pela linha ou ative o modo avançado.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.padding(12.dp),
+                            )
+                        }
+                        Spacer(Modifier.height(12.dp))
+                    }
                     // 2. MONO LINE
                     Text(
                         "LINHA DE COMANDO",
@@ -679,15 +736,22 @@ internal fun CommandEditor(
                         fontWeight = FontWeight.Bold,
                     )
                     Spacer(Modifier.height(4.dp))
+                    // Locked: the kind of the command alone, disabled. Mode off: the three anyone understands.
+                    val kinds = when {
+                        locked -> listOf(type)
+                        advanced -> CommandType.entries
+                        else -> CommandType.entries.filter { it in BASIC_TYPES }
+                    }
                     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                        CommandType.entries.forEachIndexed { index, option ->
+                        kinds.forEachIndexed { index, option ->
                             SegmentedButton(
                                 selected = type == option,
+                                enabled = !locked,
                                 onClick = {
                                     type = option
                                     syncFieldsToLine()
                                 },
-                                shape = SegmentedButtonDefaults.itemShape(index, CommandType.entries.size),
+                                shape = SegmentedButtonDefaults.itemShape(index, kinds.size),
                                 // Six kinds share the row: no check mark, one line each.
                                 icon = {},
                             ) {
@@ -724,634 +788,763 @@ internal fun CommandEditor(
 
                     Spacer(Modifier.height(16.dp))
 
-                    // 4. Campos por Tipo
-                    when (type) {
-                        CommandType.LINK -> {
-                            var phMenuOpen by remember { mutableStateOf(false) }
-                            OutlinedTextField(
-                                value = template,
-                                onValueChange = {
-                                    template = it
-                                    syncFieldsToLine()
-                                },
-                                label = { Text("Link ou URI") },
-                                modifier = Modifier.fillMaxWidth(),
-                                trailingIcon = {
-                                    Box {
-                                        IconButton(onClick = { phMenuOpen = true }) {
-                                            Text("{}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                                        }
-                                        PlaceholderDropdown(
-                                            expanded = phMenuOpen,
-                                            onDismiss = { phMenuOpen = false },
-                                            onInsert = { ph ->
-                                                template += ph
-                                                phMenuOpen = false
-                                                syncFieldsToLine()
-                                            },
-                                        )
-                                    }
-                                },
-                                supportingText = { Text("{text} recebe o que vier depois do nome") },
-                            )
-                            if (template.contains("{number}") || template.contains("{phone}")) {
-                                Spacer(Modifier.height(8.dp))
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.fillMaxWidth(),
-                                ) {
-                                    Text(
-                                        "Abrir SMS se o app não estiver instalado",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        modifier = Modifier.weight(1f),
-                                    )
-                                    Switch(
-                                        checked = smsFallback,
-                                        onCheckedChange = {
-                                            smsFallback = it
-                                            syncFieldsToLine()
-                                        },
-                                    )
-                                }
-                            }
-                        }
-
-                        CommandType.APP -> {
-                            val currentApp = apps.firstOrNull { it.id == selectedAppPackage }
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { appPickerOpen = true },
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.padding(16.dp),
-                                ) {
-                                    Column(Modifier.weight(1f)) {
-                                        Text(
-                                            currentApp?.label ?: "Nenhum app selecionado",
-                                            style = MaterialTheme.typography.bodyLarge,
-                                            fontWeight = FontWeight.SemiBold,
-                                        )
-                                        if (currentApp != null) {
-                                            Text(
-                                                currentApp.id,
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            )
-                                        }
-                                    }
-                                    Button(onClick = { appPickerOpen = true }) {
-                                        Text(if (currentApp == null) "Escolher App" else "Trocar")
-                                    }
-                                }
-                            }
-                        }
-
-                        CommandType.INTENT -> {
-                            // Action field + Catalog button
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                                OutlinedTextField(
-                                    value = intentAction,
-                                    onValueChange = {
-                                        intentAction = it
-                                        syncFieldsToLine()
-                                    },
-                                    label = { Text("Ação da Intent") },
-                                    modifier = Modifier.weight(1f),
-                                    singleLine = true,
-                                )
-                                OutlinedButton(onClick = { catalogPickerOpen = true }) {
-                                    Text("Catálogo")
-                                }
-                            }
-
-                            Spacer(Modifier.height(8.dp))
-
-                            // Iniciar / Broadcast
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("Destino:", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(end = 8.dp))
-                                FilterChip(
-                                    selected = intentTarget == "activity",
-                                    onClick = {
-                                        intentTarget = "activity"
-                                        syncFieldsToLine()
-                                    },
-                                    label = { Text("Activity") },
-                                    modifier = Modifier.padding(end = 8.dp),
-                                )
-                                FilterChip(
-                                    selected = intentTarget == "broadcast",
-                                    onClick = {
-                                        intentTarget = "broadcast"
-                                        syncFieldsToLine()
-                                    },
-                                    label = { Text("Broadcast") },
-                                )
-                            }
-
-                            Spacer(Modifier.height(8.dp))
-
-                            // Abre com (Package)
-                            val openWithApp = apps.firstOrNull { it.id == intentPackages.firstOrNull() }
-                            OutlinedTextField(
-                                value = openWithApp?.label ?: intentPackages.firstOrNull() ?: "Qualquer app",
-                                onValueChange = {},
-                                readOnly = true,
-                                label = { Text("Abre com") },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { appPickerOpen = true },
-                                trailingIcon = {
-                                    IconButton(onClick = { appPickerOpen = true }) {
-                                        Icon(Icons.Default.ArrowDropDown, contentDescription = "Escolher")
-                                    }
-                                },
-                            )
-
-                            Spacer(Modifier.height(8.dp))
-
-                            // Data URI & MIME
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                var phMenuOpen by remember { mutableStateOf(false) }
-                                OutlinedTextField(
-                                    value = template,
-                                    onValueChange = {
-                                        template = it
-                                        syncFieldsToLine()
-                                    },
-                                    label = { Text("Dado (URI)") },
-                                    modifier = Modifier.weight(1.5f),
-                                    trailingIcon = {
-                                        Box {
-                                            IconButton(onClick = { phMenuOpen = true }) {
-                                                Text("{}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                                            }
-                                            PlaceholderDropdown(
-                                                expanded = phMenuOpen,
-                                                onDismiss = { phMenuOpen = false },
-                                                onInsert = { ph ->
-                                                    template += ph
-                                                    phMenuOpen = false
-                                                    syncFieldsToLine()
-                                                },
-                                            )
-                                        }
-                                    },
-                                )
-                                OutlinedTextField(
-                                    value = mimeType,
-                                    onValueChange = {
-                                        mimeType = it
-                                        syncFieldsToLine()
-                                    },
-                                    label = { Text("Tipo MIME") },
-                                    modifier = Modifier.weight(1f),
-                                )
-                            }
-
-                            Spacer(Modifier.height(12.dp))
-
-                            // Extras Table
-                            Text(
-                                "EXTRAS",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold,
-                            )
-                            Spacer(Modifier.height(4.dp))
-                            extras.forEachIndexed { idx, extra ->
-                                Row(
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 4.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
+                    // 4. Campos por Tipo (read-only while locked: a tap on them goes nowhere)
+                    Box {
+                        Column(Modifier.fillMaxWidth().then(if (locked) Modifier.alpha(0.6f) else Modifier)) {
+                            when (type) {
+                                CommandType.LINK -> {
+                                    var phMenuOpen by remember { mutableStateOf(false) }
                                     OutlinedTextField(
-                                        value = extra.key,
-                                        onValueChange = { k ->
-                                            extras = extras.toMutableList().also { it[idx] = extra.copy(key = k) }
+                                        value = template,
+                                        onValueChange = {
+                                            template = it
                                             syncFieldsToLine()
                                         },
-                                        placeholder = { Text("Chave") },
-                                        modifier = Modifier.weight(1.2f),
-                                        singleLine = true,
-                                    )
-                                    // Type dropdown
-                                    var typeMenuOpen by remember { mutableStateOf(false) }
-                                    Box(Modifier.weight(0.9f)) {
-                                        OutlinedButton(onClick = { typeMenuOpen = true }, modifier = Modifier.fillMaxWidth()) {
-                                            Text(extra.type.id, maxLines = 1)
-                                        }
-                                        DropdownMenu(expanded = typeMenuOpen, onDismissRequest = { typeMenuOpen = false }) {
-                                            ExtraType.entries.forEach { et ->
-                                                DropdownMenuItem(
-                                                    text = { Text(et.id) },
-                                                    onClick = {
-                                                        extras = extras.toMutableList().also { it[idx] = extra.copy(type = et) }
-                                                        typeMenuOpen = false
+                                        label = { Text("Link ou URI") },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        trailingIcon = {
+                                            Box {
+                                                IconButton(onClick = { phMenuOpen = true }) {
+                                                    Text("{}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                                }
+                                                PlaceholderDropdown(
+                                                    expanded = phMenuOpen,
+                                                    onDismiss = { phMenuOpen = false },
+                                                    onInsert = { ph ->
+                                                        template += ph
+                                                        phMenuOpen = false
                                                         syncFieldsToLine()
                                                     },
                                                 )
                                             }
+                                        },
+                                        supportingText = { Text("{text} recebe o que vier depois do nome") },
+                                    )
+                                    if (template.contains("{number}") || template.contains("{phone}")) {
+                                        Spacer(Modifier.height(8.dp))
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.fillMaxWidth(),
+                                        ) {
+                                            Text(
+                                                "Abrir SMS se o app não estiver instalado",
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                modifier = Modifier.weight(1f),
+                                            )
+                                            Switch(
+                                                checked = smsFallback,
+                                                onCheckedChange = {
+                                                    smsFallback = it
+                                                    syncFieldsToLine()
+                                                },
+                                            )
                                         }
                                     }
-                                    OutlinedTextField(
-                                        value = extra.value,
-                                        onValueChange = { v ->
-                                            extras = extras.toMutableList().also { it[idx] = extra.copy(value = v) }
-                                            syncFieldsToLine()
-                                        },
-                                        placeholder = { Text("Valor") },
-                                        modifier = Modifier.weight(1.2f),
-                                        singleLine = true,
-                                    )
-                                    IconButton(onClick = {
-                                        extras = extras.toMutableList().also { it.removeAt(idx) }
-                                        syncFieldsToLine()
-                                    }) {
-                                        Icon(Icons.Default.Delete, contentDescription = "Remover", tint = MaterialTheme.colorScheme.error)
-                                    }
                                 }
-                            }
-                            TextButton(
-                                onClick = {
-                                    extras = extras + IntentExtra("", ExtraType.STRING, "")
-                                    syncFieldsToLine()
-                                },
-                            ) {
-                                Icon(Icons.Default.Add, contentDescription = null)
-                                Spacer(Modifier.width(4.dp))
-                                Text("Adicionar extra")
-                            }
-                            Text(
-                                "Extras com valor vazio não vão na intent",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
 
-                        CommandType.API -> {
-                            // Provedor
-                            var provMenuOpen by remember { mutableStateOf(false) }
-                            Box(Modifier.fillMaxWidth()) {
-                                OutlinedTextField(
-                                    value = provider.ifEmpty { "Selecione um provedor" },
-                                    onValueChange = {},
-                                    readOnly = true,
-                                    label = { Text("Provedor") },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable { provMenuOpen = true },
-                                    trailingIcon = {
-                                        IconButton(onClick = { provMenuOpen = true }) {
-                                            Icon(Icons.Default.ArrowDropDown, contentDescription = "Provedor")
-                                        }
-                                    },
-                                )
-                                DropdownMenu(expanded = provMenuOpen, onDismissRequest = { provMenuOpen = false }) {
-                                    providers.forEach { p ->
-                                        val hasKey = configured.contains(p.id)
-                                        DropdownMenuItem(
-                                            text = { Text("${p.name} (@${p.id}) · ${if (hasKey) "Chave salva" else "Sem chave"}") },
-                                            onClick = {
-                                                provider = p.id
-                                                provMenuOpen = false
-                                                syncFieldsToLine()
-                                            },
-                                        )
-                                    }
-                                    HorizontalDivider()
-                                    DropdownMenuItem(
-                                        text = { Text("+ Gerenciar Provedores") },
-                                        onClick = {
-                                            provMenuOpen = false
-                                            navController.navigate(CommandProviders())
-                                        },
-                                    )
-                                }
-                            }
-
-                            Spacer(Modifier.height(8.dp))
-
-                            // Método & Caminho
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                var methodMenuOpen by remember { mutableStateOf(false) }
-                                Box(Modifier.weight(0.9f)) {
-                                    OutlinedTextField(
-                                        value = apiMethod,
-                                        onValueChange = {},
-                                        readOnly = true,
-                                        label = { Text("Método") },
+                                CommandType.APP -> {
+                                    val currentApp = apps.firstOrNull { it.id == selectedAppPackage }
+                                    Card(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .clickable { methodMenuOpen = true },
-                                        trailingIcon = {
-                                            IconButton(onClick = { methodMenuOpen = true }) {
-                                                Icon(Icons.Default.ArrowDropDown, contentDescription = "Método")
-                                            }
-                                        },
-                                    )
-                                    DropdownMenu(expanded = methodMenuOpen, onDismissRequest = { methodMenuOpen = false }) {
-                                        listOf("GET", "POST", "PUT", "DELETE", "PATCH").forEach { m ->
-                                            DropdownMenuItem(
-                                                text = { Text(m) },
-                                                onClick = {
-                                                    apiMethod = m
-                                                    methodMenuOpen = false
-                                                    syncFieldsToLine()
-                                                },
-                                            )
-                                        }
-                                    }
-                                }
-                                var phMenuOpen by remember { mutableStateOf(false) }
-                                OutlinedTextField(
-                                    value = template,
-                                    onValueChange = {
-                                        template = it
-                                        syncFieldsToLine()
-                                    },
-                                    label = { Text("Caminho (ex: /v1/data/{text})") },
-                                    modifier = Modifier.weight(1.8f),
-                                    trailingIcon = {
-                                        Box {
-                                            IconButton(onClick = { phMenuOpen = true }) {
-                                                Text("{}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                                            }
-                                            PlaceholderDropdown(
-                                                expanded = phMenuOpen,
-                                                onDismiss = { phMenuOpen = false },
-                                                onInsert = { ph ->
-                                                    template += ph
-                                                    phMenuOpen = false
-                                                    syncFieldsToLine()
-                                                },
-                                            )
-                                        }
-                                    },
-                                )
-                            }
-
-                            Spacer(Modifier.height(8.dp))
-
-                            // Headers (collapsible)
-                            var headersOpen by remember { mutableStateOf(false) }
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { headersOpen = !headersOpen }
-                                    .padding(vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Icon(if (headersOpen) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown, contentDescription = null)
-                                Spacer(Modifier.width(8.dp))
-                                Text(
-                                    "Cabeçalhos (${if (apiHeaders.isEmpty()) "nenhum · a chave vem do provedor" else "${apiHeaders.size} configurados"})",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                )
-                            }
-                            if (headersOpen) {
-                                apiHeaders.forEach { (hk, hv) ->
-                                    Row(
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 2.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
+                                            .clickable { appPickerOpen = true },
+                                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                                     ) {
-                                        OutlinedTextField(
-                                            value = hk,
-                                            onValueChange = { newK ->
-                                                val m = apiHeaders.toMutableMap()
-                                                m.remove(hk)
-                                                m[newK] = hv
-                                                apiHeaders = m
-                                                syncFieldsToLine()
-                                            },
-                                            placeholder = { Text("Header") },
-                                            modifier = Modifier.weight(1f),
-                                        )
-                                        OutlinedTextField(
-                                            value = hv,
-                                            onValueChange = { newV ->
-                                                val m = apiHeaders.toMutableMap()
-                                                m[hk] = newV
-                                                apiHeaders = m
-                                                syncFieldsToLine()
-                                            },
-                                            placeholder = { Text("Valor") },
-                                            modifier = Modifier.weight(1.2f),
-                                        )
-                                        IconButton(onClick = {
-                                            val m = apiHeaders.toMutableMap()
-                                            m.remove(hk)
-                                            apiHeaders = m
-                                            syncFieldsToLine()
-                                        }) {
-                                            Icon(Icons.Default.Delete, contentDescription = "Remover", tint = MaterialTheme.colorScheme.error)
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.padding(16.dp),
+                                        ) {
+                                            Column(Modifier.weight(1f)) {
+                                                Text(
+                                                    currentApp?.label ?: "Nenhum app selecionado",
+                                                    style = MaterialTheme.typography.bodyLarge,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                )
+                                                if (currentApp != null) {
+                                                    Text(
+                                                        currentApp.id,
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    )
+                                                }
+                                            }
+                                            Button(onClick = { appPickerOpen = true }) {
+                                                Text(if (currentApp == null) "Escolher App" else "Trocar")
+                                            }
                                         }
                                     }
                                 }
-                                TextButton(onClick = {
-                                    apiHeaders = apiHeaders + ("X-Custom" to "valor")
-                                    syncFieldsToLine()
-                                }) {
-                                    Icon(Icons.Default.Add, contentDescription = null)
-                                    Text("Adicionar cabeçalho")
-                                }
-                            }
 
-                            Spacer(Modifier.height(8.dp))
+                                CommandType.INTENT -> {
+                                    // Action field + Catalog button
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                        OutlinedTextField(
+                                            value = intentAction,
+                                            onValueChange = {
+                                                intentAction = it
+                                                syncFieldsToLine()
+                                            },
+                                            label = { Text("Ação da Intent") },
+                                            modifier = Modifier.weight(1f),
+                                            singleLine = true,
+                                        )
+                                        OutlinedButton(onClick = { catalogPickerOpen = true }) {
+                                            Text("Catálogo")
+                                        }
+                                    }
 
-                            // Body (if method != GET)
-                            if (apiMethod != "GET") {
-                                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                                    Text("Tipo do corpo:", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(end = 8.dp))
-                                    BodyType.entries.forEach { bt ->
+                                    Spacer(Modifier.height(8.dp))
+
+                                    // Iniciar / Broadcast
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text("Destino:", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(end = 8.dp))
                                         FilterChip(
-                                            selected = apiBodyType == bt,
+                                            selected = intentTarget == "activity",
                                             onClick = {
-                                                apiBodyType = bt
+                                                intentTarget = "activity"
                                                 syncFieldsToLine()
                                             },
-                                            label = { Text(bt.name) },
-                                            modifier = Modifier.padding(end = 4.dp),
+                                            label = { Text("Activity") },
+                                            modifier = Modifier.padding(end = 8.dp),
+                                        )
+                                        FilterChip(
+                                            selected = intentTarget == "broadcast",
+                                            onClick = {
+                                                intentTarget = "broadcast"
+                                                syncFieldsToLine()
+                                            },
+                                            label = { Text("Broadcast") },
                                         )
                                     }
-                                }
-                                OutlinedTextField(
-                                    value = apiBody,
-                                    onValueChange = {
-                                        apiBody = it
-                                        syncFieldsToLine()
-                                    },
-                                    label = { Text("Corpo da requisição") },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .heightIn(min = 80.dp),
-                                )
-                                Spacer(Modifier.height(8.dp))
-                            }
 
-                            // Format
-                            OutlinedTextField(
-                                value = apiFormat,
-                                onValueChange = {
-                                    apiFormat = it
-                                    syncFieldsToLine()
-                                },
-                                label = { Text("Mostrar na barra (formato)") },
-                                modifier = Modifier.fillMaxWidth(),
-                                supportingText = { Text("Ex: {logradouro} · {bairro}") },
-                            )
+                                    Spacer(Modifier.height(8.dp))
 
-                            Spacer(Modifier.height(8.dp))
+                                    // Abre com (Package)
+                                    val openWithApp = apps.firstOrNull { it.id == intentPackages.firstOrNull() }
+                                    OutlinedTextField(
+                                        value = openWithApp?.label ?: intentPackages.firstOrNull() ?: "Qualquer app",
+                                        onValueChange = {},
+                                        readOnly = true,
+                                        label = { Text("Abre com") },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable { appPickerOpen = true },
+                                        trailingIcon = {
+                                            IconButton(onClick = { appPickerOpen = true }) {
+                                                Icon(Icons.Default.ArrowDropDown, contentDescription = "Escolher")
+                                            }
+                                        },
+                                    )
 
-                            // Lista (collapsible)
-                            var listOpen by remember { mutableStateOf(apiList.isNotEmpty() || apiUpcoming.isNotEmpty() || apiPaginate.isNotEmpty()) }
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { listOpen = !listOpen }
-                                    .padding(vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Icon(if (listOpen) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown, contentDescription = null)
-                                Spacer(Modifier.width(8.dp))
-                                Text("Lista, Limite e Próximos", style = MaterialTheme.typography.bodyMedium)
-                            }
-                            if (listOpen) {
-                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    OutlinedTextField(
-                                        value = apiList,
-                                        onValueChange = {
-                                            apiList = it
-                                            syncFieldsToLine()
-                                        },
-                                        label = { Text("--list") },
-                                        modifier = Modifier.weight(1.5f),
-                                    )
-                                    OutlinedTextField(
-                                        value = apiMax.toString(),
-                                        onValueChange = {
-                                            apiMax = it.toIntOrNull() ?: 5
-                                            syncFieldsToLine()
-                                        },
-                                        label = { Text("--max") },
-                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                        modifier = Modifier.weight(0.8f),
-                                    )
-                                }
-                                OutlinedTextField(
-                                    value = apiUpcoming,
-                                    onValueChange = {
-                                        apiUpcoming = it
-                                        syncFieldsToLine()
-                                    },
-                                    label = { Text("--upcoming") },
-                                    modifier = Modifier.fillMaxWidth(),
-                                )
-                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    OutlinedTextField(
-                                        value = apiPaginate,
-                                        onValueChange = {
-                                            apiPaginate = it
-                                            syncFieldsToLine()
-                                        },
-                                        label = { Text("--paginate") },
-                                        placeholder = { Text("cursor | next-url | offset | page | link") },
-                                        modifier = Modifier.weight(1.5f),
-                                    )
-                                    OutlinedTextField(
-                                        value = apiPages.toString(),
-                                        onValueChange = {
-                                            apiPages = it.toIntOrNull() ?: PageSpec.DEFAULT_PAGES
-                                            syncFieldsToLine()
-                                        },
-                                        label = { Text("--pages") },
-                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                        modifier = Modifier.weight(0.8f),
-                                    )
-                                }
-                                if (apiPaginate.isNotEmpty()) {
+                                    Spacer(Modifier.height(8.dp))
+
+                                    // Data URI & MIME
                                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        var phMenuOpen by remember { mutableStateOf(false) }
                                         OutlinedTextField(
-                                            value = apiPageParam,
+                                            value = template,
                                             onValueChange = {
-                                                apiPageParam = it
+                                                template = it
                                                 syncFieldsToLine()
                                             },
-                                            label = { Text("--page-param") },
-                                            modifier = Modifier.weight(1f),
+                                            label = { Text("Dado (URI)") },
+                                            modifier = Modifier.weight(1.5f),
+                                            trailingIcon = {
+                                                Box {
+                                                    IconButton(onClick = { phMenuOpen = true }) {
+                                                        Text("{}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                                    }
+                                                    PlaceholderDropdown(
+                                                        expanded = phMenuOpen,
+                                                        onDismiss = { phMenuOpen = false },
+                                                        onInsert = { ph ->
+                                                            template += ph
+                                                            phMenuOpen = false
+                                                            syncFieldsToLine()
+                                                        },
+                                                    )
+                                                }
+                                            },
                                         )
                                         OutlinedTextField(
-                                            value = apiPageNext,
+                                            value = mimeType,
                                             onValueChange = {
-                                                apiPageNext = it
+                                                mimeType = it
                                                 syncFieldsToLine()
                                             },
-                                            label = { Text("--page-next") },
+                                            label = { Text("Tipo MIME") },
                                             modifier = Modifier.weight(1f),
                                         )
                                     }
+
+                                    Spacer(Modifier.height(12.dp))
+
+                                    // Extras Table
+                                    Text(
+                                        "EXTRAS",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.Bold,
+                                    )
+                                    Spacer(Modifier.height(4.dp))
+                                    extras.forEachIndexed { idx, extra ->
+                                        Row(
+                                            Modifier
+                                                .fillMaxWidth()
+                                                .padding(vertical = 4.dp),
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            OutlinedTextField(
+                                                value = extra.key,
+                                                onValueChange = { k ->
+                                                    extras = extras.toMutableList().also { it[idx] = extra.copy(key = k) }
+                                                    syncFieldsToLine()
+                                                },
+                                                placeholder = { Text("Chave") },
+                                                modifier = Modifier.weight(1.2f),
+                                                singleLine = true,
+                                            )
+                                            // Type dropdown
+                                            var typeMenuOpen by remember { mutableStateOf(false) }
+                                            Box(Modifier.weight(0.9f)) {
+                                                OutlinedButton(onClick = { typeMenuOpen = true }, modifier = Modifier.fillMaxWidth()) {
+                                                    Text(extra.type.id, maxLines = 1)
+                                                }
+                                                DropdownMenu(expanded = typeMenuOpen, onDismissRequest = { typeMenuOpen = false }) {
+                                                    ExtraType.entries.forEach { et ->
+                                                        DropdownMenuItem(
+                                                            text = { Text(et.id) },
+                                                            onClick = {
+                                                                extras = extras.toMutableList().also { it[idx] = extra.copy(type = et) }
+                                                                typeMenuOpen = false
+                                                                syncFieldsToLine()
+                                                            },
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                            OutlinedTextField(
+                                                value = extra.value,
+                                                onValueChange = { v ->
+                                                    extras = extras.toMutableList().also { it[idx] = extra.copy(value = v) }
+                                                    syncFieldsToLine()
+                                                },
+                                                placeholder = { Text("Valor") },
+                                                modifier = Modifier.weight(1.2f),
+                                                singleLine = true,
+                                            )
+                                            IconButton(onClick = {
+                                                extras = extras.toMutableList().also { it.removeAt(idx) }
+                                                syncFieldsToLine()
+                                            }) {
+                                                Icon(Icons.Default.Delete, contentDescription = "Remover", tint = MaterialTheme.colorScheme.error)
+                                            }
+                                        }
+                                    }
+                                    TextButton(
+                                        onClick = {
+                                            extras = extras + IntentExtra("", ExtraType.STRING, "")
+                                            syncFieldsToLine()
+                                        },
+                                    ) {
+                                        Icon(Icons.Default.Add, contentDescription = null)
+                                        Spacer(Modifier.width(4.dp))
+                                        Text("Adicionar extra")
+                                    }
+                                    Text(
+                                        "Extras com valor vazio não vão na intent",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+
+                                CommandType.API -> {
+                                    // Provedor
+                                    var provMenuOpen by remember { mutableStateOf(false) }
+                                    Box(Modifier.fillMaxWidth()) {
+                                        OutlinedTextField(
+                                            value = provider.ifEmpty { "Nenhum (URL pública)" },
+                                            onValueChange = {},
+                                            readOnly = true,
+                                            label = { Text("Provedor") },
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable { provMenuOpen = true },
+                                            trailingIcon = {
+                                                IconButton(onClick = { provMenuOpen = true }) {
+                                                    Icon(Icons.Default.ArrowDropDown, contentDescription = "Provedor")
+                                                }
+                                            },
+                                        )
+                                        DropdownMenu(expanded = provMenuOpen, onDismissRequest = { provMenuOpen = false }) {
+                                            // A page or a JSON answer from any https address: GET only, and no key is ever sent.
+                                            DropdownMenuItem(
+                                                text = { Text("Nenhum (URL pública)") },
+                                                onClick = {
+                                                    provider = ""
+                                                    apiMethod = "GET"
+                                                    apiHeaders = emptyMap()
+                                                    apiBody = ""
+                                                    provMenuOpen = false
+                                                    syncFieldsToLine()
+                                                },
+                                            )
+                                            providers.forEach { p ->
+                                                val hasKey = configured.contains(p.id)
+                                                DropdownMenuItem(
+                                                    text = { Text("${p.name} (@${p.id}) · ${if (hasKey) "Chave salva" else "Sem chave"}") },
+                                                    onClick = {
+                                                        provider = p.id
+                                                        provMenuOpen = false
+                                                        syncFieldsToLine()
+                                                    },
+                                                )
+                                            }
+                                            HorizontalDivider()
+                                            DropdownMenuItem(
+                                                text = { Text("+ Gerenciar Provedores") },
+                                                onClick = {
+                                                    provMenuOpen = false
+                                                    navController.navigate(CommandProviders())
+                                                },
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(Modifier.height(8.dp))
+
+                                    // Método & Caminho
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        var methodMenuOpen by remember { mutableStateOf(false) }
+                                        Box(Modifier.weight(0.9f)) {
+                                            OutlinedTextField(
+                                                value = if (provider.isEmpty()) "GET" else apiMethod,
+                                                onValueChange = {},
+                                                readOnly = true,
+                                                label = { Text("Método") },
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .clickable(enabled = provider.isNotEmpty()) { methodMenuOpen = true },
+                                                trailingIcon = {
+                                                    IconButton(onClick = { methodMenuOpen = true }, enabled = provider.isNotEmpty()) {
+                                                        Icon(Icons.Default.ArrowDropDown, contentDescription = "Método")
+                                                    }
+                                                },
+                                            )
+                                            DropdownMenu(expanded = methodMenuOpen, onDismissRequest = { methodMenuOpen = false }) {
+                                                listOf("GET", "POST", "PUT", "DELETE", "PATCH").forEach { m ->
+                                                    DropdownMenuItem(
+                                                        text = { Text(m) },
+                                                        onClick = {
+                                                            apiMethod = m
+                                                            methodMenuOpen = false
+                                                            syncFieldsToLine()
+                                                        },
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        var phMenuOpen by remember { mutableStateOf(false) }
+                                        OutlinedTextField(
+                                            value = template,
+                                            onValueChange = {
+                                                template = it
+                                                syncFieldsToLine()
+                                            },
+                                            label = { Text(if (provider.isEmpty()) "URL (https://… com {text})" else "Caminho (ex: /v1/data/{text})") },
+                                            modifier = Modifier.weight(1.8f),
+                                            trailingIcon = {
+                                                Box {
+                                                    IconButton(onClick = { phMenuOpen = true }) {
+                                                        Text("{}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                                    }
+                                                    PlaceholderDropdown(
+                                                        expanded = phMenuOpen,
+                                                        onDismiss = { phMenuOpen = false },
+                                                        onInsert = { ph ->
+                                                            template += ph
+                                                            phMenuOpen = false
+                                                            syncFieldsToLine()
+                                                        },
+                                                    )
+                                                }
+                                            },
+                                        )
+                                    }
+
+                                    Spacer(Modifier.height(8.dp))
+
+                                    // Headers and body only go with a provider; an address of its own is a plain GET.
+                                    if (provider.isNotEmpty()) {
+                                        // Headers (collapsible)
+                                        var headersOpen by remember { mutableStateOf(false) }
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable { headersOpen = !headersOpen }
+                                                .padding(vertical = 4.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            Icon(if (headersOpen) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown, contentDescription = null)
+                                            Spacer(Modifier.width(8.dp))
+                                            Text(
+                                                "Cabeçalhos (${if (apiHeaders.isEmpty()) "nenhum · a chave vem do provedor" else "${apiHeaders.size} configurados"})",
+                                                style = MaterialTheme.typography.bodyMedium,
+                                            )
+                                        }
+                                        if (headersOpen) {
+                                            apiHeaders.forEach { (hk, hv) ->
+                                                Row(
+                                                    Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(vertical = 2.dp),
+                                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                ) {
+                                                    OutlinedTextField(
+                                                        value = hk,
+                                                        onValueChange = { newK ->
+                                                            val m = apiHeaders.toMutableMap()
+                                                            m.remove(hk)
+                                                            m[newK] = hv
+                                                            apiHeaders = m
+                                                            syncFieldsToLine()
+                                                        },
+                                                        placeholder = { Text("Header") },
+                                                        modifier = Modifier.weight(1f),
+                                                    )
+                                                    OutlinedTextField(
+                                                        value = hv,
+                                                        onValueChange = { newV ->
+                                                            val m = apiHeaders.toMutableMap()
+                                                            m[hk] = newV
+                                                            apiHeaders = m
+                                                            syncFieldsToLine()
+                                                        },
+                                                        placeholder = { Text("Valor") },
+                                                        modifier = Modifier.weight(1.2f),
+                                                    )
+                                                    IconButton(onClick = {
+                                                        val m = apiHeaders.toMutableMap()
+                                                        m.remove(hk)
+                                                        apiHeaders = m
+                                                        syncFieldsToLine()
+                                                    }) {
+                                                        Icon(Icons.Default.Delete, contentDescription = "Remover", tint = MaterialTheme.colorScheme.error)
+                                                    }
+                                                }
+                                            }
+                                            TextButton(onClick = {
+                                                apiHeaders = apiHeaders + ("X-Custom" to "valor")
+                                                syncFieldsToLine()
+                                            }) {
+                                                Icon(Icons.Default.Add, contentDescription = null)
+                                                Text("Adicionar cabeçalho")
+                                            }
+                                        }
+
+                                        Spacer(Modifier.height(8.dp))
+
+                                        // Body (if method != GET)
+                                        if (apiMethod != "GET") {
+                                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                                Text("Tipo do corpo:", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(end = 8.dp))
+                                                BodyType.entries.forEach { bt ->
+                                                    FilterChip(
+                                                        selected = apiBodyType == bt,
+                                                        onClick = {
+                                                            apiBodyType = bt
+                                                            syncFieldsToLine()
+                                                        },
+                                                        label = { Text(bt.name) },
+                                                        modifier = Modifier.padding(end = 4.dp),
+                                                    )
+                                                }
+                                            }
+                                            OutlinedTextField(
+                                                value = apiBody,
+                                                onValueChange = {
+                                                    apiBody = it
+                                                    syncFieldsToLine()
+                                                },
+                                                label = { Text("Corpo da requisição") },
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .heightIn(min = 80.dp),
+                                            )
+                                            Spacer(Modifier.height(8.dp))
+                                        }
+                                    }
+
+                                    // O que vai para a barra: campos de um JSON, os elementos de uma página ou a página inteira.
+                                    Text(
+                                        "MOSTRAR NA BARRA",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.Bold,
+                                    )
+                                    Spacer(Modifier.height(4.dp))
+                                    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                                        ApiShow.entries.forEachIndexed { index, option ->
+                                            SegmentedButton(
+                                                selected = apiShow == option,
+                                                onClick = {
+                                                    if (apiShow != option) {
+                                                        apiShow = option
+                                                        when (option) {
+                                                            ApiShow.JSON -> {
+                                                                apiSelect = ""
+                                                                if (apiMax == HtmlSelect.DEFAULT_MAX) apiMax = 5
+                                                            }
+
+                                                            ApiShow.HTML -> {
+                                                                apiList = ""
+                                                                apiUpcoming = ""
+                                                                apiPaginate = ""
+                                                                if (apiMax == 5) apiMax = HtmlSelect.DEFAULT_MAX
+                                                            }
+
+                                                            ApiShow.RAW -> {
+                                                                apiFormat = ""
+                                                                apiList = ""
+                                                                apiUpcoming = ""
+                                                                apiPaginate = ""
+                                                                apiSelect = ""
+                                                            }
+                                                        }
+                                                        syncFieldsToLine()
+                                                    }
+                                                },
+                                                shape = SegmentedButtonDefaults.itemShape(index, ApiShow.entries.size),
+                                                icon = {},
+                                            ) {
+                                                Text(option.label, style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
+                                            }
+                                        }
+                                    }
+                                    Spacer(Modifier.height(8.dp))
+
+                                    if (apiShow == ApiShow.HTML) {
+                                        OutlinedTextField(
+                                            value = apiSelect,
+                                            onValueChange = {
+                                                apiSelect = it
+                                                syncFieldsToLine()
+                                            },
+                                            label = { Text("Seletor CSS") },
+                                            modifier = Modifier.fillMaxWidth(),
+                                            singleLine = true,
+                                            textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
+                                            supportingText = { Text("Ex: span.valor · a.titulo@href (o @ pega um atributo) · item > title") },
+                                        )
+                                        Spacer(Modifier.height(8.dp))
+                                        OutlinedTextField(
+                                            value = apiMax.toString(),
+                                            onValueChange = {
+                                                apiMax = it.toIntOrNull() ?: HtmlSelect.DEFAULT_MAX
+                                                syncFieldsToLine()
+                                            },
+                                            label = { Text("Máximo de elementos") },
+                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                            modifier = Modifier.fillMaxWidth(),
+                                            singleLine = true,
+                                        )
+                                        Spacer(Modifier.height(8.dp))
+                                        OutlinedTextField(
+                                            value = apiFormat,
+                                            onValueChange = {
+                                                apiFormat = it
+                                                syncFieldsToLine()
+                                            },
+                                            label = { Text("Formato de cada elemento (opcional)") },
+                                            modifier = Modifier.fillMaxWidth(),
+                                            supportingText = { Text("Sem formato, a barra mostra o texto de cada elemento") },
+                                        )
+                                        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                            listOf("{text}", "{attrs.href}", "{attrs.src}", "{tag}", "{html}").forEach { chip ->
+                                                SuggestionChip(
+                                                    onClick = {
+                                                        apiFormat = (apiFormat + " " + chip).trim()
+                                                        syncFieldsToLine()
+                                                    },
+                                                    label = { Text(chip, fontFamily = FontFamily.Monospace) },
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    if (apiShow == ApiShow.RAW) {
+                                        Text(
+                                            "A página inteira vai para a saída, cortada em 64 KB. Combine com | node -e para extrair o que quiser.",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    }
+
+                                    if (apiShow == ApiShow.JSON) {
+                                        // Format
+                                        OutlinedTextField(
+                                            value = apiFormat,
+                                            onValueChange = {
+                                                apiFormat = it
+                                                syncFieldsToLine()
+                                            },
+                                            label = { Text("Mostrar na barra (formato)") },
+                                            modifier = Modifier.fillMaxWidth(),
+                                            supportingText = { Text("Ex: {logradouro} · {bairro}") },
+                                        )
+
+                                        Spacer(Modifier.height(8.dp))
+
+                                        // Lista (collapsible)
+                                        var listOpen by remember { mutableStateOf(apiList.isNotEmpty() || apiUpcoming.isNotEmpty() || apiPaginate.isNotEmpty()) }
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable { listOpen = !listOpen }
+                                                .padding(vertical = 4.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            Icon(if (listOpen) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown, contentDescription = null)
+                                            Spacer(Modifier.width(8.dp))
+                                            Text("Lista, Limite e Próximos", style = MaterialTheme.typography.bodyMedium)
+                                        }
+                                        if (listOpen) {
+                                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                OutlinedTextField(
+                                                    value = apiList,
+                                                    onValueChange = {
+                                                        apiList = it
+                                                        syncFieldsToLine()
+                                                    },
+                                                    label = { Text("--list") },
+                                                    modifier = Modifier.weight(1.5f),
+                                                )
+                                                OutlinedTextField(
+                                                    value = apiMax.toString(),
+                                                    onValueChange = {
+                                                        apiMax = it.toIntOrNull() ?: 5
+                                                        syncFieldsToLine()
+                                                    },
+                                                    label = { Text("--max") },
+                                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                                    modifier = Modifier.weight(0.8f),
+                                                )
+                                            }
+                                            OutlinedTextField(
+                                                value = apiUpcoming,
+                                                onValueChange = {
+                                                    apiUpcoming = it
+                                                    syncFieldsToLine()
+                                                },
+                                                label = { Text("--upcoming") },
+                                                modifier = Modifier.fillMaxWidth(),
+                                            )
+                                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                OutlinedTextField(
+                                                    value = apiPaginate,
+                                                    onValueChange = {
+                                                        apiPaginate = it
+                                                        syncFieldsToLine()
+                                                    },
+                                                    label = { Text("--paginate") },
+                                                    placeholder = { Text("cursor | next-url | offset | page | link") },
+                                                    modifier = Modifier.weight(1.5f),
+                                                )
+                                                OutlinedTextField(
+                                                    value = apiPages.toString(),
+                                                    onValueChange = {
+                                                        apiPages = it.toIntOrNull() ?: PageSpec.DEFAULT_PAGES
+                                                        syncFieldsToLine()
+                                                    },
+                                                    label = { Text("--pages") },
+                                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                                    modifier = Modifier.weight(0.8f),
+                                                )
+                                            }
+                                            if (apiPaginate.isNotEmpty()) {
+                                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                    OutlinedTextField(
+                                                        value = apiPageParam,
+                                                        onValueChange = {
+                                                            apiPageParam = it
+                                                            syncFieldsToLine()
+                                                        },
+                                                        label = { Text("--page-param") },
+                                                        modifier = Modifier.weight(1f),
+                                                    )
+                                                    OutlinedTextField(
+                                                        value = apiPageNext,
+                                                        onValueChange = {
+                                                            apiPageNext = it
+                                                            syncFieldsToLine()
+                                                        },
+                                                        label = { Text("--page-next") },
+                                                        modifier = Modifier.weight(1f),
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                CommandType.SCRIPT -> {
+                                    ScriptCodeField(
+                                        code = scriptCode,
+                                        onCodeChange = {
+                                            scriptCode = it
+                                            scriptErrorLine = null
+                                            syncFieldsToLine()
+                                        },
+                                        isExpression = scriptIsExpr,
+                                        errorLine = scriptErrorLine,
+                                        onConvert = {
+                                            val program = ScriptSpec(expr = scriptCode.text).asProgram().source.orEmpty()
+                                            scriptIsExpr = false
+                                            scriptCode = TextFieldValue(program)
+                                            syncFieldsToLine()
+                                        },
+                                    )
+                                    if (!scriptCheck.ok) {
+                                        Spacer(Modifier.height(4.dp))
+                                        Text(
+                                            scriptCheck.line?.let { "linha $it: ${scriptCheck.message}" } ?: scriptCheck.message.orEmpty(),
+                                            color = MaterialTheme.colorScheme.error,
+                                            style = MaterialTheme.typography.bodySmall,
+                                        )
+                                        scriptCheck.line?.let { l ->
+                                            TextButton(onClick = { scriptCode = atLine(scriptCode, l) }) { Text("Ir para a linha $l") }
+                                        }
+                                    } else if (!scripts.isSupported) {
+                                        Spacer(Modifier.height(4.dp))
+                                        Text(stringResource(CommandR.string.cmd_warn_script_unsupported), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                                    }
+                                    Text(
+                                        "main(input, ctx): input.text, input.args, input.stdin { text, data } · ctx.vars, ctx.locale, ctx.command. " +
+                                            "Devolva um texto, dados ou { text, data, action }. Sem rede nem acesso ao aparelho.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.padding(top = 4.dp),
+                                    )
+                                }
+
+                                CommandType.ALIAS -> {
+                                    OutlinedTextField(
+                                        value = expansion,
+                                        onValueChange = {
+                                            expansion = it
+                                            syncFieldsToLine()
+                                        },
+                                        label = { Text("Expansão do apelido") },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        supportingText = { Text("Ex: abrir youtube, ou w ana {text}") },
+                                    )
                                 }
                             }
                         }
-
-                        CommandType.SCRIPT -> {
-                            ScriptCodeField(
-                                code = scriptCode,
-                                onCodeChange = {
-                                    scriptCode = it
-                                    scriptErrorLine = null
-                                    syncFieldsToLine()
-                                },
-                                isExpression = scriptIsExpr,
-                                errorLine = scriptErrorLine,
-                                onConvert = {
-                                    val program = ScriptSpec(expr = scriptCode.text).asProgram().source.orEmpty()
-                                    scriptIsExpr = false
-                                    scriptCode = TextFieldValue(program)
-                                    syncFieldsToLine()
-                                },
-                            )
-                            if (!scriptCheck.ok) {
-                                Spacer(Modifier.height(4.dp))
-                                Text(
-                                    scriptCheck.line?.let { "linha $it: ${scriptCheck.message}" } ?: scriptCheck.message.orEmpty(),
-                                    color = MaterialTheme.colorScheme.error,
-                                    style = MaterialTheme.typography.bodySmall,
-                                )
-                                scriptCheck.line?.let { l ->
-                                    TextButton(onClick = { scriptCode = atLine(scriptCode, l) }) { Text("Ir para a linha $l") }
-                                }
-                            } else if (!scripts.isSupported) {
-                                Spacer(Modifier.height(4.dp))
-                                Text(stringResource(CommandR.string.cmd_warn_script_unsupported), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
-                            }
-                            Text(
-                                "main(input, ctx): input.text, input.args, input.stdin { text, data } · ctx.vars, ctx.locale, ctx.command. " +
-                                    "Devolva um texto, dados ou { text, data, action }. Sem rede nem acesso ao aparelho.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(top = 4.dp),
-                            )
-                        }
-
-                        CommandType.ALIAS -> {
-                            OutlinedTextField(
-                                value = expansion,
-                                onValueChange = {
-                                    expansion = it
-                                    syncFieldsToLine()
-                                },
-                                label = { Text("Expansão do apelido") },
-                                modifier = Modifier.fillMaxWidth(),
-                                supportingText = { Text("Ex: abrir youtube, ou w ana {text}") },
-                            )
+                        if (locked) {
+                            Box(Modifier.matchParentSize().pointerInput(Unit) { detectTapGestures { } })
                         }
                     }
 
@@ -1443,6 +1636,18 @@ internal fun CommandEditor(
                                             style = MaterialTheme.typography.bodyLarge,
                                             color = MaterialTheme.colorScheme.primary,
                                         )
+                                    }
+
+                                    // A page asked with --raw or --select: its text, the elements found and the tree of the document.
+                                    testPage?.let { page ->
+                                        val spec = (currentCmd as? ParsedCommand.Action)?.action?.api
+                                        if (spec != null && spec.html) {
+                                            Spacer(Modifier.height(10.dp))
+                                            PageTestPanel(page, spec, testLatency) { css ->
+                                                apiSelect = css
+                                                syncFieldsToLine()
+                                            }
+                                        }
                                     }
 
                                     // Interactive JSON Tree for API

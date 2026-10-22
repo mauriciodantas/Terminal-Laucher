@@ -289,6 +289,11 @@ private fun CommandScreen(onClose: () -> Unit) {
         }
         reloadExtras()
         loaded = true
+        // Once, after the update: a user with advanced commands finds the mode on, and is told why.
+        if (withContext(Dispatchers.IO) { AdvancedModeStore.migrate(context) }) {
+            extras = extras.copy(advancedMode = true)
+            android.widget.Toast.makeText(context, CommandR.string.cmd_dev_migrated, android.widget.Toast.LENGTH_LONG).show()
+        }
         RatesStore.refresh(context)?.let { rates -> extras = extras.copy(rates = rates) }
     }
     // Back from the settings, what changed there counts: a key saved, a command added or removed.
@@ -301,7 +306,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                     custom = actions
                     aliases = names
                     extras = withContext(Dispatchers.IO) { with(CommandSources) { extras.withProviders(context) } }
-                        .copy(variables = withContext(Dispatchers.IO) { UserVariableStore.load(context) })
+                        .copy(variables = withContext(Dispatchers.IO) { UserVariableStore.load(context) }, advancedMode = withContext(Dispatchers.IO) { AdvancedModeStore.load(context) })
                 }
             }
         }
@@ -674,7 +679,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                         finish(outcome.result) { ChainRunner.failure(action, outcome) }
                         return@launch
                     }
-                    if (action.steps.any { it is CommandAction.Schedule || it is CommandAction.CancelJob || it is CommandAction.AddNote || it is CommandAction.SetVariable || it is CommandAction.UnsetVariable }) {
+                    if (action.steps.any { it is CommandAction.Schedule || it is CommandAction.CancelJob || it is CommandAction.AddNote || it is CommandAction.SetVariable || it is CommandAction.UnsetVariable || it is CommandAction.SetAdvancedMode }) {
                         reloadExtras()
                     }
                     val result = outcome.result
@@ -758,6 +763,18 @@ private fun CommandScreen(onClose: () -> Unit) {
                     is CommandAction.UnsetVariable -> context.getString(CommandR.string.cmd_variable_removed, action.name)
                     else -> executedLabel
                 }
+                return
+            }
+
+            is CommandAction.SetAdvancedMode -> {
+                if (!CommandExecutor.execute(context, action)) {
+                    done = failedLabel
+                    return
+                }
+                record(action, command)
+                extras = extras.copy(advancedMode = AdvancedMode.isOn)
+                setText("")
+                done = DevCommand.done(action, AdvancedMode.isOn)
                 return
             }
 

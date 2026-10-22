@@ -231,6 +231,9 @@ object CommandExecutor {
 
             is CommandAction.ClearHistory -> CommandActivity.clearHistory(context)
 
+            // "dev" alone only says the state; on and off save it, and every screen follows (AdvancedMode.enabled).
+            is CommandAction.SetAdvancedMode -> action.on?.let { AdvancedModeStore.set(context, it) }
+
             is CommandAction.Call -> {
                 val uri = Uri.fromParts("tel", action.contact.number, null)
                 // Calls straight away when allowed; otherwise the dialer opens with the number.
@@ -377,6 +380,7 @@ object CommandExecutor {
     fun runsInBackground(context: Context, action: CommandAction): Boolean = when (action) {
         is ThemeAction.Change, is ThemeAction.Apply, is ThemeAction.Save, is ThemeAction.Delete, is CommandAction.Calc, is CommandAction.Copy, is CommandAction.Schedule,
         is CommandAction.CancelJob, is CommandAction.Volume, is CommandAction.Media, is CommandAction.AddNote, is CommandAction.AiSetup,
+        is CommandAction.SetAdvancedMode,
         -> true
 
         // Without the special access these open the screen that grants it, which needs the bar in front.

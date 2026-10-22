@@ -1632,6 +1632,8 @@
     <string name="command_secret_needed">THIS COMMAND NEEDS AN API KEY.</string>
     <string name="command_configure">SET UP</string>
     <string name="cmd_pref_group_advanced">Advanced</string>
+    <string name="cmd_pref_advanced_mode">Advanced mode</string>
+    <string name="cmd_pref_advanced_mode_hint">Shows the Intent, API and Script kinds in the editor. It changes nothing a command may do.</string>
     <string name="cmd_providers_title">API providers</string>
     <string name="cmd_providers_entry">Services API commands talk to, and their keys</string>
     <string name="cmd_guide_title">Command pack guide (.tcmd)</string>

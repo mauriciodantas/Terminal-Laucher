@@ -17,7 +17,10 @@
 package app.lawnchair.ui.preferences.about
 
 import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -49,6 +52,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import app.lawnchair.command.AdvancedModeStore
+import app.lawnchair.command.VersionTaps
 import app.lawnchair.preferences.PreferenceManager
 import app.lawnchair.ui.preferences.LocalIsExpandedScreen
 import app.lawnchair.ui.preferences.components.NavigationActionPreference
@@ -77,6 +82,9 @@ fun About(
     val scope = rememberCoroutineScope()
 
     val prefs: PreferenceManager = PreferenceManager.getInstance(context)
+
+    // Seven taps on the version number turn the advanced mode on (there is no way to turn it off by tapping).
+    val versionTaps = remember { VersionTaps() }
 
     if (openBottomSheet) {
         val updateState = uiState.updateState
@@ -156,6 +164,9 @@ fun About(
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
+                    modifier = Modifier.clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
+                        AdvancedModeStore.tap(context, versionTaps)?.let { Toast.makeText(context, it, Toast.LENGTH_SHORT).show() }
+                    },
                 )
             }
         }
