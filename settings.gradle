@@ -119,3 +119,9 @@ include ':concurrent'
 include ':modules:widgetpicker'
 include ':commands'
 
+
+// The watch: protocol, phone bridge and Wear OS app live in the `wear/` submodule (terminal-wear).
+include ':wear-protocol', ':wear-bridge', ':wear-app'
+project(':wear-protocol').projectDir = file('wear/protocol')
+project(':wear-bridge').projectDir = file('wear/bridge')
+project(':wear-app').projectDir = file('wear/app')

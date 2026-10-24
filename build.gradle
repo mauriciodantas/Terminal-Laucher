@@ -407,6 +407,8 @@ dependencies {
 //    withQuickstepImplementation projects.compose
     withQuickstepImplementation projects.modules.widgetpicker
     lawnImplementation projects.commands
+    // The watch: receives the lines the watch sends and publishes the commands and the theme (see wear/).
+    lawnImplementation project(':wear-bridge')
     // Draws the SVG wallpaper the AI writes into a theme.
     lawnImplementation libs.androidsvg
     implementation libs.androidx.dynamicanimation
@@ -539,6 +541,8 @@ licensee {
     allowUrl("https://opensource.org/licenses/mit-license.php")
     // jsoup (MIT), which reads the pages of `curl --select`.
     allowUrl("https://jsoup.org/license")
+    // Google Play services (the Data Layer of the watch, see wear/), under the Android SDK terms.
+    allowUrl("https://developer.android.com/studio/terms.html")
 
     bundleAndroidAsset = true
     androidAssetReportPath = 'licenses.json'
