@@ -32,7 +32,7 @@ object LauncherWearHost : WearHost {
 
     override val notificationIcon: Int = R.drawable.ic_command_notification
 
-    override val watchedPreferences = listOf("nostromo" to setOf("custom_actions", "command_aliases", "api_providers"))
+    override val watchedPreferences = listOf("nostromo" to setOf("custom_actions", "command_aliases", "api_providers", "command_favorites"))
 
     override suspend fun plan(context: Context, line: String): WearPlan {
         val analysis = CommandLineRunner.analyze(context, line)
@@ -114,7 +114,9 @@ object LauncherWearHost : WearHost {
     override suspend fun watchCommands(context: Context, usage: (String) -> Int): List<WatchCommand> = withContext(Dispatchers.IO) {
         val actions = CustomActionStore.load(context)
         val aliases = AliasStore.load(context)
-        val fromActions = actions.map { a ->
+        // Only the favorites travel: the watch is for what the user reaches for often.
+        val favorites = FavoriteStore.load(context)
+        val fromActions = actions.filter { it.letter.lowercase() in favorites }.map { a ->
             WatchCommand(
                 letter = a.letter,
                 label = a.label,
@@ -124,7 +126,7 @@ object LauncherWearHost : WearHost {
                 usage = usage(a.letter),
             )
         }
-        val fromAliases = aliases.mapNotNull { alias ->
+        val fromAliases = aliases.filter { it.name.lowercase() in favorites }.mapNotNull { alias ->
             // What the alias expands to tells where it lands; one that needs more than a word has no action yet.
             val action = CommandLineRunner.analyze(context, alias.name).action
             val effect = action?.let(WatchRules::effect)

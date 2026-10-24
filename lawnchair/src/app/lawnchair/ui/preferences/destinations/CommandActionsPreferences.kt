@@ -38,12 +38,15 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Deselect
 import androidx.compose.material.icons.rounded.SelectAll
+import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.StarBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
@@ -108,6 +111,7 @@ import app.lawnchair.command.ContactEntry
 import app.lawnchair.command.CustomAction
 import app.lawnchair.command.CustomActionStore
 import app.lawnchair.command.CustomActions
+import app.lawnchair.command.FavoriteStore
 import app.lawnchair.command.ImportCommandsActivity
 import app.lawnchair.command.ParseResult
 import app.lawnchair.command.ParsedCommand
@@ -169,6 +173,8 @@ fun CommandActionsPreferences(openEdit: String = "") {
         AdvancedMode.enabled
     }.collectAsState()
     var query by remember { mutableStateOf("") }
+    var favorites by remember { mutableStateOf(FavoriteStore.load(context)) }
+    var othersOpen by remember { mutableStateOf(false) }
     var backupOpen by remember { mutableStateOf(false) }
     var confirmRestore by remember { mutableStateOf(false) }
     val usage = remember { CommandUsage.load(context) }
@@ -524,95 +530,95 @@ fun CommandActionsPreferences(openEdit: String = "") {
                     }
                 }
             }
-            // Main commands group (actions and aliases merged, sorted by usage)
-            if (shownCommands.isNotEmpty() || (shownApiCommands.isEmpty() && (query.isNotEmpty() || (commandItems.isEmpty() && apiItems.isEmpty())))) {
-                PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_commands)) {
-                    if (query.isNotEmpty() && shownCommands.isEmpty() && shownApiCommands.isEmpty()) {
-                        ClickablePreference(
-                            label = stringResource(R.string.cmd_pref_no_actions),
-                            subtitle = stringResource(R.string.cmd_pref_no_match),
-                            onClick = {},
-                        )
+            @Composable
+            fun ItemRow(item: CommandItem) {
+                val isSelected = when (item) {
+                    is CommandItem.Action -> item.action in selectedActions
+                    is CommandItem.Alias -> item.alias in selectedAliases
+                }
+                fun toggleSelected() {
+                    when (item) {
+                        is CommandItem.Action -> selectedActions = if (isSelected) selectedActions - item.action else selectedActions + item.action
+                        is CommandItem.Alias -> selectedAliases = if (isSelected) selectedAliases - item.alias else selectedAliases + item.alias
                     }
-                    shownCommands.forEach { item ->
-                        val isSelected = when (item) {
-                            is CommandItem.Action -> item.action in selectedActions
-                            is CommandItem.Alias -> item.alias in selectedAliases
+                }
+                CommandLinePreference(
+                    name = item.name,
+                    destination = item.destination,
+                    usageCount = item.usageCount,
+                    isSelected = isSelected,
+                    selectionMode = selectionMode,
+                    favorite = item.name.lowercase() in favorites,
+                    onToggleFavorite = { favorites = FavoriteStore.toggle(context, item.name) },
+                    onClick = {
+                        if (selectionMode) {
+                            toggleSelected()
+                        } else {
+                            when (item) {
+                                is CommandItem.Action -> editor = EditorTarget.Action(item.action)
+                                is CommandItem.Alias -> editor = EditorTarget.Alias(item.alias)
+                            }
                         }
-                        CommandLinePreference(
-                            name = item.name,
-                            destination = item.destination,
-                            usageCount = item.usageCount,
-                            isSelected = isSelected,
-                            selectionMode = selectionMode,
-                            onClick = {
-                                if (selectionMode) {
-                                    when (item) {
-                                        is CommandItem.Action -> {
-                                            selectedActions = if (isSelected) selectedActions - item.action else selectedActions + item.action
-                                        }
+                    },
+                    onLongClick = {
+                        if (selectionMode) {
+                            toggleSelected()
+                        } else {
+                            selectionMode = true
+                            when (item) {
+                                is CommandItem.Action -> selectedActions = setOf(item.action)
+                                is CommandItem.Alias -> selectedAliases = setOf(item.alias)
+                            }
+                        }
+                    },
+                )
+            }
 
-                                        is CommandItem.Alias -> {
-                                            selectedAliases = if (isSelected) selectedAliases - item.alias else selectedAliases + item.alias
-                                        }
-                                    }
-                                } else {
-                                    when (item) {
-                                        is CommandItem.Action -> editor = EditorTarget.Action(item.action)
-                                        is CommandItem.Alias -> editor = EditorTarget.Alias(item.alias)
-                                    }
-                                }
-                            },
-                            onLongClick = {
-                                if (selectionMode) {
-                                    when (item) {
-                                        is CommandItem.Action -> {
-                                            selectedActions = if (isSelected) selectedActions - item.action else selectedActions + item.action
-                                        }
-
-                                        is CommandItem.Alias -> {
-                                            selectedAliases = if (isSelected) selectedAliases - item.alias else selectedAliases + item.alias
-                                        }
-                                    }
-                                } else {
-                                    selectionMode = true
-                                    when (item) {
-                                        is CommandItem.Action -> selectedActions = setOf(item.action)
-                                        is CommandItem.Alias -> selectedAliases = setOf(item.alias)
-                                    }
-                                }
-                            },
+            // Favorites come first and are what the watch carries; the rest folds away once there are favorites.
+            val favoriteShown = (shownCommands + shownApiCommands).filter { it.name.lowercase() in favorites }
+            val restCommands = shownCommands.filter { it.name.lowercase() !in favorites }
+            val restApi = shownApiCommands.filter { it.name.lowercase() !in favorites }
+            val folded = favorites.isNotEmpty() && query.isEmpty() && !selectionMode && !othersOpen
+            if (favoriteShown.isNotEmpty()) {
+                PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_favorites)) {
+                    favoriteShown.forEach { ItemRow(it) }
+                }
+            }
+            if (folded) {
+                if (restCommands.isNotEmpty() || restApi.isNotEmpty()) {
+                    PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_commands)) {
+                        ClickablePreference(
+                            label = stringResource(R.string.cmd_pref_show_others, restCommands.size + restApi.size),
+                            subtitle = stringResource(R.string.cmd_pref_favorites_hint),
+                            onClick = { othersOpen = true },
                         )
                     }
                 }
-            }
-            // API commands group
-            if (shownApiCommands.isNotEmpty()) {
-                PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_api_commands)) {
-                    shownApiCommands.forEach { item ->
-                        val isSelected = item.action in selectedActions
-                        CommandLinePreference(
-                            name = item.name,
-                            destination = item.destination,
-                            usageCount = item.usageCount,
-                            isSelected = isSelected,
-                            selectionMode = selectionMode,
-                            onClick = {
-                                if (selectionMode) {
-                                    selectedActions = if (isSelected) selectedActions - item.action else selectedActions + item.action
-                                } else {
-                                    editor = EditorTarget.Action(item.action)
-                                }
-                            },
-                            onLongClick = {
-                                if (selectionMode) {
-                                    selectedActions = if (isSelected) selectedActions - item.action else selectedActions + item.action
-                                } else {
-                                    selectionMode = true
-                                    selectedActions = setOf(item.action)
-                                }
-                            },
-                        )
+            } else {
+                val canHide = favorites.isNotEmpty() && othersOpen && query.isEmpty() && !selectionMode
+                val hideRow: @Composable () -> Unit = {
+                    ClickablePreference(
+                        label = stringResource(R.string.cmd_pref_hide_others),
+                        onClick = { othersOpen = false },
+                    )
+                }
+                if (restCommands.isNotEmpty() || (favoriteShown.isEmpty() && shownApiCommands.isEmpty() && (query.isNotEmpty() || (commandItems.isEmpty() && apiItems.isEmpty())))) {
+                    PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_commands)) {
+                        if (query.isNotEmpty() && shownCommands.isEmpty() && shownApiCommands.isEmpty()) {
+                            ClickablePreference(
+                                label = stringResource(R.string.cmd_pref_no_actions),
+                                subtitle = stringResource(R.string.cmd_pref_no_match),
+                                onClick = {},
+                            )
+                        }
+                        if (canHide) hideRow()
+                        restCommands.forEach { ItemRow(it) }
+                    }
+                }
+                if (restApi.isNotEmpty()) {
+                    PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_api_commands)) {
+                        if (canHide && restCommands.isEmpty()) hideRow()
+                        restApi.forEach { ItemRow(it) }
                     }
                 }
             }
@@ -1422,6 +1428,8 @@ private fun CommandLinePreference(
     usageCount: Int,
     isSelected: Boolean,
     selectionMode: Boolean,
+    favorite: Boolean,
+    onToggleFavorite: () -> Unit,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
@@ -1466,6 +1474,19 @@ private fun CommandLinePreference(
             }
         } else {
             null
+        },
+        trailingContent = if (selectionMode) {
+            null
+        } else {
+            {
+                IconButton(onClick = onToggleFavorite) {
+                    Icon(
+                        imageVector = if (favorite) Icons.Rounded.Star else Icons.Rounded.StarBorder,
+                        contentDescription = stringResource(if (favorite) R.string.cmd_pref_favorite_remove else R.string.cmd_pref_favorite_add),
+                        tint = if (favorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
         },
         colors = ListItemDefaults.colors(
             containerColor = MaterialTheme.colorScheme.surfaceContainer,

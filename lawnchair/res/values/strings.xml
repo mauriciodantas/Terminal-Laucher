@@ -1760,4 +1760,10 @@
     <string name="command_widget_empty">No command set. Long press the widget and choose Configure</string>
     <string name="command_widget_preview_command">$ clima recife</string>
     <string name="command_widget_preview_result">28°C · ensolarado</string>
+    <string name="cmd_pref_group_favorites">Favorites</string>
+    <string name="cmd_pref_favorites_hint">Favorites are the only commands the watch carries</string>
+    <string name="cmd_pref_favorite_add">Add to favorites</string>
+    <string name="cmd_pref_favorite_remove">Remove from favorites</string>
+    <string name="cmd_pref_show_others">Other commands (%1$d)</string>
+    <string name="cmd_pref_hide_others">Hide other commands</string>
 </resources>
