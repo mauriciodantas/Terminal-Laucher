@@ -12,6 +12,7 @@ set -e
 #                             publica em várias faixas com UM só build
 #   ./release.sh --build-only compila e assina o bundle (.aab), sem publicar
 #   ./release.sh --apk        compila e assina um APK para instalar/testar
+#   ./release.sh --no-wear    não gera nem publica o app do relógio (Wear OS)
 #   ./release.sh --promote-only
 #                             sem compilar, promove o build atual da faixa internal
 #                             para o teste fechado; com --tracks, da primeira faixa
@@ -29,6 +30,7 @@ set -e
 
 BUILD_ONLY=0
 BUILD_APK=0
+WEAR=1
 PROMOTE_ONLY=0
 ARGS=("$@")
 for ((i = 0; i < ${#ARGS[@]}; i++)); do
@@ -37,9 +39,10 @@ for ((i = 0; i < ${#ARGS[@]}; i++)); do
         --tracks) i=$((i + 1)); PLAY_TRACK="${ARGS[$i]:?ERRO: --tracks precisa de um valor}" ;;
         --build-only) BUILD_ONLY=1 ;;
         --apk) BUILD_APK=1 ;;
+        --no-wear) WEAR=0 ;;
         --promote-only) PROMOTE_ONLY=1 ;;
         --tracks=*) PLAY_TRACK="${arg#--tracks=}" ;;
-        -h|--help) sed -n '4,29p' "$0"; exit 0 ;;
+        -h|--help) sed -n '4,30p' "$0"; exit 0 ;;
         *) echo "ERRO: argumento desconhecido: $arg" >&2; exit 1 ;;
     esac
 done
@@ -154,6 +157,21 @@ promote_tracks() {
             FAILED+=("$track")
         fi
     done
+    promote_wear_tracks
+}
+
+# O relógio sobe na mesma ficha, na faixa Wear OS ("wear:<faixa>"), com o mesmo build do celular.
+wear_enabled() { [ "$WEAR" -eq 1 ] && [ -f wear/app/build.gradle.kts ]; }
+
+promote_wear_tracks() {
+    wear_enabled || return 0
+    for track in ${TRACKS[@]+"${TRACKS[@]:1}"}; do
+        echo "Promovendo relógio wear:$PRIMARY_TRACK -> wear:$track..."
+        if ! ./gradlew ":wear-app:promoteLauncherReleaseArtifact" \
+            --from-track "wear:$PRIMARY_TRACK" --promote-track "wear:$track" --no-daemon; then
+            FAILED+=("wear:$track")
+        fi
+    done
 }
 
 # Lista o resultado de cada faixa e sai com erro se alguma falhou.
@@ -202,6 +220,14 @@ export ORG_GRADLE_PROJECT_PLAY_TRACK="$PRIMARY_TRACK"
 if [ "$BUILD_APK" -eq 1 ]; then
     echo "Building signed APK..."
     ./gradlew assembleLawnWithQuickstepPlayRelease --no-daemon
+    if wear_enabled; then
+        ./gradlew :wear-app:assembleLauncherRelease --no-daemon
+        WEAR_APK="$(find wear/app/build/outputs/apk/launcher/release -name '*.apk' | head -1)"
+        [ -n "$WEAR_APK" ] || { echo "ERRO: APK do relógio não encontrado." >&2; exit 1; }
+        mkdir -p releases
+        cp "$WEAR_APK" "releases/terminal-wear-$VERSION_NAME.apk"
+        echo "APK do relógio: releases/terminal-wear-$VERSION_NAME.apk"
+    fi
     APK="$(find build/outputs/apk/lawnWithQuickstepPlay/release -name '*.apk' | head -1)"
     [ -n "$APK" ] || { echo "ERRO: APK não encontrado em build/outputs/apk." >&2; exit 1; }
     mkdir -p releases
@@ -218,12 +244,23 @@ if [ "$BUILD_ONLY" -eq 1 ]; then
     [ -n "$BUNDLE" ] || { echo "ERRO: bundle não encontrado em build/outputs/bundle." >&2; exit 1; }
     cp "$BUNDLE" "releases/terminal-$VERSION_NAME.aab"
     echo "Bundle assinado: releases/terminal-$VERSION_NAME.aab"
+    if wear_enabled; then
+        ./gradlew :wear-app:bundleLauncherRelease --no-daemon
+        WEAR_BUNDLE="$(find wear/app/build/outputs/bundle/launcherRelease -name '*.aab' | head -1)"
+        [ -n "$WEAR_BUNDLE" ] || { echo "ERRO: bundle do relógio não encontrado." >&2; exit 1; }
+        cp "$WEAR_BUNDLE" "releases/terminal-wear-$VERSION_NAME.aab"
+        echo "Bundle do relógio: releases/terminal-wear-$VERSION_NAME.aab"
+    fi
     exit 0
 fi
 
 # Execute build and publish using Gradle Play Publisher
 echo "Building and Publishing to Play Store (faixa: $PRIMARY_TRACK)..."
 ./gradlew "${GRADLE_TASK:-publishLawnWithQuickstepPlayReleaseBundle}" --no-daemon
+if wear_enabled; then
+    echo "Publicando o app do relógio (faixa: wear:$PRIMARY_TRACK)..."
+    ./gradlew :wear-app:publishLauncherReleaseBundle --no-daemon
+fi
 
 # As demais faixas recebem o MESMO build, promovido a partir da primeira. Uma
 # faixa que falhe (nome inexistente, por exemplo) não impede as outras; o
