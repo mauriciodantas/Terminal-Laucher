@@ -70,6 +70,16 @@ Resumo do funcionamento:
 - **Mudar só o que é daqui**: edite `command-host/` e rode os testes; o submódulo e os ponteiros não mudam.
 - O SDK e o Java do `:commands` vêm do `allprojects` do `build.gradle` desta raiz; o Spotless cobre `commands/src`, `command-host/src` e `lawnchair/src`.
 
+## Relógio (submódulo `wear/`)
+
+`wear/` é o submódulo `terminal-wear` (`git@github.com:mauriciodantas/terminal-wear.git`, local em `/Users/mauricio/Projetos/terminal-wear`): o relógio (Wear OS) como controle remoto da barra. O relógio manda a linha, o celular executa pelo mesmo caminho da barra e devolve o resultado; nada é cadastrado nem executado no relógio. Leia `wear/README.md` e `wear/docs/FASE-0.md`.
+
+- **Depois de clonar**: `git submodule update --init`. Os módulos `:wear-protocol`, `:wear-bridge` e `:wear-app` vêm daí (`settings.gradle`).
+- **Aqui**: `LauncherWearHost` (`lawnchair/src/app/lawnchair/command/`) implementa o `WearHost` do `bridge`; `TerminalWear.install` roda no `LawnchairApp.onCreate`. O tema do tile é o que a home desenha agora (`LauncherGround.drawn`), publicado em `ThemeStore.apply`/`reset`. As regras que valem para os dois apps (onde cai cada comando, quando pede confirmação) estão no motor: `WatchRules`.
+- **App do relógio**: `terminalWear.host=launcher` no `gradle.properties` escolhe o flavor. `./gradlew :wear-app:assembleLauncherDebug` (debug usa `net.mdantas.terminal.debug`, como o launcher). O `release.sh` gera e publica o AAB do relógio nas faixas `wear:<faixa>`; `--no-wear` desliga.
+- **Mudar o relógio**: edite em `wear/`, rode `./gradlew :wear-protocol:test`, faça push em `wear/` e só então commite o ponteiro aqui e no Terminal Bar. Os dois apps devem apontar para o mesmo commit (`git submodule status wear`).
+- Uma ação nova no motor nasce `UNSUPPORTED` no relógio; para liberá-la, ponha-a em `WatchRules.effect`.
+
 ## Release
 
 When the user asks for a "release", they always mean: build a new version and publish it to the Play Store **internal** track. Run `./release.sh` (default track is `internal`). Do only a build without publishing (`--build-only` for the `.aab`, `--apk` for an installable APK) or use another track (`PLAY_TRACK=...`) when the user explicitly asks for it. To publish to several tracks, pass them together (`./release.sh --tracks internal,closed-testing`): the script builds once, publishes to the first and promotes the same build to the others (`closed-testing` is the `alpha` track). To promote the build already in a track without building, use `./release.sh --promote-only` (internal to closed-testing by default; `--tracks from,to,...` picks the tracks).

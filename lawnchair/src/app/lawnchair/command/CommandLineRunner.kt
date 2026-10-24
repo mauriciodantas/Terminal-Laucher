@@ -106,7 +106,7 @@ object CommandLineRunner {
         else -> false
     }
 
-    private suspend fun <T> withSteps(context: Context, block: suspend (StepExecutor) -> T): T {
+    internal suspend fun <T> withSteps(context: Context, block: suspend (StepExecutor) -> T): T {
         val scripts = ScriptRunner(context)
         val extras = CommandSources.load(context, CommandActivity.loadHistory(context))
         return try {

@@ -155,6 +155,7 @@ object ThemeStore {
         spec.font?.let { setFont(context, it) }
         // Last: a new outline restarts the home screen.
         spec.outline?.let { p.strokeColorStyle.update(p, optionOf(it)) }
+        net.mdantas.terminal.wear.bridge.TerminalWear.publishTheme(context)
         return true
     }
 
@@ -168,6 +169,7 @@ object ThemeStore {
         val fonts = PreferenceManager.getInstance(context).fontWorkspace
         if (fonts.get() != fonts.defaultValue) fonts.set(fonts.defaultValue)
         p.strokeColorStyle.update(p, p.strokeColorStyle.defaultValue)
+        net.mdantas.terminal.wear.bridge.TerminalWear.publishTheme(context)
     }
 
     private fun <C, S> PreferenceImpl<C, S>.update(p: PreferenceManager2, value: C) {

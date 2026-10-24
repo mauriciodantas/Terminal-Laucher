@@ -433,6 +433,8 @@ private fun CommandScreen(onClose: () -> Unit) {
         history = CommandEngine.pushHistory(history, command)
         CommandActivity.saveHistory(context, history)
         CommandUsage.record(context, CommandUsage.keysFor(action, command, aliases))
+        // The watch ranks "most used" with the runs of the bar too.
+        net.mdantas.terminal.wear.bridge.TerminalWear.commandRan(context, WatchRules.letterOf(command))
         StatsStore.record(context, command.trim())
     }
 
