@@ -60,7 +60,7 @@ Tests:
 
 ## Motor da barra de comando (submódulo `commands/`)
 
-`commands/` é o submódulo `terminal-commands` (`git@github.com:mauriciodantas/terminal-commands.git`, privado, local em `/Users/mauricio/Projetos/terminal-commands`). É o motor da barra de comando, compartilhado com o Terminal Bar (`/Users/mauricio/Projetos/TerminalBar`). **Leia `commands/agent.md` antes de mexer no motor**: ele tem o contrato, o passo a passo e a recuperação.
+`commands/` é o submódulo `terminal-commands` (`git@github.com:mauriciodantas/terminal-commands.git`, privado, local em `/Users/mauricio/Projetos/Terminal/terminal-commands`). É o motor da barra de comando, compartilhado com o Terminal Bar (`/Users/mauricio/Projetos/Terminal/TerminalBar`). **Leia `commands/agent.md` antes de mexer no motor**: ele tem o contrato, o passo a passo e a recuperação.
 
 Resumo do funcionamento:
 - **Depois de clonar**: `git submodule update --init`. O módulo Gradle `:commands` é essa pasta e não funciona sem ela.
@@ -72,7 +72,7 @@ Resumo do funcionamento:
 
 ## Relógio (submódulo `wear/`)
 
-`wear/` é o submódulo `terminal-wear` (`git@github.com:mauriciodantas/terminal-wear.git`, local em `/Users/mauricio/Projetos/terminal-wear`): o relógio (Wear OS) como controle remoto da barra. O relógio manda a linha, o celular executa pelo mesmo caminho da barra e devolve o resultado; nada é cadastrado nem executado no relógio. Leia `wear/README.md` e `wear/docs/FASE-0.md`.
+`wear/` é o submódulo `terminal-wear` (`git@github.com:mauriciodantas/terminal-wear.git`, local em `/Users/mauricio/Projetos/Terminal/terminal-wear`): o relógio (Wear OS) como controle remoto da barra. O relógio manda a linha, o celular executa pelo mesmo caminho da barra e devolve o resultado; nada é cadastrado nem executado no relógio. Leia `wear/README.md` e `wear/docs/FASE-0.md`.
 
 - **Depois de clonar**: `git submodule update --init`. Os módulos `:wear-protocol`, `:wear-bridge` e `:wear-app` vêm daí (`settings.gradle`).
 - **Aqui**: `LauncherWearHost` (`lawnchair/src/app/lawnchair/command/`) implementa o `WearHost` do `bridge`; `TerminalWear.install` roda no `LawnchairApp.onCreate`. O tema do tile é o que a home desenha agora (`LauncherGround.drawn`), publicado em `ThemeStore.apply`/`reset`. As regras que valem para os dois apps (onde cai cada comando, quando pede confirmação) estão no motor: `WatchRules`.
