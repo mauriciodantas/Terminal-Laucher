@@ -25,6 +25,7 @@ import app.lawnchair.command.WidgetBody
 import app.lawnchair.theme.color.tokens.PhosphorColorToken
 import app.lawnchair.util.repeatOnAttached
 import com.android.launcher3.R
+import com.android.launcher3.widget.RoundedCornerEnforcement
 import java.util.Calendar
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -71,7 +72,9 @@ class CommandWidgetView(context: Context, private val appWidgetId: Int) : Linear
         setPadding(pad, pad, pad, pad)
         background = GradientDrawable().apply {
             setColor(Color.argb(225, 14, 14, 14))
-            cornerRadius = 16 * density
+            // The radius the home screen clips the widget with, so the outline follows the corners
+            // of the phone instead of being cut by a bigger or smaller one.
+            cornerRadius = RoundedCornerEnforcement.computeEnforcedRadius(context).takeIf { it > 0f } ?: (16 * density)
             setStroke((2 * density).toInt(), PhosphorColorToken(0.4f).resolveColor(context))
         }
         addView(header, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))

@@ -323,6 +323,7 @@
     <string name="appearance_bg_on_lock_screen_confirm_text">A imagem atual do ecrã de bloqueio será substituída pela cor de fundo e não poderá ser recuperada. Para voltar a ter uma imagem, terá de escolhê-la novamente no seletor do sistema.</string>
     <string name="appearance_bg_on_lock_screen_confirm">Substituir</string>
     <string name="appearance_color_accent">Cor de destaque</string>
+    <string name="appearance_group_shapes">Formatos</string>
     <string name="appearance_group_font">Tipo de letra</string>
     <string name="appearance_font_ui">Tipo de letra da interface</string>
     <string name="appearance_pixel_clock">Relógio pixelizado</string>

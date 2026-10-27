@@ -19,6 +19,7 @@ import app.lawnchair.preferences.preferenceManager
 import app.lawnchair.preferences2.preferenceManager2
 import app.lawnchair.ui.preferences.LocalIsExpandedScreen
 import app.lawnchair.ui.preferences.components.FontPreference
+import app.lawnchair.ui.preferences.components.NavigationActionPreference
 import app.lawnchair.ui.preferences.components.SavedThemesPreference
 import app.lawnchair.ui.preferences.components.colorpreference.ColorPreference
 import app.lawnchair.ui.preferences.components.colorpreference.ComplementaryColorsPreference
@@ -30,6 +31,7 @@ import app.lawnchair.ui.preferences.components.layout.DividerColumn
 import app.lawnchair.ui.preferences.components.layout.ExpandAndShrink
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
+import app.lawnchair.ui.preferences.navigation.GeneralIconShape
 import com.android.launcher3.R
 
 /** Everything that decides how the launcher looks: the colors and the font, in one place. */
@@ -134,6 +136,28 @@ fun AppearancePreferences(modifier: Modifier = Modifier) {
                     )
                 }
             }
+        }
+
+        // The shape app icons and folders are cut to, which a theme carries too.
+        PreferenceGroup(
+            heading = stringResource(id = R.string.appearance_group_shapes),
+            modifier = Modifier.padding(top = 8.dp),
+        ) {
+            val appShape = prefs2.iconShape.getAdapter().state.value
+            val folderShape = prefs2.folderShape.getAdapter().state.value
+            val shapeEntries = iconShapeEntries(context)
+            NavigationActionPreference(
+                label = stringResource(id = R.string.icon_shape_label),
+                destination = GeneralIconShape(ShapeRoute.APP_SHAPE),
+                subtitle = shapeEntries.firstOrNull { it.value == appShape }?.label?.invoke() ?: stringResource(id = R.string.custom),
+                endWidget = { IconShapePreview(iconShape = appShape) },
+            )
+            NavigationActionPreference(
+                label = stringResource(id = R.string.folder_shape_label),
+                destination = GeneralIconShape(ShapeRoute.FOLDER_SHAPE),
+                subtitle = shapeEntries.firstOrNull { it.value == folderShape }?.label?.invoke() ?: stringResource(id = R.string.custom),
+                endWidget = { IconShapePreview(iconShape = folderShape) },
+            )
         }
 
         PreferenceGroup(

@@ -1403,6 +1403,7 @@
     <string name="appearance_bg_on_lock_screen_confirm_text">The current lock screen wallpaper will be replaced by the background color and cannot be recovered. To have an image again, you will need to choose it again in the system picker.</string>
     <string name="appearance_bg_on_lock_screen_confirm">Overwrite</string>
     <string name="appearance_color_accent">Accent color</string>
+    <string name="appearance_group_shapes">Shapes</string>
     <string name="appearance_group_font">Font</string>
     <string name="appearance_font_ui">Interface font</string>
     <string name="appearance_pixel_clock">Pixel clock</string>

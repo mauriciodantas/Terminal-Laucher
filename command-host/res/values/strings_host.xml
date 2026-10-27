@@ -41,6 +41,11 @@
     <string name="cmd_theme_el_icons_desc">TERMINAL ICONS IN THE ACCENT COLOR</string>
     <string name="cmd_theme_el_outline">outline</string>
     <string name="cmd_theme_el_outline_desc">SEARCH BAR OUTLINE</string>
+    <string name="cmd_theme_el_shape">shape</string>
+    <string name="cmd_theme_el_shape_desc">ICON SHAPE</string>
+    <string name="cmd_theme_el_foldershape">foldershape</string>
+    <string name="cmd_theme_el_foldershape_desc">FOLDER SHAPE</string>
+    <string name="cmd_theme_shape_hint">Pick a shape: circle, squircle, hexagon, flower…</string>
     <string name="cmd_theme_el_paint">paint</string>
     <string name="cmd_theme_el_paint_desc">BACKGROUND COLOR AS THE SYSTEM WALLPAPER</string>
     <string name="cmd_theme_el_secondary">secondary</string>

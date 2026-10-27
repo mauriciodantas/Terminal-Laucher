@@ -50,12 +50,12 @@ object LauncherAiPrompts {
     fun currentTheme(context: AiContext): String = context.host.theme?.let { "CURRENT THEME (start from it when the request asks for changes to it): " + ThemeSpecs.encode(it.copy(name = ""), pretty = false) + "\n\n" }.orEmpty()
 
     /** The fields of a theme and how to fill them, for [AiMode.THEME] and for a theme asked of [AiMode.CREATE]. */
-    const val THEME_SHAPE =
+    val THEME_SHAPE =
         "{\"name\": \"<short name, 1 to 3 words, in the user's language>\", \"accent\": \"#rrggbb\", \"background\": \"#rrggbb\", \"secondary\": \"#rrggbb\", " +
             "\"outline\": \"#rrggbb\", \"dock\": \"#rrggbb\", \"folder\": \"#rrggbb\", \"followSystem\": false, " +
             "\"font\": {\"kind\": \"google\", \"family\": \"<Google Fonts family>\"}, \"pixelClock\": true, \"iconEffect\": true, " +
             "\"widgetEffect\": true, \"widgetIntensity\": 0.6, \"crtEffect\": true, \"crtIntensity\": 0.4, " +
-            "\"showWallpaper\": false, \"wallpaperDim\": 0.5, \"colorAsWallpaper\": false, " +
+            "\"showWallpaper\": false, \"wallpaperDim\": 0.5, \"colorAsWallpaper\": false, \"iconShape\": \"<shape>\", \"folderShape\": \"<shape>\", " +
             "\"wallpaper\": {\"svg\": \"<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1080 2400'>...</svg>\", \"lockScreen\": false}, " +
             "\"lockWallpaper\": {\"svg\": \"<svg ...>...</svg>\"}, \"note\": \"<one short sentence>\"}\n" +
             "Rules: the accent over the background must read well, a contrast ratio of at least 4.5 (WCAG). " +
@@ -68,19 +68,35 @@ object LauncherAiPrompts {
             "iconEffect draws app icons in the accent color; widgetEffect tints widgets; crtEffect adds scanlines; " +
             "intensities go from 0.05 to 1. showWallpaper shows the system wallpaper behind the home screen, dimmed by wallpaperDim (0 to 1); " +
             "colorAsWallpaper sets the background color as the system wallpaper. Set followSystem only when asked to follow the light and dark mode. " +
-            "wallpaper and lockWallpaper: include them ONLY when the user explicitly asks for a wallpaper or a picture " +
-            "(wallpaper, papel de parede, fondo de pantalla, imagem de fundo, lock screen...); otherwise leave both out. " +
-            "You draw the picture yourself as ONE self-contained SVG in the same reply: xmlns set, viewBox='0 0 1080 2400' (a portrait phone screen), " +
-            "only shapes, paths, gradients, patterns and filters; no <image>, links, external fonts, <text>, scripts, CSS @import or <foreignObject>; " +
-            "at most 20000 characters. Make it a real illustration of what was asked (a scene or motifs with depth, not a flat color), " +
-            "built on the theme background as its dominant color and calm behind the top third and the middle, where the clock, icons and text are drawn over it. " +
+            "iconShape and folderShape pick the shape app icons and folders are cut to, one of: ${ThemeSpecs.ICON_SHAPES.joinToString(", ")}. " +
+            "Choose them as part of the concept instead of leaving the default: hexagon or diamond for sci-fi, flower or cloudy for something soft, " +
+            "sharpSquare or square for brutalist or terminal looks, squircle for clean ones, heart, leaf or teardrop for playful or nature themes. " +
+            "BE CREATIVE: a request is a mood, a place, a feeling or a story, not only a palette. Pick an unexpected, specific idea " +
+            "(a rainy neon alley, a deep-sea research station, an 80s arcade, a paper-cut forest at dawn) and carry it through every field at once: " +
+            "the colors, the font that suits the era or material, the effects, the shapes, the name and the wallpaper. " +
+            "Avoid the obvious choice (pure black with green, a plain blue-to-purple gradient) unless that is exactly what was asked. " +
+            "wallpaper: draw one for EVERY theme, since a theme without a picture feels unfinished; leave it out only when the user asks for no wallpaper, " +
+            "keeps the current one or wants a plain color. Add lockWallpaper (a second scene of the same world, for example the same place at another hour) " +
+            "when the user mentions the lock screen or asks for more than one picture; lockScreen true reuses the home picture there. " +
+            "How to draw it, as ONE self-contained SVG in the same reply: xmlns set, viewBox='0 0 1080 2400' (a portrait phone screen), " +
+            "only shapes, paths, gradients, patterns, clipPaths and masks; no <image>, links, external fonts, <text>, scripts, CSS @import, <foreignObject> or <filter> " +
+            "(the renderer ignores filters, so blur, glow and grain must be built from shapes); at most 30000 characters. " +
+            "It must NOT look like a flat clip-art or a Paint drawing. Build it in depth, in layers from back to front: " +
+            "(1) a background filled with a linearGradient or radialGradient of 3 or more stops that is not a flat color, in tones of the theme background; " +
+            "(2) a far layer such as a sky, a horizon, distant mountains or city lights, in low-contrast colors, to suggest atmosphere; " +
+            "(3) a middle layer with the main subject, using overlapping shapes with different fill-opacity, gradient fills and thin strokes of a lighter tone for edges and highlights; " +
+            "(4) glow made from stacked radialGradients that fade to stop-opacity 0, and soft haze or fog as wide translucent shapes; " +
+            "(5) texture: a pattern of tiny dots or lines, scattered small circles as stars, dust, rain or sparks (60 or more, varied in size and opacity); " +
+            "(6) a vignette, a radialGradient from transparent in the center to dark at the edges. " +
+            "Use curves (C, Q, S in paths) and organic variation instead of rectangles and perfect circles; vary sizes, angles and spacing; " +
+            "use a limited palette of 4 to 6 colors from the theme, with one light accent for highlights. " +
+            "The theme background is the dominant color and the picture stays calm and dark enough behind the top third and the middle, " +
+            "where the clock, icons and text are drawn over it; put the detail and the subject in the lower third and at the edges. " +
             "Write the attributes with single quotes so the SVG fits in the JSON string as it is. " +
-            "lockScreen true puts the same picture on the lock screen; lockWallpaper is a different picture just for it. " +
-            "Use them only when the user asks for the lock screen or for more than one wallpaper. " +
             "With a wallpaper set showWallpaper true and wallpaperDim about 0.3. Never write image links or base64: only SVG. " +
             "The launcher looks like a terminal: the accent color draws all the text, lines and icons over the background color."
 
-    const val THEME_RULES =
+    val THEME_RULES =
         "Design a theme for the launcher from the user's description. " +
             "Reply with JSON only, no other text, in this shape (leave out a field to keep it as it is):\n" + THEME_SHAPE
 
@@ -108,7 +124,7 @@ object LauncherAiPrompts {
     fun createdTheme(reply: String): Pair<ThemeSpec, String>? = if (AiPrompts.json(reply)?.optJSONObject("theme") != null) theme(reply) else null
 
     /** Added to the rules of "ia criar": a theme can be asked for instead of commands. */
-    const val CREATE_TAIL =
+    val CREATE_TAIL =
         "\n" +
             "When the user asks for a theme, a look, colors, a font or effects for the launcher instead of a command, " +
             "write no actions or aliases: reply with JSON only, {\"theme\": <theme>, \"note\": \"<one short sentence>\"}, " +

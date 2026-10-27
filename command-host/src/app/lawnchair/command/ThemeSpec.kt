@@ -114,6 +114,10 @@ data class ThemeSpec(
     val wallpaper: ThemeWallpaper? = null,
     /** An image of its own for the lock screen; it wins over [ThemeWallpaper.lockScreen]. */
     val lockWallpaper: ThemeImage? = null,
+    /** The shape app icons are cut to, one of [ThemeSpecs.ICON_SHAPES] ("circle", "squircle", "hexagon"…). */
+    val iconShape: String? = null,
+    /** The shape of the folders, from the same list. */
+    val folderShape: String? = null,
 ) {
     /** The image each screen gets: the home screen's and the lock screen's. */
     val lockImage: ThemeImage? get() = lockWallpaper ?: wallpaper?.takeIf { it.lockScreen }?.image
@@ -143,6 +147,8 @@ data class ThemeSpec(
         colorAsWallpaper = other.colorAsWallpaper ?: colorAsWallpaper,
         wallpaper = other.wallpaper ?: wallpaper,
         lockWallpaper = other.lockWallpaper ?: lockWallpaper,
+        iconShape = other.iconShape ?: iconShape,
+        folderShape = other.folderShape ?: folderShape,
     )
 }
 
@@ -212,6 +218,8 @@ object ThemeSpecs {
         spec.colorAsWallpaper?.let { o.put("colorAsWallpaper", it) }
         spec.wallpaper?.let { w -> o.put("wallpaper", image(w.image).apply { if (w.lockScreen) put("lockScreen", true) }) }
         spec.lockWallpaper?.let { o.put("lockWallpaper", image(it)) }
+        spec.iconShape?.let { o.put("iconShape", it) }
+        spec.folderShape?.let { o.put("folderShape", it) }
         return if (pretty) o.toString(2) else o.toString()
     }
 
@@ -271,7 +279,25 @@ object ThemeSpecs {
             image(w, stored)?.let { ThemeWallpaper(it, lockScreen = (w as? JSONObject)?.let { bool(it, "lockScreen") } == true) }
         },
         lockWallpaper = o.opt("lockWallpaper")?.let { image(it, stored) },
+        iconShape = shape(o, "iconShape"),
+        folderShape = shape(o, "folderShape"),
     )
+
+    /** The shapes the launcher draws icons and folders in, by the key it stores ("system" follows the phone's own mask). */
+    val ICON_SHAPES = listOf(
+        "system", "circle", "square", "sharpSquare", "roundedSquare", "squircle", "sammy", "teardrop", "cylinder",
+        "cupertino", "octagon", "hexagon", "diamond", "egg", "verysunny", "complexclover", "foursidedcookie",
+        "sevensidedcookie", "arch", "cloudy", "flower", "heart", "leaf", "meow", "pebble", "roundedhexagon",
+        "stretched", "vessel",
+    )
+
+    /** The key a shape [text] names, in any case and with or without spaces, dashes or underscores; null for an unknown one. */
+    fun shapeKey(text: String): String? {
+        val t = text.trim().lowercase().filter { it.isLetterOrDigit() }
+        return ICON_SHAPES.firstOrNull { it.lowercase() == t }
+    }
+
+    private fun shape(o: JSONObject, key: String): String? = if (o.isNull(key)) null else shapeKey(o.optString(key))
 
     /**
      * The image of `{"url": …}`, `{"base64": …}` or of a bare string, a link or a data URI

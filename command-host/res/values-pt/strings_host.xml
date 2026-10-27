@@ -41,6 +41,11 @@
     <string name="cmd_theme_el_icons_desc">ÍCONES DE TERMINAL NA COR DE DESTAQUE</string>
     <string name="cmd_theme_el_outline">contorno</string>
     <string name="cmd_theme_el_outline_desc">CONTORNO DA BARRA DE BUSCA</string>
+    <string name="cmd_theme_el_shape">formato</string>
+    <string name="cmd_theme_el_shape_desc">FORMATO DOS ÍCONES</string>
+    <string name="cmd_theme_el_foldershape">formatopasta</string>
+    <string name="cmd_theme_el_foldershape_desc">FORMATO DAS PASTAS</string>
+    <string name="cmd_theme_shape_hint">Escolha um formato: circle, squircle, hexagon, flower…</string>
     <string name="cmd_theme_el_paint">pintar</string>
     <string name="cmd_theme_el_paint_desc">COR DE FUNDO COMO PAPEL DE PAREDE DO SISTEMA</string>
     <string name="cmd_theme_el_secondary">secundária</string>

@@ -8,6 +8,7 @@ import androidx.core.content.FileProvider
 import app.lawnchair.font.FontCache
 import app.lawnchair.font.googlefonts.GoogleFontsListing
 import app.lawnchair.preferences.PreferenceManager
+import app.lawnchair.icons.shape.IconShape
 import app.lawnchair.preferences2.PreferenceManager2
 import app.lawnchair.preferences2.firstCached
 import app.lawnchair.theme.ComplementaryColors
@@ -91,6 +92,9 @@ object ThemeStore {
             showWallpaper = p.showSystemWallpaper.firstCached(p),
             wallpaperDim = p.wallpaperDim.firstCached(p),
             colorAsWallpaper = p.backgroundColorAsWallpaper.firstCached(p),
+            // A custom corner shape has no name to carry: it is left out.
+            iconShape = ThemeSpecs.shapeKey(p.iconShape.firstCached(p).toString()),
+            folderShape = ThemeSpecs.shapeKey(p.folderShape.firstCached(p).toString()),
         )
     }
 
@@ -151,6 +155,8 @@ object ThemeStore {
         spec.wallpaperDim?.let { p.wallpaperDim.update(p, it) }
         (if (spec.wallpaper != null) false else spec.colorAsWallpaper)?.let { p.backgroundColorAsWallpaper.update(p, it) }
         if (spec.lockImage != null) p.backgroundColorOnLockScreen.update(p, false)
+        spec.iconShape?.let { setShape(context, p.iconShape, it) }
+        spec.folderShape?.let { setShape(context, p.folderShape, it) }
         ThemeImages.applyLater(context, spec)
         spec.font?.let { setFont(context, it) }
         // Last: a new outline restarts the home screen.
@@ -169,11 +175,19 @@ object ThemeStore {
         val fonts = PreferenceManager.getInstance(context).fontWorkspace
         if (fonts.get() != fonts.defaultValue) fonts.set(fonts.defaultValue)
         p.strokeColorStyle.update(p, p.strokeColorStyle.defaultValue)
+        setShape(context, p.iconShape, p.iconShape.defaultValue.toString())
+        setShape(context, p.folderShape, p.folderShape.defaultValue.toString())
         net.mdantas.terminal.wear.bridge.TerminalWear.publishTheme(context)
     }
 
     private fun <C, S> PreferenceImpl<C, S>.update(p: PreferenceManager2, value: C) {
         if (firstCached(p) != value) setBlocking(value)
+    }
+
+    /** Sets a shape by its key, only when it changes: a new one reloads every icon. */
+    private fun setShape(context: Context, pref: PreferenceImpl<IconShape, String>, key: String) {
+        val shape = IconShape.fromString(key, context) ?: return
+        if (pref.firstCached(PreferenceManager2.getInstance(context)).toString() != shape.toString()) pref.setBlocking(shape)
     }
 
     private fun setFont(context: Context, font: ThemeFont) {

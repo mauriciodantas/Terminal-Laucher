@@ -5,7 +5,7 @@ import app.lawnchair.util.Texts
 import app.lawnchair.util.foldAccents
 
 /** What an element of the theme takes after its word. */
-enum class ThemeValue { COLOR, FONT, SWITCH, EFFECT, PERCENT }
+enum class ThemeValue { COLOR, FONT, SWITCH, EFFECT, PERCENT, SHAPE }
 
 /**
  * Each part of the theme the command sets on its own: "tema fundo #000000", "tema fonte Space Mono",
@@ -32,6 +32,8 @@ enum class ThemeElement(
     CRT(R.string.cmd_theme_el_crt, "crt", "crt", R.string.cmd_theme_el_crt_desc, ThemeValue.EFFECT),
     WALLPAPER(R.string.cmd_theme_el_wallpaper, "papel", "wallpaper", R.string.cmd_theme_el_wallpaper_desc, ThemeValue.SWITCH),
     DIM(R.string.cmd_theme_el_dim, "escurecer", "dim", R.string.cmd_theme_el_dim_desc, ThemeValue.PERCENT),
+    SHAPE(R.string.cmd_theme_el_shape, "formato", "shape", R.string.cmd_theme_el_shape_desc, ThemeValue.SHAPE),
+    FOLDER_SHAPE(R.string.cmd_theme_el_foldershape, "formatopasta", "foldershape", R.string.cmd_theme_el_foldershape_desc, ThemeValue.SHAPE),
     PAINT(R.string.cmd_theme_el_paint, "pintar", "paint", R.string.cmd_theme_el_paint_desc, ThemeValue.SWITCH),
     ;
 
@@ -58,6 +60,8 @@ enum class ThemeElement(
         WALLPAPER -> spec.showWallpaper?.let(ThemeCommand::stateText)
         DIM -> spec.wallpaperDim?.let(ThemeCommand::percentText)
         PAINT -> spec.colorAsWallpaper?.let(ThemeCommand::stateText)
+        SHAPE -> spec.iconShape
+        FOLDER_SHAPE -> spec.folderShape
     }
 
     companion object {
@@ -173,7 +177,24 @@ object ThemeCommand : BuiltIn(BuiltInCommand.THEME, null, R.string.cmd_help_them
             ThemeValue.FONT -> font(rest, title, current, extras)
             ThemeValue.SWITCH, ThemeValue.EFFECT -> switch(element, rest, title, current, extras)
             ThemeValue.PERCENT -> percent(element, rest, title, current)
+            ThemeValue.SHAPE -> shape(element, rest, title, current)
         }
+    }
+
+    /** "tema formato hexagon": the shape icons (or folders) are cut to, picked from the known ones. */
+    private fun shape(element: ThemeElement, rest: String, title: String, current: String?): Analysis {
+        val word = BuiltInCommand.THEME.word + " " + element.word
+        val typed = rest.foldAccents().filter { it.isLetterOrDigit() }
+        val suggestions = ThemeSpecs.ICON_SHAPES.filter { typed.isEmpty() || it.lowercase().startsWith(typed) }
+            .take(CommandEngine.MAX_SUGGESTIONS * 3)
+            .map { Suggestion("$word $it", it, Texts.get(R.string.cmd_kind_option)) }
+        val key = ThemeSpecs.shapeKey(rest)
+        if (key == null) {
+            val hint = Texts.get(R.string.cmd_theme_shape_hint) + currentLine(current)
+            return result(title, hint, if (rest.isEmpty()) Tone.IDLE else Tone.ERROR, null, suggestions)
+        }
+        val spec = if (element == ThemeElement.SHAPE) ThemeSpec(iconShape = key) else ThemeSpec(folderShape = key)
+        return result(title, "→ $key", Tone.OK, ThemeAction.Apply(spec), suggestions.filter { it.label != key })
     }
 
     private fun currentLine(current: String?): String = current?.let { "\n" + Texts.get(R.string.cmd_theme_now, it) }.orEmpty()

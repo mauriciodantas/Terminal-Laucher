@@ -323,6 +323,7 @@
     <string name="appearance_bg_on_lock_screen_confirm_text">O papel de parede atual da tela de bloqueio será substituído pela cor de fundo e não poderá ser recuperado. Para voltar a ter uma imagem, será preciso escolhê-la de novo no seletor do sistema.</string>
     <string name="appearance_bg_on_lock_screen_confirm">Sobrescrever</string>
     <string name="appearance_color_accent">Cor de destaque</string>
+    <string name="appearance_group_shapes">Formatos</string>
     <string name="appearance_group_font">Fonte</string>
     <string name="appearance_font_ui">Fonte da interface</string>
     <string name="appearance_pixel_clock">Relógio pixelado</string>
