@@ -200,6 +200,13 @@ class LargeFolderMathTest {
     }
 
     @Test
+    fun previousPage_wrapsAroundToTheLast() {
+        assertEquals(2, LargeFolderMath.previousPage(0, 3))
+        assertEquals(0, LargeFolderMath.previousPage(1, 3))
+        assertEquals(0, LargeFolderMath.previousPage(0, 1))
+    }
+
+    @Test
     fun nextPage_wrapsAroundToTheFirst() {
         assertEquals(1, LargeFolderMath.nextPage(0, 3))
         assertEquals(0, LargeFolderMath.nextPage(2, 3))

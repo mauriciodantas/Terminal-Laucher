@@ -128,6 +128,10 @@ object LargeFolderMath {
     @JvmStatic
     fun nextPage(page: Int, pages: Int): Int = if (pages <= 1) 0 else (page + 1) % pages
 
+    /** The page before [page], wrapping around to the last. */
+    @JvmStatic
+    fun previousPage(page: Int, pages: Int): Int = if (pages <= 1) 0 else (page - 1 + pages) % pages
+
     /**
      * Where a folder of [spanX] x [spanY] cells goes when it grows from [cellX], [cellY] in a grid
      * of [countX] x [countY] cells: the same cell, moved back only as far as needed to fit.

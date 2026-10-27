@@ -28,7 +28,9 @@ import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
@@ -92,6 +94,10 @@ public class LargeFolderView extends ViewGroup {
     private int mShownEnd = 0;
     private FolderInfo mInfo;
     private final ImageButton mSizeButton;
+    private final int mTouchSlop;
+    private float mDownX;
+    private float mDownY;
+    private boolean mSwiping;
 
     public LargeFolderView(Context context, FolderIcon folderIcon, ActivityContext activity) {
         super(context);
@@ -99,6 +105,7 @@ public class LargeFolderView extends ViewGroup {
         mActivity = activity;
         setWillNotDraw(false);
         setClipChildren(false);
+        mTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
 
         float density = context.getResources().getDisplayMetrics().density;
         mPadding = Math.round(PADDING_DP * density);
@@ -146,6 +153,82 @@ public class LargeFolderView extends ViewGroup {
         addView(mSizeButton);
 
         refreshColors();
+    }
+
+    /**
+     * A horizontal swipe turns the page: left for the next, right for the previous. The folder
+     * claims the gesture from the workspace so it does not switch home screens instead.
+     */
+    @Override
+    public boolean onInterceptTouchEvent(MotionEvent ev) {
+        if (mPages <= 1) return false;
+        switch (ev.getActionMasked()) {
+            case MotionEvent.ACTION_DOWN:
+                mDownX = ev.getX();
+                mDownY = ev.getY();
+                mSwiping = false;
+                if (getParent() != null) getParent().requestDisallowInterceptTouchEvent(true);
+                return false;
+            case MotionEvent.ACTION_MOVE:
+                float dx = ev.getX() - mDownX;
+                if (Math.abs(dx) > mTouchSlop && Math.abs(dx) > Math.abs(ev.getY() - mDownY)) {
+                    mSwiping = true;
+                    return true;
+                }
+                return false;
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * Handles the swipe when it starts on empty space (no icon took the touch, so the intercept
+     * above never sees the moves). Anything that is not a swipe goes on to the folder icon, which
+     * owns the long press that drags the whole folder.
+     */
+    @Override
+    @SuppressLint("ClickableViewAccessibility")
+    public boolean onTouchEvent(MotionEvent ev) {
+        if (mPages <= 1 && !mSwiping) return super.onTouchEvent(ev);
+        int action = ev.getActionMasked();
+        if (action == MotionEvent.ACTION_DOWN) {
+            mDownX = ev.getX();
+            mDownY = ev.getY();
+            mSwiping = false;
+            if (getParent() != null) getParent().requestDisallowInterceptTouchEvent(true);
+            mFolderIcon.onTouchEvent(ev);
+            return true;
+        }
+        if (!mSwiping && action == MotionEvent.ACTION_MOVE) {
+            float dx = ev.getX() - mDownX;
+            if (Math.abs(dx) > mTouchSlop && Math.abs(dx) > Math.abs(ev.getY() - mDownY)) {
+                mSwiping = true;
+                cancelFolderIconTouch(ev);
+            }
+        }
+        if (!mSwiping) {
+            mFolderIcon.onTouchEvent(ev);
+            return true;
+        }
+        if (action == MotionEvent.ACTION_UP) {
+            float dx = ev.getX() - mDownX;
+            if (Math.abs(dx) > mTouchSlop) {
+                showPage(dx < 0
+                        ? LargeFolderMath.nextPage(mPage, mPages)
+                        : LargeFolderMath.previousPage(mPage, mPages));
+            }
+        }
+        if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+            mSwiping = false;
+        }
+        return true;
+    }
+
+    private void cancelFolderIconTouch(MotionEvent ev) {
+        MotionEvent cancel = MotionEvent.obtain(ev);
+        cancel.setAction(MotionEvent.ACTION_CANCEL);
+        mFolderIcon.onTouchEvent(cancel);
+        cancel.recycle();
     }
 
     private void showPage(int page) {
