@@ -138,8 +138,11 @@ private fun ImportDialog(
                     element.valueIn(spec)?.let { value ->
                         Row(modifier = Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                             swatchOf(element, spec)?.let { Swatch(it) }
-                            Text(element.desc.lowercase() + ": ", style = MaterialTheme.typography.bodySmall, color = dim)
-                            Text(value, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
+                            // The words and the value stack, so a long label never squeezes the value into a column.
+                            Column {
+                                Text(element.desc.lowercase() + ":", style = MaterialTheme.typography.bodySmall, color = dim)
+                                Text(value, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
+                            }
                         }
                     }
                 }

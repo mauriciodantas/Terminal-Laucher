@@ -109,7 +109,10 @@ object AppHost : CommandHost {
         if (isLottie) {
             return LauncherImport.Widget(o.optString("nm").ifBlank { o.optString("name").ifBlank { "widget.json" } }, raw)
         }
-        if (o.has("animation") && (o.optJSONObject("animation") != null || o.optString("animation").isNotBlank())) {
+        // A Lottie widget carries an animation of its own; a theme's "animation" is the name of one the launcher plays.
+        val animation = o.opt("animation")
+        val themeAnimation = animation is String && (ThemeSpecs.animationKey(animation) != null || ThemeSpecs.animationIsOff(animation))
+        if (!themeAnimation && o.has("animation") && (o.optJSONObject("animation") != null || o.optString("animation").isNotBlank())) {
             return LauncherImport.Widget(o.optString("name").ifBlank { "widget.json" }, raw)
         }
         // Theme
@@ -120,7 +123,7 @@ object AppHost : CommandHost {
         }
         val hasThemeProps = listOf(
             "accent", "background", "secondary", "outline", "dock", "folder",
-            "followSystem", "pixelClock", "iconEffect", "widgetEffect", "crtEffect",
+            "followSystem", "pixelClock", "iconEffect", "widgetEffect", "crtEffect", "animation", "customAnimation",
             "showWallpaper", "colorAsWallpaper", "wallpaper", "lockWallpaper",
         ).any { o.has(it) }
         if (hasThemeProps) {

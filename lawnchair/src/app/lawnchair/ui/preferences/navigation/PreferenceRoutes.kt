@@ -180,6 +180,12 @@ data object CommandGuide : PreferenceRoute, PreferenceDeepLink {
     override val deepLink = "$URI/command-guide"
 }
 
+/** The guide to making a theme with an AI chat and importing it. */
+@Serializable
+data object ThemeGuide : PreferenceRoute, PreferenceDeepLink {
+    override val deepLink = "$URI/theme-guide"
+}
+
 // App Drawer section routes
 @Serializable
 data object AppDrawerHiddenApps : PreferenceRoute, PreferenceDeepLink {

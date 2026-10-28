@@ -28,7 +28,7 @@
     <string name="cmd_theme_el_clock">clock</string>
     <string name="cmd_theme_el_clock_desc">PIXEL CLOCK</string>
     <string name="cmd_theme_el_crt">crt</string>
-    <string name="cmd_theme_el_crt_desc">CRT EFFECT · SCANLINES</string>
+    <string name="cmd_theme_el_crt_desc">ANIMATION INTENSITY</string>
     <string name="cmd_theme_el_dim">dim</string>
     <string name="cmd_theme_el_dim_desc">WALLPAPER DIMMING</string>
     <string name="cmd_theme_el_dock">dock</string>

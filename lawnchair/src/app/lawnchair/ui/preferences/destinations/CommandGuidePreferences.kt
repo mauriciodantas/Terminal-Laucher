@@ -558,7 +558,7 @@ fun CommandGuidePreferences(
 }
 
 @Composable
-private fun GuideTextCard(text: String) {
+internal fun GuideTextCard(text: String) {
     Text(
         text = text,
         style = MaterialTheme.typography.bodyMedium,
@@ -568,7 +568,7 @@ private fun GuideTextCard(text: String) {
 }
 
 @Composable
-private fun JsonCodeCard(json: String) {
+internal fun JsonCodeCard(json: String) {
     val context = LocalContext.current
     Surface(
         modifier = Modifier

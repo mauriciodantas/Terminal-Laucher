@@ -59,6 +59,7 @@ import app.lawnchair.ui.preferences.destinations.SelectAppsForDrawerFolder
 import app.lawnchair.ui.preferences.destinations.SelectIconPreference
 import app.lawnchair.ui.preferences.destinations.ShapePreference
 import app.lawnchair.ui.preferences.destinations.SmartspacePreferences
+import app.lawnchair.ui.preferences.destinations.ThemeGuidePreferences
 import com.android.launcher3.util.ComponentKey
 import soup.compose.material.motion.animation.materialSharedAxisXIn
 import soup.compose.material.motion.animation.materialSharedAxisXOut
@@ -170,6 +171,9 @@ fun PreferenceNavigation(
         composable<CommandGuide>(
             deepLinks = getDeepLink(CommandGuide),
         ) { CommandGuidePreferences() }
+        composable<ThemeGuide>(
+            deepLinks = getDeepLink(ThemeGuide),
+        ) { ThemeGuidePreferences() }
 
         composable<Smartspace>(
             deepLinks = getDeepLink(Smartspace),

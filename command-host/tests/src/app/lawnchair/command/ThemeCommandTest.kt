@@ -155,6 +155,29 @@ class ThemeCommandTest {
         assertEquals(null, run("tema animation lasers").action)
     }
 
+    @Test fun aCustomAnimationIsReadHeldToItsRangesAndKept() {
+        val raw = """{"format":"terminal-theme","customAnimation":{"kind":"particles","shape":"petal","color":"#ffb7c5","count":9000,"size":1,"speed":9,"angle":90,"twinkle":0.4}}"""
+        val a = ThemeSpecs.decode(raw).customAnimation as CustomAnimation.Particles
+        // A number out of range is held to it; a color is the theme's own.
+        assertEquals(ThemeSpecs.MAX_PARTICLES, a.count)
+        assertEquals(2f, a.size)
+        assertEquals(1.5f, a.speed)
+        assertEquals(90f, a.angle)
+        assertEquals(ThemeColor.Custom(0xFFFFB7C5.toInt()), a.color)
+        // It survives a saved file, and the theme that has it is not empty.
+        val spec = ThemeSpec(customAnimation = a)
+        assertEquals(a, ThemeSpecs.decode(ThemeSpecs.encode(spec)).customAnimation)
+        assertFalse(spec.isEmpty)
+        // An unknown kind, a missing drawing and a file that is not Lottie are left out.
+        assertEquals(null, ThemeSpecs.decode("""{"format":"terminal-theme","customAnimation":{"kind":"lasers"}}""").customAnimation)
+        assertEquals(null, ThemeSpecs.decode("""{"format":"terminal-theme","customAnimation":{"kind":"particles","shape":"svg"}}""").customAnimation)
+        assertEquals(null, ThemeSpecs.decode("""{"format":"terminal-theme","customAnimation":{"kind":"lottie","lottie":{"v":"5"}}}""").customAnimation)
+        // A Lottie file is kept whole.
+        val lottie = """{"format":"terminal-theme","customAnimation":{"kind":"lottie","lottie":{"v":"5.7","fr":30,"ip":0,"op":60,"w":100,"h":100,"layers":[]}}}"""
+        val l = ThemeSpecs.decode(lottie).customAnimation as CustomAnimation.Lottie
+        assertEquals(l, ThemeSpecs.decode(ThemeSpecs.encode(ThemeSpec(customAnimation = l))).customAnimation)
+    }
+
     @Test fun savedThemesByName() {
         val list = ThemeSpecs.upsert(listOf(night, gameBoy), night.copy(accent = green))
         assertEquals(2, list.size)

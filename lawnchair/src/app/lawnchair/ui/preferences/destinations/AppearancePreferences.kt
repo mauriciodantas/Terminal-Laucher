@@ -43,6 +43,7 @@ import app.lawnchair.ui.preferences.components.layout.ExpandAndShrink
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
 import app.lawnchair.ui.preferences.navigation.GeneralIconShape
+import app.lawnchair.ui.preferences.navigation.ThemeGuide
 import app.lawnchair.views.ScreenAnimationView
 import com.android.launcher3.R
 
@@ -221,6 +222,8 @@ fun AppearancePreferences(modifier: Modifier = Modifier) {
                 Column {
                     val animationKind = prefs2.screenAnimation.getAdapter()
                     val animationIntensity = prefs2.crtEffectIntensity.getAdapter()
+                    // The animation a theme brought is a choice only while there is one stored.
+                    val customAnimation = prefs2.screenAnimationCustom.getAdapter().state.value
                     ListPreference(
                         adapter = animationKind,
                         entries = listOf(
@@ -229,6 +232,8 @@ fun AppearancePreferences(modifier: Modifier = Modifier) {
                             ListPreferenceEntry("petals") { stringResource(R.string.screen_animation_petals) },
                             ListPreferenceEntry("stars") { stringResource(R.string.screen_animation_stars) },
                             ListPreferenceEntry("rain") { stringResource(R.string.screen_animation_rain) },
+                        ) + listOfNotNull(
+                            if (customAnimation.isNotBlank()) ListPreferenceEntry("custom") { stringResource(R.string.screen_animation_custom) } else null,
                         ),
                         label = stringResource(id = R.string.screen_animation_kind),
                     )
@@ -239,20 +244,29 @@ fun AppearancePreferences(modifier: Modifier = Modifier) {
                         valueRange = 0.05f..1f,
                         showAsPercentage = true,
                     )
-                    ScreenAnimationPreview(kind = animationKind.state.value, intensity = animationIntensity.state.value)
+                    ScreenAnimationPreview(kind = animationKind.state.value, custom = customAnimation, intensity = animationIntensity.state.value)
                 }
             }
+        }
+
+        // Last, the way to make a theme with an AI chat and bring it in.
+        PreferenceGroup(modifier = Modifier.padding(top = 8.dp)) {
+            NavigationActionPreference(
+                label = stringResource(id = R.string.theme_guide_nav),
+                subtitle = stringResource(id = R.string.theme_guide_nav_desc),
+                destination = ThemeGuide,
+            )
         }
     }
 }
 
 /** The chosen animation playing over a stand-in wallpaper, so it can be judged before leaving Settings. */
 @Composable
-private fun ScreenAnimationPreview(kind: String, intensity: Float) {
+private fun ScreenAnimationPreview(kind: String, custom: String, intensity: Float) {
     AndroidView(
         factory = { ScreenAnimationView(it) },
         update = {
-            it.play(kind)
+            it.play(kind, custom)
             it.intensity = intensity
         },
         modifier = Modifier

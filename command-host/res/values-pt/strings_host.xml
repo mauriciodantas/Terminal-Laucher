@@ -28,7 +28,7 @@
     <string name="cmd_theme_el_clock">relógio</string>
     <string name="cmd_theme_el_clock_desc">RELÓGIO PIXELADO</string>
     <string name="cmd_theme_el_crt">crt</string>
-    <string name="cmd_theme_el_crt_desc">EFEITO CRT · LINHAS DE VARREDURA</string>
+    <string name="cmd_theme_el_crt_desc">INTENSIDADE DA ANIMAÇÃO</string>
     <string name="cmd_theme_el_dim">escurecer</string>
     <string name="cmd_theme_el_dim_desc">ESCURECER O PAPEL DE PAREDE</string>
     <string name="cmd_theme_el_dock">dock</string>

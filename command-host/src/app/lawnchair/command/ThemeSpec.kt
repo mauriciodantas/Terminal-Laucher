@@ -109,6 +109,8 @@ data class ThemeSpec(
     val crtIntensity: Float? = null,
     /** Which animation plays over the screen, one of [ThemeSpecs.ANIMATIONS]; [crtIntensity] says how strong. */
     val animation: String? = null,
+    /** An animation the theme brings itself, in data; it wins over [animation] when both are there. */
+    val customAnimation: CustomAnimation? = null,
     val showWallpaper: Boolean? = null,
     val wallpaperDim: Float? = null,
     /** The background color also set as the system wallpaper of the home screen. */
@@ -146,6 +148,7 @@ data class ThemeSpec(
         crtEffect = other.crtEffect ?: crtEffect,
         crtIntensity = other.crtIntensity ?: crtIntensity,
         animation = other.animation ?: animation,
+        customAnimation = other.customAnimation ?: customAnimation,
         showWallpaper = other.showWallpaper ?: showWallpaper,
         wallpaperDim = other.wallpaperDim ?: wallpaperDim,
         colorAsWallpaper = other.colorAsWallpaper ?: colorAsWallpaper,
@@ -154,6 +157,43 @@ data class ThemeSpec(
         iconShape = other.iconShape ?: iconShape,
         folderShape = other.folderShape ?: folderShape,
     )
+}
+
+/**
+ * An animation the theme brings itself, as data: particles the launcher moves and draws, or a
+ * Lottie file played over the screen. It is shown on the import screen before anything is installed.
+ */
+sealed interface CustomAnimation {
+
+    /**
+     * A field of [count] particles drawn as [shape] (one of [ThemeSpecs.PARTICLE_SHAPES]; "svg" draws [svg]).
+     * [speed] is in screens per second, [angle] the direction in degrees (0 falls down, 90 goes left,
+     * 180 rises, 270 goes right), [sway] how far a particle drifts to the side, [spin] its turning in
+     * degrees per second and [twinkle] how much its light comes and goes.
+     */
+    data class Particles(
+        val shape: String = "circle",
+        val svg: String? = null,
+        val color: ThemeColor = ThemeColor.Default,
+        val count: Int = 60,
+        val size: Float = 6f,
+        val speed: Float = 0.08f,
+        val angle: Float = 0f,
+        val sway: Float = 0.02f,
+        val spin: Float = 0f,
+        val twinkle: Float = 0f,
+        val opacity: Float = 0.8f,
+    ) : CustomAnimation
+
+    /** A Lottie file ([json] is the whole file), played over the screen and looped. */
+    data class Lottie(val json: String) : CustomAnimation
+
+    /** What it is, as one short line for the import screen and the command bar. */
+    val label: String
+        get() = when (this) {
+            is Particles -> "particles · $shape · $count"
+            is Lottie -> "lottie · ${json.length / 1024 + 1} KB"
+        }
 }
 
 /** The theme file (.tthm) and the rules every theme goes through, wherever it came from. Pure, so it can be unit tested. */
@@ -218,6 +258,7 @@ object ThemeSpecs {
         spec.crtEffect?.let { o.put("crtEffect", it) }
         spec.crtIntensity?.let { o.put("crtIntensity", it.toDouble()) }
         spec.animation?.let { o.put("animation", it) }
+        spec.customAnimation?.let { o.put("customAnimation", customAnimationJson(it)) }
         spec.showWallpaper?.let { o.put("showWallpaper", it) }
         spec.wallpaperDim?.let { o.put("wallpaperDim", it.toDouble()) }
         spec.colorAsWallpaper?.let { o.put("colorAsWallpaper", it) }
@@ -278,6 +319,7 @@ object ThemeSpecs {
         crtEffect = bool(o, "crtEffect") ?: animationOff(o),
         crtIntensity = fraction(o, "crtIntensity")?.coerceAtLeast(MIN_INTENSITY),
         animation = animationKey(o.optString("animation")),
+        customAnimation = customAnimation(o.opt("customAnimation")),
         showWallpaper = bool(o, "showWallpaper"),
         wallpaperDim = fraction(o, "wallpaperDim"),
         colorAsWallpaper = bool(o, "colorAsWallpaper"),
@@ -296,6 +338,73 @@ object ThemeSpecs {
         "sevensidedcookie", "arch", "cloudy", "flower", "heart", "leaf", "meow", "pebble", "roundedhexagon",
         "stretched", "vessel",
     )
+
+    /** The shapes a particle can be drawn as; "svg" draws the markup the theme brings. */
+    val PARTICLE_SHAPES = listOf("circle", "petal", "line", "star", "svg")
+
+    /** The longest particle drawing and the largest Lottie file a theme may carry. */
+    const val MAX_SPRITE_CHARS = 8_000
+    const val MAX_LOTTIE_CHARS = 400_000
+    const val MAX_PARTICLES = 150
+
+    fun customAnimationJson(a: CustomAnimation): JSONObject = when (a) {
+        is CustomAnimation.Particles -> JSONObject().put("kind", "particles").put("shape", a.shape).apply {
+            a.svg?.let { put("svg", it) }
+            put("color", a.color.encode())
+            put("count", a.count)
+            put("size", a.size.toDouble())
+            put("speed", a.speed.toDouble())
+            put("angle", a.angle.toDouble())
+            put("sway", a.sway.toDouble())
+            put("spin", a.spin.toDouble())
+            put("twinkle", a.twinkle.toDouble())
+            put("opacity", a.opacity.toDouble())
+        }
+
+        is CustomAnimation.Lottie -> JSONObject().put("kind", "lottie").put("lottie", JSONObject(a.json))
+    }
+
+    /** The animation [value] describes, with every number held to its range; null when it is not one the launcher can play. */
+    fun customAnimation(value: Any?): CustomAnimation? {
+        val o = value as? JSONObject ?: return null
+        return when (o.optString("kind").trim().lowercase()) {
+            "particles" -> particles(o)
+            "lottie" -> lottie(o)
+            else -> null
+        }
+    }
+
+    private fun particles(o: JSONObject): CustomAnimation.Particles? {
+        val shape = o.optString("shape", "circle").trim().lowercase().takeIf { it in PARTICLE_SHAPES } ?: "circle"
+        val svg = o.optString("svg").trim().takeIf { it.length <= MAX_SPRITE_CHARS && it.contains("<svg") }
+        if (shape == "svg" && svg == null) return null
+        val color = color(o, "color").takeIf { it is ThemeColor.Custom } ?: ThemeColor.Default
+        return CustomAnimation.Particles(
+            shape = shape,
+            svg = svg.takeIf { shape == "svg" },
+            color = color,
+            count = number(o, "count", 60f, 1f, MAX_PARTICLES.toFloat()).toInt(),
+            size = number(o, "size", 6f, 2f, 64f),
+            speed = number(o, "speed", 0.08f, 0f, 1.5f),
+            angle = number(o, "angle", 0f, 0f, 360f),
+            sway = number(o, "sway", 0.02f, 0f, 0.2f),
+            spin = number(o, "spin", 0f, -360f, 360f),
+            twinkle = number(o, "twinkle", 0f, 0f, 1f),
+            opacity = number(o, "opacity", 0.8f, 0.1f, 1f),
+        )
+    }
+
+    private fun lottie(o: JSONObject): CustomAnimation.Lottie? {
+        val file = o.optJSONObject("lottie") ?: return null
+        if (file.optJSONArray("layers") == null) return null
+        val json = file.toString()
+        return CustomAnimation.Lottie(json).takeIf { json.length <= MAX_LOTTIE_CHARS }
+    }
+
+    private fun number(o: JSONObject, key: String, default: Float, min: Float, max: Float): Float {
+        val v = (o.opt(key) as? Number)?.toFloat() ?: return default
+        return if (v.isNaN()) default else v.coerceIn(min, max)
+    }
 
     /**
      * The animations the launcher can play over the screen, by the key it stores. "monitor" is the

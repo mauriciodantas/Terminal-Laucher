@@ -270,14 +270,18 @@ class LawnchairLauncher : QuickstepLauncher() {
             preferenceManager2.crtEffect.get(),
             preferenceManager2.crtEffectIntensity.get(),
             preferenceManager2.screenAnimation.get(),
-        ) { enabled, intensity, kind ->
-            Triple(kind, if (enabled) intensity else 0f, enabled)
-        }.distinctUntilChanged().onEach { (kind, intensity, _) ->
-            crt.play(kind)
-            crt.intensity = intensity
-            crt.visibility = if (intensity > 0f) View.VISIBLE else View.GONE
+            preferenceManager2.screenAnimationCustom.get(),
+        ) { enabled, intensity, kind, custom ->
+            AnimationState(kind, custom, if (enabled) intensity else 0f)
+        }.distinctUntilChanged().onEach { state ->
+            crt.play(state.kind, state.custom)
+            crt.intensity = state.intensity
+            crt.visibility = if (state.intensity > 0f) View.VISIBLE else View.GONE
         }.launchIn(scope = lifecycleScope)
     }
+
+    /** What the screen animation layer plays: which one, the animation a theme brought and how strong. */
+    private data class AnimationState(val kind: String, val custom: String, val intensity: Float)
 
     /** Adds "Conversas rápidas" right above the dock icons, hidden whenever the home screen is not in front. */
     private fun installChatsStrip() {

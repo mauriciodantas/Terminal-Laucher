@@ -68,6 +68,13 @@ object LauncherAiPrompts {
             "iconEffect draws app icons in the accent color; widgetEffect tints widgets; crtEffect turns on the animation over the whole screen and crtIntensity says how strong it is; " +
             "animation picks which one: ${ThemeSpecs.ANIMATIONS.joinToString(", ")} (monitor is the CRT look with scanlines; the others are particles), or \"none\" for no animation. " +
             "Pick the animation that belongs to the concept instead of always the monitor: snow for a winter scene, petals for a spring or a Japanese garden, stars for a night sky, rain for a neon alley or a storm. " +
+            "When none of them fits, write your own with customAnimation instead of animation: " +
+            "{\"kind\": \"particles\", \"shape\": \"circle|petal|line|star|svg\", \"color\": \"#rrggbb\", \"count\": 60, \"size\": 6, \"speed\": 0.08, " +
+            "\"angle\": 0, \"sway\": 0.02, \"spin\": 0, \"twinkle\": 0, \"opacity\": 0.8}. " +
+            "count is up to ${ThemeSpecs.MAX_PARTICLES}, size 2 to 64 (dp), speed in screens per second (0 to 1.5), angle the direction in degrees " +
+            "(0 falls, 90 goes left, 180 rises, 270 goes right), sway how far a particle drifts to the side (0 to 0.2), spin its turning in degrees per second, " +
+            "twinkle how much its light comes and goes (0 to 1). shape svg also takes \"svg\": a single small <svg> of at most ${ThemeSpecs.MAX_SPRITE_CHARS} characters with a viewBox, " +
+            "shapes only. Embers rising (angle 180, circle, orange), fireflies (twinkle, sway), leaves, confetti or bubbles are good uses. Never write a Lottie file. " +
             "intensities go from 0.05 to 1. showWallpaper shows the system wallpaper behind the home screen, dimmed by wallpaperDim (0 to 1); " +
             "colorAsWallpaper sets the background color as the system wallpaper. Set followSystem only when asked to follow the light and dark mode. " +
             "iconShape and folderShape pick the shape app icons and folders are cut to, one of: ${ThemeSpecs.ICON_SHAPES.joinToString(", ")}. " +
@@ -103,6 +110,13 @@ object LauncherAiPrompts {
             "Reply with JSON only, no other text, in this shape (leave out a field to keep it as it is):\n" + THEME_SHAPE
 
     /**
+     * The prompt of the theme guide, for any AI chat: the rules and the shape of a theme, and a last
+     * line the user replaces with what they want.
+     */
+    val THEME_MASTER_PROMPT =
+        THEME_RULES + "\n\nTHE THEME I WANT (replace this line with the mood or place, the colors, the font, the animation and whether it has a wallpaper):\n"
+
+    /**
      * The theme of a reply and its note, or null when the reply holds none or it could not be read.
      * [AiMode.THEME] replies with the theme itself; [AiMode.CREATE] wraps it in "theme" when it was asked for one.
      */
@@ -114,6 +128,8 @@ object LauncherAiPrompts {
         val read = ThemeSpecs.fromJson(t)
         val wallpaper = read.wallpaper?.takeIf { it.image is ThemeImage.Svg }
         val spec = read.copy(
+            // A Lottie file is a file from someone else: an AI only describes particles.
+            customAnimation = read.customAnimation as? CustomAnimation.Particles,
             wallpaper = wallpaper,
             lockWallpaper = read.lockWallpaper as? ThemeImage.Svg,
             showWallpaper = if (wallpaper != null) true else read.showWallpaper,

@@ -58,7 +58,7 @@ enum class ThemeElement(
         ICONS -> spec.iconEffect?.let(ThemeCommand::stateText)
         WIDGETS -> ThemeCommand.effectText(spec.widgetEffect, spec.widgetIntensity)
         CRT -> ThemeCommand.effectText(spec.crtEffect, spec.crtIntensity)
-        ANIMATION -> spec.animation ?: spec.crtEffect?.takeIf { !it }?.let { ThemeCommand.NO_ANIMATION }
+        ANIMATION -> spec.customAnimation?.label ?: spec.animation ?: spec.crtEffect?.takeIf { !it }?.let { ThemeCommand.NO_ANIMATION }
         WALLPAPER -> spec.showWallpaper?.let(ThemeCommand::stateText)
         DIM -> spec.wallpaperDim?.let(ThemeCommand::percentText)
         PAINT -> spec.colorAsWallpaper?.let(ThemeCommand::stateText)

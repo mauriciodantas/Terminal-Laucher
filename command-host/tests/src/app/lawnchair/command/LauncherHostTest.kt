@@ -161,6 +161,39 @@ class LauncherHostTest {
     }
 
     @Test
+    fun aThemeWithAnAnimationIsNotTakenForAWidget() {
+        // "animation" names one of the launcher's animations in a theme and holds a Lottie file in a widget.
+        val json = "{\"name\": \"Rain\", \"accent\": \"#4fd8ff\", \"animation\": \"rain\", \"crtIntensity\": 0.5}"
+        val analysis = CommandEngine.analyze(json, emptyList(), emptyList(), false)
+        assertTrue(analysis.action is ImportAction.Theme)
+        assertEquals("rain", (analysis.action as ImportAction.Theme).spec.animation)
+        // Only the animation, nothing else of a theme: still a theme.
+        assertTrue(CommandEngine.analyze("{\"animation\": \"snow\"}", emptyList(), emptyList(), false).action is ImportAction.Theme)
+        // An animation of its own is still a widget.
+        val widget = "{\"name\": \"Pulse\", \"animation\": {\"v\": \"5.0\", \"layers\": []}}"
+        assertTrue(CommandEngine.analyze(widget, emptyList(), emptyList(), false).action is ImportAction.Widget)
+    }
+
+    @Test
+    fun aPastedThemeWithOnlyTheKindAndShapeStillKeepsItsCustomAnimation() {
+        val json = "{\"accent\":\"#ffcc33\",\"customAnimation\":{\"kind\":\"particles\",\"shape\":\"circle\"}}"
+        val action = CommandEngine.analyze(json, emptyList(), emptyList(), false).action as ImportAction.Theme
+        assertEquals(CustomAnimation.Particles(), action.spec.customAnimation)
+        val file = ThemeSpecs.encode(action.spec)
+        assertTrue(file, file.contains("customAnimation"))
+    }
+
+    @Test
+    fun aPastedThemeKeepsItsCustomAnimation() {
+        val json = "{\"name\":\"Fireflies\",\"accent\":\"#ffcc33\",\"customAnimation\":{\"kind\":\"particles\",\"shape\":\"circle\",\"color\":\"#ffee66\",\"count\":40,\"angle\":180,\"twinkle\":0.8}}"
+        val action = CommandEngine.analyze(json, emptyList(), emptyList(), false).action as ImportAction.Theme
+        val custom = action.spec.customAnimation as CustomAnimation.Particles
+        assertEquals(40, custom.count)
+        assertEquals(180f, custom.angle)
+        assertEquals("particles · circle · 40", ThemeElement.ANIMATION.valueIn(action.spec))
+    }
+
+    @Test
     fun commandEngineAnalyzesImportKeyword() {
         val json = "importar {\"name\": \"Retro\", \"accent\": \"#ffb000\", \"background\": \"#101010\"}"
         val analysis = CommandEngine.analyze(json, emptyList(), emptyList(), false)

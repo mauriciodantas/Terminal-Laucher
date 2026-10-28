@@ -89,7 +89,9 @@ object ThemeStore {
             widgetIntensity = p.widgetEffectIntensity.firstCached(p),
             crtEffect = p.crtEffect.firstCached(p),
             crtIntensity = p.crtEffectIntensity.firstCached(p),
-            animation = p.screenAnimation.firstCached(p),
+            animation = p.screenAnimation.firstCached(p).takeIf { it in ThemeSpecs.ANIMATIONS },
+            customAnimation = p.screenAnimationCustom.firstCached(p).takeIf { p.screenAnimation.firstCached(p) == "custom" }
+                ?.let { runCatching { ThemeSpecs.customAnimation(org.json.JSONObject(it)) }.getOrNull() },
             showWallpaper = p.showSystemWallpaper.firstCached(p),
             wallpaperDim = p.wallpaperDim.firstCached(p),
             colorAsWallpaper = p.backgroundColorAsWallpaper.firstCached(p),
@@ -152,6 +154,11 @@ object ThemeStore {
         spec.crtEffect?.let { p.crtEffect.update(p, it) }
         spec.crtIntensity?.let { p.crtEffectIntensity.update(p, it) }
         spec.animation?.let { p.screenAnimation.update(p, it) }
+        // What the theme brings wins over a named animation, and stays stored in case the user goes back to it.
+        spec.customAnimation?.let {
+            p.screenAnimationCustom.update(p, ThemeSpecs.customAnimationJson(it).toString())
+            p.screenAnimation.update(p, "custom")
+        }
         // An image as wallpaper is shown behind the home screen, and the color no longer painted over it.
         (spec.showWallpaper ?: spec.wallpaper?.let { true })?.let { p.showSystemWallpaper.update(p, it) }
         spec.wallpaperDim?.let { p.wallpaperDim.update(p, it) }
@@ -175,6 +182,7 @@ object ThemeStore {
             .forEach { it.update(p, it.defaultValue) }
         listOf(p.widgetEffectIntensity, p.crtEffectIntensity, p.wallpaperDim).forEach { it.update(p, it.defaultValue) }
         p.screenAnimation.update(p, p.screenAnimation.defaultValue)
+        p.screenAnimationCustom.update(p, p.screenAnimationCustom.defaultValue)
         val fonts = PreferenceManager.getInstance(context).fontWorkspace
         if (fonts.get() != fonts.defaultValue) fonts.set(fonts.defaultValue)
         p.strokeColorStyle.update(p, p.strokeColorStyle.defaultValue)

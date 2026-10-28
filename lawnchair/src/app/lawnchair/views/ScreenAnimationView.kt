@@ -8,6 +8,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.LinearGradient
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.RadialGradient
 import android.graphics.RectF
 import android.graphics.Shader
@@ -16,10 +17,18 @@ import android.provider.Settings
 import android.view.View
 import android.view.animation.LinearInterpolator
 import androidx.core.graphics.ColorUtils
+import app.lawnchair.command.CustomAnimation
+import app.lawnchair.command.ThemeColor
+import app.lawnchair.command.ThemeSpecs
 import app.lawnchair.theme.color.tokens.PhosphorColorToken
+import com.airbnb.lottie.LottieCompositionFactory
+import com.airbnb.lottie.LottieDrawable
+import com.caverock.androidsvg.PreserveAspectRatio
+import com.caverock.androidsvg.SVG
 import java.util.Random
 import kotlin.math.PI
 import kotlin.math.sin
+import org.json.JSONObject
 
 /**
  * One animation that plays over the whole launcher: the monitor, falling snow, and so on. The view
@@ -33,8 +42,17 @@ abstract class ScreenAnimation {
     open fun pulse(now: Long) = Unit
 
     companion object {
-        /** The animation called [key] (one of the keys the theme file knows); the monitor for an unknown one. */
-        fun create(context: Context, key: String?): ScreenAnimation = when (key) {
+        /**
+         * The animation called [key] (one of the keys the theme file knows, or "custom" for [custom],
+         * the one a theme brings); the monitor for an unknown one.
+         */
+        fun create(context: Context, key: String?, custom: CustomAnimation? = null): ScreenAnimation = when {
+            key == "custom" && custom is CustomAnimation.Particles -> CustomParticleAnimation(context, custom)
+            key == "custom" && custom is CustomAnimation.Lottie -> LottieOverlayAnimation(custom.json) ?: MonitorAnimation(context)
+            else -> byKey(context, key)
+        }
+
+        private fun byKey(context: Context, key: String?): ScreenAnimation = when (key) {
             "snow" -> SnowAnimation(context)
             "petals" -> PetalsAnimation(context)
             "stars" -> StarsAnimation(context)
@@ -69,11 +87,20 @@ class ScreenAnimationView(context: Context) : View(context) {
             invalidate()
         }
 
-    /** Plays the animation called [key], keeping the one that already plays when it is the same. */
-    fun play(key: String?) {
-        if (key == this.key) return
-        this.key = key
-        animation = ScreenAnimation.create(context, key)
+    /**
+     * Plays the animation called [key], keeping the one that already plays when it is the same. For
+     * "custom", [customJson] is the animation the theme brought, as it is stored.
+     */
+    fun play(key: String?, customJson: String = "") {
+        val id = if (key == "custom") "custom:$customJson" else key
+        if (id == this.key) return
+        this.key = id
+        val custom = if (key == "custom") {
+            runCatching { ThemeSpecs.customAnimation(JSONObject(customJson)) }.getOrNull()
+        } else {
+            null
+        }
+        animation = ScreenAnimation.create(context, key, custom)
         invalidate()
     }
 
@@ -358,5 +385,147 @@ private class RainAnimation(context: Context) : ParticleAnimation(context, 41, 1
         val py = y[i] * h
         // Drops slant a little to the left as they fall.
         canvas.drawLine(px, py, px - len * 0.2f, py - len, paint)
+    }
+}
+
+/**
+ * The particles a theme describes: the shape, color, size, speed and direction it asks for, within
+ * the limits [ThemeSpecs.customAnimation] already held its numbers to.
+ */
+private class CustomParticleAnimation(context: Context, private val spec: CustomAnimation.Particles) : ParticleAnimation(context, 53, spec.count) {
+
+    private val color = (spec.color as? ThemeColor.Custom)?.argb ?: PhosphorColorToken(1f).resolveColor(context)
+    private val radians = Math.toRadians(spec.angle.toDouble())
+
+    // Where a particle goes: 0 degrees falls down, 90 goes left, 180 rises, 270 goes right.
+    private val dx = (-sin(radians)).toFloat()
+    private val dy = kotlin.math.cos(radians).toFloat()
+    private val oval = RectF()
+    private val star = Path().apply {
+        // A four-point star in a unit square around the origin.
+        moveTo(0f, -1f)
+        quadTo(0.12f, -0.12f, 1f, 0f)
+        quadTo(0.12f, 0.12f, 0f, 1f)
+        quadTo(-0.12f, 0.12f, -1f, 0f)
+        quadTo(-0.12f, -0.12f, 0f, -1f)
+        close()
+    }
+    private val sprite: Bitmap? = if (spec.shape == "svg") sprite(spec.svg.orEmpty()) else null
+
+    init {
+        paint.color = color
+        paint.strokeWidth = 1.2f * density
+        paint.strokeCap = Paint.Cap.ROUND
+    }
+
+    override fun step(i: Int, dt: Float, seconds: Float) {
+        val move = dt * spec.speed * speed[i]
+        x[i] += move * dx
+        y[i] += move * dy
+        if (y[i] > 1.05f) {
+            y[i] -= 1.1f
+        } else if (y[i] < -0.05f) {
+            y[i] += 1.1f
+        }
+        if (x[i] > 1.05f) {
+            x[i] -= 1.1f
+        } else if (x[i] < -0.05f) {
+            x[i] += 1.1f
+        }
+    }
+
+    override fun drawOne(canvas: Canvas, i: Int, w: Float, h: Float, seconds: Float, alpha: Float) {
+        // A drift to the side of the way it goes.
+        val drift = sin(seconds * 0.7f * speed[i] + phase[i]) * spec.sway * minOf(w, h)
+        val px = x[i] * w + dy * drift
+        val py = y[i] * h - dx * drift
+        val side = spec.size * density * (0.6f + 0.8f * size[i])
+        val twinkle = 1f - spec.twinkle * (0.5f - 0.5f * sin(seconds * 1.6f * speed[i] + phase[i]))
+        paint.alpha = (spec.opacity * alpha.coerceAtMost(1f) * twinkle * 255).toInt().coerceIn(0, 255)
+        val turn = spec.spin * seconds * speed[i] + Math.toDegrees(phase[i].toDouble()).toFloat()
+        when (spec.shape) {
+            "line" -> canvas.drawLine(px, py, px - dx * side * 2f, py - dy * side * 2f, paint)
+
+            "petal" -> {
+                canvas.save()
+                canvas.translate(px, py)
+                canvas.rotate(turn)
+                val flat = 0.35f + 0.65f * kotlin.math.abs(sin(seconds * 1.4f * speed[i] + phase[i]))
+                oval.set(-side, -side * 0.5f * flat, side, side * 0.5f * flat)
+                canvas.drawOval(oval, paint)
+                canvas.restore()
+            }
+
+            "star" -> {
+                canvas.save()
+                canvas.translate(px, py)
+                canvas.rotate(turn)
+                canvas.scale(side, side)
+                canvas.drawPath(star, paint)
+                canvas.restore()
+            }
+
+            "svg" -> sprite?.let {
+                canvas.save()
+                canvas.translate(px, py)
+                canvas.rotate(turn)
+                oval.set(-side, -side, side, side)
+                canvas.drawBitmap(it, null, oval, paint)
+                canvas.restore()
+            }
+
+            else -> canvas.drawCircle(px, py, side * 0.5f, paint)
+        }
+    }
+
+    /** The drawing of an "svg" particle, rendered once; null when the markup cannot be drawn. */
+    private fun sprite(markup: String): Bitmap? = runCatching {
+        val svg = SVG.getFromString(markup)
+        if (svg.documentViewBox == null && svg.documentWidth > 0 && svg.documentHeight > 0) {
+            svg.setDocumentViewBox(0f, 0f, svg.documentWidth, svg.documentHeight)
+        }
+        svg.documentPreserveAspectRatio = PreserveAspectRatio.LETTERBOX
+        svg.setDocumentWidth(SPRITE_SIDE.toFloat())
+        svg.setDocumentHeight(SPRITE_SIDE.toFloat())
+        val bitmap = Bitmap.createBitmap(SPRITE_SIDE, SPRITE_SIDE, Bitmap.Config.ARGB_8888)
+        svg.renderToCanvas(Canvas(bitmap))
+        bitmap
+    }.getOrNull()
+
+    private companion object {
+        const val SPRITE_SIDE = 64
+    }
+}
+
+/**
+ * A Lottie file the theme brings, looped over the whole screen and scaled to cover it. Nothing is
+ * fetched: a file that points at outside images draws without them.
+ */
+private class LottieOverlayAnimation private constructor(private val drawable: LottieDrawable, private val width: Float, private val height: Float) : ScreenAnimation() {
+
+    override fun draw(canvas: Canvas, width: Float, height: Float, now: Long, intensity: Float, animated: Boolean) {
+        val scale = maxOf(width / this.width, height / this.height)
+        val w = this.width * scale
+        val h = this.height * scale
+        drawable.setBounds(((width - w) / 2f).toInt(), ((height - h) / 2f).toInt(), ((width + w) / 2f).toInt(), ((height + h) / 2f).toInt())
+        drawable.alpha = (intensity * 255).toInt()
+        if (!animated && drawable.isAnimating) drawable.pauseAnimation()
+        drawable.draw(canvas)
+    }
+
+    companion object {
+        /** The animation the file [json] holds, or null when it is not a Lottie composition that has something to play. */
+        operator fun invoke(json: String): LottieOverlayAnimation? {
+            val composition = runCatching { LottieCompositionFactory.fromJsonStringSync(json, null).value }.getOrNull() ?: return null
+            val bounds = composition.bounds
+            if (composition.duration <= 0f || bounds.width() <= 0 || bounds.height() <= 0) return null
+            val drawable = LottieDrawable().apply {
+                setComposition(composition)
+                repeatCount = LottieDrawable.INFINITE
+                setVisible(true, false)
+                playAnimation()
+            }
+            return LottieOverlayAnimation(drawable, bounds.width().toFloat(), bounds.height().toFloat())
+        }
     }
 }

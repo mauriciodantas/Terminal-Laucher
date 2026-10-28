@@ -541,6 +541,12 @@ class PreferenceManager2 @Inject constructor(
         defaultValue = "monitor",
     )
 
+    /** The animation a theme brought, as stored (a ThemeSpecs custom animation); played when [screenAnimation] is "custom". */
+    val screenAnimationCustom = preference(
+        key = stringPreferencesKey("screen_animation_custom"),
+        defaultValue = "",
+    )
+
     /** The animation over the whole launcher is on: the monitor by default, or the one chosen. */
     val crtEffect = preference(
         key = booleanPreferencesKey("crt_effect"),
