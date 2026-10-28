@@ -1776,4 +1776,33 @@
     <string name="cmd_pref_favorite_remove">Remove from favorites</string>
     <string name="cmd_pref_show_others">Other commands (%1$d)</string>
     <string name="cmd_pref_hide_others">Hide other commands</string>
+    <string name="theme_guide_title">Create a theme with AI</string>
+    <string name="theme_guide_nav">Theme guide (.tthm)</string>
+    <string name="theme_guide_nav_desc">Make a theme with an AI chat and import it</string>
+    <string name="theme_guide_copy">Copy prompt for AI</string>
+    <string name="theme_guide_copy_hint">A ready prompt that teaches any AI chat to write a theme this launcher imports: colors, font, effects, animation, shapes and a wallpaper</string>
+    <string name="theme_guide_prompt_copied">Theme prompt copied to the clipboard!</string>
+    <string name="theme_guide_share">Share</string>
+    <string name="theme_guide_save">Save file</string>
+    <string name="theme_guide_prompt_saved">Prompt saved</string>
+    <string name="theme_guide_prompt_save_failed">Could not save the prompt</string>
+    <string name="theme_guide_import">Import from the clipboard</string>
+    <string name="theme_guide_clipboard_empty">The clipboard is empty: copy the theme the AI wrote first</string>
+    <string name="theme_guide_clipboard_invalid">The clipboard does not hold a theme</string>
+    <string name="theme_guide_steps_heading">How it works</string>
+    <string name="theme_guide_step1">1. Copy the prompt and paste it in the AI chat of your choice.</string>
+    <string name="theme_guide_step2">2. Replace the last line with what you want: the mood or place, colors, font, animation and wallpaper.</string>
+    <string name="theme_guide_step3">3. Copy the JSON the AI answers with. Markdown fences around it are fine.</string>
+    <string name="theme_guide_step4">4. Tap Import from the clipboard, or type \"theme import\" in the bar. The import screen shows the theme before anything changes.</string>
+    <string name="theme_guide_import_heading">Import a theme</string>
+    <string name="theme_guide_import_ways">• Clipboard: copy the JSON and tap Import from the clipboard, or paste it in the command bar.\n• File: open or share a .tthm file with the launcher; it lands on the import screen. Saved themes are in Appearance.\n• From the bar: \"ai theme &lt;description&gt;\" asks the AI for the theme and opens the same screen.\n\nThe import screen shows the colors, the shapes and the wallpaper before installing, and you choose to apply it or only keep it. A theme never changes anything but how the launcher looks.</string>
+    <string name="theme_guide_format_heading">Theme file</string>
+    <string name="theme_guide_format_text">A theme is a JSON file. Every field is optional: what it leaves out stays as it is. This is a small one:</string>
+    <string name="theme_guide_format_rules">• Colors: #rrggbb, or \"default\" to follow the accent. The accent over the background must read well.\n• font: an exact Google Fonts family, or {\"kind\": \"default\"}.\n• crtEffect and crtIntensity turn the screen animation on and set how strong it is; animation picks one of monitor, snow, petals, stars, rain or none.\n• customAnimation brings an animation of its own: particles (shape circle, petal, line, star or svg; color, count, size, speed, angle, sway, spin, twinkle) or a Lottie file. The example above is a field of fireflies rising and twinkling.\n• iconShape and folderShape: circle, squircle, hexagon, flower…\n• wallpaper and lockWallpaper: a picture drawn as SVG, shown behind the home screen and the lock screen.</string>
+    <string name="theme_guide_commands_heading">In the bar</string>
+    <string name="theme_guide_commands_intro">With an AI key saved, the bar writes the theme itself. The \"theme\" command changes everything else one thing at a time.</string>
+    <string name="theme_guide_commands" formatted="false">ai theme neon night, magenta frame\ntheme                      list everything\ntheme accent #33ff66\ntheme background #000000\ntheme animation snow\ntheme animation none\ntheme crt 40%\ntheme shape hexagon\ntheme save night\ntheme share night\ntheme night                a saved theme or look\ntheme default              everything back</string>
+    <string name="command_pin">Pin to the home screen</string>
+    <string name="command_pin_unsupported">This launcher cannot pin shortcuts</string>
+    <string name="screen_animation_custom">From the theme</string>
 </resources>

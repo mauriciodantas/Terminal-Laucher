@@ -23,4 +23,33 @@
     <string name="cmd_pref_favorite_remove">Desfavoritar</string>
     <string name="cmd_pref_show_others">Outros comandos (%1$d)</string>
     <string name="cmd_pref_hide_others">Ocultar outros comandos</string>
+    <string name="theme_guide_title">Criar tema com IA</string>
+    <string name="theme_guide_nav">Guia de temas (.tthm)</string>
+    <string name="theme_guide_nav_desc">Crie um tema com um chat de IA e importe</string>
+    <string name="theme_guide_copy">Copiar prompt para IA</string>
+    <string name="theme_guide_copy_hint">Um prompt pronto que ensina qualquer chat de IA a escrever um tema que este launcher importa: cores, fonte, efeitos, animação, formas e papel de parede</string>
+    <string name="theme_guide_prompt_copied">Prompt de tema copiado para a área de transferência!</string>
+    <string name="theme_guide_share">Compartilhar</string>
+    <string name="theme_guide_save">Salvar arquivo</string>
+    <string name="theme_guide_prompt_saved">Prompt salvo</string>
+    <string name="theme_guide_prompt_save_failed">Não foi possível salvar o prompt</string>
+    <string name="theme_guide_import">Importar da área de transferência</string>
+    <string name="theme_guide_clipboard_empty">A área de transferência está vazia: copie antes o tema que a IA escreveu</string>
+    <string name="theme_guide_clipboard_invalid">A área de transferência não tem um tema</string>
+    <string name="theme_guide_steps_heading">Como funciona</string>
+    <string name="theme_guide_step1">1. Copie o prompt e cole no chat de IA que preferir.</string>
+    <string name="theme_guide_step2">2. Troque a última linha pelo que você quer: clima ou lugar, cores, fonte, animação e papel de parede.</string>
+    <string name="theme_guide_step3">3. Copie o JSON que a IA responder. Pode vir com as cercas de código do Markdown.</string>
+    <string name="theme_guide_step4">4. Toque em Importar da área de transferência, ou digite \"tema importar\" na barra. A tela de importação mostra o tema antes de mudar qualquer coisa.</string>
+    <string name="theme_guide_import_heading">Importar um tema</string>
+    <string name="theme_guide_import_ways">• Área de transferência: copie o JSON e toque em Importar da área de transferência, ou cole na barra de comando.\n• Arquivo: abra ou compartilhe um arquivo .tthm com o launcher; ele cai na tela de importação. Os temas salvos ficam em Aparência.\n• Pela barra: \"ia tema &lt;descrição&gt;\" pede o tema à IA e abre a mesma tela.\n\nA tela de importação mostra as cores, as formas e o papel de parede antes de instalar, e você escolhe aplicar ou só guardar. Um tema nunca muda nada além da aparência do launcher.</string>
+    <string name="theme_guide_format_heading">Arquivo de tema</string>
+    <string name="theme_guide_format_text">Um tema é um arquivo JSON. Todos os campos são opcionais: o que faltar fica como está. Este é um pequeno:</string>
+    <string name="theme_guide_format_rules">• Cores: #rrggbb, ou \"default\" para seguir o destaque. O destaque sobre o fundo precisa ser legível.\n• font: uma família exata do Google Fonts, ou {\"kind\": \"default\"}.\n• crtEffect e crtIntensity ligam a animação da tela e dão a força; animation escolhe monitor, snow, petals, stars, rain ou none.\n• customAnimation traz uma animação própria: partículas (shape circle, petal, line, star ou svg; color, count, size, speed, angle, sway, spin, twinkle) ou um arquivo Lottie. O exemplo acima é um campo de vaga-lumes subindo e piscando.\n• iconShape e folderShape: circle, squircle, hexagon, flower…\n• wallpaper e lockWallpaper: uma imagem desenhada em SVG, atrás da tela inicial e da tela de bloqueio.</string>
+    <string name="theme_guide_commands_heading">Na barra</string>
+    <string name="theme_guide_commands_intro">Com uma chave de IA salva, a própria barra escreve o tema. O comando \"tema\" muda o resto, uma coisa por vez.</string>
+    <string name="theme_guide_commands" formatted="false">ia tema noite de neon, moldura magenta\ntema                      lista tudo\ntema destaque #33ff66\ntema fundo #000000\ntema animacao snow\ntema animacao none\ntema crt 40%\ntema formato hexagon\ntema salvar noite\ntema compartilhar noite\ntema noite                um tema salvo ou visual\ntema padrão               tudo de volta</string>
+    <string name="command_pin">Fixar na tela inicial</string>
+    <string name="command_pin_unsupported">Este launcher não consegue fixar atalhos</string>
+    <string name="screen_animation_custom">Do tema</string>
 </resources>

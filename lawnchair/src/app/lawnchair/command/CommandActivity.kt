@@ -1055,6 +1055,7 @@ private fun CommandScreen(onClose: () -> Unit) {
 
     val voiceIntent = remember { CommandActivity.voiceIntent(context) }
     val voiceAvailable = remember { CommandActivity.voiceAvailable(context) }
+    val pinSupported = remember { CommandShortcuts.supported(context) }
     val voice = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         val spoken = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
         if (result.resultCode == android.app.Activity.RESULT_OK && !spoken.isNullOrBlank()) {
@@ -1278,6 +1279,20 @@ private fun CommandScreen(onClose: () -> Unit) {
                             contentAlignment = Alignment.Center,
                         ) {
                             Text("[MIC]", color = phosphor, fontFamily = mono(), fontSize = 10.sp, letterSpacing = 0.5.sp)
+                        }
+                    }
+                    // The command typed can be pinned to the home screen, where one tap runs it.
+                    if (text.isNotBlank() && pinSupported) {
+                        Spacer(Modifier.width(2.dp))
+                        val pinLabel = stringResource(R.string.command_pin)
+                        Box(
+                            Modifier
+                                .size(44.dp)
+                                .clickable { CommandShortcuts.pin(context, text) }
+                                .semantics { contentDescription = pinLabel },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text("[PIN]", color = phosphor, fontFamily = mono(), fontSize = 10.sp, letterSpacing = 0.5.sp)
                         }
                     }
                     if (compact) barButtons()
