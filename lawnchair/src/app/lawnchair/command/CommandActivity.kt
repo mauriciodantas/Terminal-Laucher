@@ -637,7 +637,19 @@ private fun CommandScreen(onClose: () -> Unit) {
             record(action, command)
             val history = if (action is CommandAction.Ai && action.mode == AiMode.CHAT) aiTurns else emptyList()
             if (BackgroundRunService.start(context, command, history, action as? CommandAction.Ai) != null) {
-                android.widget.Toast.makeText(context, context.getString(CommandR.string.cmd_bg_started), android.widget.Toast.LENGTH_SHORT).show()
+                // Denied twice (or turned off in One UI), Android never asks again: the run goes on, so say where to turn them on.
+                if (!androidx.core.app.NotificationManagerCompat.from(context).areNotificationsEnabled()) {
+                    android.widget.Toast.makeText(context, context.getString(R.string.cmd_bg_notify_off), android.widget.Toast.LENGTH_LONG).show()
+                    runCatching {
+                        context.startActivity(
+                            Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                                .putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, context.packageName)
+                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                        )
+                    }
+                } else {
+                    android.widget.Toast.makeText(context, context.getString(CommandR.string.cmd_bg_started), android.widget.Toast.LENGTH_SHORT).show()
+                }
                 onClose()
                 return
             }
