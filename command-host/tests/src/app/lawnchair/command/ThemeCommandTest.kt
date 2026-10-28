@@ -142,6 +142,19 @@ class ThemeCommandTest {
         assertEquals(ThemeSpec(background = black, crtIntensity = 1f), spec)
     }
 
+    @Test fun theAnimationIsChosenByKey() {
+        // A known key is kept, an unknown one is left out, and "none" turns the animation off.
+        assertEquals(ThemeSpec(animation = "snow", crtIntensity = 0.6f), ThemeSpecs.decode("""{"format":"terminal-theme","animation":"Snow","crtIntensity":0.6}"""))
+        assertEquals(ThemeSpec(), ThemeSpecs.decode("""{"format":"terminal-theme","animation":"lasers"}"""))
+        assertEquals(ThemeSpec(crtEffect = false), ThemeSpecs.decode("""{"format":"terminal-theme","animation":"none"}"""))
+        // It survives a saved file, and the typed command picks it.
+        val spec = ThemeSpec(crtEffect = true, animation = "petals", crtIntensity = 0.5f)
+        assertEquals(spec, ThemeSpecs.decode(ThemeSpecs.encode(spec)))
+        assertEquals(ThemeAction.Apply(ThemeSpec(crtEffect = true, animation = "stars")), run("tema animation stars").action)
+        assertEquals(ThemeAction.Apply(ThemeSpec(crtEffect = false)), run("tema animation none").action)
+        assertEquals(null, run("tema animation lasers").action)
+    }
+
     @Test fun savedThemesByName() {
         val list = ThemeSpecs.upsert(listOf(night, gameBoy), night.copy(accent = green))
         assertEquals(2, list.size)

@@ -5,7 +5,7 @@ import app.lawnchair.util.Texts
 import app.lawnchair.util.foldAccents
 
 /** What an element of the theme takes after its word. */
-enum class ThemeValue { COLOR, FONT, SWITCH, EFFECT, PERCENT, SHAPE }
+enum class ThemeValue { COLOR, FONT, SWITCH, EFFECT, PERCENT, SHAPE, ANIMATION }
 
 /**
  * Each part of the theme the command sets on its own: "tema fundo #000000", "tema fonte Space Mono",
@@ -30,6 +30,7 @@ enum class ThemeElement(
     ICONS(R.string.cmd_theme_el_icons, "icones", "icons", R.string.cmd_theme_el_icons_desc, ThemeValue.SWITCH),
     WIDGETS(R.string.cmd_theme_el_widgets, "widgets", "widgets", R.string.cmd_theme_el_widgets_desc, ThemeValue.EFFECT),
     CRT(R.string.cmd_theme_el_crt, "crt", "crt", R.string.cmd_theme_el_crt_desc, ThemeValue.EFFECT),
+    ANIMATION(R.string.cmd_theme_el_animation, "animacao", "animation", R.string.cmd_theme_el_animation_desc, ThemeValue.ANIMATION),
     WALLPAPER(R.string.cmd_theme_el_wallpaper, "papel", "wallpaper", R.string.cmd_theme_el_wallpaper_desc, ThemeValue.SWITCH),
     DIM(R.string.cmd_theme_el_dim, "escurecer", "dim", R.string.cmd_theme_el_dim_desc, ThemeValue.PERCENT),
     SHAPE(R.string.cmd_theme_el_shape, "formato", "shape", R.string.cmd_theme_el_shape_desc, ThemeValue.SHAPE),
@@ -57,6 +58,7 @@ enum class ThemeElement(
         ICONS -> spec.iconEffect?.let(ThemeCommand::stateText)
         WIDGETS -> ThemeCommand.effectText(spec.widgetEffect, spec.widgetIntensity)
         CRT -> ThemeCommand.effectText(spec.crtEffect, spec.crtIntensity)
+        ANIMATION -> spec.animation ?: spec.crtEffect?.takeIf { !it }?.let { ThemeCommand.NO_ANIMATION }
         WALLPAPER -> spec.showWallpaper?.let(ThemeCommand::stateText)
         DIM -> spec.wallpaperDim?.let(ThemeCommand::percentText)
         PAINT -> spec.colorAsWallpaper?.let(ThemeCommand::stateText)
@@ -178,6 +180,7 @@ object ThemeCommand : BuiltIn(BuiltInCommand.THEME, null, R.string.cmd_help_them
             ThemeValue.SWITCH, ThemeValue.EFFECT -> switch(element, rest, title, current, extras)
             ThemeValue.PERCENT -> percent(element, rest, title, current)
             ThemeValue.SHAPE -> shape(element, rest, title, current)
+            ThemeValue.ANIMATION -> animation(rest, title, current)
         }
     }
 
@@ -195,6 +198,26 @@ object ThemeCommand : BuiltIn(BuiltInCommand.THEME, null, R.string.cmd_help_them
         }
         val spec = if (element == ThemeElement.SHAPE) ThemeSpec(iconShape = key) else ThemeSpec(folderShape = key)
         return result(title, "→ $key", Tone.OK, ThemeAction.Apply(spec), suggestions.filter { it.label != key })
+    }
+
+    /** The word that turns the animation off. */
+    const val NO_ANIMATION = "none"
+
+    /** "tema animacao snow": which animation plays over the screen, picked from the known ones, or none. */
+    private fun animation(rest: String, title: String, current: String?): Analysis {
+        val word = BuiltInCommand.THEME.word + " " + ThemeElement.ANIMATION.word
+        val typed = rest.foldAccents().trim()
+        val suggestions = (ThemeSpecs.ANIMATIONS + NO_ANIMATION).filter { typed.isEmpty() || it.startsWith(typed) }
+            .map { Suggestion("$word $it", it, Texts.get(R.string.cmd_kind_option)) }
+        val spec = when {
+            typed == NO_ANIMATION -> ThemeSpec(crtEffect = false)
+            else -> ThemeSpecs.animationKey(typed)?.let { ThemeSpec(crtEffect = true, animation = it) }
+        }
+        if (spec == null) {
+            val hint = Texts.get(R.string.cmd_theme_animation_hint) + currentLine(current)
+            return result(title, hint, if (rest.isEmpty()) Tone.IDLE else Tone.ERROR, null, suggestions)
+        }
+        return result(title, "→ " + (spec.animation ?: NO_ANIMATION), Tone.OK, ThemeAction.Apply(spec), suggestions.filter { it.label != typed })
     }
 
     private fun currentLine(current: String?): String = current?.let { "\n" + Texts.get(R.string.cmd_theme_now, it) }.orEmpty()

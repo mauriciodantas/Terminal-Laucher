@@ -69,8 +69,8 @@ import app.lawnchair.ui.popup.LauncherOptionsPopup
 import app.lawnchair.ui.popup.LawnchairShortcut
 import app.lawnchair.util.unsafeLazy
 import app.lawnchair.views.BurnInGuard
-import app.lawnchair.views.CrtOverlayView
 import app.lawnchair.views.LawnchairFloatingSurfaceView
+import app.lawnchair.views.ScreenAnimationView
 import app.lawnchair.wallpaper.BackgroundColorWallpaper
 import com.android.launcher3.AbstractFloatingView
 import com.android.launcher3.BaseActivity
@@ -254,7 +254,7 @@ class LawnchairLauncher : QuickstepLauncher() {
     private fun canOpenCommandBar() = isInState(LauncherState.NORMAL) && AbstractFloatingView.getTopOpenView(this) == null
 
     private fun installCrtOverlay() {
-        val crt = CrtOverlayView(this)
+        val crt = ScreenAnimationView(this)
         (dragLayer.parent as ViewGroup).addView(
             crt,
             ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),
@@ -266,9 +266,14 @@ class LawnchairLauncher : QuickstepLauncher() {
                 }
             },
         )
-        combine(preferenceManager2.crtEffect.get(), preferenceManager2.crtEffectIntensity.get()) { enabled, intensity ->
-            if (enabled) intensity else 0f
-        }.distinctUntilChanged().onEach { intensity ->
+        combine(
+            preferenceManager2.crtEffect.get(),
+            preferenceManager2.crtEffectIntensity.get(),
+            preferenceManager2.screenAnimation.get(),
+        ) { enabled, intensity, kind ->
+            Triple(kind, if (enabled) intensity else 0f, enabled)
+        }.distinctUntilChanged().onEach { (kind, intensity, _) ->
+            crt.play(kind)
             crt.intensity = intensity
             crt.visibility = if (intensity > 0f) View.VISIBLE else View.GONE
         }.launchIn(scope = lifecycleScope)

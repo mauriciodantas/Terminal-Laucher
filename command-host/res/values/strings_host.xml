@@ -45,6 +45,9 @@
     <string name="cmd_theme_el_shape_desc">ICON SHAPE</string>
     <string name="cmd_theme_el_foldershape">foldershape</string>
     <string name="cmd_theme_el_foldershape_desc">FOLDER SHAPE</string>
+    <string name="cmd_theme_el_animation">animation</string>
+    <string name="cmd_theme_el_animation_desc">SCREEN ANIMATION · MONITOR, SNOW, PETALS…</string>
+    <string name="cmd_theme_animation_hint">Pick an animation: monitor, snow, petals, stars, rain or none</string>
     <string name="cmd_theme_shape_hint">Pick a shape: circle, squircle, hexagon, flower…</string>
     <string name="cmd_theme_el_paint">paint</string>
     <string name="cmd_theme_el_paint_desc">BACKGROUND COLOR AS THE SYSTEM WALLPAPER</string>

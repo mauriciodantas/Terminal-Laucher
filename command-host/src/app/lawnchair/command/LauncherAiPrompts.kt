@@ -54,7 +54,7 @@ object LauncherAiPrompts {
         "{\"name\": \"<short name, 1 to 3 words, in the user's language>\", \"accent\": \"#rrggbb\", \"background\": \"#rrggbb\", \"secondary\": \"#rrggbb\", " +
             "\"outline\": \"#rrggbb\", \"dock\": \"#rrggbb\", \"folder\": \"#rrggbb\", \"followSystem\": false, " +
             "\"font\": {\"kind\": \"google\", \"family\": \"<Google Fonts family>\"}, \"pixelClock\": true, \"iconEffect\": true, " +
-            "\"widgetEffect\": true, \"widgetIntensity\": 0.6, \"crtEffect\": true, \"crtIntensity\": 0.4, " +
+            "\"widgetEffect\": true, \"widgetIntensity\": 0.6, \"crtEffect\": true, \"crtIntensity\": 0.4, \"animation\": \"<animation>\", " +
             "\"showWallpaper\": false, \"wallpaperDim\": 0.5, \"colorAsWallpaper\": false, \"iconShape\": \"<shape>\", \"folderShape\": \"<shape>\", " +
             "\"wallpaper\": {\"svg\": \"<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1080 2400'>...</svg>\", \"lockScreen\": false}, " +
             "\"lockWallpaper\": {\"svg\": \"<svg ...>...</svg>\"}, \"note\": \"<one short sentence>\"}\n" +
@@ -65,7 +65,9 @@ object LauncherAiPrompts {
             "any color may be \"default\" to follow the accent. The font is an exact Google Fonts family name " +
             "(monospaced ones such as JetBrains Mono, Space Mono, IBM Plex Mono, VT323 or Share Tech Mono suit the look best), " +
             "or {\"kind\": \"default\"} for the terminal font. pixelClock keeps the pixel font for the clock. " +
-            "iconEffect draws app icons in the accent color; widgetEffect tints widgets; crtEffect adds scanlines; " +
+            "iconEffect draws app icons in the accent color; widgetEffect tints widgets; crtEffect turns on the animation over the whole screen and crtIntensity says how strong it is; " +
+            "animation picks which one: ${ThemeSpecs.ANIMATIONS.joinToString(", ")} (monitor is the CRT look with scanlines; the others are particles), or \"none\" for no animation. " +
+            "Pick the animation that belongs to the concept instead of always the monitor: snow for a winter scene, petals for a spring or a Japanese garden, stars for a night sky, rain for a neon alley or a storm. " +
             "intensities go from 0.05 to 1. showWallpaper shows the system wallpaper behind the home screen, dimmed by wallpaperDim (0 to 1); " +
             "colorAsWallpaper sets the background color as the system wallpaper. Set followSystem only when asked to follow the light and dark mode. " +
             "iconShape and folderShape pick the shape app icons and folders are cut to, one of: ${ThemeSpecs.ICON_SHAPES.joinToString(", ")}. " +

@@ -1,7 +1,12 @@
 package app.lawnchair.ui.preferences.destinations
 
 import android.content.Intent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -11,9 +16,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import app.lawnchair.preferences.getAdapter
 import app.lawnchair.preferences.preferenceManager
 import app.lawnchair.preferences2.preferenceManager2
@@ -25,6 +34,8 @@ import app.lawnchair.ui.preferences.components.colorpreference.ColorPreference
 import app.lawnchair.ui.preferences.components.colorpreference.ComplementaryColorsPreference
 import app.lawnchair.ui.preferences.components.colorpreference.FollowSystemColorModePreference
 import app.lawnchair.ui.preferences.components.controls.ClickablePreference
+import app.lawnchair.ui.preferences.components.controls.ListPreference
+import app.lawnchair.ui.preferences.components.controls.ListPreferenceEntry
 import app.lawnchair.ui.preferences.components.controls.SliderPreference
 import app.lawnchair.ui.preferences.components.controls.SwitchPreference
 import app.lawnchair.ui.preferences.components.layout.DividerColumn
@@ -32,6 +43,7 @@ import app.lawnchair.ui.preferences.components.layout.ExpandAndShrink
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
 import app.lawnchair.ui.preferences.navigation.GeneralIconShape
+import app.lawnchair.views.ScreenAnimationView
 import com.android.launcher3.R
 
 /** Everything that decides how the launcher looks: the colors and the font, in one place. */
@@ -202,18 +214,52 @@ fun AppearancePreferences(modifier: Modifier = Modifier) {
             val crtEffect = prefs2.crtEffect.getAdapter()
             SwitchPreference(
                 adapter = crtEffect,
-                label = stringResource(id = R.string.crt_effect),
-                description = stringResource(id = R.string.crt_effect_desc),
+                label = stringResource(id = R.string.screen_animation),
+                description = stringResource(id = R.string.screen_animation_desc),
             )
             ExpandAndShrink(visible = crtEffect.state.value) {
-                SliderPreference(
-                    label = stringResource(id = R.string.effect_intensity),
-                    adapter = prefs2.crtEffectIntensity.getAdapter(),
-                    step = 0.05f,
-                    valueRange = 0.05f..1f,
-                    showAsPercentage = true,
-                )
+                Column {
+                    val animationKind = prefs2.screenAnimation.getAdapter()
+                    val animationIntensity = prefs2.crtEffectIntensity.getAdapter()
+                    ListPreference(
+                        adapter = animationKind,
+                        entries = listOf(
+                            ListPreferenceEntry("monitor") { stringResource(R.string.screen_animation_monitor) },
+                            ListPreferenceEntry("snow") { stringResource(R.string.screen_animation_snow) },
+                            ListPreferenceEntry("petals") { stringResource(R.string.screen_animation_petals) },
+                            ListPreferenceEntry("stars") { stringResource(R.string.screen_animation_stars) },
+                            ListPreferenceEntry("rain") { stringResource(R.string.screen_animation_rain) },
+                        ),
+                        label = stringResource(id = R.string.screen_animation_kind),
+                    )
+                    SliderPreference(
+                        label = stringResource(id = R.string.effect_intensity),
+                        adapter = animationIntensity,
+                        step = 0.05f,
+                        valueRange = 0.05f..1f,
+                        showAsPercentage = true,
+                    )
+                    ScreenAnimationPreview(kind = animationKind.state.value, intensity = animationIntensity.state.value)
+                }
             }
         }
     }
+}
+
+/** The chosen animation playing over a stand-in wallpaper, so it can be judged before leaving Settings. */
+@Composable
+private fun ScreenAnimationPreview(kind: String, intensity: Float) {
+    AndroidView(
+        factory = { ScreenAnimationView(it) },
+        update = {
+            it.play(kind)
+            it.intensity = intensity
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .height(180.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(Brush.verticalGradient(listOf(Color(0xFF14102B), Color(0xFF3D2547), Color(0xFF8A4B5C)))),
+    )
 }

@@ -535,7 +535,13 @@ class PreferenceManager2 @Inject constructor(
         defaultValue = 1f,
     )
 
-    /** The CRT layer over the whole launcher: scanlines, rolling band, flicker and vignette. */
+    /** Which animation plays over the whole launcher while [crtEffect] is on: a key of ThemeSpecs.ANIMATIONS. */
+    val screenAnimation = preference(
+        key = stringPreferencesKey("screen_animation"),
+        defaultValue = "monitor",
+    )
+
+    /** The animation over the whole launcher is on: the monitor by default, or the one chosen. */
     val crtEffect = preference(
         key = booleanPreferencesKey("crt_effect"),
         defaultValue = true,

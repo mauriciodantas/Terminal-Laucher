@@ -104,8 +104,11 @@ data class ThemeSpec(
     val iconEffect: Boolean? = null,
     val widgetEffect: Boolean? = null,
     val widgetIntensity: Float? = null,
+    /** The animation over the whole screen is on; "none" in a theme file turns it off. */
     val crtEffect: Boolean? = null,
     val crtIntensity: Float? = null,
+    /** Which animation plays over the screen, one of [ThemeSpecs.ANIMATIONS]; [crtIntensity] says how strong. */
+    val animation: String? = null,
     val showWallpaper: Boolean? = null,
     val wallpaperDim: Float? = null,
     /** The background color also set as the system wallpaper of the home screen. */
@@ -142,6 +145,7 @@ data class ThemeSpec(
         widgetIntensity = other.widgetIntensity ?: widgetIntensity,
         crtEffect = other.crtEffect ?: crtEffect,
         crtIntensity = other.crtIntensity ?: crtIntensity,
+        animation = other.animation ?: animation,
         showWallpaper = other.showWallpaper ?: showWallpaper,
         wallpaperDim = other.wallpaperDim ?: wallpaperDim,
         colorAsWallpaper = other.colorAsWallpaper ?: colorAsWallpaper,
@@ -213,6 +217,7 @@ object ThemeSpecs {
         spec.widgetIntensity?.let { o.put("widgetIntensity", it.toDouble()) }
         spec.crtEffect?.let { o.put("crtEffect", it) }
         spec.crtIntensity?.let { o.put("crtIntensity", it.toDouble()) }
+        spec.animation?.let { o.put("animation", it) }
         spec.showWallpaper?.let { o.put("showWallpaper", it) }
         spec.wallpaperDim?.let { o.put("wallpaperDim", it.toDouble()) }
         spec.colorAsWallpaper?.let { o.put("colorAsWallpaper", it) }
@@ -270,8 +275,9 @@ object ThemeSpecs {
         iconEffect = bool(o, "iconEffect"),
         widgetEffect = bool(o, "widgetEffect"),
         widgetIntensity = fraction(o, "widgetIntensity")?.coerceAtLeast(MIN_INTENSITY),
-        crtEffect = bool(o, "crtEffect"),
+        crtEffect = bool(o, "crtEffect") ?: animationOff(o),
         crtIntensity = fraction(o, "crtIntensity")?.coerceAtLeast(MIN_INTENSITY),
+        animation = animationKey(o.optString("animation")),
         showWallpaper = bool(o, "showWallpaper"),
         wallpaperDim = fraction(o, "wallpaperDim"),
         colorAsWallpaper = bool(o, "colorAsWallpaper"),
@@ -290,6 +296,23 @@ object ThemeSpecs {
         "sevensidedcookie", "arch", "cloudy", "flower", "heart", "leaf", "meow", "pebble", "roundedhexagon",
         "stretched", "vessel",
     )
+
+    /**
+     * The animations the launcher can play over the screen, by the key it stores. "monitor" is the
+     * CRT look of the Nostromo terminals; each of the others is a field of moving particles.
+     */
+    val ANIMATIONS = listOf("monitor", "snow", "petals", "stars", "rain")
+
+    /** The key an animation [text] names, in any case; null for an unknown one or for "none". */
+    fun animationKey(text: String): String? {
+        val t = text.trim().lowercase()
+        return ANIMATIONS.firstOrNull { it == t }
+    }
+
+    /** True for "none" or "off": the animation is switched off rather than changed. */
+    fun animationIsOff(text: String): Boolean = text.trim().lowercase() in setOf("none", "off")
+
+    private fun animationOff(o: JSONObject): Boolean? = if (animationIsOff(o.optString("animation"))) false else null
 
     /** The key a shape [text] names, in any case and with or without spaces, dashes or underscores; null for an unknown one. */
     fun shapeKey(text: String): String? {

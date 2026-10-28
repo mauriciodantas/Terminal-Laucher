@@ -7,8 +7,8 @@ import android.net.Uri
 import androidx.core.content.FileProvider
 import app.lawnchair.font.FontCache
 import app.lawnchair.font.googlefonts.GoogleFontsListing
-import app.lawnchair.preferences.PreferenceManager
 import app.lawnchair.icons.shape.IconShape
+import app.lawnchair.preferences.PreferenceManager
 import app.lawnchair.preferences2.PreferenceManager2
 import app.lawnchair.preferences2.firstCached
 import app.lawnchair.theme.ComplementaryColors
@@ -89,6 +89,7 @@ object ThemeStore {
             widgetIntensity = p.widgetEffectIntensity.firstCached(p),
             crtEffect = p.crtEffect.firstCached(p),
             crtIntensity = p.crtEffectIntensity.firstCached(p),
+            animation = p.screenAnimation.firstCached(p),
             showWallpaper = p.showSystemWallpaper.firstCached(p),
             wallpaperDim = p.wallpaperDim.firstCached(p),
             colorAsWallpaper = p.backgroundColorAsWallpaper.firstCached(p),
@@ -150,6 +151,7 @@ object ThemeStore {
         spec.widgetIntensity?.let { p.widgetEffectIntensity.update(p, it) }
         spec.crtEffect?.let { p.crtEffect.update(p, it) }
         spec.crtIntensity?.let { p.crtEffectIntensity.update(p, it) }
+        spec.animation?.let { p.screenAnimation.update(p, it) }
         // An image as wallpaper is shown behind the home screen, and the color no longer painted over it.
         (spec.showWallpaper ?: spec.wallpaper?.let { true })?.let { p.showSystemWallpaper.update(p, it) }
         spec.wallpaperDim?.let { p.wallpaperDim.update(p, it) }
@@ -172,6 +174,7 @@ object ThemeStore {
         listOf(p.followSystemColorMode, p.terminalPixelClock, p.terminalIconEffect, p.widgetEffect, p.crtEffect, p.showSystemWallpaper, p.backgroundColorAsWallpaper)
             .forEach { it.update(p, it.defaultValue) }
         listOf(p.widgetEffectIntensity, p.crtEffectIntensity, p.wallpaperDim).forEach { it.update(p, it.defaultValue) }
+        p.screenAnimation.update(p, p.screenAnimation.defaultValue)
         val fonts = PreferenceManager.getInstance(context).fontWorkspace
         if (fonts.get() != fonts.defaultValue) fonts.set(fonts.defaultValue)
         p.strokeColorStyle.update(p, p.strokeColorStyle.defaultValue)

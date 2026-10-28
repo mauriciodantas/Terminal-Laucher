@@ -45,6 +45,9 @@
     <string name="cmd_theme_el_shape_desc">FORMATO DOS ÍCONES</string>
     <string name="cmd_theme_el_foldershape">formatopasta</string>
     <string name="cmd_theme_el_foldershape_desc">FORMATO DAS PASTAS</string>
+    <string name="cmd_theme_el_animation">animacao</string>
+    <string name="cmd_theme_el_animation_desc">ANIMAÇÃO DA TELA · MONITOR, NEVE, PÉTALAS…</string>
+    <string name="cmd_theme_animation_hint">Escolha uma animação: monitor, snow, petals, stars, rain ou none</string>
     <string name="cmd_theme_shape_hint">Escolha um formato: circle, squircle, hexagon, flower…</string>
     <string name="cmd_theme_el_paint">pintar</string>
     <string name="cmd_theme_el_paint_desc">COR DE FUNDO COMO PAPEL DE PAREDE DO SISTEMA</string>

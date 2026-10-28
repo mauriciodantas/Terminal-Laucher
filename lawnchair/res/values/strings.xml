@@ -1297,6 +1297,14 @@
     <string name="widget_effect_desc">Phosphor-colored tint and scanlines over added widgets. When off, each widget shows its own colors</string>
     <string name="crt_effect">Monitor effect</string>
     <string name="crt_effect_desc">Scanlines, a glow band, flicker and vignette over the screen</string>
+    <string name="screen_animation">Screen animation</string>
+    <string name="screen_animation_desc">An animation over the whole screen: the monitor, snow, petals…</string>
+    <string name="screen_animation_kind">Animation</string>
+    <string name="screen_animation_monitor">Monitor</string>
+    <string name="screen_animation_snow">Snow</string>
+    <string name="screen_animation_petals">Falling petals</string>
+    <string name="screen_animation_stars">Twinkling stars</string>
+    <string name="screen_animation_rain">Rain</string>
     <string name="effect_intensity">Intensity</string>
     <string name="lottie_widget">Lottie animation</string>
     <string name="lottie_widget_desc">Plays an imported Lottie animation (.json or .lottie). Loops or plays once per tap, and a tap can run a command</string>
