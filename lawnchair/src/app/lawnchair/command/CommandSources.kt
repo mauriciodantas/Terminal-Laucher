@@ -215,7 +215,11 @@ object CommandSources {
         val process = ProcessBuilder("ping", "-c", "3", "-W", "2", host).redirectErrorStream(true).start()
         // The watchdog ends a ping that never answers; reading the output would otherwise block past the timeout.
         val watchdog = kotlin.concurrent.thread(isDaemon = true) {
-            if (!process.waitFor(PING_TIMEOUT_S, java.util.concurrent.TimeUnit.SECONDS)) process.destroyForcibly()
+            // Interrupted once the output was read: the ping is over, so there is nothing left to end.
+            try {
+                if (!process.waitFor(PING_TIMEOUT_S, java.util.concurrent.TimeUnit.SECONDS)) process.destroyForcibly()
+            } catch (_: InterruptedException) {
+            }
         }
         val output = process.inputStream.bufferedReader().use { it.readText() }
         watchdog.interrupt()
