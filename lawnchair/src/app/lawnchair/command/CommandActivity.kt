@@ -46,6 +46,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -438,6 +439,118 @@ private fun CommandScreen(onClose: () -> Unit) {
         StatsStore.record(context, command.trim())
     }
 
+    /** What the bar does with the answer of the AI: the line it suggests, what to review (pack, theme, folders) or the next question. */
+    suspend fun applyAiReply(action: CommandAction.Ai, turns: List<AiTurn>, reply: AiReply, folders: List<ExistingFolder>) {
+        when (action.mode) {
+            AiMode.RUN -> {
+                val proposal = AiPrompts.command(reply.text)
+                val line = proposal.command
+                if (line == null) {
+                    done = proposal.note.ifEmpty { context.getString(R.string.cmd_ai_no_command) }
+                } else {
+                    // The command waits on the line with its preview; Enter runs it.
+                    setText(line)
+                    aiNote = line to proposal.note
+                }
+            }
+
+            AiMode.CREATE -> {
+                val pack = AiPrompts.pack(reply.text)
+                // Asked for a theme in other words ("ia create theme for halloween"), the AI sends one: it is reviewed as a theme.
+                val theme = LauncherAiPrompts.createdTheme(reply.text)
+                if (theme != null) {
+                    if (ThemeStore.review(context, ThemeImages.embed(context, theme.first))) onClose() else done = failedLabel
+                } else if (pack == null) {
+                    done = context.getString(R.string.cmd_ai_create_failed)
+                } else {
+                    // The same import screen as a pack received from somebody: nothing is added unseen.
+                    val opened = runCatching {
+                        val dir = java.io.File(context.cacheDir, "commands").apply { mkdirs() }
+                        val file = java.io.File(dir, "ia." + CommandPacks.EXTENSION).apply { writeText(pack.first) }
+                        val uri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+                        context.startActivity(
+                            Intent(context, ImportCommandsActivity::class.java)
+                                .setAction(Intent.ACTION_VIEW)
+                                .setData(uri)
+                                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION),
+                        )
+                    }.isSuccess
+                    if (opened) onClose() else done = failedLabel
+                }
+            }
+
+            AiMode.THEME -> {
+                val theme = LauncherAiPrompts.theme(reply.text)
+                when {
+                    theme == null -> done = context.getString(R.string.cmd_ai_theme_failed)
+
+                    // The same screen as a theme received from somebody: nothing changes unseen.
+                    ThemeStore.review(context, ThemeImages.embed(context, theme.first)) -> onClose()
+
+                    else -> done = failedLabel
+                }
+            }
+
+            AiMode.FOLDERS -> {
+                val plan = AiFolders.plan(reply.text, apps, folders, action.force)
+                when {
+                    plan == null -> done = context.getString(R.string.cmd_ai_folders_failed)
+
+                    plan.isEmpty -> done = plan.note.ifEmpty { context.getString(R.string.cmd_ai_folders_none) }
+
+                    // The plan waits on screen: nothing changes until APPLY.
+                    else -> {
+                        folderPlan = plan
+                        done = null
+                        setText("")
+                    }
+                }
+            }
+
+            else -> {
+                aiTurns = turns + reply.turn
+                // Ready for the next question.
+                setText(BuiltInCommand.AI.word + " ")
+            }
+        }
+    }
+
+    // Runs that work (or ended) while the bar was closed: see BackgroundRunService.
+    val runs by BackgroundRuns.jobs.collectAsState()
+    var clockNow by remember { mutableStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(runs.any { it.running }) {
+        while (runs.any { it.running }) {
+            clockNow = System.currentTimeMillis()
+            kotlinx.coroutines.delay(100)
+        }
+    }
+
+    /** Shows how a run ended and takes it off the list: the answer, the line it suggests, or why it failed. */
+    fun adopt(job: BackgroundJob) {
+        BackgroundRuns.dismiss(job.id)
+        BackgroundRunService.clearDone(context, job.id)
+        val ask = job.ai
+        val reply = job.reply
+        val prefill = job.prefill
+        if (ask != null && reply != null && job.phase == RunPhase.DONE) {
+            scope.launch {
+                val folders = if (ask.mode == AiMode.FOLDERS) runCatching { FolderOrganizer.existing(context) }.getOrDefault(emptyList()) else emptyList()
+                applyAiReply(ask, BackgroundRuns.history(job.id) + AiTurn(true, ask.prompt), AiReply(reply.text, reply), folders)
+            }
+        } else if (prefill != null) {
+            setText(prefill)
+            aiNote = prefill to job.result.orEmpty()
+        } else {
+            done = job.result.orEmpty().ifBlank { executedLabel }
+        }
+    }
+
+    LaunchedEffect(runs) {
+        if (done != null || field.text.isNotBlank()) return@LaunchedEffect
+        val wanted = (context as? android.app.Activity)?.intent?.getIntExtra(BackgroundRuns.EXTRA_JOB, -1)
+        runs.firstOrNull { !it.running && (it.id == wanted || wanted == null || wanted < 0) }?.let { adopt(it) }
+    }
+
     /**
      * Sends [action] to the AI. Only the request, the commands of the bar, the user's letters and
      * alias names, the app names and the drawer folder names go out: no contacts, notes, calendar,
@@ -495,78 +608,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                 done = AiClient.describe(context, error)
                 return@launch
             }
-            when (action.mode) {
-                AiMode.RUN -> {
-                    val proposal = AiPrompts.command(reply.text)
-                    val line = proposal.command
-                    if (line == null) {
-                        done = proposal.note.ifEmpty { context.getString(R.string.cmd_ai_no_command) }
-                    } else {
-                        // The command waits on the line with its preview; Enter runs it.
-                        setText(line)
-                        aiNote = line to proposal.note
-                    }
-                }
-
-                AiMode.CREATE -> {
-                    val pack = AiPrompts.pack(reply.text)
-                    // Asked for a theme in other words ("ia create theme for halloween"), the AI sends one: it is reviewed as a theme.
-                    val theme = LauncherAiPrompts.createdTheme(reply.text)
-                    if (theme != null) {
-                        if (ThemeStore.review(context, ThemeImages.embed(context, theme.first))) onClose() else done = failedLabel
-                    } else if (pack == null) {
-                        done = context.getString(R.string.cmd_ai_create_failed)
-                    } else {
-                        // The same import screen as a pack received from somebody: nothing is added unseen.
-                        val opened = runCatching {
-                            val dir = java.io.File(context.cacheDir, "commands").apply { mkdirs() }
-                            val file = java.io.File(dir, "ia." + CommandPacks.EXTENSION).apply { writeText(pack.first) }
-                            val uri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
-                            context.startActivity(
-                                Intent(context, ImportCommandsActivity::class.java)
-                                    .setAction(Intent.ACTION_VIEW)
-                                    .setData(uri)
-                                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION),
-                            )
-                        }.isSuccess
-                        if (opened) onClose() else done = failedLabel
-                    }
-                }
-
-                AiMode.THEME -> {
-                    val theme = LauncherAiPrompts.theme(reply.text)
-                    when {
-                        theme == null -> done = context.getString(R.string.cmd_ai_theme_failed)
-
-                        // The same screen as a theme received from somebody: nothing changes unseen.
-                        ThemeStore.review(context, ThemeImages.embed(context, theme.first)) -> onClose()
-
-                        else -> done = failedLabel
-                    }
-                }
-
-                AiMode.FOLDERS -> {
-                    val plan = AiFolders.plan(reply.text, apps, folders, action.force)
-                    when {
-                        plan == null -> done = context.getString(R.string.cmd_ai_folders_failed)
-
-                        plan.isEmpty -> done = plan.note.ifEmpty { context.getString(R.string.cmd_ai_folders_none) }
-
-                        // The plan waits on screen: nothing changes until APPLY.
-                        else -> {
-                            folderPlan = plan
-                            done = null
-                            setText("")
-                        }
-                    }
-                }
-
-                else -> {
-                    aiTurns = turns + reply.turn
-                    // Ready for the next question.
-                    setText(BuiltInCommand.AI.word + " ")
-                }
-            }
+            applyAiReply(action, turns, reply, folders)
         }
     }
 
@@ -588,6 +630,18 @@ private fun CommandScreen(onClose: () -> Unit) {
     }
 
     fun commit(action: CommandAction, command: String) {
+        // Slow commands (AI, requests, scripts) go on after the bar closes and tell when they end.
+        if (BackgroundRules.isLong(action) && !(action is CommandAction.Ai && AiStore.load(context) == null) &&
+            !(action is CommandAction.Ai && aiBusy)
+        ) {
+            record(action, command)
+            val history = if (action is CommandAction.Ai && action.mode == AiMode.CHAT) aiTurns else emptyList()
+            if (BackgroundRunService.start(context, command, history, action as? CommandAction.Ai) != null) {
+                android.widget.Toast.makeText(context, context.getString(CommandR.string.cmd_bg_started), android.widget.Toast.LENGTH_SHORT).show()
+                onClose()
+                return
+            }
+        }
         when (action) {
             is CommandAction.Ai -> if (action.mode != AiMode.SETUP) {
                 askAi(action, command)
@@ -899,7 +953,7 @@ private fun CommandScreen(onClose: () -> Unit) {
             callPermission.launch(android.Manifest.permission.CALL_PHONE)
             return
         }
-        if (action is CommandAction.Schedule && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU &&
+        if ((action is CommandAction.Schedule || BackgroundRules.isLong(action)) && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU &&
             !CommandSources.granted(context, android.Manifest.permission.POST_NOTIFICATIONS)
         ) {
             pendingAction = action
@@ -1592,8 +1646,15 @@ private fun CommandScreen(onClose: () -> Unit) {
 
             // Preview.
             val preview: @Composable () -> Unit = {
-                val previewTitle = if (done != null) stringResource(R.string.command_executed) else analysis.previewTitle
-                val previewText = done ?: analysis.preview
+                val live = runs.firstOrNull { it.running }?.takeIf { done == null && text.isBlank() }
+                val previewTitle = when {
+                    live != null -> BackgroundRules.spinner(clockNow).toString() + " " + stringResource(R.string.command_running) + " " + BackgroundRules.clock(live.elapsed(clockNow))
+                    done != null -> stringResource(R.string.command_executed)
+                    else -> analysis.previewTitle
+                }
+                val previewText = done ?: live?.let { job ->
+                    listOf(job.command, BackgroundRules.bar(job), job.partial?.takeLast(300).orEmpty()).filter { it.isNotBlank() }.joinToString("\n")
+                } ?: analysis.preview
                 val previewColor = when {
                     done != null -> phosphor
                     analysis.tone == Tone.OK -> phosphor

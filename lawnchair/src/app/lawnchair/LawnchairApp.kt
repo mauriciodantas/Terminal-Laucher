@@ -71,6 +71,7 @@ class LawnchairApp : LauncherApplication() {
         // The command bar's rules ("quando carregar: ...") and its scheduled commands.
         app.lawnchair.command.CommandScheduler.watchEvents(this)
         app.lawnchair.command.CommandScheduler.armAll(this)
+        app.lawnchair.command.LauncherBackground.install(this)
         // The watch is a remote control of the command bar; its theme and commands go out from here.
         net.mdantas.terminal.wear.bridge.TerminalWear.install(this, app.lawnchair.command.LauncherWearHost)
         QuickStepContract.sRecentsDisabled = !recentsEnabled
