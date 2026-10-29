@@ -162,45 +162,40 @@ object ThemeStore {
         ).takeUnless { it.isEmpty }
     }
 
-    /** The preset first, then each setting the theme names on its own. */
+    /**
+     * The preset first, then each setting the theme names on its own. The final value of each one is worked out
+     * here and written once, without comparing to the cache, which is stale right after a write and made a setting
+     * the preset had just written look unchanged.
+     */
     private fun applyLook(p: PreferenceManager2, l: GlanceLook) {
-        l.preset?.let { id -> GlancePreset.entries.firstOrNull { it.name.equals(id, ignoreCase = true) } }?.let { preset ->
-            p.glancePanelBorder.update(p, preset.border)
-            p.glanceTitleBar.update(p, preset.titleBar)
-            p.glanceBorderWidth.update(p, preset.borderWidth)
-            p.glanceCornerRadius.update(p, preset.radius)
-            p.glanceAlign.update(p, preset.align)
-            p.glanceDensity.update(p, preset.density)
-            p.glanceGlow.update(p, preset.glow)
-            p.glanceShowHeader.update(p, preset.header)
-            p.glanceShowStatus.update(p, preset.status)
-            p.glanceClockFormat.update(p, preset.clock)
-            p.glanceDateFormat.update(p, preset.date)
+        val preset = l.preset?.let { id -> GlancePreset.entries.firstOrNull { it.name.equals(id, ignoreCase = true) } }
+        fun <C, S> PreferenceImpl<C, S>.put(value: C?) {
+            if (value != null) setBlocking(value)
         }
-        l.header?.let { p.glanceShowHeader.update(p, it) }
-        l.date?.let { p.glanceShowDate.update(p, it) }
-        l.status?.let { p.glanceShowStatus.update(p, it) }
-        l.clockFormat?.let { p.glanceClockFormat.update(p, GlanceClockFormat.fromId(it)) }
-        l.dateFormat?.let { p.glanceDateFormat.update(p, GlanceDateFormat.fromId(it)) }
-        l.seconds?.let { p.glanceClockSeconds.update(p, it) }
-        l.dateCaps?.let { p.glanceDateCaps.update(p, it) }
-        l.clockSize?.let { p.glanceClockScale.update(p, it) }
-        l.textSize?.let { p.glanceTextScale.update(p, it) }
-        l.align?.let { p.glanceAlign.update(p, GlanceAlign.fromId(it)) }
-        l.density?.let { p.glanceDensity.update(p, GlanceDensity.fromId(it)) }
-        l.border?.let { p.glancePanelBorder.update(p, it) }
-        l.borderWidth?.let { p.glanceBorderWidth.update(p, it) }
-        l.radius?.let { p.glanceCornerRadius.update(p, it) }
-        l.titleBar?.let { p.glanceTitleBar.update(p, GlanceTitleBar.fromId(it)) }
-        l.glow?.let { p.glanceGlow.update(p, it) }
-        l.dim?.let { p.glanceDimLevel.update(p, it) }
-        l.urgent?.let { p.glanceUrgentColor.update(p, GlanceUrgentColor.fromId(it)) }
-        l.statusSound?.let { p.glanceStatusSound.update(p, it) }
-        l.statusStorage?.let { p.glanceStatusStorage.update(p, it) }
-        l.statusRam?.let { p.glanceStatusRam.update(p, it) }
+        p.glancePanelBorder.put(l.border ?: preset?.border)
+        p.glanceTitleBar.put(l.titleBar?.let(GlanceTitleBar::fromId) ?: preset?.titleBar)
+        p.glanceBorderWidth.put(l.borderWidth ?: preset?.borderWidth)
+        p.glanceCornerRadius.put(l.radius ?: preset?.radius)
+        p.glanceAlign.put(l.align?.let(GlanceAlign::fromId) ?: preset?.align)
+        p.glanceDensity.put(l.density?.let(GlanceDensity::fromId) ?: preset?.density)
+        p.glanceGlow.put(l.glow ?: preset?.glow)
+        p.glanceShowHeader.put(l.header ?: preset?.header)
+        p.glanceShowStatus.put(l.status ?: preset?.status)
+        p.glanceClockFormat.put(l.clockFormat?.let(GlanceClockFormat::fromId) ?: preset?.clock)
+        p.glanceDateFormat.put(l.dateFormat?.let(GlanceDateFormat::fromId) ?: preset?.date)
+        p.glanceShowDate.put(l.date)
+        p.glanceClockSeconds.put(l.seconds)
+        p.glanceDateCaps.put(l.dateCaps)
+        p.glanceClockScale.put(l.clockSize)
+        p.glanceTextScale.put(l.textSize)
+        p.glanceDimLevel.put(l.dim)
+        p.glanceUrgentColor.put(l.urgent?.let(GlanceUrgentColor::fromId))
+        p.glanceStatusSound.put(l.statusSound)
+        p.glanceStatusStorage.put(l.statusStorage)
+        p.glanceStatusRam.put(l.statusRam)
         l.hiddenShortcuts?.let { names ->
             val hidden = GlanceShortcut.entries.filter { it.name.lowercase() in names }.toSet()
-            p.glanceShortcutsHidden.update(p, GlanceReadout.serializeHidden(hidden))
+            p.glanceShortcutsHidden.put(GlanceReadout.serializeHidden(hidden))
         }
     }
 
