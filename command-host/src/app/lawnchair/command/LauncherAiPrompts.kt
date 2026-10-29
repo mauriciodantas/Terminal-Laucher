@@ -114,7 +114,7 @@ object LauncherAiPrompts {
 
     /**
      * For a chat that can open links: a real picture beats a drawing. Only the guide prompt has it, since
-     * [theme] keeps just the SVG of a reply and a model behind the in-app command has no internet.
+     * a model behind the in-app command may have no internet.
      */
     val REAL_IMAGES_RULES =
         "WALLPAPER, IF YOU CAN BROWSE THE INTERNET (open links, search the web or call APIs): this replaces the SVG wallpaper rules and " +
@@ -125,14 +125,20 @@ object LauncherAiPrompts {
             "skip \"nao\" and, unless nothing else fits, \"limitado\". Pick the source that suits the idea (space: NASA; art and paintings: The Met, Art Institute of Chicago, Cleveland; " +
             "places, history, architecture: Wikimedia Commons; nature and animals: iNaturalist or Wikimedia Commons). If a source fails or finds nothing, try the next.\n" +
             "3. Search it for the concept of the theme, in English. Prefer a portrait or tall picture at least 1080 px wide, with a calm area in the top third and the middle " +
-            "(the clock, icons and text are drawn there) and the detail at the bottom and the edges.\n" +
+            "(the clock, icons and text are drawn there) and the detail at the bottom and the edges. If no portrait one fits, a landscape or square picture is fine: " +
+            "the phone crops it to fill the screen around its center, so choose one whose subject is in the middle. " +
+            "If the exact thing asked for (bats, ghosts, a given animal) has no suitable picture, take a picture of the same mood or place and let the animation or the colors carry the rest.\n" +
             "4. The link must be one you really received from that API or page: a direct https link to a .jpg, .png or .webp (not a web page, a search page or a viewer), " +
-            "of at most 3 MB (use the size parameter of the source, for example width=1080 on Wikimedia Commons). Open it to check that it loads as an image. " +
+            "of at most 3 MB. Open it to check that it loads as an image and read its size; a large PNG is often over 3 MB, so prefer a JPEG or a smaller size. " +
+            "Use the size the source itself returns, as the catalog says (on Wikimedia Commons the thumburl of the API with iiurlwidth, or the upload.wikimedia.org link of the file; " +
+            "do not build thumbnail links by hand, only standard sizes exist). Send an identifiable User-Agent when the catalog asks for one. " +
             "Never invent, guess or rebuild a link from memory, and never use pictures from sources outside the catalog (Google Images, Pinterest, stock sites, social networks).\n" +
-            "5. Write it as \"wallpaper\": {\"url\": \"<direct link>\"} (add \"lockScreen\": true to use it on the lock screen too), set showWallpaper true and " +
-            "wallpaperDim between 0.35 and 0.6 so the text stays readable, and leave out \"lockWallpaper\" unless the user wants a second picture (then {\"url\": \"<link>\"}).\n" +
+            "5. Write it as \"wallpaper\": {\"url\": \"<direct link>\"}; \"lockScreen\": true may go in the same object to use it on the lock screen too. " +
+            "Set showWallpaper true and wallpaperDim between 0.35 and 0.6 so the text stays readable (more when the subject is in the middle of the screen). " +
+            "Leave out \"lockWallpaper\" unless the user wants a second picture or asks for one for the lock screen (then {\"url\": \"<link>\"}, another picture of the same world). " +
+            "A customAnimation replaces \"animation\": leave \"animation\" out then.\n" +
             "6. Take the colors from the picture: a dark background from its darkest tone, an accent from its most vivid or lightest tone, still with a contrast of at least 4.5.\n" +
-            "7. Put the credit in \"note\" (title, author, licence and site; the licence of the item, not of the site), within one or two short sentences. " +
+            "7. Put the credit in \"note\": for each picture its title, author and licence (the licence of the item, not of the site), as short as you can, one sentence per picture. " +
             "Use only items whose licence allows reuse, and give the credit when it asks for one.\n" +
             "8. If no picture fits, fall back to the SVG wallpaper."
 
@@ -150,15 +156,17 @@ object LauncherAiPrompts {
     fun theme(reply: String): Pair<ThemeSpec, String>? {
         val o = AiPrompts.json(reply) ?: AiPrompts.json(AiPrompts.repairSvg(reply)) ?: return null
         val t = o.optJSONObject("theme") ?: o
-        // A link or base64 the AI writes would be made up: only the SVG it draws stays, which the phone turns into
-        // a PNG embedded in the theme. A wallpaper it adds is shown even if it left showWallpaper off.
+        // Base64 the AI writes would be made up: what stays is the SVG it draws, which the phone turns into a PNG
+        // embedded in the theme, and the link of a real picture (an AI that browses, see [REAL_IMAGES_RULES]), which
+        // the import screen shows before the phone downloads it. A wallpaper it adds is shown even if it left showWallpaper off.
         val read = ThemeSpecs.fromJson(t)
-        val wallpaper = read.wallpaper?.takeIf { it.image is ThemeImage.Svg }
+        fun ThemeImage?.kept() = this is ThemeImage.Svg || this is ThemeImage.Url
+        val wallpaper = read.wallpaper?.takeIf { it.image.kept() }
         val spec = read.copy(
             // A Lottie file is a file from someone else: an AI only describes particles.
             customAnimation = read.customAnimation as? CustomAnimation.Particles,
             wallpaper = wallpaper,
-            lockWallpaper = read.lockWallpaper as? ThemeImage.Svg,
+            lockWallpaper = read.lockWallpaper?.takeIf { it.kept() },
             showWallpaper = if (wallpaper != null) true else read.showWallpaper,
         )
         if (spec.isEmpty || ThemeSpecs.unreadable(spec, null)) return null

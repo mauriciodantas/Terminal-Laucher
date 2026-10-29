@@ -43,6 +43,8 @@ class ThemeShapeTest {
     @Test fun guidePromptPrefersRealImagesFromTheCatalog() {
         assertTrue(LauncherAiPrompts.THEME_MASTER_PROMPT.contains(LauncherAiPrompts.IMAGE_SOURCES_URL))
         assertTrue(LauncherAiPrompts.THEME_MASTER_PROMPT.contains("\"wallpaper\": {\"url\""))
+        assertTrue(LauncherAiPrompts.THEME_MASTER_PROMPT.contains("thumburl"))
+        assertTrue(LauncherAiPrompts.THEME_MASTER_PROMPT.contains("crops it"))
         // The in-app command keeps the SVG: its reply is read for drawings only and a model there may not browse.
         assertFalse(LauncherAiPrompts.THEME_RULES.contains(LauncherAiPrompts.IMAGE_SOURCES_URL))
         assertFalse(LauncherAiPrompts.CREATE_TAIL.contains(LauncherAiPrompts.IMAGE_SOURCES_URL))
@@ -52,5 +54,16 @@ class ThemeShapeTest {
         val spec = ThemeSpecs.fromJson(org.json.JSONObject("""{"name":"x","wallpaper":{"url":"https://upload.wikimedia.org/a.jpg","lockScreen":true},"showWallpaper":true,"wallpaperDim":0.5}"""))
         assertEquals(ThemeImage.Url("https://upload.wikimedia.org/a.jpg"), spec.wallpaper?.image)
         assertTrue(spec.wallpaper?.lockScreen == true)
+    }
+
+    @Test fun aGuideReplyWithALinkWallpaperKeepsItAndBase64IsDropped() {
+        val reply = """```json
+{"name":"x","accent":"#6ef5aa","background":"#051419","wallpaper":{"url":"https://upload.wikimedia.org/a.jpg"},"lockWallpaper":{"url":"https://upload.wikimedia.org/b.jpg"},"note":"credit"}
+```"""
+        val (spec, note) = LauncherAiPrompts.theme(reply)!!
+        assertEquals(ThemeImage.Url("https://upload.wikimedia.org/a.jpg"), spec.wallpaper?.image)
+        assertEquals(ThemeImage.Url("https://upload.wikimedia.org/b.jpg"), spec.lockWallpaper)
+        assertEquals(true, spec.showWallpaper)
+        assertEquals("credit", note)
     }
 }

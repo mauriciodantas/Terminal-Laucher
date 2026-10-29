@@ -288,9 +288,10 @@ class ThemeCommandTest {
     private val drawing = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1080 2400'><rect width='1080' height='2400' fill='#120a1e'/></svg>"
 
     @Test fun aiThemesDrawTheirWallpaperInSvg() {
-        // A link, base64 or symbols the AI writes are left out; the SVG it draws stays, and is shown.
+        // Base64 or symbols the AI writes are left out; the SVG it draws and the link of a real picture stay, and are shown.
         val linked = """{"accent":"#33ff66","background":"#000000","wallpaper":"https://example.com/made-up.jpg"}"""
-        assertNull(LauncherAiPrompts.theme(linked)?.first?.wallpaper)
+        assertEquals(ThemeImage.Url("https://example.com/made-up.jpg"), LauncherAiPrompts.theme(linked)?.first?.wallpaper?.image)
+        assertNull(LauncherAiPrompts.theme("""{"accent":"#33ff66","background":"#000000","wallpaper":{"base64":"AAAA"}}""")?.first?.wallpaper)
         assertNull(LauncherAiPrompts.theme("""{"accent":"#33ff66","background":"#000000","wallpaper":{"art":{"symbols":["🎃"]}}}""")?.first?.wallpaper)
         val drawn = LauncherAiPrompts.theme(
             """{"accent":"#ff7518","background":"#120a1e","showWallpaper":false,
@@ -298,8 +299,9 @@ class ThemeCommandTest {
                "lockWallpaper":{"url":"https://example.com/lock.png"}}""",
         )!!.first
         assertEquals(ThemeWallpaper(ThemeImage.Svg(drawing), lockScreen = true), drawn.wallpaper)
-        assertEquals(ThemeImage.Svg(drawing), drawn.lockImage)
-        assertNull(drawn.lockWallpaper)
+        // The lock screen's own image wins over the home screen's.
+        assertEquals(ThemeImage.Url("https://example.com/lock.png"), drawn.lockImage)
+        assertEquals(ThemeImage.Url("https://example.com/lock.png"), drawn.lockWallpaper)
         assertEquals(true, drawn.showWallpaper)
         // A theme without a wallpaper asked for stays without one.
         assertNull(LauncherAiPrompts.theme("""{"accent":"#ff7518","background":"#120a1e"}""")!!.first.wallpaper)
