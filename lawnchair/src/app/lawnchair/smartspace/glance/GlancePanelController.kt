@@ -41,8 +41,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 
 /**
@@ -163,6 +165,25 @@ class GlancePanelController(
                 prefs2.glanceAnimationTint.get(),
             ) { style, file, tint -> Triple(style, file, tint) }
                 .collect { (style, file, tint) -> renderAnimation(style, file, tint) }
+        }
+        newScope.launch {
+            // Everything the panel reads when it draws: a theme (or the settings) changing one of
+            // these shows at once, without turning At a Glance off and on.
+            val flows: List<Flow<Any?>> = listOf(
+                prefs2.glanceShortcuts.get(),
+                prefs2.glanceStatusLine.get(),
+                prefs2.glanceAgenda.get(),
+                prefs2.glanceWeather.get(),
+                prefs2.smartspaceNowPlaying.get(),
+                prefs2.glanceAlarm.get(),
+                prefs2.glanceReminders.get(),
+                prefs2.glanceBluetooth.get(),
+                prefs2.glanceAutoPriority.get(),
+                prefs2.glanceAutoRotate.get(),
+                prefs2.glanceLeadMinutes.get(),
+                prefs2.smartspacerMaxCount.get(),
+            )
+            combine(flows) { }.drop(1).collect { refresh() }
         }
         handler.postDelayed(tick, REFRESH_MS)
         handler.postDelayed(rotate, rotateIntervalMs())
