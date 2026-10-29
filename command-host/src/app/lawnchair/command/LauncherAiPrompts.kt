@@ -109,12 +109,39 @@ object LauncherAiPrompts {
         "Design a theme for the launcher from the user's description. " +
             "Reply with JSON only, no other text, in this shape (leave out a field to keep it as it is):\n" + THEME_SHAPE
 
+    /** The catalog of free-license image sources the guide prompt points to; it is `docs/imagens-licenca-aberta.csv` of this repository. */
+    const val IMAGE_SOURCES_URL = "https://raw.githubusercontent.com/mauriciodantas/Terminal-Laucher/16-dev/docs/imagens-licenca-aberta.csv"
+
     /**
-     * The prompt of the theme guide, for any AI chat: the rules and the shape of a theme, and a last
-     * line the user replaces with what they want.
+     * For a chat that can open links: a real picture beats a drawing. Only the guide prompt has it, since
+     * [theme] keeps just the SVG of a reply and a model behind the in-app command has no internet.
+     */
+    val REAL_IMAGES_RULES =
+        "WALLPAPER, IF YOU CAN BROWSE THE INTERNET (open links, search the web or call APIs): this replaces the SVG wallpaper rules and " +
+            "the rule against image links above. A real photo or artwork looks far better than a drawing, so do NOT draw an SVG; if you cannot browse, ignore this section and draw the SVG.\n" +
+            "1. Open the catalog of free-license sources: $IMAGE_SOURCES_URL (CSV; one row per site, with the licence, whether commercial use is allowed, " +
+            "an example request and, in como_obter_a_imagem, how to get the direct picture link).\n" +
+            "2. Use only rows whose papel_de_parede is ideal or bom and whose uso_comercial starts with Sim, in the order of prioridade; " +
+            "skip \"nao\" and, unless nothing else fits, \"limitado\". Pick the source that suits the idea (space: NASA; art and paintings: The Met, Art Institute of Chicago, Cleveland; " +
+            "places, history, architecture: Wikimedia Commons; nature and animals: iNaturalist or Wikimedia Commons). If a source fails or finds nothing, try the next.\n" +
+            "3. Search it for the concept of the theme, in English. Prefer a portrait or tall picture at least 1080 px wide, with a calm area in the top third and the middle " +
+            "(the clock, icons and text are drawn there) and the detail at the bottom and the edges.\n" +
+            "4. The link must be one you really received from that API or page: a direct https link to a .jpg, .png or .webp (not a web page, a search page or a viewer), " +
+            "of at most 3 MB (use the size parameter of the source, for example width=1080 on Wikimedia Commons). Open it to check that it loads as an image. " +
+            "Never invent, guess or rebuild a link from memory, and never use pictures from sources outside the catalog (Google Images, Pinterest, stock sites, social networks).\n" +
+            "5. Write it as \"wallpaper\": {\"url\": \"<direct link>\"} (add \"lockScreen\": true to use it on the lock screen too), set showWallpaper true and " +
+            "wallpaperDim between 0.35 and 0.6 so the text stays readable, and leave out \"lockWallpaper\" unless the user wants a second picture (then {\"url\": \"<link>\"}).\n" +
+            "6. Take the colors from the picture: a dark background from its darkest tone, an accent from its most vivid or lightest tone, still with a contrast of at least 4.5.\n" +
+            "7. Put the credit in \"note\" (title, author, licence and site; the licence of the item, not of the site), within one or two short sentences. " +
+            "Use only items whose licence allows reuse, and give the credit when it asks for one.\n" +
+            "8. If no picture fits, fall back to the SVG wallpaper."
+
+    /**
+     * The prompt of the theme guide, for any AI chat: the rules and the shape of a theme, how to use real
+     * pictures when the chat can browse, and a last line the user replaces with what they want.
      */
     val THEME_MASTER_PROMPT =
-        THEME_RULES + "\n\nTHE THEME I WANT (replace this line with the mood or place, the colors, the font, the animation and whether it has a wallpaper):\n"
+        THEME_RULES + "\n\n" + REAL_IMAGES_RULES + "\n\nTHE THEME I WANT (replace this line with the mood or place, the colors, the font, the animation and whether it has a wallpaper):\n"
 
     /**
      * The theme of a reply and its note, or null when the reply holds none or it could not be read.

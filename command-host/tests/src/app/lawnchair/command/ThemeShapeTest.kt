@@ -2,6 +2,7 @@ package app.lawnchair.command
 
 import org.junit.Assert.assertEquals
 import app.lawnchair.util.ResourceTexts
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -37,5 +38,19 @@ class ThemeShapeTest {
     @Test fun promptNamesTheShapes() {
         assertTrue(LauncherAiPrompts.THEME_RULES.contains("iconShape"))
         assertTrue(LauncherAiPrompts.THEME_RULES.contains("squircle"))
+    }
+
+    @Test fun guidePromptPrefersRealImagesFromTheCatalog() {
+        assertTrue(LauncherAiPrompts.THEME_MASTER_PROMPT.contains(LauncherAiPrompts.IMAGE_SOURCES_URL))
+        assertTrue(LauncherAiPrompts.THEME_MASTER_PROMPT.contains("\"wallpaper\": {\"url\""))
+        // The in-app command keeps the SVG: its reply is read for drawings only and a model there may not browse.
+        assertFalse(LauncherAiPrompts.THEME_RULES.contains(LauncherAiPrompts.IMAGE_SOURCES_URL))
+        assertFalse(LauncherAiPrompts.CREATE_TAIL.contains(LauncherAiPrompts.IMAGE_SOURCES_URL))
+    }
+
+    @Test fun aLinkWallpaperOfTheGuideReplyIsRead() {
+        val spec = ThemeSpecs.fromJson(org.json.JSONObject("""{"name":"x","wallpaper":{"url":"https://upload.wikimedia.org/a.jpg","lockScreen":true},"showWallpaper":true,"wallpaperDim":0.5}"""))
+        assertEquals(ThemeImage.Url("https://upload.wikimedia.org/a.jpg"), spec.wallpaper?.image)
+        assertTrue(spec.wallpaper?.lockScreen == true)
     }
 }
