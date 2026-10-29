@@ -45,6 +45,7 @@ class ThemeShapeTest {
         assertTrue(LauncherAiPrompts.THEME_MASTER_PROMPT.contains("\"wallpaper\": {\"url\""))
         assertTrue(LauncherAiPrompts.THEME_MASTER_PROMPT.contains("thumburl"))
         assertTrue(LauncherAiPrompts.THEME_MASTER_PROMPT.contains("crops it"))
+        assertTrue(LauncherAiPrompts.THEME_MASTER_PROMPT.contains("must be dark where text goes"))
         // The in-app command keeps the SVG: its reply is read for drawings only and a model there may not browse.
         assertFalse(LauncherAiPrompts.THEME_RULES.contains(LauncherAiPrompts.IMAGE_SOURCES_URL))
         assertFalse(LauncherAiPrompts.CREATE_TAIL.contains(LauncherAiPrompts.IMAGE_SOURCES_URL))

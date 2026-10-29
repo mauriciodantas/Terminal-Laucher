@@ -127,19 +127,23 @@ object LauncherAiPrompts {
             "3. Search it for the concept of the theme, in English. Prefer a portrait or tall picture at least 1080 px wide, with a calm area in the top third and the middle " +
             "(the clock, icons and text are drawn there) and the detail at the bottom and the edges. If no portrait one fits, a landscape or square picture is fine: " +
             "the phone crops it to fill the screen around its center, so choose one whose subject is in the middle. " +
+            "The picture must be dark where text goes: light text and icons are drawn over the top third and the middle, so reject pictures that are bright or busy there " +
+            "(a bright sky, a stained-glass ceiling, white walls); night scenes, dark interiors and deep colors work best. " +
+            "Look at the picture before choosing it, and when you cannot, prefer the ones the source describes as night, dark or low-key. " +
             "If the exact thing asked for (bats, ghosts, a given animal) has no suitable picture, take a picture of the same mood or place and let the animation or the colors carry the rest.\n" +
             "4. The link must be one you really received from that API or page: a direct https link to a .jpg, .png or .webp (not a web page, a search page or a viewer), " +
-            "of at most 3 MB. Open it to check that it loads as an image and read its size; a large PNG is often over 3 MB, so prefer a JPEG or a smaller size. " +
+            "of at most 3 MB; a query string such as ?utm_source=... after the file name is fine. Open it to check that it loads as an image and read its size; a large PNG is often over 3 MB, so prefer a JPEG or a smaller size. " +
             "Use the size the source itself returns, as the catalog says (on Wikimedia Commons the thumburl of the API with iiurlwidth, or the upload.wikimedia.org link of the file; " +
             "do not build thumbnail links by hand, only standard sizes exist). Send an identifiable User-Agent when the catalog asks for one. " +
             "Never invent, guess or rebuild a link from memory, and never use pictures from sources outside the catalog (Google Images, Pinterest, stock sites, social networks).\n" +
             "5. Write it as \"wallpaper\": {\"url\": \"<direct link>\"}; \"lockScreen\": true may go in the same object to use it on the lock screen too. " +
-            "Set showWallpaper true and wallpaperDim between 0.35 and 0.6 so the text stays readable (more when the subject is in the middle of the screen). " +
+            "Set showWallpaper true and wallpaperDim (0 to 1) so the text stays readable: 0.35 for a dark picture, 0.5 for a mid-tone one, 0.65 to 0.75 for a bright one " +
+            "(a bright picture you could not avoid), and a little more when the subject is in the middle of the screen. " +
             "Leave out \"lockWallpaper\" unless the user wants a second picture or asks for one for the lock screen (then {\"url\": \"<link>\"}, another picture of the same world). " +
-            "A customAnimation replaces \"animation\": leave \"animation\" out then.\n" +
+            "A customAnimation replaces \"animation\": leave \"animation\" out then; crtEffect true is what turns the animation on, crtIntensity says how strong.\n" +
             "6. Take the colors from the picture: a dark background from its darkest tone, an accent from its most vivid or lightest tone, still with a contrast of at least 4.5.\n" +
             "7. Put the credit in \"note\": for each picture its title, author and licence (the licence of the item, not of the site), as short as you can, one sentence per picture. " +
-            "Use only items whose licence allows reuse, and give the credit when it asks for one.\n" +
+            "Use only items whose licence allows reuse, and give the credit when it asks for one. A picture of a real place or object is fine for a theme about a film, a book or a mood.\n" +
             "8. If no picture fits, fall back to the SVG wallpaper."
 
     /**
