@@ -59,7 +59,12 @@ object LauncherAiPrompts {
             "\"wallpaper\": {\"svg\": \"<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1080 2400'>...</svg>\", \"lockScreen\": false}, " +
             "\"lockWallpaper\": {\"svg\": \"<svg ...>...</svg>\"}, " +
             "\"glance\": {\"show\": true, \"animation\": \"<${GlanceSpecs.ANIMATIONS.joinToString("|")}>\", \"tint\": true, \"shortcuts\": true, \"chats\": true, " +
-            "\"targets\": {\"agenda\": true, \"weather\": true, \"alarm\": true, \"reminders\": true, \"bluetooth\": true}, \"autoRotate\": true}, " +
+            "\"targets\": {\"agenda\": true, \"weather\": true, \"alarm\": true, \"reminders\": true, \"bluetooth\": true}, \"autoRotate\": true, " +
+            "\"look\": {\"preset\": \"<${GlanceSpecs.PRESETS.joinToString("|")}>\", \"align\": \"<${GlanceSpecs.ALIGNS.joinToString("|")}>\", \"density\": \"<${GlanceSpecs.DENSITIES.joinToString("|")}>\", " +
+            "\"header\": true, \"date\": true, \"status\": true, \"clockFormat\": \"<${GlanceSpecs.CLOCK_FORMATS.joinToString("|")}>\", \"dateFormat\": \"<${GlanceSpecs.DATE_FORMATS.joinToString("|")}>\", " +
+            "\"seconds\": false, \"dateCaps\": true, \"clockSize\": 100, \"textSize\": 100, \"border\": true, \"borderWidth\": 1, \"radius\": 8, " +
+            "\"titleBar\": \"<${GlanceSpecs.TITLE_BARS.joinToString("|")}>\", \"glow\": true, \"dim\": 62, \"urgent\": \"<${GlanceSpecs.URGENT_COLORS.joinToString("|")}>\", " +
+            "\"statusItems\": {\"sound\": true, \"storage\": true, \"ram\": true}, \"hiddenShortcuts\": [\"<${GlanceSpecs.SHORTCUTS.joinToString("|")}>\"]}}, " +
             "\"note\": \"<one short sentence>\"}\n" +
             "Rules: the accent over the background must read well, a contrast ratio of at least 4.5 (WCAG). " +
             "secondary is a third color for secondary text, hints and lines (default keeps the accent dimmed); " +
@@ -93,6 +98,22 @@ object LauncherAiPrompts {
             "Change it only if another one clearly suits the concept (sonar for the deep sea, wave for an oscilloscope or music, bars for an equalizer, radar for sci-fi) " +
             "or off when it would be noise; leaving it out, so it stays as the user has it, is a good answer too. " +
             "shortcuts false removes the row of utility shortcuts and chats false the row of chat shortcuts, for a cleaner look. " +
+            "look is how the panel is drawn, and it is where a theme can make the panel its own. preset is a ready-made style: " +
+            "terminal (square border, solid title bar), outline (thicker rounded border, title as plain text), open (no border or header, compact rows), " +
+            "centered (everything centered, rounded panel) and minimal (only the clock, the weekday and the target, to the right). " +
+            "Pick a preset first, then refine with the other fields only where the concept asks for it. " +
+            "align ${GlanceSpecs.ALIGNS.joinToString("/")} places the readout lines; density ${GlanceSpecs.DENSITIES.joinToString("/")} sets the room the target row takes. " +
+            "header, date and status show or hide those lines (the panel may still hide some when the screen is short). " +
+            "clockFormat ${GlanceSpecs.CLOCK_FORMATS.joinToString("/")} and dateFormat ${GlanceSpecs.DATE_FORMATS.joinToString("/")} (full is a long date, short an abbreviated one, numeric 02/10/2026, weekday only the day name); " +
+            "seconds adds seconds to the clock, dateCaps writes the date in capitals. clockSize ${GlanceSpecs.CLOCK_SIZE.first}-${GlanceSpecs.CLOCK_SIZE.last} and textSize ${GlanceSpecs.TEXT_SIZE.first}-${GlanceSpecs.TEXT_SIZE.last} are percents of the default size. " +
+            "border turns the frame on or off, borderWidth ${GlanceSpecs.BORDER_WIDTH.first}-${GlanceSpecs.BORDER_WIDTH.last} dp, radius ${GlanceSpecs.RADIUS.first}-${GlanceSpecs.RADIUS.last} dp rounds the corners, " +
+            "titleBar ${GlanceSpecs.TITLE_BARS.joinToString("/")} (filled is a solid bar, outline only the text), glow is the soft light behind the clock, " +
+            "dim ${GlanceSpecs.DIM.first}-${GlanceSpecs.DIM.last} is how strong the secondary text is against the accent (lower for quiet, higher for legible), " +
+            "urgent ${GlanceSpecs.URGENT_COLORS.joinToString("/")} is the color of an event about to start, so pick one that stands out from the accent and the background. " +
+            "statusItems choose what the status line lists (sound profile, storage, memory), and hiddenShortcuts (${GlanceSpecs.SHORTCUTS.joinToString(", ")}) removes buttons from the shortcut row. " +
+            "Match the look to the concept: sharp and square (terminal, open) for brutalist, hacker or industrial ideas; rounded with outline or centered for soft, nature or playful ones; " +
+            "minimal when the wallpaper is busy or its subject sits near the top; compact density for dense, technical looks; glow on for neon and CRT ideas and off for paper or flat ones. " +
+            "Every field is optional and each one you add should be there for a reason, since leaving the panel as the user has it is a good answer too. " +
             "targets switch off kinds of information and autoRotate stops the panel from turning through them: leave them out unless the user asks. " +
             "tint true paints a Lottie animation in the accent color. \"lottie\" (an animation of its own) is only for a chat that can browse, see below; never write the file. " +
             "BE CREATIVE: a request is a mood, a place, a feeling or a story, not only a palette. Pick an unexpected, specific idea " +

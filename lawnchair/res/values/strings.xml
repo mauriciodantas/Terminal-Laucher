@@ -1807,4 +1807,56 @@
     <string name="command_pin">Pin to the home screen</string>
     <string name="command_pin_unsupported">This launcher cannot pin shortcuts</string>
     <string name="screen_animation_custom">From the theme</string>
+    <string name="glance_group_readout">Readout</string>
+    <string name="glance_show_header">Header</string>
+    <string name="glance_show_date">Date</string>
+    <string name="glance_show_status">Status line</string>
+    <string name="glance_clock_format">Clock format</string>
+    <string name="glance_clock_format_system">System</string>
+    <string name="glance_clock_format_24">24 hours</string>
+    <string name="glance_clock_format_12">12 hours</string>
+    <string name="glance_date_format">Date format</string>
+    <string name="glance_date_format_full" translatable="false">SATURDAY · 02.OCT.2026</string>
+    <string name="glance_date_format_short" translatable="false">SAT · 02.OCT</string>
+    <string name="glance_date_format_numeric" translatable="false">02/10/2026</string>
+    <string name="glance_date_format_weekday">Weekday only</string>
+    <string name="glance_clock_size">Clock size</string>
+    <string name="glance_group_status_items">Status line items</string>
+    <string name="glance_status_sound">Sound profile</string>
+    <string name="glance_status_storage">Storage</string>
+    <string name="glance_status_ram">Memory</string>
+    <string name="glance_clock_seconds">Show seconds</string>
+    <string name="glance_date_caps">Date in capitals</string>
+    <string name="glance_text_size">Target text size</string>
+    <string name="glance_align">Alignment</string>
+    <string name="glance_align_start">Left</string>
+    <string name="glance_align_center">Center</string>
+    <string name="glance_align_end">Right</string>
+    <string name="glance_density">Density</string>
+    <string name="glance_density_comfortable">Comfortable</string>
+    <string name="glance_density_compact">Compact</string>
+    <string name="glance_group_styles">Ready-made styles</string>
+    <string name="glance_group_panel_style">Panel style</string>
+    <string name="glance_panel_border">Border</string>
+    <string name="glance_border_width">Border thickness</string>
+    <string name="glance_corner_radius">Corner radius</string>
+    <string name="glance_title_bar">Title bar</string>
+    <string name="glance_title_filled">Filled</string>
+    <string name="glance_title_outline">Text only</string>
+    <string name="glance_glow">Glow</string>
+    <string name="glance_dim_level">Secondary text strength</string>
+    <string name="glance_urgent_color">Priority color</string>
+    <string name="glance_urgent_red">Red</string>
+    <string name="glance_urgent_amber">Amber</string>
+    <string name="glance_urgent_magenta">Magenta</string>
+    <string name="glance_preset_terminal">Terminal</string>
+    <string name="glance_preset_terminal_desc">Square border and solid title bar</string>
+    <string name="glance_preset_outline">Outline</string>
+    <string name="glance_preset_outline_desc">Thicker rounded border, title as text only</string>
+    <string name="glance_preset_open">Open</string>
+    <string name="glance_preset_open_desc">No border or header, compact rows</string>
+    <string name="glance_preset_centered">Centered</string>
+    <string name="glance_preset_centered_desc">Everything centered, rounded panel</string>
+    <string name="glance_preset_minimal">Minimal</string>
+    <string name="glance_preset_minimal_desc">Only clock, weekday and the target, to the right</string>
 </resources>

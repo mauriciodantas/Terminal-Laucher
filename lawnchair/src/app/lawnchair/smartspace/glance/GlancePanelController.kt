@@ -67,8 +67,9 @@ class GlancePanelController(
     private var selectedId: String? = null
 
     private val phosphor = PhosphorColorToken(1f).resolveColor(context)
-    private val dim = PhosphorColorToken(0.62f).resolveColor(context)
-    private val urgentColor = Color.parseColor("#FFFF5A45")
+    private val dim get() = PhosphorColorToken(GlanceReadout.dim(prefs2.glanceDimLevel.firstCached())).resolveColor(context)
+    private val urgentColor get() = prefs2.glanceUrgentColor.firstCached().argb
+    private fun glow() = if (prefs2.glanceGlow.firstCached()) 8f else 0f
 
     private val tick = object : Runnable {
         override fun run() {
@@ -107,18 +108,21 @@ class GlancePanelController(
         val lead = root.findViewById<TextView>(R.id.nostromo_target_lead)
         val targetRow = root.findViewById<View>(R.id.nostromo_target_row)
         val density = root.resources.displayMetrics.density
-        listOfNotNull(status, header, date).forEach { it.visibility = View.VISIBLE }
-        clock?.setTextSize(TypedValue.COMPLEX_UNIT_SP, CLOCK_SP)
-        lead?.setTextSize(TypedValue.COMPLEX_UNIT_SP, LEAD_SP)
-        targetRow?.minimumHeight = (TARGET_ROW_MIN_DP * density).toInt()
+        val scale = GlanceReadout.scale(prefs2.glanceClockScale.firstCached())
+        status?.visibility = if (prefs2.glanceShowStatus.firstCached()) View.VISIBLE else View.GONE
+        header?.visibility = if (prefs2.glanceShowHeader.firstCached()) View.VISIBLE else View.GONE
+        date?.visibility = if (prefs2.glanceShowDate.firstCached()) View.VISIBLE else View.GONE
+        clock?.setTextSize(TypedValue.COMPLEX_UNIT_SP, CLOCK_SP * scale)
+        lead?.setTextSize(TypedValue.COMPLEX_UNIT_SP, LEAD_SP * scale)
+        targetRow?.minimumHeight = (prefs2.glanceDensity.firstCached().rowMinDp * density).toInt()
         val steps = listOf<() -> Unit>(
             {
-                lead?.setTextSize(TypedValue.COMPLEX_UNIT_SP, LEAD_COMPACT_SP)
+                lead?.setTextSize(TypedValue.COMPLEX_UNIT_SP, minOf(LEAD_COMPACT_SP, LEAD_SP * scale))
                 targetRow?.minimumHeight = 0
             },
             { status?.visibility = View.GONE },
             { header?.visibility = View.GONE },
-            { clock?.setTextSize(TypedValue.COMPLEX_UNIT_SP, CLOCK_COMPACT_SP) },
+            { clock?.setTextSize(TypedValue.COMPLEX_UNIT_SP, minOf(CLOCK_COMPACT_SP, CLOCK_SP * scale)) },
             { date?.visibility = View.GONE },
         )
         for (step in steps) {
@@ -182,6 +186,28 @@ class GlancePanelController(
                 prefs2.glanceAutoRotate.get(),
                 prefs2.glanceLeadMinutes.get(),
                 prefs2.smartspacerMaxCount.get(),
+                prefs2.glanceShowHeader.get(),
+                prefs2.glanceShowDate.get(),
+                prefs2.glanceShowStatus.get(),
+                prefs2.glanceStatusSound.get(),
+                prefs2.glanceStatusStorage.get(),
+                prefs2.glanceStatusRam.get(),
+                prefs2.glanceClockFormat.get(),
+                prefs2.glanceDateFormat.get(),
+                prefs2.glanceClockScale.get(),
+                prefs2.glanceShortcutsHidden.get(),
+                prefs2.glancePanelBorder.get(),
+                prefs2.glanceTitleBar.get(),
+                prefs2.glanceBorderWidth.get(),
+                prefs2.glanceCornerRadius.get(),
+                prefs2.glanceAlign.get(),
+                prefs2.glanceClockSeconds.get(),
+                prefs2.glanceDateCaps.get(),
+                prefs2.glanceGlow.get(),
+                prefs2.glanceDimLevel.get(),
+                prefs2.glanceUrgentColor.get(),
+                prefs2.glanceDensity.get(),
+                prefs2.glanceTextScale.get(),
             )
             combine(flows) { }.drop(1).collect { refresh() }
         }
@@ -264,12 +290,15 @@ class GlancePanelController(
             it != null && it != android.app.NotificationManager.INTERRUPTION_FILTER_ALL &&
                 it != android.app.NotificationManager.INTERRUPTION_FILTER_UNKNOWN
         }
-        val profile = audio?.let { StatusLine.soundProfile(it.ringerMode, dnd) }
+        val profile = audio?.takeIf { prefs2.glanceStatusSound.firstCached() }
+            ?.let { StatusLine.soundProfile(it.ringerMode, dnd) }
         val storage = runCatching {
+            if (!prefs2.glanceStatusStorage.firstCached()) return@runCatching null
             val stat = android.os.StatFs(android.os.Environment.getDataDirectory().path)
             StatusLine.percentUsed(stat.totalBytes - stat.availableBytes, stat.totalBytes)
         }.getOrNull()
         val ram = runCatching {
+            if (!prefs2.glanceStatusRam.firstCached()) return@runCatching null
             val info = android.app.ActivityManager.MemoryInfo()
             context.getSystemService(android.app.ActivityManager::class.java).getMemoryInfo(info)
             StatusLine.percentUsed(info.totalMem - info.availMem, info.totalMem)
@@ -299,11 +328,18 @@ class GlancePanelController(
             root.findViewById<View>(R.id.nostromo_quick_label)?.visibility = View.VISIBLE
             return
         }
+        val hidden = GlanceReadout.parseHidden(prefs2.glanceShortcutsHidden.firstCached())
+        val shown = GlanceShortcut.entries.filter { it !in hidden && it.isAvailable() }
+        if (shown.isEmpty()) {
+            row.visibility = View.GONE
+            root.findViewById<View>(R.id.nostromo_quick_label)?.visibility = View.VISIBLE
+            return
+        }
         row.visibility = View.VISIBLE
         // The panel only has two cell rows: the shortcuts take the place of the "quick access" label.
         root.findViewById<View>(R.id.nostromo_quick_label)?.visibility = View.GONE
         val density = context.resources.displayMetrics.density
-        GlanceShortcut.values().filter { it.isAvailable() }.forEachIndexed { index, shortcut ->
+        shown.forEachIndexed { index, shortcut ->
             val active = shortcut == GlanceShortcut.TORCH && torchOn
             row.addView(
                 TextView(context).apply {
@@ -389,7 +425,74 @@ class GlancePanelController(
         manager.setTorchMode(id, !torchOn)
     }
 
+    /** The clock and the date are written the way the user chose. */
+    private fun renderFormats() {
+        val clockFormat = prefs2.glanceClockFormat.firstCached()
+        root.findViewById<android.widget.TextClock>(R.id.nostromo_clock)?.apply {
+            val seconds = prefs2.glanceClockSeconds.firstCached()
+            format12Hour = GlanceReadout.withSeconds(clockFormat.pattern12, seconds)
+            format24Hour = GlanceReadout.withSeconds(clockFormat.pattern24, seconds)
+        }
+        val datePattern = prefs2.glanceDateFormat.firstCached().pattern
+        root.findViewById<android.widget.TextClock>(R.id.nostromo_date)?.apply {
+            format12Hour = datePattern
+            format24Hour = datePattern
+            isAllCaps = prefs2.glanceDateCaps.firstCached()
+        }
+    }
+
+    /** Border, corners, alignment, glow, density and text size of the panel, read again at every refresh. */
+    private fun renderStyle() {
+        val density = context.resources.displayMetrics.density
+        val border = prefs2.glancePanelBorder.firstCached()
+        val widthPx = (prefs2.glanceBorderWidth.firstCached().coerceIn(1, GlanceReadout.BORDER_MAX) * density).toInt()
+        val radius = prefs2.glanceCornerRadius.firstCached().coerceIn(0, GlanceReadout.RADIUS_MAX) * density
+        val line = PhosphorColorToken(0.32f).resolveColor(context)
+        listOf(R.id.nostromo_panel, R.id.nostromo_second).forEach { id ->
+            val card = root.findViewById<View>(id) ?: return@forEach
+            card.background = GradientDrawable().apply {
+                setColor(Color.TRANSPARENT)
+                cornerRadius = radius
+                if (border) setStroke(widthPx, line)
+            }
+            card.clipToOutline = radius > 0f
+            card.outlineProvider = object : android.view.ViewOutlineProvider() {
+                override fun getOutline(view: View, outline: android.graphics.Outline) {
+                    outline.setRoundRect(0, 0, view.width, view.height, radius)
+                }
+            }
+        }
+        val gravity = prefs2.glanceAlign.firstCached().gravity
+        listOf(
+            R.id.nostromo_header,
+            R.id.nostromo_clock,
+            R.id.nostromo_date,
+            R.id.nostromo_status,
+            R.id.nostromo_quick_label,
+        ).forEach { id ->
+            val view = root.findViewById<View>(id) ?: return@forEach
+            (view.layoutParams as? LinearLayout.LayoutParams)?.let {
+                if (it.gravity != gravity) {
+                    it.gravity = gravity
+                    view.layoutParams = it
+                }
+            }
+        }
+        root.findViewById<TextView>(R.id.nostromo_clock)?.setShadowLayer(glow(), 0f, 0f, phosphor and 0x00FFFFFF or 0x66000000)
+        root.findViewById<TextView>(R.id.nostromo_status)?.setTextColor(dim)
+        root.findViewById<TextView>(R.id.nostromo_quick_label)?.setTextColor(dim)
+        val text = GlanceReadout.textScale(prefs2.glanceTextScale.firstCached())
+        listOf(
+            R.id.nostromo_target_primary to PRIMARY_SP,
+            R.id.nostromo_second_primary to PRIMARY_SP,
+            R.id.nostromo_target_secondary to SECONDARY_SP,
+            R.id.nostromo_second_secondary to SECONDARY_SP,
+        ).forEach { (id, sp) -> root.findViewById<TextView>(id)?.setTextSize(TypedValue.COMPLEX_UNIT_SP, sp * text) }
+    }
+
     private fun refresh() {
+        renderFormats()
+        renderStyle()
         renderStatusLine()
         renderShortcuts()
         scheduleFit()
@@ -453,7 +556,14 @@ class GlancePanelController(
     }
 
     /** The title bar is a solid fill, so its text takes the color that reads over it. */
-    private fun colorTitleBar(title: TextView?, tag: TextView?, fill: Int) {
+    private fun paintTitleBar(bar: View?, title: TextView?, tag: TextView?, fill: Int) {
+        if (prefs2.glanceTitleBar.firstCached() == GlanceTitleBar.OUTLINE) {
+            bar?.setBackgroundColor(Color.TRANSPARENT)
+            title?.setTextColor(fill)
+            tag?.setTextColor(fill)
+            return
+        }
+        bar?.setBackgroundColor(fill)
         val on = LauncherGround.onAccent(context, fill)
         title?.setTextColor(on)
         tag?.setTextColor(on)
@@ -488,8 +598,7 @@ class GlancePanelController(
         if (selected == null) {
             title?.text = context.getString(R.string.nostromo_panel_title)
             tag?.text = context.getString(R.string.nostromo_panel_state)
-            bar?.setBackgroundColor(phosphor)
-            colorTitleBar(title, tag, phosphor)
+            paintTitleBar(bar, title, tag, phosphor)
             primary?.text = context.getString(R.string.glance_empty_primary)
             secondary?.text = context.getString(R.string.glance_empty_secondary)
             content?.setOnClickListener(null)
@@ -507,8 +616,7 @@ class GlancePanelController(
             // A trailing arrow shows the title bar changes the target when there is more than one.
             "[%02d/%02d]".format(panel.tabs.indexOf(selected) + 1, panel.tabs.size) + if (panel.tabs.size > 1) " ▸" else ""
         }
-        bar?.setBackgroundColor(if (urgent) urgentColor else phosphor)
-        colorTitleBar(title, tag, if (urgent) urgentColor else phosphor)
+        paintTitleBar(bar, title, tag, if (urgent) urgentColor else phosphor)
 
         // The time or temperature goes big on the left, like the prototype; the rest is the text.
         val leadView = root.findViewById<TextView>(R.id.nostromo_target_lead)
@@ -516,7 +624,7 @@ class GlancePanelController(
         leadView?.visibility = if (lead.value == null) View.GONE else View.VISIBLE
         leadView?.text = lead.value
         leadView?.setTextColor(if (urgent) urgentColor else phosphor)
-        leadView?.setShadowLayer(8f, 0f, 0f, (if (urgent) urgentColor else phosphor) and 0x00FFFFFF or 0x66000000)
+        leadView?.setShadowLayer(glow(), 0f, 0f, (if (urgent) urgentColor else phosphor) and 0x00FFFFFF or 0x66000000)
 
         val (main, rest) = targetLines(selected, lead)
         primary?.text = main
@@ -589,8 +697,7 @@ class GlancePanelController(
         val color = if (urgent) urgentColor else phosphor
         val name = root.findViewById<TextView>(R.id.nostromo_second_name)
         val state = root.findViewById<TextView>(R.id.nostromo_second_state)
-        root.findViewById<View>(R.id.nostromo_second_title)?.setBackgroundColor(color)
-        colorTitleBar(name, state, color)
+        paintTitleBar(root.findViewById(R.id.nostromo_second_title), name, state, color)
         name?.text = other.kind.panelTitle
         state?.text = if (urgent) {
             context.getString(R.string.glance_tag_priority)
@@ -602,7 +709,7 @@ class GlancePanelController(
             visibility = if (lead.value == null) View.GONE else View.VISIBLE
             text = lead.value
             setTextColor(color)
-            setShadowLayer(8f, 0f, 0f, color and 0x00FFFFFF or 0x66000000)
+            setShadowLayer(glow(), 0f, 0f, color and 0x00FFFFFF or 0x66000000)
         }
         val (main, rest) = targetLines(other, lead)
         root.findViewById<TextView>(R.id.nostromo_second_primary)?.apply {
@@ -685,7 +792,8 @@ class GlancePanelController(
         private const val LEAD_SP = 32f
         private const val LEAD_COMPACT_SP = 24f
 
-        /** The target row's android:minHeight in smartspace_widget.xml. */
-        private const val TARGET_ROW_MIN_DP = 48
+        /** The text sizes of the target lines in smartspace_widget_panel.xml. */
+        private const val PRIMARY_SP = 12.5f
+        private const val SECONDARY_SP = 10.5f
     }
 }

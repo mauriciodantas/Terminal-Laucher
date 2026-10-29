@@ -11,8 +11,17 @@ import app.lawnchair.icons.shape.IconShape
 import app.lawnchair.preferences.PreferenceManager
 import app.lawnchair.preferences2.PreferenceManager2
 import app.lawnchair.preferences2.firstCached
+import app.lawnchair.smartspace.glance.GlanceAlign
 import app.lawnchair.smartspace.glance.GlanceAnimationFile
 import app.lawnchair.smartspace.glance.GlanceAnimationStyle
+import app.lawnchair.smartspace.glance.GlanceClockFormat
+import app.lawnchair.smartspace.glance.GlanceDateFormat
+import app.lawnchair.smartspace.glance.GlanceDensity
+import app.lawnchair.smartspace.glance.GlancePreset
+import app.lawnchair.smartspace.glance.GlanceReadout
+import app.lawnchair.smartspace.glance.GlanceShortcut
+import app.lawnchair.smartspace.glance.GlanceTitleBar
+import app.lawnchair.smartspace.glance.GlanceUrgentColor
 import app.lawnchair.theme.ComplementaryColors
 import app.lawnchair.theme.color.ColorOption
 import com.android.launcher3.R
@@ -119,7 +128,80 @@ object ThemeStore {
             tint = false.takeIf { lottie != null && !p.glanceAnimationTint.firstCached(p) },
             shortcuts = false.takeIf { !p.glanceShortcuts.firstCached(p) },
             chats = false.takeIf { !p.glanceChats.firstCached(p) },
+            look = lookNow(p),
         ).takeUnless { it.isEmpty }
+    }
+
+    /** The look settings that are not how the app comes; null when they all are. */
+    private fun lookNow(p: PreferenceManager2): GlanceLook? {
+        fun <C, S> PreferenceImpl<C, S>.changed(): C? = firstCached(p).takeIf { it != defaultValue }
+        return GlanceLook(
+            header = p.glanceShowHeader.changed(),
+            date = p.glanceShowDate.changed(),
+            status = p.glanceShowStatus.changed(),
+            clockFormat = p.glanceClockFormat.changed()?.id,
+            dateFormat = p.glanceDateFormat.changed()?.id,
+            seconds = p.glanceClockSeconds.changed(),
+            dateCaps = p.glanceDateCaps.changed(),
+            clockSize = p.glanceClockScale.changed(),
+            textSize = p.glanceTextScale.changed(),
+            align = p.glanceAlign.changed()?.id,
+            density = p.glanceDensity.changed()?.id,
+            border = p.glancePanelBorder.changed(),
+            borderWidth = p.glanceBorderWidth.changed(),
+            radius = p.glanceCornerRadius.changed(),
+            titleBar = p.glanceTitleBar.changed()?.id,
+            glow = p.glanceGlow.changed(),
+            dim = p.glanceDimLevel.changed(),
+            urgent = p.glanceUrgentColor.changed()?.id,
+            statusSound = p.glanceStatusSound.changed(),
+            statusStorage = p.glanceStatusStorage.changed(),
+            statusRam = p.glanceStatusRam.changed(),
+            hiddenShortcuts = GlanceReadout.parseHidden(p.glanceShortcutsHidden.firstCached(p))
+                .map { it.name.lowercase() }.takeIf { it.isNotEmpty() },
+        ).takeUnless { it.isEmpty }
+    }
+
+    /** The preset first, then each setting the theme names on its own. */
+    private fun applyLook(p: PreferenceManager2, l: GlanceLook) {
+        l.preset?.let { id -> GlancePreset.entries.firstOrNull { it.name.equals(id, ignoreCase = true) } }?.let { preset ->
+            p.glancePanelBorder.update(p, preset.border)
+            p.glanceTitleBar.update(p, preset.titleBar)
+            p.glanceBorderWidth.update(p, preset.borderWidth)
+            p.glanceCornerRadius.update(p, preset.radius)
+            p.glanceAlign.update(p, preset.align)
+            p.glanceDensity.update(p, preset.density)
+            p.glanceGlow.update(p, preset.glow)
+            p.glanceShowHeader.update(p, preset.header)
+            p.glanceShowStatus.update(p, preset.status)
+            p.glanceClockFormat.update(p, preset.clock)
+            p.glanceDateFormat.update(p, preset.date)
+        }
+        l.header?.let { p.glanceShowHeader.update(p, it) }
+        l.date?.let { p.glanceShowDate.update(p, it) }
+        l.status?.let { p.glanceShowStatus.update(p, it) }
+        l.clockFormat?.let { p.glanceClockFormat.update(p, GlanceClockFormat.fromId(it)) }
+        l.dateFormat?.let { p.glanceDateFormat.update(p, GlanceDateFormat.fromId(it)) }
+        l.seconds?.let { p.glanceClockSeconds.update(p, it) }
+        l.dateCaps?.let { p.glanceDateCaps.update(p, it) }
+        l.clockSize?.let { p.glanceClockScale.update(p, it) }
+        l.textSize?.let { p.glanceTextScale.update(p, it) }
+        l.align?.let { p.glanceAlign.update(p, GlanceAlign.fromId(it)) }
+        l.density?.let { p.glanceDensity.update(p, GlanceDensity.fromId(it)) }
+        l.border?.let { p.glancePanelBorder.update(p, it) }
+        l.borderWidth?.let { p.glanceBorderWidth.update(p, it) }
+        l.radius?.let { p.glanceCornerRadius.update(p, it) }
+        l.titleBar?.let { p.glanceTitleBar.update(p, GlanceTitleBar.fromId(it)) }
+        l.glow?.let { p.glanceGlow.update(p, it) }
+        l.dim?.let { p.glanceDimLevel.update(p, it) }
+        l.urgent?.let { p.glanceUrgentColor.update(p, GlanceUrgentColor.fromId(it)) }
+        l.statusSound?.let { p.glanceStatusSound.update(p, it) }
+        l.statusStorage?.let { p.glanceStatusStorage.update(p, it) }
+        l.statusRam?.let { p.glanceStatusRam.update(p, it) }
+        l.hiddenShortcuts?.let { names ->
+            val hidden = GlanceShortcut.entries.filter { it.name.lowercase() in names }.toSet()
+            p.glanceShortcutsHidden.update(p, GlanceReadout.serializeHidden(hidden))
+        }
     }
 
     private fun colorOf(option: ColorOption): ThemeColor = when (option) {
@@ -211,6 +293,7 @@ object ThemeStore {
         g.reminders?.let { p.glanceReminders.update(p, it) }
         g.bluetooth?.let { p.glanceBluetooth.update(p, it) }
         g.autoRotate?.let { p.glanceAutoRotate.update(p, it) }
+        g.look?.let { applyLook(p, it) }
         g.lottie?.let { ThemeGlance.applyLater(context, it) }
         g.show?.let { p.enableSmartspace.update(p, it) }
     }
@@ -227,6 +310,24 @@ object ThemeStore {
         // The panel's look; what it shows (agenda, weather…) is a choice of the user, not of a theme.
         listOf(p.glanceAnimationTint, p.glanceShortcuts, p.glanceChats, p.enableSmartspace).forEach { it.update(p, it.defaultValue) }
         p.glanceAnimation.update(p, p.glanceAnimation.defaultValue)
+        listOf(
+            p.glanceShowHeader, p.glanceShowDate, p.glanceShowStatus, p.glanceClockSeconds, p.glanceDateCaps,
+            p.glancePanelBorder, p.glanceGlow, p.glanceStatusSound, p.glanceStatusStorage, p.glanceStatusRam,
+        ).forEach { it.update(p, it.defaultValue) }
+        listOf(
+            p.glanceClockScale,
+            p.glanceTextScale,
+            p.glanceBorderWidth,
+            p.glanceCornerRadius,
+            p.glanceDimLevel,
+        ).forEach { it.update(p, it.defaultValue) }
+        p.glanceClockFormat.update(p, p.glanceClockFormat.defaultValue)
+        p.glanceDateFormat.update(p, p.glanceDateFormat.defaultValue)
+        p.glanceAlign.update(p, p.glanceAlign.defaultValue)
+        p.glanceDensity.update(p, p.glanceDensity.defaultValue)
+        p.glanceTitleBar.update(p, p.glanceTitleBar.defaultValue)
+        p.glanceUrgentColor.update(p, p.glanceUrgentColor.defaultValue)
+        p.glanceShortcutsHidden.update(p, p.glanceShortcutsHidden.defaultValue)
         val fonts = PreferenceManager.getInstance(context).fontWorkspace
         if (fonts.get() != fonts.defaultValue) fonts.set(fonts.defaultValue)
         p.strokeColorStyle.update(p, p.strokeColorStyle.defaultValue)

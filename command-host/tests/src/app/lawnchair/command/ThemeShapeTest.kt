@@ -82,6 +82,28 @@ class ThemeShapeTest {
         assertTrue(ThemeSpec(glance = GlanceSpec(show = false)).isEmpty.not())
     }
 
+    @Test fun glanceLookSurvivesTheFileAndTheOverlay() {
+        val look = GlanceLook(preset = "centered", align = "end", radius = 8, titleBar = "outline", glow = false, statusRam = false, hiddenShortcuts = listOf("camera"))
+        val spec = ThemeSpec(name = "x", glance = GlanceSpec(look = look))
+        assertEquals(spec, ThemeSpecs.decode(ThemeSpecs.encode(spec)))
+        val merged = ThemeSpec(glance = GlanceSpec(look = look)).overlaidWith(ThemeSpec(glance = GlanceSpec(look = GlanceLook(align = "start", dim = 50))))
+        assertEquals(look.copy(align = "start", dim = 50), merged.glance?.look)
+        assertTrue(GlanceSpec(look = look).items.any { it.startsWith("style centered") })
+    }
+
+    @Test fun glanceLookReadsOnlyWhatItUnderstands() {
+        val read = GlanceSpecs.lookFromJson(org.json.JSONObject("""{"preset":"Disco","align":"CENTER","radius":99,"clockSize":"20","borderWidth":"x","hiddenShortcuts":["Camera","laser","camera"],"statusItems":{"ram":false}}"""))
+        assertEquals(GlanceLook(align = "center", radius = 16, clockSize = 60, hiddenShortcuts = listOf("camera"), statusRam = false), read)
+        assertNull(GlanceSpecs.lookFromJson(org.json.JSONObject("""{"preset":"x"}""")))
+    }
+
+    @Test fun promptsExplainTheGlanceLook() {
+        listOf("preset", "clockFormat", "hiddenShortcuts", "statusItems", "radius", "urgent", "dim", "textSize").forEach {
+            assertTrue(it, LauncherAiPrompts.THEME_RULES.contains(it))
+        }
+        GlanceSpecs.PRESETS.forEach { assertTrue(it, LauncherAiPrompts.THEME_RULES.contains(it)) }
+    }
+
     @Test fun glanceReadsOnlyWhatItUnderstands() {
         val read = GlanceSpecs.fromJson(org.json.JSONObject("""{"animation":"disco","lottie":"file:///etc/passwd","show":"maybe","targets":{"weather":false}}"""))
         assertEquals(GlanceSpec(weather = false), read)

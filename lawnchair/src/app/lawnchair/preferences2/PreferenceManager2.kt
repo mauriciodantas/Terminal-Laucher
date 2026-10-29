@@ -42,7 +42,14 @@ import app.lawnchair.preferences.PreferenceManager as LawnchairPreferenceManager
 import app.lawnchair.qsb.providers.QsbSearchProvider
 import app.lawnchair.search.algorithms.LawnchairSearchAlgorithm
 import app.lawnchair.search.algorithms.engine.provider.web.WebSearchProvider
+import app.lawnchair.smartspace.glance.GlanceAlign
 import app.lawnchair.smartspace.glance.GlanceAnimationStyle
+import app.lawnchair.smartspace.glance.GlanceClockFormat
+import app.lawnchair.smartspace.glance.GlanceDateFormat
+import app.lawnchair.smartspace.glance.GlanceDensity
+import app.lawnchair.smartspace.glance.GlanceShortcut
+import app.lawnchair.smartspace.glance.GlanceTitleBar
+import app.lawnchair.smartspace.glance.GlanceUrgentColor
 import app.lawnchair.smartspace.model.SmartspaceCalendar
 import app.lawnchair.smartspace.model.SmartspaceMode
 import app.lawnchair.smartspace.model.SmartspaceTimeFormat
@@ -1003,6 +1010,137 @@ class PreferenceManager2 @Inject constructor(
     val glanceAutoPriority = preference(
         key = booleanPreferencesKey("glance_auto_priority"),
         defaultValue = true,
+    )
+
+    /** Which parts of the At a Glance readout (header, date, status line) are drawn. */
+    val glanceShowHeader = preference(
+        key = booleanPreferencesKey("glance_show_header"),
+        defaultValue = true,
+    )
+
+    val glanceShowDate = preference(
+        key = booleanPreferencesKey("glance_show_date"),
+        defaultValue = true,
+    )
+
+    val glanceShowStatus = preference(
+        key = booleanPreferencesKey("glance_show_status"),
+        defaultValue = true,
+    )
+
+    /** What the dynamic status line lists; with all three off the fixed text comes back. */
+    val glanceStatusSound = preference(
+        key = booleanPreferencesKey("glance_status_sound"),
+        defaultValue = true,
+    )
+
+    val glanceStatusStorage = preference(
+        key = booleanPreferencesKey("glance_status_storage"),
+        defaultValue = true,
+    )
+
+    val glanceStatusRam = preference(
+        key = booleanPreferencesKey("glance_status_ram"),
+        defaultValue = true,
+    )
+
+    val glanceClockFormat = preference(
+        key = stringPreferencesKey("glance_clock_format"),
+        defaultValue = GlanceClockFormat.SYSTEM,
+        parse = { GlanceClockFormat.fromId(it) },
+        save = { it.id },
+    )
+
+    val glanceDateFormat = preference(
+        key = stringPreferencesKey("glance_date_format"),
+        defaultValue = GlanceDateFormat.FULL,
+        parse = { GlanceDateFormat.fromId(it) },
+        save = { it.id },
+    )
+
+    /** Size of the clock and of the big value, in percent of the default. */
+    val glanceClockScale = preference(
+        key = intPreferencesKey("glance_clock_scale"),
+        defaultValue = 100,
+    )
+
+    /** Names of the [GlanceShortcut]s the user hid, separated by commas. */
+    val glanceShortcutsHidden = preference(
+        key = stringPreferencesKey("glance_shortcuts_hidden"),
+        defaultValue = "",
+    )
+
+    val glancePanelBorder = preference(
+        key = booleanPreferencesKey("glance_panel_border"),
+        defaultValue = true,
+    )
+
+    val glanceTitleBar = preference(
+        key = stringPreferencesKey("glance_title_bar"),
+        defaultValue = GlanceTitleBar.FILLED,
+        parse = { GlanceTitleBar.fromId(it) },
+        save = { it.id },
+    )
+
+    /** Border thickness of the panel, in dp. */
+    val glanceBorderWidth = preference(
+        key = intPreferencesKey("glance_border_width"),
+        defaultValue = 1,
+    )
+
+    /** Corner radius of the panel, in dp. */
+    val glanceCornerRadius = preference(
+        key = intPreferencesKey("glance_corner_radius"),
+        defaultValue = 0,
+    )
+
+    val glanceAlign = preference(
+        key = stringPreferencesKey("glance_align"),
+        defaultValue = GlanceAlign.START,
+        parse = { GlanceAlign.fromId(it) },
+        save = { it.id },
+    )
+
+    val glanceClockSeconds = preference(
+        key = booleanPreferencesKey("glance_clock_seconds"),
+        defaultValue = false,
+    )
+
+    val glanceDateCaps = preference(
+        key = booleanPreferencesKey("glance_date_caps"),
+        defaultValue = true,
+    )
+
+    /** The soft glow behind the clock and the big values. */
+    val glanceGlow = preference(
+        key = booleanPreferencesKey("glance_glow"),
+        defaultValue = true,
+    )
+
+    /** Strength of the secondary text and the status line, in percent of the main color. */
+    val glanceDimLevel = preference(
+        key = intPreferencesKey("glance_dim_level"),
+        defaultValue = 62,
+    )
+
+    val glanceUrgentColor = preference(
+        key = stringPreferencesKey("glance_urgent_color"),
+        defaultValue = GlanceUrgentColor.RED,
+        parse = { GlanceUrgentColor.fromId(it) },
+        save = { it.id },
+    )
+
+    val glanceDensity = preference(
+        key = stringPreferencesKey("glance_density"),
+        defaultValue = GlanceDensity.COMFORTABLE,
+        parse = { GlanceDensity.fromId(it) },
+        save = { it.id },
+    )
+
+    /** Size of the text of the targets, in percent of the default. */
+    val glanceTextScale = preference(
+        key = intPreferencesKey("glance_text_scale"),
+        defaultValue = 100,
     )
 
     val smartspacerMaxCount = preference(

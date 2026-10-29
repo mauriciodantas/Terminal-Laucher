@@ -57,11 +57,20 @@ import app.lawnchair.preferences2.preferenceManager2
 import app.lawnchair.smartspace.SmartspaceViewContainer
 import app.lawnchair.smartspace.glance.ChatCandidate
 import app.lawnchair.smartspace.glance.ChatShortcuts
+import app.lawnchair.smartspace.glance.GlanceAlign
 import app.lawnchair.smartspace.glance.GlanceAnimationFile
 import app.lawnchair.smartspace.glance.GlanceAnimationStyle
+import app.lawnchair.smartspace.glance.GlanceClockFormat
+import app.lawnchair.smartspace.glance.GlanceDateFormat
+import app.lawnchair.smartspace.glance.GlanceDensity
 import app.lawnchair.smartspace.glance.GlanceEngine
+import app.lawnchair.smartspace.glance.GlancePreset
+import app.lawnchair.smartspace.glance.GlanceReadout
 import app.lawnchair.smartspace.glance.GlanceSetup
 import app.lawnchair.smartspace.glance.GlanceSetupIntents
+import app.lawnchair.smartspace.glance.GlanceShortcut
+import app.lawnchair.smartspace.glance.GlanceTitleBar
+import app.lawnchair.smartspace.glance.GlanceUrgentColor
 import app.lawnchair.smartspace.glance.MediaSetupStep
 import app.lawnchair.smartspace.glance.WhatsAppChatSource
 import app.lawnchair.smartspace.model.SmartspaceCalendar
@@ -206,6 +215,7 @@ private fun GlanceTargetsPreferences(modifier: Modifier = Modifier) {
             label = stringResource(id = R.string.glance_lead_time),
         )
     }
+    GlanceReadoutPreferences(modifier = Modifier.padding(top = 8.dp))
     GlanceAnimationPreferences(modifier = Modifier.padding(top = 8.dp))
     PreferenceGroup(
         heading = stringResource(id = R.string.glance_group_shortcuts),
@@ -216,6 +226,199 @@ private fun GlanceTargetsPreferences(modifier: Modifier = Modifier) {
             label = stringResource(id = R.string.glance_shortcuts),
             description = stringResource(id = R.string.glance_shortcuts_desc),
         )
+        val shortcutsOn by prefs2.glanceShortcuts.asState()
+        if (shortcutsOn) {
+            val hiddenAdapter = prefs2.glanceShortcutsHidden.getAdapter()
+            val hidden = GlanceReadout.parseHidden(hiddenAdapter.state.value)
+            GlanceShortcut.entries.forEach { shortcut ->
+                SwitchPreference(
+                    checked = shortcut !in hidden,
+                    onCheckedChange = { show ->
+                        val next = if (show) hidden - shortcut else hidden + shortcut
+                        hiddenAdapter.onChange(GlanceReadout.serializeHidden(next))
+                    },
+                    label = shortcut.label,
+                )
+            }
+        }
+    }
+}
+
+/** Ready-made looks of the panel: each one sets the style preferences below in one tap. */
+@Composable
+private fun GlancePanelStylePreferences(modifier: Modifier = Modifier) {
+    val prefs2 = preferenceManager2()
+    val scope = rememberCoroutineScope()
+    val border by prefs2.glancePanelBorder.asState()
+
+    PreferenceGroup(heading = stringResource(id = R.string.glance_group_styles), modifier = modifier) {
+        GlancePreset.entries.forEach { preset ->
+            ClickablePreference(
+                label = stringResource(preset.labelRes),
+                subtitle = stringResource(preset.descriptionRes),
+                onClick = {
+                    scope.launch {
+                        prefs2.glancePanelBorder.set(preset.border)
+                        prefs2.glanceTitleBar.set(preset.titleBar)
+                        prefs2.glanceBorderWidth.set(preset.borderWidth)
+                        prefs2.glanceCornerRadius.set(preset.radius)
+                        prefs2.glanceAlign.set(preset.align)
+                        prefs2.glanceDensity.set(preset.density)
+                        prefs2.glanceGlow.set(preset.glow)
+                        prefs2.glanceShowHeader.set(preset.header)
+                        prefs2.glanceShowStatus.set(preset.status)
+                        prefs2.glanceClockFormat.set(preset.clock)
+                        prefs2.glanceDateFormat.set(preset.date)
+                    }
+                },
+            )
+        }
+    }
+    PreferenceGroup(heading = stringResource(id = R.string.glance_group_panel_style), modifier = Modifier.padding(top = 8.dp)) {
+        SwitchPreference(
+            adapter = prefs2.glancePanelBorder.getAdapter(),
+            label = stringResource(id = R.string.glance_panel_border),
+        )
+        if (border) {
+            SliderPreference(
+                label = stringResource(id = R.string.glance_border_width),
+                adapter = prefs2.glanceBorderWidth.getAdapter(),
+                step = 1,
+                valueRange = 1..GlanceReadout.BORDER_MAX,
+            )
+        }
+        SliderPreference(
+            label = stringResource(id = R.string.glance_corner_radius),
+            adapter = prefs2.glanceCornerRadius.getAdapter(),
+            step = 2,
+            valueRange = 0..GlanceReadout.RADIUS_MAX,
+        )
+        ListPreference(
+            adapter = prefs2.glanceTitleBar.getAdapter(),
+            entries = remember {
+                GlanceTitleBar.entries.map { entry ->
+                    ListPreferenceEntry(value = entry, label = { stringResource(entry.labelRes) })
+                }
+            },
+            label = stringResource(id = R.string.glance_title_bar),
+        )
+        SwitchPreference(
+            adapter = prefs2.glanceGlow.getAdapter(),
+            label = stringResource(id = R.string.glance_glow),
+        )
+        SliderPreference(
+            label = stringResource(id = R.string.glance_dim_level),
+            adapter = prefs2.glanceDimLevel.getAdapter(),
+            step = 5,
+            valueRange = GlanceReadout.DIM_MIN..GlanceReadout.DIM_MAX,
+        )
+        ListPreference(
+            adapter = prefs2.glanceUrgentColor.getAdapter(),
+            entries = remember {
+                GlanceUrgentColor.entries.map { entry ->
+                    ListPreferenceEntry(value = entry, label = { stringResource(entry.labelRes) })
+                }
+            },
+            label = stringResource(id = R.string.glance_urgent_color),
+        )
+    }
+}
+
+/** The look of the readout above the panel: which lines are drawn, the clock and date format, and the size. */
+@Composable
+private fun GlanceReadoutPreferences(modifier: Modifier = Modifier) {
+    val prefs2 = preferenceManager2()
+    val statusLine by prefs2.glanceStatusLine.asState()
+
+    PreferenceGroup(heading = stringResource(id = R.string.glance_group_readout), modifier = modifier) {
+        SwitchPreference(
+            adapter = prefs2.glanceShowHeader.getAdapter(),
+            label = stringResource(id = R.string.glance_show_header),
+        )
+        SwitchPreference(
+            adapter = prefs2.glanceShowDate.getAdapter(),
+            label = stringResource(id = R.string.glance_show_date),
+        )
+        SwitchPreference(
+            adapter = prefs2.glanceShowStatus.getAdapter(),
+            label = stringResource(id = R.string.glance_show_status),
+        )
+        ListPreference(
+            adapter = prefs2.glanceClockFormat.getAdapter(),
+            entries = remember {
+                GlanceClockFormat.entries.map { entry ->
+                    ListPreferenceEntry(value = entry, label = { stringResource(entry.labelRes) })
+                }
+            },
+            label = stringResource(id = R.string.glance_clock_format),
+        )
+        ListPreference(
+            adapter = prefs2.glanceDateFormat.getAdapter(),
+            entries = remember {
+                GlanceDateFormat.entries.map { entry ->
+                    ListPreferenceEntry(value = entry, label = { stringResource(entry.labelRes) })
+                }
+            },
+            label = stringResource(id = R.string.glance_date_format),
+        )
+        SwitchPreference(
+            adapter = prefs2.glanceClockSeconds.getAdapter(),
+            label = stringResource(id = R.string.glance_clock_seconds),
+        )
+        SwitchPreference(
+            adapter = prefs2.glanceDateCaps.getAdapter(),
+            label = stringResource(id = R.string.glance_date_caps),
+        )
+        SliderPreference(
+            label = stringResource(id = R.string.glance_clock_size),
+            adapter = prefs2.glanceClockScale.getAdapter(),
+            step = 10,
+            valueRange = GlanceReadout.SCALE_MIN..GlanceReadout.SCALE_MAX,
+        )
+        SliderPreference(
+            label = stringResource(id = R.string.glance_text_size),
+            adapter = prefs2.glanceTextScale.getAdapter(),
+            step = 10,
+            valueRange = GlanceReadout.TEXT_MIN..GlanceReadout.TEXT_MAX,
+        )
+        ListPreference(
+            adapter = prefs2.glanceAlign.getAdapter(),
+            entries = remember {
+                GlanceAlign.entries.map { entry ->
+                    ListPreferenceEntry(value = entry, label = { stringResource(entry.labelRes) })
+                }
+            },
+            label = stringResource(id = R.string.glance_align),
+        )
+        ListPreference(
+            adapter = prefs2.glanceDensity.getAdapter(),
+            entries = remember {
+                GlanceDensity.entries.map { entry ->
+                    ListPreferenceEntry(value = entry, label = { stringResource(entry.labelRes) })
+                }
+            },
+            label = stringResource(id = R.string.glance_density),
+        )
+    }
+    GlancePanelStylePreferences(modifier = Modifier.padding(top = 8.dp))
+    if (statusLine) {
+        PreferenceGroup(
+            heading = stringResource(id = R.string.glance_group_status_items),
+            modifier = Modifier.padding(top = 8.dp),
+        ) {
+            SwitchPreference(
+                adapter = prefs2.glanceStatusSound.getAdapter(),
+                label = stringResource(id = R.string.glance_status_sound),
+            )
+            SwitchPreference(
+                adapter = prefs2.glanceStatusStorage.getAdapter(),
+                label = stringResource(id = R.string.glance_status_storage),
+            )
+            SwitchPreference(
+                adapter = prefs2.glanceStatusRam.getAdapter(),
+                label = stringResource(id = R.string.glance_status_ram),
+            )
+        }
     }
 }
 
