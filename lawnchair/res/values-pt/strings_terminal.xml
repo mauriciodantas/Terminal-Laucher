@@ -525,6 +525,8 @@
     <string name="theme_import_image_art">desenhado no aparelho: %1$s</string>
     <string name="theme_import_image_svg">desenho vetorial no arquivo</string>
     <string name="theme_wallpaper_failed">Não foi possível aplicar o papel de parede do tema</string>
+    <string name="theme_glance_lottie_failed">Não foi possível aplicar a animação do At a Glance do tema</string>
+    <string name="theme_import_glance">At a Glance</string>
     <string name="cmd_ai_theme_request">Crie um tema original para mim</string>
     <string name="cmd_ai_theme_failed">A IA NÃO ENVIOU UM TEMA LEGÍVEL</string>
     <string name="appearance_group_themes">Temas</string>

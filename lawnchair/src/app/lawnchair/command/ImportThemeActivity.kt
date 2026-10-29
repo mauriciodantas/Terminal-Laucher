@@ -158,6 +158,12 @@ private fun ImportDialog(
                         Text(stringResource(R.string.theme_import_lock_apply), style = MaterialTheme.typography.bodySmall)
                     }
                 }
+                spec.glance?.items?.takeIf { it.isNotEmpty() }?.let { items ->
+                    Column(modifier = Modifier.padding(top = 4.dp)) {
+                        Text(stringResource(R.string.theme_import_glance).lowercase() + ":", style = MaterialTheme.typography.bodySmall, color = dim)
+                        Text(items.joinToString(" · "), style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
+                    }
+                }
                 if (spec.followSystem == true) {
                     Text(ThemeChange.SYSTEM.preview.lowercase(), style = MaterialTheme.typography.bodySmall, color = dim, modifier = Modifier.padding(top = 4.dp))
                 }

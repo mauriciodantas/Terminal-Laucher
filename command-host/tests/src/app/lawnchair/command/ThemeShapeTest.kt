@@ -67,4 +67,45 @@ class ThemeShapeTest {
         assertEquals(true, spec.showWallpaper)
         assertEquals("credit", note)
     }
+
+    @Test fun glanceSurvivesTheFileAndTheOverlay() {
+        val spec = ThemeSpec(
+            name = "x",
+            glance = GlanceSpec(show = false, animation = "sonar", lottie = GlanceLottie.Url("https://example.com/a.json"), tint = true, shortcuts = false, agenda = false, autoRotate = true),
+        )
+        assertEquals(spec, ThemeSpecs.decode(ThemeSpecs.encode(spec)))
+        val json = GlanceLottie.Json("""{"layers":[]}""")
+        assertEquals(GlanceSpec(show = true, animation = "wave", lottie = json), GlanceSpecs.fromJson(org.json.JSONObject("""{"show":"true","animation":"Wave","lottie":{"json":{"layers":[]}}}""")))
+        val merged = ThemeSpec(glance = GlanceSpec(show = false, animation = "radar")).overlaidWith(ThemeSpec(glance = GlanceSpec(animation = "bars", chats = false)))
+        assertEquals(GlanceSpec(show = false, animation = "bars", chats = false), merged.glance)
+        assertEquals(GlanceSpec(show = false), ThemeSpec().overlaidWith(ThemeSpec(glance = GlanceSpec(show = false))).glance)
+        assertTrue(ThemeSpec(glance = GlanceSpec(show = false)).isEmpty.not())
+    }
+
+    @Test fun glanceReadsOnlyWhatItUnderstands() {
+        val read = GlanceSpecs.fromJson(org.json.JSONObject("""{"animation":"disco","lottie":"file:///etc/passwd","show":"maybe","targets":{"weather":false}}"""))
+        assertEquals(GlanceSpec(weather = false), read)
+        assertNull(GlanceSpecs.fromJson(org.json.JSONObject("""{"animation":"none"}""").put("x", 1))?.animation?.takeIf { it != "off" })
+        assertNull(GlanceSpecs.fromJson(org.json.JSONObject("""{"lottie":{"json":{"nolayers":1}}}""")))
+        assertEquals(GlanceLottie.Url("https://example.com/a.json"), GlanceSpecs.fromJson(org.json.JSONObject("""{"lottie":"https://example.com/a.json"}"""))?.lottie)
+    }
+
+    @Test fun promptsExplainTheGlancePanel() {
+        assertTrue(LauncherAiPrompts.THEME_RULES.contains("glance"))
+        assertTrue(LauncherAiPrompts.THEME_RULES.contains("sonar"))
+        assertTrue(LauncherAiPrompts.THEME_RULES.contains("Animation is optional"))
+        assertTrue(LauncherAiPrompts.THEME_RULES.contains("never just because the field exists"))
+        assertTrue(LauncherAiPrompts.THEME_MASTER_PROMPT.contains("glance.lottie"))
+        assertFalse(LauncherAiPrompts.THEME_RULES.contains("glance.lottie"))
+    }
+
+    @Test fun aGuideReplyKeepsItsGlance() {
+        val (spec, _) = LauncherAiPrompts.theme("""{"accent":"#6ef5aa","background":"#051419","glance":{"show":false}}""")!!
+        assertEquals(GlanceSpec(show = false), spec.glance)
+    }
+
+    @Test fun aThemeThatOnlyHidesThePanelIsRead() {
+        val (spec, _) = LauncherAiPrompts.theme("""{"name":"Sem painel","glance":{"show":false}}""")!!
+        assertEquals(GlanceSpec(show = false), spec.glance)
+    }
 }

@@ -11,6 +11,8 @@ import app.lawnchair.icons.shape.IconShape
 import app.lawnchair.preferences.PreferenceManager
 import app.lawnchair.preferences2.PreferenceManager2
 import app.lawnchair.preferences2.firstCached
+import app.lawnchair.smartspace.glance.GlanceAnimationFile
+import app.lawnchair.smartspace.glance.GlanceAnimationStyle
 import app.lawnchair.theme.ComplementaryColors
 import app.lawnchair.theme.color.ColorOption
 import com.android.launcher3.R
@@ -98,7 +100,26 @@ object ThemeStore {
             // A custom corner shape has no name to carry: it is left out.
             iconShape = ThemeSpecs.shapeKey(p.iconShape.firstCached(p).toString()),
             folderShape = ThemeSpecs.shapeKey(p.folderShape.firstCached(p).toString()),
+            glance = glanceNow(context, p),
         )
+    }
+
+    /** What the At a Glance panel has that is not how the app comes; null when it is all as it comes. */
+    private fun glanceNow(context: Context, p: PreferenceManager2): GlanceSpec? {
+        val style = p.glanceAnimation.firstCached(p)
+        val lottie = style.takeIf { it == GlanceAnimationStyle.CUSTOM }
+            ?.let { GlanceAnimationFile.file(context).takeIf { f -> f.isFile } }
+            ?.let { runCatching { it.readText() }.getOrNull() }
+            ?.takeIf { it.length <= ThemeSpecs.MAX_LOTTIE_CHARS && runCatching { JSONObject(it).optJSONArray("layers") != null }.getOrDefault(false) }
+            ?.let { GlanceLottie.Json(it) }
+        return GlanceSpec(
+            show = false.takeIf { !p.enableSmartspace.firstCached(p) },
+            animation = style.id.takeIf { style != GlanceAnimationStyle.OFF && style != GlanceAnimationStyle.CUSTOM },
+            lottie = lottie,
+            tint = false.takeIf { lottie != null && !p.glanceAnimationTint.firstCached(p) },
+            shortcuts = false.takeIf { !p.glanceShortcuts.firstCached(p) },
+            chats = false.takeIf { !p.glanceChats.firstCached(p) },
+        ).takeUnless { it.isEmpty }
     }
 
     private fun colorOf(option: ColorOption): ThemeColor = when (option) {
@@ -168,10 +189,30 @@ object ThemeStore {
         spec.folderShape?.let { setShape(context, p.folderShape, it) }
         ThemeImages.applyLater(context, spec)
         spec.font?.let { setFont(context, it) }
+        spec.glance?.let { applyGlance(context, p, it) }
         // Last: a new outline restarts the home screen.
         spec.outline?.let { p.strokeColorStyle.update(p, optionOf(it)) }
         net.mdantas.terminal.wear.bridge.TerminalWear.publishTheme(context)
         return true
+    }
+
+    /**
+     * The At a Glance panel: the switches and the named animation are written now, a Lottie (which a link
+     * has to download) afterwards, and it wins over a named animation. Hiding the panel goes last, since it restarts the home screen.
+     */
+    private fun applyGlance(context: Context, p: PreferenceManager2, g: GlanceSpec) {
+        if (g.lottie == null) g.animation?.let { p.glanceAnimation.update(p, GlanceAnimationStyle.fromId(it)) }
+        g.tint?.let { p.glanceAnimationTint.update(p, it) }
+        g.shortcuts?.let { p.glanceShortcuts.update(p, it) }
+        g.chats?.let { p.glanceChats.update(p, it) }
+        g.agenda?.let { p.glanceAgenda.update(p, it) }
+        g.weather?.let { p.glanceWeather.update(p, it) }
+        g.alarm?.let { p.glanceAlarm.update(p, it) }
+        g.reminders?.let { p.glanceReminders.update(p, it) }
+        g.bluetooth?.let { p.glanceBluetooth.update(p, it) }
+        g.autoRotate?.let { p.glanceAutoRotate.update(p, it) }
+        g.lottie?.let { ThemeGlance.applyLater(context, it) }
+        g.show?.let { p.enableSmartspace.update(p, it) }
     }
 
     /** Every element of the theme back to how the app comes; the lock screen is left alone. */
@@ -183,6 +224,9 @@ object ThemeStore {
         listOf(p.widgetEffectIntensity, p.crtEffectIntensity, p.wallpaperDim).forEach { it.update(p, it.defaultValue) }
         p.screenAnimation.update(p, p.screenAnimation.defaultValue)
         p.screenAnimationCustom.update(p, p.screenAnimationCustom.defaultValue)
+        // The panel's look; what it shows (agenda, weather…) is a choice of the user, not of a theme.
+        listOf(p.glanceAnimationTint, p.glanceShortcuts, p.glanceChats, p.enableSmartspace).forEach { it.update(p, it.defaultValue) }
+        p.glanceAnimation.update(p, p.glanceAnimation.defaultValue)
         val fonts = PreferenceManager.getInstance(context).fontWorkspace
         if (fonts.get() != fonts.defaultValue) fonts.set(fonts.defaultValue)
         p.strokeColorStyle.update(p, p.strokeColorStyle.defaultValue)

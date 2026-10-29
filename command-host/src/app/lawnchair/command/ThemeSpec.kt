@@ -123,6 +123,8 @@ data class ThemeSpec(
     val iconShape: String? = null,
     /** The shape of the folders, from the same list. */
     val folderShape: String? = null,
+    /** The At a Glance panel: hidden, its animation (or a Lottie of its own), its rows and what it shows. */
+    val glance: GlanceSpec? = null,
 ) {
     /** The image each screen gets: the home screen's and the lock screen's. */
     val lockImage: ThemeImage? get() = lockWallpaper ?: wallpaper?.takeIf { it.lockScreen }?.image
@@ -156,6 +158,7 @@ data class ThemeSpec(
         lockWallpaper = other.lockWallpaper ?: lockWallpaper,
         iconShape = other.iconShape ?: iconShape,
         folderShape = other.folderShape ?: folderShape,
+        glance = glance?.let { g -> other.glance?.let(g::overlaidWith) ?: g } ?: other.glance,
     )
 }
 
@@ -266,6 +269,7 @@ object ThemeSpecs {
         spec.lockWallpaper?.let { o.put("lockWallpaper", image(it)) }
         spec.iconShape?.let { o.put("iconShape", it) }
         spec.folderShape?.let { o.put("folderShape", it) }
+        spec.glance?.let { o.put("glance", GlanceSpecs.toJson(it)) }
         return if (pretty) o.toString(2) else o.toString()
     }
 
@@ -329,6 +333,7 @@ object ThemeSpecs {
         lockWallpaper = o.opt("lockWallpaper")?.let { image(it, stored) },
         iconShape = shape(o, "iconShape"),
         folderShape = shape(o, "folderShape"),
+        glance = GlanceSpecs.fromJson(o.opt("glance")),
     )
 
     /** The shapes the launcher draws icons and folders in, by the key it stores ("system" follows the phone's own mask). */

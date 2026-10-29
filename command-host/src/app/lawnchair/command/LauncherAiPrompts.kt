@@ -57,7 +57,10 @@ object LauncherAiPrompts {
             "\"widgetEffect\": true, \"widgetIntensity\": 0.6, \"crtEffect\": true, \"crtIntensity\": 0.4, \"animation\": \"<animation>\", " +
             "\"showWallpaper\": false, \"wallpaperDim\": 0.5, \"colorAsWallpaper\": false, \"iconShape\": \"<shape>\", \"folderShape\": \"<shape>\", " +
             "\"wallpaper\": {\"svg\": \"<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1080 2400'>...</svg>\", \"lockScreen\": false}, " +
-            "\"lockWallpaper\": {\"svg\": \"<svg ...>...</svg>\"}, \"note\": \"<one short sentence>\"}\n" +
+            "\"lockWallpaper\": {\"svg\": \"<svg ...>...</svg>\"}, " +
+            "\"glance\": {\"show\": true, \"animation\": \"<${GlanceSpecs.ANIMATIONS.joinToString("|")}>\", \"tint\": true, \"shortcuts\": true, \"chats\": true, " +
+            "\"targets\": {\"agenda\": true, \"weather\": true, \"alarm\": true, \"reminders\": true, \"bluetooth\": true}, \"autoRotate\": true}, " +
+            "\"note\": \"<one short sentence>\"}\n" +
             "Rules: the accent over the background must read well, a contrast ratio of at least 4.5 (WCAG). " +
             "secondary is a third color for secondary text, hints and lines (default keeps the accent dimmed); " +
             "it must read over the background too, at least 3.0, and works best a third of the color wheel away from the accent. " +
@@ -67,7 +70,10 @@ object LauncherAiPrompts {
             "or {\"kind\": \"default\"} for the terminal font. pixelClock keeps the pixel font for the clock. " +
             "iconEffect draws app icons in the accent color; widgetEffect tints widgets; crtEffect turns on the animation over the whole screen and crtIntensity says how strong it is; " +
             "animation picks which one: ${ThemeSpecs.ANIMATIONS.joinToString(", ")} (monitor is the CRT look with scanlines; the others are particles), or \"none\" for no animation. " +
-            "Pick the animation that belongs to the concept instead of always the monitor: snow for a winter scene, petals for a spring or a Japanese garden, stars for a night sky, rain for a neon alley or a storm. " +
+            "Animation is optional, and no animation is often the best answer: add one only when it adds something real to the concept and you would be proud of it, " +
+            "never just because the field exists. A calm theme, a photo that already has movement or mood, or a legible minimal look is better still. " +
+            "The same goes for every moving part of the theme: the screen animation, the effects (crtEffect, widgetEffect), the animation of the At a Glance panel and its Lottie. " +
+            "When you do add one, pick the animation that belongs to the concept instead of always the monitor: snow for a winter scene, petals for a spring or a Japanese garden, stars for a night sky, rain for a neon alley or a storm. " +
             "When none of them fits, write your own with customAnimation instead of animation: " +
             "{\"kind\": \"particles\", \"shape\": \"circle|petal|line|star|svg\", \"color\": \"#rrggbb\", \"count\": 60, \"size\": 6, \"speed\": 0.08, " +
             "\"angle\": 0, \"sway\": 0.02, \"spin\": 0, \"twinkle\": 0, \"opacity\": 0.8}. " +
@@ -80,9 +86,18 @@ object LauncherAiPrompts {
             "iconShape and folderShape pick the shape app icons and folders are cut to, one of: ${ThemeSpecs.ICON_SHAPES.joinToString(", ")}. " +
             "Choose them as part of the concept instead of leaving the default: hexagon or diamond for sci-fi, flower or cloudy for something soft, " +
             "sharpSquare or square for brutalist or terminal looks, squircle for clean ones, heart, leaf or teardrop for playful or nature themes. " +
+            "glance is the At a Glance panel at the top of the home screen (the weather, the next event, the alarm, with a row of shortcuts under it). " +
+            "You decide what suits the concept, and every field is optional. show false hides the whole panel: do it when it would fight the picture " +
+            "(a wallpaper whose subject sits at the top, a poster, a minimal or empty look); otherwise leave it shown. " +
+            "animation is the readout beside its big value: ${GlanceSpecs.ANIMATIONS.joinToString(", ")}. " +
+            "Change it only if another one clearly suits the concept (sonar for the deep sea, wave for an oscilloscope or music, bars for an equalizer, radar for sci-fi) " +
+            "or off when it would be noise; leaving it out, so it stays as the user has it, is a good answer too. " +
+            "shortcuts false removes the row of utility shortcuts and chats false the row of chat shortcuts, for a cleaner look. " +
+            "targets switch off kinds of information and autoRotate stops the panel from turning through them: leave them out unless the user asks. " +
+            "tint true paints a Lottie animation in the accent color. \"lottie\" (an animation of its own) is only for a chat that can browse, see below; never write the file. " +
             "BE CREATIVE: a request is a mood, a place, a feeling or a story, not only a palette. Pick an unexpected, specific idea " +
-            "(a rainy neon alley, a deep-sea research station, an 80s arcade, a paper-cut forest at dawn) and carry it through every field at once: " +
-            "the colors, the font that suits the era or material, the effects, the shapes, the name and the wallpaper. " +
+            "(a rainy neon alley, a deep-sea research station, an 80s arcade, a paper-cut forest at dawn) and carry it through the fields that serve it: " +
+            "the colors, the font that suits the era or material, the shapes, the name and the wallpaper, and an effect or an animation only where it truly adds to the idea (not every field has to change). " +
             "Avoid the obvious choice (pure black with green, a plain blue-to-purple gradient) unless that is exactly what was asked. " +
             "wallpaper: draw one for EVERY theme, since a theme without a picture feels unfinished; leave it out only when the user asks for no wallpaper, " +
             "keeps the current one or wants a plain color. Add lockWallpaper (a second scene of the same world, for example the same place at another hour) " +
@@ -144,7 +159,11 @@ object LauncherAiPrompts {
             "6. Take the colors from the picture: a dark background from its darkest tone, an accent from its most vivid or lightest tone, still with a contrast of at least 4.5.\n" +
             "7. Put the credit in \"note\": for each picture its title, author and licence (the licence of the item, not of the site), as short as you can, one sentence per picture. " +
             "Use only items whose licence allows reuse, and give the credit when it asks for one. A picture of a real place or object is fine for a theme about a film, a book or a mood.\n" +
-            "8. If no picture fits, fall back to the SVG wallpaper."
+            "8. If no picture fits, fall back to the SVG wallpaper.\n" +
+            "9. The At a Glance panel may also have a Lottie animation of its own, glance.lottie: {\"url\": \"<direct link to a .json file>\"}, with glance.animation left out. " +
+            "Use it only when one would really suit the concept (a pulsing heart, a spinning gear, a glowing orb), as a small, simple, roughly square animation of at most 500 KB, " +
+            "and only a file you opened and checked: a direct link to the raw .json, a licence that allows reuse (public domain, CC0, MIT or similar, shown on the page or in the repository), " +
+            "that parses as JSON with \"layers\". Prefer one drawn in a single color with glance.tint true. Never invent or guess a link. Put its credit in \"note\" too. If you find none that truly adds something, do not force one: use a built-in animation only if it suits, or leave the panel's animation alone."
 
     /**
      * The prompt of the theme guide, for any AI chat: the rules and the shape of a theme, how to use real

@@ -55,11 +55,16 @@ object GlanceAnimationFile {
      */
     fun import(context: Context, uri: Uri, now: Long = System.currentTimeMillis()): Result {
         val text = runCatching { readLimited(context, uri) }.getOrNull() ?: return Result.Invalid
+        return store(context, text, nameOf(context, uri), now)
+    }
+
+    /** Checks that [text] is a Lottie animation and stores it as [name]; nothing is replaced unless it is valid. Blocking. */
+    fun store(context: Context, text: String, name: String, now: Long = System.currentTimeMillis()): Result {
         if (text.length > MAX_BYTES) return Result.TooBig
         if (!isLottie(text)) return Result.Invalid
         return runCatching {
             file(context).writeText(text)
-            Result.Imported(encode(now, nameOf(context, uri)))
+            Result.Imported(encode(now, name))
         }.getOrDefault(Result.Invalid)
     }
 

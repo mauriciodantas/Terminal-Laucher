@@ -1596,6 +1596,8 @@
     <string name="theme_import_image_art">drawn on the phone: %1$s</string>
     <string name="theme_import_image_svg">vector drawing in the file</string>
     <string name="theme_wallpaper_failed">Could not set the theme wallpaper</string>
+    <string name="theme_glance_lottie_failed">Could not set the At a Glance animation of the theme</string>
+    <string name="theme_import_glance">At a Glance</string>
     <string name="cmd_ai_theme_request">Create an original theme for me</string>
     <string name="cmd_ai_theme_failed">THE AI SENT NO READABLE THEME</string>
     <string name="cmd_fast_failed">TEST FAILED: %1$s</string>
