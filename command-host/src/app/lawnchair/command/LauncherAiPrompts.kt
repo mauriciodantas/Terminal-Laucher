@@ -68,7 +68,7 @@ object LauncherAiPrompts {
             "\"note\": \"<one short sentence>\"}\n" +
             "Rules: the accent over the background must read well, a contrast ratio of at least 4.5 (WCAG). " +
             "secondary is a third color for secondary text, hints and lines (default keeps the accent dimmed); " +
-            "it must read over the background too, at least 3.0, and works best a third of the color wheel away from the accent. " +
+            "it must read over the background too, at least 3.0, and works best a third of the color wheel away from the accent, unless the picture or the concept has a limited palette: then take it from that palette. " +
             "outline is the search bar border, dock the dock background, folder the folder background; " +
             "any color may be \"default\" to follow the accent. The font is an exact Google Fonts family name " +
             "(monospaced ones such as JetBrains Mono, Space Mono, IBM Plex Mono, VT323 or Share Tech Mono suit the look best), " +
@@ -120,6 +120,11 @@ object LauncherAiPrompts {
             "(a rainy neon alley, a deep-sea research station, an 80s arcade, a paper-cut forest at dawn) and carry it through the fields that serve it: " +
             "the colors, the font that suits the era or material, the shapes, the name and the wallpaper, and an effect or an animation only where it truly adds to the idea (not every field has to change). " +
             "Avoid the obvious choice (pure black with green, a plain blue-to-purple gradient) unless that is exactly what was asked. " +
+            "COMPOSE THE THEME AS ONE PIECE: the mood of the request is kept, but the wallpaper, colors, font, shapes, animation, particles and the At a Glance panel must look like they belong to one picture. " +
+            "Decide the wallpaper first, then build every other field from it: the background from its darkest tone, the accent from its light or glow, the secondary, outline, dock and folder from tones, tints and shades that are already in it, " +
+            "and a particle color, a font and shapes that fit its material and era (a lithograph, a neon street, a watercolor). " +
+            "Do not add a hue the picture does not have, such as orange or purple over a black and white print, only because the concept names it (Halloween, for example, can be a mood of dark and dread instead of the orange and purple colors). " +
+            "A picture with one dominant hue calls for a near-monochrome palette with a single accent. Before replying, look at the whole at once: if one field would look out of place beside the wallpaper, change that field, not the wallpaper. " +
             "wallpaper: draw one for EVERY theme, since a theme without a picture feels unfinished; leave it out only when the user asks for no wallpaper, " +
             "keeps the current one or wants a plain color. Add lockWallpaper (a second scene of the same world, for example the same place at another hour) " +
             "when the user mentions the lock screen or asks for more than one picture; lockScreen true reuses the home picture there. " +
@@ -186,7 +191,11 @@ object LauncherAiPrompts {
             "(a bright picture you could not avoid), and a little more when the subject is in the middle of the screen. " +
             "Leave out \"lockWallpaper\" unless the user wants a second picture or asks for one for the lock screen (then {\"url\": \"<link>\"}, another picture of the same world). " +
             "A customAnimation replaces \"animation\": leave \"animation\" out then; crtEffect true is what turns the animation on, crtIntensity says how strong.\n" +
-            "6. Take the colors from the picture: a dark background from its darkest tone, an accent from its most vivid or lightest tone, still with a contrast of at least 4.5.\n" +
+            "6. Choose the picture first and take every color from it, as one palette: a dark background from its darkest tone (keep its slight tint, warm or cool, instead of pure black), " +
+            "an accent from its lightest or most vivid tone (the glow of a window, the moon, the paper), still with a contrast of at least 4.5, and secondary, outline, dock and folder as shades, tints or " +
+            "neighbors of those same tones. A black and white or sepia picture gets a near-monochrome palette with one accent; never put orange, purple, green or any hue over it that it does not have. " +
+            "Particles, the font, iconShape, folderShape and the panel (urgent color, glow, preset) follow the picture too: grain and dust for a print, sparks for a fire, drops for rain, shapes and a typeface of its era and material. " +
+            "When the picture is at odds with the colors you had in mind for the concept, the picture wins.\n" +
             "7. Put the credit in \"note\": for each picture its title, author and licence (the licence of the item, not of the site), as short as you can, one sentence per picture. " +
             "Use only items whose licence allows reuse, and give the credit when it asks for one. A picture of a real place or object is fine for a theme about a film, a book or a mood.\n" +
             "8. The SVG wallpaper is the last resort, not the plan. Draw it only after you tried at least three different sources of the catalog (and, for each, more than one search word) " +

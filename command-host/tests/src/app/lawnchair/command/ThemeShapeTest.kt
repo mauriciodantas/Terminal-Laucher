@@ -59,6 +59,12 @@ class ThemeShapeTest {
         assertTrue(prompt.contains("last resort"))
     }
 
+    @Test fun promptsAskForOneComposedPaletteFromTheWallpaper() {
+        assertTrue(LauncherAiPrompts.THEME_RULES.contains("COMPOSE THE THEME AS ONE PIECE"))
+        assertTrue(LauncherAiPrompts.THEME_MASTER_PROMPT.contains("the picture wins"))
+        assertTrue(LauncherAiPrompts.THEME_MASTER_PROMPT.contains("near-monochrome"))
+    }
+
     @Test fun aLinkWallpaperOfTheGuideReplyIsRead() {
         val spec = ThemeSpecs.fromJson(org.json.JSONObject("""{"name":"x","wallpaper":{"url":"https://upload.wikimedia.org/a.jpg","lockScreen":true},"showWallpaper":true,"wallpaperDim":0.5}"""))
         assertEquals(ThemeImage.Url("https://upload.wikimedia.org/a.jpg"), spec.wallpaper?.image)
