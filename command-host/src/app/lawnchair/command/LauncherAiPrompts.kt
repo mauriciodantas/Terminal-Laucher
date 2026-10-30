@@ -159,13 +159,22 @@ object LauncherAiPrompts {
             "an example request and, in como_obter_a_imagem, how to get the direct picture link).\n" +
             "2. Use only rows whose papel_de_parede is ideal or bom and whose uso_comercial starts with Sim, in the order of prioridade; " +
             "skip \"nao\" and, unless nothing else fits, \"limitado\". Pick the source that suits the idea (space: NASA; art and paintings: The Met, Art Institute of Chicago, Cleveland; " +
-            "places, history, architecture: Wikimedia Commons; nature and animals: iNaturalist or Wikimedia Commons). If a source fails or finds nothing, try the next.\n" +
+            "places, history, architecture: Wikimedia Commons; nature and animals: iNaturalist or Wikimedia Commons). " +
+            "Do not stop at the first source: the catalog has many, and the picture of a theme almost always exists in one of them. " +
+            "A source has failed when it answers with an error (429 too many requests, 403, a timeout), returns nothing, or returns only results that have nothing to do with the idea " +
+            "(scanned book pages, PDFs, maps, diagrams, logos); then go to the next row of the catalog at once. " +
+            "On a 429 or a timeout wait a few seconds and try that same source once more, with fewer and slower requests, before leaving it; never hammer it. " +
+            "Museum collections (The Met, Art Institute of Chicago, Cleveland, Rijksmuseum, SMK, Minneapolis) are the most reliable ones for a mood: " +
+            "prints, lithographs, engravings and paintings of night, fog, storms, dreams or fear are often dark and fit a theme better than a photo; search them by words of the mood " +
+            "(night, moonlight, nightmare, haunted, storm, fog) and of the art (lithograph, engraving, noir). A keyword search is literal, so try 3 or 4 different words before leaving a source.\n" +
             "3. Search it for the concept of the theme, in English. Prefer a portrait or tall picture at least 1080 px wide, with a calm area in the top third and the middle " +
             "(the clock, icons and text are drawn there) and the detail at the bottom and the edges. If no portrait one fits, a landscape or square picture is fine: " +
             "the phone crops it to fill the screen around its center, so choose one whose subject is in the middle. " +
             "The picture must be dark where text goes: light text and icons are drawn over the top third and the middle, so reject pictures that are bright or busy there " +
             "(a bright sky, a stained-glass ceiling, white walls); night scenes, dark interiors and deep colors work best. " +
-            "Look at the picture before choosing it, and when you cannot, prefer the ones the source describes as night, dark or low-key. " +
+            "Look at the picture before choosing it (download it and open it, or at least read the title and description), and when you cannot, prefer the ones the source describes as night, dark or low-key. " +
+            "A scan of a print or a page has a pale paper margin and sometimes a caption: it is fine when the phone's crop to the center leaves them out or the dim covers them, " +
+            "but reject it when a large white area would sit under the clock. A resolution a little under 1080 px wide is acceptable for a dark, soft picture when nothing sharper fits. " +
             "If the exact thing asked for (bats, ghosts, a given animal) has no suitable picture, take a picture of the same mood or place and let the animation or the colors carry the rest.\n" +
             "4. The link must be one you really received from that API or page: a direct https link to a .jpg, .png or .webp (not a web page, a search page or a viewer), " +
             "of at most 3 MB; a query string such as ?utm_source=... after the file name is fine. Open it to check that it loads as an image and read its size; a large PNG is often over 3 MB, so prefer a JPEG or a smaller size. " +
@@ -180,7 +189,9 @@ object LauncherAiPrompts {
             "6. Take the colors from the picture: a dark background from its darkest tone, an accent from its most vivid or lightest tone, still with a contrast of at least 4.5.\n" +
             "7. Put the credit in \"note\": for each picture its title, author and licence (the licence of the item, not of the site), as short as you can, one sentence per picture. " +
             "Use only items whose licence allows reuse, and give the credit when it asks for one. A picture of a real place or object is fine for a theme about a film, a book or a mood.\n" +
-            "8. If no picture fits, fall back to the SVG wallpaper.\n" +
+            "8. The SVG wallpaper is the last resort, not the plan. Draw it only after you tried at least three different sources of the catalog (and, for each, more than one search word) " +
+            "and each one failed or had nothing that fits; when that happens, say in \"note\" which sources you tried and why they failed, so the user knows it was not a choice. " +
+            "Never drop to the SVG because of one error, one empty search or a rate limit, and never swap a picture you were asked for (a real photo, a painting) for a drawing without trying again.\n" +
             "9. The At a Glance panel may also have a Lottie animation of its own, glance.lottie: {\"url\": \"<direct link to a .json file>\"}, with glance.animation left out. " +
             "Use it only when one would really suit the concept (a pulsing heart, a spinning gear, a glowing orb), as a small, simple, roughly square animation of at most 500 KB, " +
             "and only a file you opened and checked: a direct link to the raw .json, a licence that allows reuse (public domain, CC0, MIT or similar, shown on the page or in the repository), " +

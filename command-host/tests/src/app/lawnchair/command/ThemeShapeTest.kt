@@ -51,6 +51,14 @@ class ThemeShapeTest {
         assertFalse(LauncherAiPrompts.CREATE_TAIL.contains(LauncherAiPrompts.IMAGE_SOURCES_URL))
     }
 
+    @Test fun guidePromptKeepsTheImageSearchGoingWhenASourceFails() {
+        val prompt = LauncherAiPrompts.THEME_MASTER_PROMPT
+        assertTrue(prompt.contains("429"))
+        assertTrue(prompt.contains("go to the next row of the catalog at once"))
+        assertTrue(prompt.contains("at least three different sources"))
+        assertTrue(prompt.contains("last resort"))
+    }
+
     @Test fun aLinkWallpaperOfTheGuideReplyIsRead() {
         val spec = ThemeSpecs.fromJson(org.json.JSONObject("""{"name":"x","wallpaper":{"url":"https://upload.wikimedia.org/a.jpg","lockScreen":true},"showWallpaper":true,"wallpaperDim":0.5}"""))
         assertEquals(ThemeImage.Url("https://upload.wikimedia.org/a.jpg"), spec.wallpaper?.image)
