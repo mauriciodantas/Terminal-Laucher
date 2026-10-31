@@ -13,7 +13,11 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.HelpOutline
+import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
@@ -204,6 +208,7 @@ private fun ProviderDialog(
     var user by remember { mutableStateOf((auth as? AuthSpec.Basic)?.user.orEmpty()) }
     var secret by remember { mutableStateOf("") }
     var secretSaved by remember { mutableStateOf(hasSecret) }
+    var showSecret by remember { mutableStateOf(false) }
     var testPath by remember { mutableStateOf(current?.testPath.orEmpty()) }
     var testing by remember { mutableStateOf(false) }
     var result by remember { mutableStateOf<Pair<String, Boolean>?>(null) }
@@ -238,7 +243,7 @@ private fun ProviderDialog(
     }
 
     @Composable
-    fun Field(value: String, onChange: (String) -> Unit, label: Int, enabled: Boolean = !builtIn, hint: String? = null, secret: Boolean = false) {
+    fun Field(value: String, onChange: (String) -> Unit, label: Int, enabled: Boolean = !builtIn, hint: String? = null, secret: Boolean = false, plain: Boolean = false) {
         OutlinedTextField(
             value = value,
             onValueChange = {
@@ -249,9 +254,23 @@ private fun ProviderDialog(
             supportingText = hint?.let { { Text(it) } },
             enabled = enabled,
             singleLine = true,
-            visualTransformation = if (secret) PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None,
+            visualTransformation = if (secret && !showSecret) PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None,
+            trailingIcon = if (secret) {
+                {
+                    IconButton(onClick = { showSecret = !showSecret }) {
+                        Icon(
+                            if (showSecret) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility,
+                            contentDescription = stringResource(if (showSecret) R.string.cmd_ed_hide_secret else R.string.cmd_ed_show_secret),
+                        )
+                    }
+                }
+            } else {
+                null
+            },
             keyboardOptions = if (secret) {
                 KeyboardOptions(keyboardType = KeyboardType.Password, autoCorrectEnabled = false)
+            } else if (plain) {
+                KeyboardOptions(keyboardType = KeyboardType.Text, autoCorrectEnabled = false)
             } else {
                 KeyboardOptions(keyboardType = KeyboardType.Uri, autoCorrectEnabled = false)
             },
@@ -289,9 +308,9 @@ private fun ProviderDialog(
                     )
                 }
                 Field(id, { id = it }, R.string.cmd_providers_id, enabled = current == null, hint = stringResource(R.string.cmd_providers_id_hint))
-                Field(name, { name = it }, R.string.cmd_providers_name)
+                Field(name, { name = it }, R.string.cmd_providers_name, plain = true)
                 Field(base, { base = it }, R.string.cmd_providers_base)
-                Field(hosts, { hosts = it }, R.string.cmd_providers_hosts, hint = stringResource(R.string.cmd_providers_hosts_hint))
+                Field(hosts, { hosts = it }, R.string.cmd_providers_hosts, hint = stringResource(R.string.cmd_providers_hosts_hint), plain = true)
 
                 Text(
                     stringResource(R.string.cmd_providers_auth),

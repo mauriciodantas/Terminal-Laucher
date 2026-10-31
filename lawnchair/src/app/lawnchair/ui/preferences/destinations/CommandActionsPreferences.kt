@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.provider.Settings
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -15,11 +14,14 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -44,6 +46,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -75,6 +78,13 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.toggleableState
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
@@ -124,6 +134,7 @@ import app.lawnchair.command.Tone
 import app.lawnchair.ui.preferences.LocalNavController
 import app.lawnchair.ui.preferences.components.NavigationActionPreference
 import app.lawnchair.ui.preferences.components.controls.ClickablePreference
+import app.lawnchair.ui.preferences.components.controls.InfoPreference
 import app.lawnchair.ui.preferences.components.controls.SwitchPreference
 import app.lawnchair.ui.preferences.components.layout.ClickableIcon
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
@@ -174,7 +185,9 @@ fun CommandActionsPreferences(openEdit: String = "") {
     }.collectAsState()
     var query by remember { mutableStateOf("") }
     var favorites by remember { mutableStateOf(FavoriteStore.load(context)) }
-    var othersOpen by remember { mutableStateOf(false) }
+    var moreOpen by remember { mutableStateOf(false) }
+    // Past a few commands the list shows the most used ones; this asks for all of them and is kept on rotation.
+    var showAllCommands by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     var backupOpen by remember { mutableStateOf(false) }
     var confirmRestore by remember { mutableStateOf(false) }
     val usage = remember { CommandUsage.load(context) }
@@ -192,6 +205,8 @@ fun CommandActionsPreferences(openEdit: String = "") {
     var newCommandLine by remember { mutableStateOf("") }
     var newLineError by remember { mutableStateOf<String?>(null) }
     var pendingConflict by remember { mutableStateOf<ParsedCommand?>(null) }
+    // The existing command and the new line, asked about before one replaces the other.
+    var replaceAsk by remember { mutableStateOf<Pair<String, String>?>(null) }
 
     BackHandler(enabled = selectionMode) {
         selectionMode = false
@@ -260,9 +275,8 @@ fun CommandActionsPreferences(openEdit: String = "") {
         val hasConflict = existingAction != null || existingAlias != null
         if (hasConflict && pendingConflict != parsed) {
             pendingConflict = parsed
-            val canonical = CommandLine.serialize(parsed)
-            newLineError = context.getString(CommandR.string.cmd_alias_conflict_preview) + " · " +
-                context.getString(CommandR.string.cmd_alias_conflict_new, canonical)
+            val current = existingAction?.let { CommandLine.serialize(it) } ?: existingAlias?.let { CommandLine.serialize(it) }.orEmpty()
+            replaceAsk = current to CommandLine.serialize(parsed)
             return
         }
 
@@ -353,6 +367,14 @@ fun CommandActionsPreferences(openEdit: String = "") {
         }
     }
 
+    /** A message with no undo; unlike a Toast it is announced and stays long enough to read. */
+    fun say(message: String) {
+        scope.launch {
+            snackbar.currentSnackbarData?.dismiss()
+            snackbar.showSnackbar(message)
+        }
+    }
+
     // What the user chose to send; set once the selection dialog is confirmed.
     var sharing by remember { mutableStateOf<ShareMode?>(null) }
     var selection by remember { mutableStateOf<CommandPack?>(null) }
@@ -369,7 +391,7 @@ fun CommandActionsPreferences(openEdit: String = "") {
             } != null
         }.getOrDefault(false)
         val message = if (ok) R.string.cmd_pref_exported else R.string.cmd_pref_export_failed
-        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        say(context.getString(message))
     }
     val importer = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
@@ -443,6 +465,7 @@ fun CommandActionsPreferences(openEdit: String = "") {
                         shownApiCommands.all { it.action in selectedActions }
                     ClickableIcon(
                         imageVector = if (allShownSelected) Icons.Rounded.Deselect else Icons.Rounded.SelectAll,
+                        contentDescription = stringResource(if (allShownSelected) R.string.cmd_pref_none else R.string.cmd_pref_all),
                         onClick = {
                             if (allShownSelected) {
                                 val actionsToDeselect = shownCommands.filterIsInstance<CommandItem.Action>().map { it.action } +
@@ -461,6 +484,7 @@ fun CommandActionsPreferences(openEdit: String = "") {
                     )
                     ClickableIcon(
                         imageVector = Icons.Rounded.Delete,
+                        contentDescription = stringResource(R.string.cmd_pref_delete),
                         enabled = selectedCount > 0,
                         tint = if (selectedCount > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
                         onClick = {
@@ -471,6 +495,7 @@ fun CommandActionsPreferences(openEdit: String = "") {
                     )
                     ClickableIcon(
                         imageVector = Icons.Rounded.Close,
+                        contentDescription = stringResource(R.string.cmd_pref_close),
                         onClick = {
                             selectionMode = false
                             selectedActions = emptySet()
@@ -480,6 +505,7 @@ fun CommandActionsPreferences(openEdit: String = "") {
                 } else if (actions.isNotEmpty() || aliases.isNotEmpty()) {
                     ClickableIcon(
                         imageVector = Icons.Rounded.Checklist,
+                        contentDescription = stringResource(R.string.cmd_pref_select_commands),
                         onClick = { selectionMode = true },
                     )
                 }
@@ -489,7 +515,7 @@ fun CommandActionsPreferences(openEdit: String = "") {
                 value = query,
                 onValueChange = { query = it },
                 singleLine = true,
-                placeholder = { Text(stringResource(R.string.cmd_pref_search)) },
+                label = { Text(stringResource(R.string.cmd_pref_search)) },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             )
             if (!selectionMode) {
@@ -506,7 +532,7 @@ fun CommandActionsPreferences(openEdit: String = "") {
                             newLineError = null
                             pendingConflict = null
                         },
-                        placeholder = { Text(stringResource(R.string.cmd_pref_new_command)) },
+                        label = { Text(stringResource(R.string.cmd_ed_line_hint)) },
                         singleLine = true,
                         isError = newLineError != null,
                         supportingText = newLineError?.let { { Text(it) } },
@@ -519,14 +545,22 @@ fun CommandActionsPreferences(openEdit: String = "") {
                         modifier = Modifier.weight(1f),
                     )
                     Spacer(Modifier.width(8.dp))
-                    FilledTonalIconButton(
-                        onClick = { editor = EditorTarget.New },
-                        modifier = Modifier.padding(top = 4.dp),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Add,
-                            contentDescription = stringResource(R.string.cmd_pref_new_command),
-                        )
+                    // With a line typed the button saves it; otherwise it opens the guided editor.
+                    if (newCommandLine.isNotBlank()) {
+                        FilledTonalButton(
+                            onClick = { saveFromLine() },
+                            modifier = Modifier.padding(top = 8.dp),
+                        ) { Text(stringResource(R.string.cmd_pref_add)) }
+                    } else {
+                        FilledTonalIconButton(
+                            onClick = { editor = EditorTarget.New },
+                            modifier = Modifier.padding(top = 8.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Add,
+                                contentDescription = stringResource(R.string.cmd_ed_new_assistant),
+                            )
+                        }
                     }
                 }
             }
@@ -574,118 +608,133 @@ fun CommandActionsPreferences(openEdit: String = "") {
                 )
             }
 
-            // Favorites come first and are what the watch carries; the rest folds away once there are favorites.
+            // Favorites come first and are what the watch carries. The rest is sorted by use and, once it
+            // is long, cut to the top of it; searching and selecting always see every command.
             val favoriteShown = (shownCommands + shownApiCommands).filter { it.name.lowercase() in favorites }
             val restCommands = shownCommands.filter { it.name.lowercase() !in favorites }
             val restApi = shownApiCommands.filter { it.name.lowercase() !in favorites }
-            val folded = favorites.isNotEmpty() && query.isEmpty() && !selectionMode && !othersOpen
+            val restTotal = restCommands.size + restApi.size
+            val cuttable = restTotal > COMMANDS_SHOWN + 2 && query.isEmpty() && !selectionMode
+            val capped = cuttable && !showAllCommands
+            val visibleCommands = if (capped) restCommands.take(COMMANDS_SHOWN) else restCommands
+            val visibleApi = if (capped) restApi.take((COMMANDS_SHOWN - visibleCommands.size).coerceAtLeast(0)) else restApi
             if (favoriteShown.isNotEmpty()) {
-                PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_favorites)) {
+                PreferenceGroup(
+                    heading = stringResource(R.string.cmd_pref_group_favorites),
+                    description = stringResource(R.string.cmd_pref_favorites_hint),
+                ) {
                     favoriteShown.forEach { ItemRow(it) }
                 }
             }
-            if (folded) {
-                if (restCommands.isNotEmpty() || restApi.isNotEmpty()) {
-                    PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_commands)) {
-                        ClickablePreference(
-                            label = stringResource(R.string.cmd_pref_show_others, restCommands.size + restApi.size),
-                            subtitle = stringResource(R.string.cmd_pref_favorites_hint),
-                            onClick = { othersOpen = true },
+            if (visibleCommands.isNotEmpty() || (favoriteShown.isEmpty() && shownApiCommands.isEmpty() && (query.isNotEmpty() || (commandItems.isEmpty() && apiItems.isEmpty())))) {
+                PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_commands)) {
+                    if (query.isNotEmpty() && shownCommands.isEmpty() && shownApiCommands.isEmpty()) {
+                        InfoPreference(
+                            label = stringResource(R.string.cmd_pref_no_actions),
+                            subtitle = stringResource(R.string.cmd_pref_no_match),
                         )
                     }
+                    visibleCommands.forEach { ItemRow(it) }
                 }
-            } else {
-                val canHide = favorites.isNotEmpty() && othersOpen && query.isEmpty() && !selectionMode
-                val hideRow: @Composable () -> Unit = {
+            }
+            if (visibleApi.isNotEmpty()) {
+                PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_api_commands)) {
+                    visibleApi.forEach { ItemRow(it) }
+                }
+            }
+            if (cuttable) {
+                PreferenceGroup {
                     ClickablePreference(
-                        label = stringResource(R.string.cmd_pref_hide_others),
-                        onClick = { othersOpen = false },
+                        label = if (capped) {
+                            stringResource(R.string.cmd_pref_show_all_commands, restTotal)
+                        } else {
+                            stringResource(R.string.cmd_pref_show_fewer_commands)
+                        },
+                        onClick = { showAllCommands = !showAllCommands },
                     )
-                }
-                if (restCommands.isNotEmpty() || (favoriteShown.isEmpty() && shownApiCommands.isEmpty() && (query.isNotEmpty() || (commandItems.isEmpty() && apiItems.isEmpty())))) {
-                    PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_commands)) {
-                        if (query.isNotEmpty() && shownCommands.isEmpty() && shownApiCommands.isEmpty()) {
-                            ClickablePreference(
-                                label = stringResource(R.string.cmd_pref_no_actions),
-                                subtitle = stringResource(R.string.cmd_pref_no_match),
-                                onClick = {},
-                            )
-                        }
-                        if (canHide) hideRow()
-                        restCommands.forEach { ItemRow(it) }
-                    }
-                }
-                if (restApi.isNotEmpty()) {
-                    PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_api_commands)) {
-                        if (canHide && restCommands.isEmpty()) hideRow()
-                        restApi.forEach { ItemRow(it) }
-                    }
                 }
             }
             if (!selectionMode) {
-                PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_default_apps)) {
-                    // Which launcher answers the home button is the system's choice; the screen opens from here.
-                    val defaultLauncher = remember { defaultLauncherLabel(context) }
-                    ClickablePreference(
-                        label = stringResource(R.string.cmd_pref_default_launcher),
-                        subtitle = defaultLauncher ?: stringResource(R.string.cmd_pref_default_launcher_none),
-                        onClick = {
-                            runCatching { context.startActivity(Intent(Settings.ACTION_HOME_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
-                        },
-                    )
-                    ClickablePreference(
-                        label = stringResource(R.string.cmd_pref_task_app),
-                        subtitle = taskApp ?: stringResource(R.string.cmd_pref_task_app_none),
-                        onClick = { taskPicker = true },
-                    )
-                }
-                PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_ai)) {
-                    ClickablePreference(
-                        label = stringResource(R.string.cmd_pref_ai),
-                        subtitle = aiConfig?.label ?: stringResource(R.string.cmd_pref_ai_none),
-                        onClick = { aiOpen = true },
-                    )
-                }
-                PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_backup)) {
-                    ClickablePreference(
-                        label = stringResource(R.string.cmd_pref_backup),
-                        subtitle = stringResource(R.string.cmd_pref_backup_hint),
-                        onClick = { backupOpen = true },
-                    )
-                    ClickablePreference(
-                        label = stringResource(R.string.cmd_pref_restore),
-                        subtitle = stringResource(R.string.cmd_pref_restore_hint),
-                        onClick = { confirmRestore = true },
-                    )
-                }
-                PreferenceGroup(heading = stringResource(R.string.cmd_variables_title)) {
-                    NavigationActionPreference(
-                        label = stringResource(R.string.cmd_variables_title),
-                        destination = CommandVariables,
-                        subtitle = stringResource(R.string.cmd_variables_entry),
-                    )
-                }
-                PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_history)) {
-                    ClickablePreference(
-                        label = stringResource(R.string.cmd_pref_clear_history),
-                        subtitle = if (history.isEmpty()) {
-                            stringResource(R.string.cmd_pref_clear_history_empty)
-                        } else {
-                            stringResource(R.string.cmd_pref_clear_history_count, history.size)
-                        },
-                        onClick = { if (history.isNotEmpty()) clearHistory() },
-                    )
+                // Rarely used, so folded: default apps, AI, backup, variables and history.
+                if (!moreOpen) {
+                    PreferenceGroup {
+                        ClickablePreference(
+                            label = stringResource(R.string.cmd_pref_more),
+                            subtitle = stringResource(R.string.cmd_pref_more_hint),
+                            onClick = { moreOpen = true },
+                        )
+                    }
+                } else {
+                    PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_default_apps)) {
+                        // Which launcher answers the home button is the system's choice; the screen opens from here.
+                        val defaultLauncher = remember { defaultLauncherLabel(context) }
+                        ClickablePreference(
+                            label = stringResource(R.string.cmd_pref_default_launcher),
+                            subtitle = defaultLauncher ?: stringResource(R.string.cmd_pref_default_launcher_none),
+                            onClick = {
+                                runCatching { context.startActivity(Intent(Settings.ACTION_HOME_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+                            },
+                        )
+                        ClickablePreference(
+                            label = stringResource(R.string.cmd_pref_task_app),
+                            subtitle = taskApp ?: stringResource(R.string.cmd_pref_task_app_none),
+                            onClick = { taskPicker = true },
+                        )
+                    }
+                    PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_ai)) {
+                        ClickablePreference(
+                            label = stringResource(R.string.cmd_pref_ai),
+                            subtitle = aiConfig?.label ?: stringResource(R.string.cmd_pref_ai_none),
+                            onClick = { aiOpen = true },
+                        )
+                    }
+                    PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_backup)) {
+                        ClickablePreference(
+                            label = stringResource(R.string.cmd_pref_backup),
+                            subtitle = stringResource(R.string.cmd_pref_backup_hint),
+                            onClick = { backupOpen = true },
+                        )
+                        ClickablePreference(
+                            label = stringResource(R.string.cmd_pref_restore),
+                            subtitle = stringResource(R.string.cmd_pref_restore_hint),
+                            onClick = { confirmRestore = true },
+                        )
+                    }
+                    PreferenceGroup(heading = stringResource(R.string.cmd_variables_title)) {
+                        NavigationActionPreference(
+                            label = stringResource(R.string.cmd_variables_title),
+                            destination = CommandVariables,
+                            subtitle = stringResource(R.string.cmd_variables_entry),
+                        )
+                    }
+                    PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_history)) {
+                        ClickablePreference(
+                            label = stringResource(R.string.cmd_pref_clear_history),
+                            subtitle = if (history.isEmpty()) {
+                                stringResource(R.string.cmd_pref_clear_history_empty)
+                            } else {
+                                stringResource(R.string.cmd_pref_clear_history_count, history.size)
+                            },
+                            onClick = { if (history.isNotEmpty()) clearHistory() },
+                        )
+                    }
+                    PreferenceGroup {
+                        ClickablePreference(
+                            label = stringResource(R.string.cmd_pref_less),
+                            onClick = { moreOpen = false },
+                        )
+                    }
                 }
                 // Rarely needed, so kept apart: what API commands go through and their keys.
                 PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_advanced)) {
-                    // Only once the mode is on, and then it can be turned off here without the bar.
+                    // Always here: the editor's notice points to it, and it turns the mode on as well as off.
+                    SwitchPreference(
+                        checked = advanced,
+                        onCheckedChange = { AdvancedModeStore.set(context, it) },
+                        label = stringResource(R.string.cmd_pref_advanced_mode),
+                        description = stringResource(R.string.cmd_pref_advanced_mode_hint),
+                    )
                     if (advanced) {
-                        SwitchPreference(
-                            checked = true,
-                            onCheckedChange = { AdvancedModeStore.set(context, it) },
-                            label = stringResource(R.string.cmd_pref_advanced_mode),
-                            description = stringResource(R.string.cmd_pref_advanced_mode_hint),
-                        )
                         NavigationActionPreference(
                             label = stringResource(R.string.cmd_providers_title),
                             destination = CommandProviders(),
@@ -697,6 +746,11 @@ fun CommandActionsPreferences(openEdit: String = "") {
                         destination = CommandGuide,
                         subtitle = stringResource(R.string.cmd_guide_subtitle),
                     )
+                    ClickablePreference(
+                        label = stringResource(R.string.cmd_pref_reset_starter),
+                        subtitle = stringResource(R.string.cmd_pref_reset_starter_hint),
+                        onClick = { confirmRestore = true },
+                    )
                 }
             }
         }
@@ -706,6 +760,35 @@ fun CommandActionsPreferences(openEdit: String = "") {
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding()
                 .padding(16.dp),
+        )
+    }
+
+    replaceAsk?.let { (current, next) ->
+        AlertDialog(
+            onDismissRequest = {
+                replaceAsk = null
+                pendingConflict = null
+            },
+            title = { Text(stringResource(R.string.cmd_ed_replace_title)) },
+            text = {
+                Column {
+                    Text(stringResource(CommandR.string.cmd_alias_conflict_current, current), fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodyMedium)
+                    Spacer(Modifier.height(8.dp))
+                    Text(stringResource(CommandR.string.cmd_alias_conflict_new, next), fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodyMedium)
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    replaceAsk = null
+                    saveFromLine()
+                }) { Text(stringResource(R.string.cmd_ed_replace)) }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    replaceAsk = null
+                    pendingConflict = null
+                }) { Text(stringResource(R.string.cmd_pref_cancel)) }
+            },
         )
     }
 
@@ -797,7 +880,7 @@ fun CommandActionsPreferences(openEdit: String = "") {
                     if (send != null) {
                         context.startActivity(send)
                     } else {
-                        Toast.makeText(context, R.string.cmd_pref_share_failed, Toast.LENGTH_SHORT).show()
+                        say(context.getString(R.string.cmd_pref_share_failed))
                     }
                 }
             },
@@ -832,7 +915,7 @@ fun CommandActionsPreferences(openEdit: String = "") {
             },
             onTest = { action ->
                 if (!CommandExecutor.execute(context, action)) {
-                    Toast.makeText(context, runFailed, Toast.LENGTH_SHORT).show()
+                    say(runFailed)
                 }
             },
             onDismiss = { editor = null },
@@ -1014,7 +1097,8 @@ internal fun PreviewBox(analysis: Analysis?, intro: String? = null, note: String
     }
 }
 
-/** Remove (when editing) on the left, then Test, Cancel and Save on one row. */
+/** Remove (when editing), Test, Cancel and a filled Save; they wrap to a second line when there is no room. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun DialogButtons(
     saveEnabled: Boolean,
@@ -1031,15 +1115,22 @@ internal fun DialogButtons(
     @Composable
     fun Button(text: Int, enabled: Boolean = true, color: Color = Color.Unspecified, onClick: () -> Unit) {
         TextButton(enabled = enabled, onClick = onClick, contentPadding = pad) {
-            Text(stringResource(text), color = color, style = MaterialTheme.typography.labelMedium, maxLines = 1, softWrap = false)
+            Text(stringResource(text), color = color, style = MaterialTheme.typography.labelMedium)
         }
     }
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+    // Wraps instead of cutting a label when the font is large or the translation long.
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End),
+        verticalArrangement = Arrangement.Center,
+    ) {
         if (canRemove) Button(R.string.cmd_pref_remove, color = MaterialTheme.colorScheme.error, onClick = onRemove)
-        Spacer(Modifier.weight(1f))
         Button(R.string.cmd_pref_test, enabled = testEnabled, onClick = onTest)
         Button(R.string.cmd_pref_cancel, onClick = onCancel)
-        Button(saveLabel, enabled = saveEnabled, onClick = onSave)
+        // Save is the primary action, so it is the only filled button.
+        androidx.compose.material3.Button(enabled = saveEnabled, onClick = onSave, contentPadding = pad) {
+            Text(stringResource(saveLabel), style = MaterialTheme.typography.labelMedium)
+        }
     }
 }
 
@@ -1095,6 +1186,9 @@ internal fun LetterPreview(letter: String, sample: String, analysis: Analysis?, 
 }
 
 internal const val MAX_ALIAS = 20
+
+/** Commands listed before "Show all" appears; the list stays whole up to two more than this. */
+private const val COMMANDS_SHOWN = 8
 
 private enum class ShareMode { Share, Export }
 
@@ -1199,7 +1293,12 @@ internal fun ActionPicker(action: String, onChange: (String) -> Unit) {
             modifier = Modifier.fillMaxWidth(),
         )
         // A read-only field swallows taps, so a transparent layer on top opens the menu.
-        Box(Modifier.matchParentSize().clickable { open = true })
+        Box(
+            Modifier.matchParentSize().clickable(
+                onClickLabel = stringResource(R.string.cmd_pref_manual_action),
+                role = Role.DropdownList,
+            ) { open = true },
+        )
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             IntentActions.forEach { id ->
                 DropdownMenuItem(
@@ -1357,7 +1456,7 @@ private fun AiDialog(
                             shown == okLabel -> MaterialTheme.colorScheme.primary
                             else -> MaterialTheme.colorScheme.error
                         },
-                        modifier = Modifier.padding(top = 8.dp),
+                        modifier = Modifier.padding(top = 8.dp).semantics { liveRegion = LiveRegionMode.Polite },
                     )
                 }
             }
@@ -1433,6 +1532,7 @@ private fun CommandLinePreference(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
+    val usedTimes = stringResource(R.string.cmd_pref_used_times, usageCount)
     ListItem(
         headlineContent = {
             Row(
@@ -1440,16 +1540,9 @@ private fun CommandLinePreference(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = buildAnnotatedString {
-                        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append(name)
-                        }
-                        append("  ")
-                        withStyle(SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant)) {
-                            append(destination)
-                        }
-                    },
+                    text = name,
                     fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f),
@@ -1461,9 +1554,23 @@ private fun CommandLinePreference(
                         fontFamily = FontFamily.Monospace,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.semantics { contentDescription = usedTimes },
                     )
                 }
             }
+        },
+        supportingContent = if (destination.isNotEmpty()) {
+            {
+                Text(
+                    text = destination,
+                    fontFamily = FontFamily.Monospace,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        } else {
+            null
         },
         leadingContent = if (selectionMode) {
             {
@@ -1495,9 +1602,13 @@ private fun CommandLinePreference(
         modifier = Modifier
             .fillMaxWidth()
             .combinedClickable(
+                role = if (selectionMode) Role.Checkbox else Role.Button,
                 onClick = onClick,
                 onLongClick = onLongClick,
-            ),
+            )
+            .semantics(mergeDescendants = true) {
+                if (selectionMode) toggleableState = ToggleableState(isSelected)
+            },
     )
 }
 
