@@ -1,6 +1,7 @@
 package app.lawnchair.ui.preferences.destinations
 
 import android.content.Intent
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,14 +11,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,6 +32,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import app.lawnchair.command.ThemeSpec
@@ -58,13 +64,11 @@ import app.lawnchair.ui.preferences.components.layout.ExpandAndShrink
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
 import app.lawnchair.ui.preferences.navigation.GeneralIconShape
-import app.lawnchair.ui.preferences.navigation.ThemeGuide
 import app.lawnchair.views.ScreenAnimationView
 import com.android.launcher3.R
-import kotlinx.coroutines.delay
 
-/** How long the offer to undo a look stays on screen. */
-private const val UNDO_MILLIS = 10_000L
+/** What the last change a tap made was, and how things were just before it, so it can be put back. */
+private class UndoState(val before: ThemeSpec, @StringRes val message: Int)
 
 /**
  * Everything that decides how the launcher looks, in one place. What most people reach for sits on top
@@ -77,16 +81,11 @@ fun AppearancePreferences(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val prefs = preferenceManager()
     val prefs2 = preferenceManager2()
-    // The look before the last change a tap made, kept for a while so it can be put back.
-    var undoTo by remember { mutableStateOf<ThemeSpec?>(null) }
-    val rememberLook = { undoTo = ThemeStore.current(context) }
+    // The look before the last change a tap made. It stays until the next change or until it is dismissed,
+    // so nobody is rushed: a timer would take it away from whoever needs longer.
+    var undoTo by remember { mutableStateOf<UndoState?>(null) }
+    val rememberLook = { message: Int -> { undoTo = UndoState(ThemeStore.current(context), message) } }
     var advancedOpen by rememberSaveable { mutableStateOf(false) }
-    LaunchedEffect(undoTo) {
-        if (undoTo != null) {
-            delay(UNDO_MILLIS)
-            undoTo = null
-        }
-    }
 
     PreferenceLayout(
         backArrowVisible = !LocalIsExpandedScreen.current,
@@ -102,16 +101,20 @@ fun AppearancePreferences(modifier: Modifier = Modifier) {
         // Whole looks first: the quick choice of mode, the ready-made ones, the user's own and what can be done with them.
         PreferenceGroup(heading = stringResource(id = R.string.appearance_group_themes)) {
             ExpandAndShrink(visible = undoTo != null) {
-                UndoBanner(
-                    onUndo = {
-                        undoTo?.let { ThemeStore.apply(context, it) }
-                        undoTo = null
-                    },
-                )
+                undoTo?.let { state ->
+                    UndoBanner(
+                        message = state.message,
+                        onUndo = {
+                            ThemeStore.apply(context, state.before)
+                            undoTo = null
+                        },
+                        onDismiss = { undoTo = null },
+                    )
+                }
             }
-            ColorModeShortcuts(onBeforeChange = rememberLook)
-            ComplementaryColorsPreference(onBeforeApply = rememberLook)
-            SavedThemesPreference(onBeforeApply = rememberLook)
+            ColorModeShortcuts(onBeforeChange = rememberLook(R.string.appearance_undo_mode))
+            ComplementaryColorsPreference(onBeforeApply = rememberLook(R.string.appearance_undo_message))
+            SavedThemesPreference(onBeforeApply = rememberLook(R.string.appearance_undo_theme))
         }
 
         // Then each color on its own, with how the pair follows the system mode.
@@ -122,7 +125,6 @@ fun AppearancePreferences(modifier: Modifier = Modifier) {
             ColorPreference(preference = prefs2.accentColor)
             ColorPreference(preference = prefs2.launcherBackgroundColor)
             ColorPreference(preference = prefs2.secondaryColor)
-            FollowSystemColorModePreference()
         }
 
         PreferenceGroup(
@@ -156,9 +158,9 @@ fun AppearancePreferences(modifier: Modifier = Modifier) {
             }
         }
 
-        // The shape app icons and folders are cut to, which a theme carries too.
+        // The shape app icons and folders are cut to, the font and the clock: how things are drawn, which a theme carries too.
         PreferenceGroup(
-            heading = stringResource(id = R.string.appearance_group_shapes),
+            heading = stringResource(id = R.string.appearance_group_style),
             modifier = Modifier.padding(top = 8.dp),
         ) {
             val appShape = prefs2.iconShape.getAdapter().state.value
@@ -176,12 +178,6 @@ fun AppearancePreferences(modifier: Modifier = Modifier) {
                 subtitle = shapeEntries.firstOrNull { it.value == folderShape }?.label?.invoke() ?: stringResource(id = R.string.custom),
                 endWidget = { IconShapePreview(iconShape = folderShape) },
             )
-        }
-
-        PreferenceGroup(
-            heading = stringResource(id = R.string.appearance_group_font),
-            modifier = Modifier.padding(top = 8.dp),
-        ) {
             FontPreference(
                 fontPref = prefs.fontWorkspace,
                 label = stringResource(id = R.string.appearance_font_ui),
@@ -193,7 +189,8 @@ fun AppearancePreferences(modifier: Modifier = Modifier) {
             )
         }
 
-        // What few people change: the colors of single parts and the terminal effects, out of the way until asked for.
+        // What few people change: the colors of single parts, following the system mode and the terminal effects, out of the way until asked for.
+        val advancedState = stringResource(id = if (advancedOpen) R.string.appearance_expanded else R.string.appearance_collapsed)
         PreferenceGroup(modifier = Modifier.padding(top = 8.dp)) {
             ClickablePreference(
                 label = stringResource(id = R.string.appearance_group_advanced),
@@ -204,12 +201,16 @@ fun AppearancePreferences(modifier: Modifier = Modifier) {
                         contentDescription = null,
                     )
                 },
+                modifier = Modifier.semantics {
+                    stateDescription = advancedState
+                },
                 onClick = { advancedOpen = !advancedOpen },
             )
         }
         ExpandAndShrink(visible = advancedOpen) {
             Column {
                 PreferenceGroup(modifier = Modifier.padding(top = 8.dp)) {
+                    FollowSystemColorModePreference()
                     ColorPreference(preference = prefs2.strokeColorStyle)
                     ColorPreference(preference = prefs2.hotseatBackgroundColor)
                     ColorPreference(preference = prefs2.folderColor)
@@ -276,15 +277,6 @@ fun AppearancePreferences(modifier: Modifier = Modifier) {
                 }
             }
         }
-
-        // Last, the way to make a theme with an AI chat and bring it in.
-        PreferenceGroup(modifier = Modifier.padding(top = 8.dp)) {
-            NavigationActionPreference(
-                label = stringResource(id = R.string.theme_guide_nav),
-                subtitle = stringResource(id = R.string.theme_guide_nav_desc),
-                destination = ThemeGuide,
-            )
-        }
     }
 }
 
@@ -306,24 +298,32 @@ private fun ScreenAnimationPreview(kind: String, custom: String, intensity: Floa
     )
 }
 
-/** Tells that the look just changed and offers to put the previous one back. */
+/** Tells what just changed and offers to put the previous look back; read out by a screen reader as it appears. */
 @Composable
-private fun UndoBanner(onUndo: () -> Unit) {
+private fun UndoBanner(@StringRes message: Int, onUndo: () -> Unit, onDismiss: () -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.secondaryContainer)
-            .padding(start = 16.dp, end = 8.dp),
+            .semantics { liveRegion = LiveRegionMode.Polite }
+            .padding(start = 16.dp, end = 4.dp),
     ) {
         Text(
-            text = stringResource(id = R.string.appearance_undo_message),
+            text = stringResource(id = message),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSecondaryContainer,
+            modifier = Modifier.weight(1f),
         )
         TextButton(onClick = onUndo) {
             Text(text = stringResource(id = R.string.appearance_undo))
+        }
+        IconButton(onClick = onDismiss) {
+            Icon(
+                imageVector = Icons.Rounded.Close,
+                contentDescription = stringResource(id = R.string.appearance_dismiss),
+                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+            )
         }
     }
 }

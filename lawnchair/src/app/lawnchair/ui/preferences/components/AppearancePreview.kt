@@ -73,10 +73,10 @@ fun AppearancePreview(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .clearAndSetSemantics { contentDescription = description }
                 .fillMaxWidth()
-                .height(88.dp)
+                .height(64.dp)
                 .clip(RoundedCornerShape(16.dp))
                 .background(ground)
-                .padding(10.dp),
+                .padding(8.dp),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -84,7 +84,7 @@ fun AppearancePreview(modifier: Modifier = Modifier) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column {
-                    Text(text = "12:34", color = accent, fontFamily = FontFamily.Monospace, fontSize = 22.sp)
+                    Text(text = "12:34", color = accent, fontFamily = FontFamily.Monospace, fontSize = 18.sp)
                     Text(text = "~ terminal", color = secondary, fontFamily = FontFamily.Monospace, fontSize = 11.sp)
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -95,8 +95,8 @@ fun AppearancePreview(modifier: Modifier = Modifier) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(14.dp)
-                    .clip(RoundedCornerShape(7.dp))
+                    .height(10.dp)
+                    .clip(RoundedCornerShape(5.dp))
                     .background(dock),
             )
         }
@@ -104,7 +104,7 @@ fun AppearancePreview(modifier: Modifier = Modifier) {
             text = stringResource(id = R.string.appearance_preview_note),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 4.dp),
+            modifier = Modifier.padding(top = 2.dp),
         )
     }
 }
@@ -114,7 +114,7 @@ private fun PreviewTile(accent: Color, fill: Color) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
-            .size(28.dp)
+            .size(24.dp)
             .clip(RoundedCornerShape(7.dp))
             .background(fill)
             .border(BorderStroke(1.dp, accent), RoundedCornerShape(7.dp)),

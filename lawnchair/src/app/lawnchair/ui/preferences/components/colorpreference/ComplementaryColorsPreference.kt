@@ -50,6 +50,15 @@ import com.android.launcher3.R
 @Composable
 fun ComplementaryColorsPreference(modifier: Modifier = Modifier, onBeforeApply: () -> Unit = {}) {
     val looks = rememberLooks(onBeforeApply = onBeforeApply)
+    ChipRow(modifier = modifier) {
+        WheelChip(onClick = looks::openWheel)
+        ComplementaryColors.all.forEach { pair -> LookChip(pair, looks.isSelected(pair), onClick = { looks.apply(pair) }) }
+    }
+}
+
+/** A row of chips that scrolls sideways; a fade at its end says there is more while it can still scroll. */
+@Composable
+fun ChipRow(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     val scroll = rememberScrollState()
     val ground = MaterialTheme.colorScheme.surfaceContainer
     Box(
@@ -63,10 +72,8 @@ fun ComplementaryColorsPreference(modifier: Modifier = Modifier, onBeforeApply: 
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            WheelChip(onClick = looks::openWheel)
-            ComplementaryColors.all.forEach { pair -> LookChip(pair, looks.isSelected(pair), onClick = { looks.apply(pair) }) }
+            content()
         }
-        // Tells there are more looks to the right; gone once the row is scrolled to its end.
         if (scroll.canScrollForward) {
             Box(
                 modifier = Modifier

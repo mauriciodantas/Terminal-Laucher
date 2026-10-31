@@ -4,6 +4,7 @@ import android.content.Intent
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -13,16 +14,23 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.FileOpen
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -33,10 +41,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -50,17 +61,24 @@ import app.lawnchair.command.ThemeStore
 import app.lawnchair.preferences.getAdapter
 import app.lawnchair.preferences2.preferenceManager2
 import app.lawnchair.theme.color.ColorOption
+import app.lawnchair.ui.preferences.LocalNavController
+import app.lawnchair.ui.preferences.components.colorpreference.ChipRow
 import app.lawnchair.ui.preferences.components.layout.PreferenceTemplate
+import app.lawnchair.ui.preferences.navigation.ThemeGuide
 import com.android.launcher3.R
 
 /**
- * The themes the user kept by name (imported, written by "ia tema" or saved with "tema salvar"),
- * each applied with a tap and shared or deleted from its row, then one row of actions: keep the
- * current look, open a .tthm file, send the current look. Meant to sit inside the Themes group.
+ * The themes the user kept by name (imported, written by "ia tema" or saved with "tema salvar"), as a
+ * row of chips like the ready-made looks, with the one in use marked; a tap applies it. Sharing and
+ * deleting live in a sheet opened by "Manage", so the page does not grow with every theme. Under the
+ * chips, one row of actions: keep the current look, open a .tthm file, make a theme with an AI chat.
+ * Meant to sit inside the Themes group.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SavedThemesPreference(modifier: Modifier = Modifier, onBeforeApply: () -> Unit = {}) {
     val context = LocalContext.current
+    val navController = LocalNavController.current
     val prefs2 = preferenceManager2()
     // Read so the "in use" mark follows the colors as they change.
     val accent = prefs2.accentColor.getAdapter().state.value
@@ -68,6 +86,7 @@ fun SavedThemesPreference(modifier: Modifier = Modifier, onBeforeApply: () -> Un
     val secondary = prefs2.secondaryColor.getAdapter().state.value
     var themes by remember { mutableStateOf(ThemeStore.load(context)) }
     var saving by remember { mutableStateOf(false) }
+    var managing by remember { mutableStateOf(false) }
     var deleting by remember { mutableStateOf<ThemeSpec?>(null) }
     val importTheme = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) {
@@ -79,62 +98,115 @@ fun SavedThemesPreference(modifier: Modifier = Modifier, onBeforeApply: () -> Un
             )
         }
     }
+    fun inUse(theme: ThemeSpec) = (theme.accent != null || theme.background != null) &&
+        theme.accent.matches(accent) && theme.background.matches(background) && theme.secondary.matches(secondary)
 
-    themes.forEach { theme ->
-        val inUse = (theme.accent != null || theme.background != null) &&
-            theme.accent.matches(accent) && theme.background.matches(background) && theme.secondary.matches(secondary)
-        PreferenceTemplate(
-            title = { Text(if (inUse) "${theme.name} · ${stringResource(id = R.string.saved_themes_in_use)}" else theme.name) },
-            description = {
-                Text(
-                    ThemeCommand.summary(theme),
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 12.sp,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            },
-            startWidget = { ThemeChip(theme) },
-            endWidget = {
-                Row {
-                    IconButton(onClick = { ThemeStore.shareIntent(context, theme)?.let(context::startActivity) }) {
-                        Icon(Icons.Rounded.Share, contentDescription = stringResource(id = R.string.theme_share))
-                    }
-                    IconButton(onClick = { deleting = theme }) {
-                        Icon(Icons.Rounded.Delete, contentDescription = stringResource(id = R.string.saved_themes_delete))
-                    }
-                }
-            },
-            onClick = {
-                onBeforeApply()
-                val applied = ThemeStore.apply(context, theme)
-                Toast.makeText(context, if (applied) R.string.theme_import_applied else R.string.theme_import_unreadable, Toast.LENGTH_SHORT).show()
-            },
-        )
-    }
-
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceContainer)
-            .padding(horizontal = 8.dp, vertical = 4.dp),
-    ) {
-        Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
-            Action(Icons.Rounded.Add, stringResource(id = R.string.saved_themes_save)) { saving = true }
-            Action(Icons.Rounded.FileOpen, stringResource(id = R.string.saved_themes_import)) {
-                runCatching { importTheme.launch(arrayOf("*/*")) }
-            }
-            Action(Icons.Rounded.Share, stringResource(id = R.string.saved_themes_share_current)) {
-                ThemeStore.shareIntent(context, ThemeStore.current(context))?.let(context::startActivity)
-            }
-        }
+    Column(modifier = modifier.fillMaxWidth()) {
         if (themes.isEmpty()) {
             Text(
                 stringResource(id = R.string.saved_themes_empty),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surfaceContainer)
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
             )
+        } else {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surfaceContainer)
+                    .padding(start = 16.dp, end = 8.dp),
+            ) {
+                Text(
+                    text = stringResource(id = R.string.saved_themes_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                TextButton(onClick = { managing = true }) {
+                    Text(stringResource(id = R.string.saved_themes_manage))
+                }
+            }
+            ChipRow {
+                themes.forEach { theme ->
+                    SavedThemeChip(
+                        theme = theme,
+                        selected = inUse(theme),
+                        onClick = {
+                            onBeforeApply()
+                            val applied = ThemeStore.apply(context, theme)
+                            Toast.makeText(context, if (applied) R.string.theme_import_applied else R.string.theme_import_unreadable, Toast.LENGTH_SHORT).show()
+                        },
+                    )
+                }
+            }
+        }
+        Row(
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surfaceContainer)
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+        ) {
+            Action(Icons.Rounded.Add, stringResource(id = R.string.saved_themes_save)) { saving = true }
+            Action(Icons.Rounded.FileOpen, stringResource(id = R.string.saved_themes_import)) {
+                runCatching { importTheme.launch(arrayOf("*/*")) }
+            }
+            Action(Icons.Rounded.AutoAwesome, stringResource(id = R.string.saved_themes_ai)) { navController.navigate(ThemeGuide) }
+        }
+    }
+
+    if (managing) {
+        ModalBottomSheet(onDismissRequest = { managing = false }) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 24.dp, end = 8.dp),
+                ) {
+                    Text(stringResource(id = R.string.saved_themes_title), style = MaterialTheme.typography.titleMedium)
+                    Action(Icons.Rounded.Share, stringResource(id = R.string.saved_themes_share_current)) {
+                        ThemeStore.shareIntent(context, ThemeStore.current(context))?.let(context::startActivity)
+                    }
+                }
+                LazyColumn {
+                    items(themes, key = { it.name }) { theme ->
+                        PreferenceTemplate(
+                            title = { Text(if (inUse(theme)) "${theme.name} · ${stringResource(id = R.string.saved_themes_in_use)}" else theme.name) },
+                            description = {
+                                Text(
+                                    ThemeCommand.summary(theme),
+                                    fontFamily = FontFamily.Monospace,
+                                    fontSize = 12.sp,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            },
+                            endWidget = {
+                                Row {
+                                    IconButton(onClick = { ThemeStore.shareIntent(context, theme)?.let(context::startActivity) }) {
+                                        Icon(Icons.Rounded.Share, contentDescription = "${stringResource(id = R.string.theme_share)}: ${theme.name}")
+                                    }
+                                    IconButton(onClick = { deleting = theme }) {
+                                        Icon(Icons.Rounded.Delete, contentDescription = "${stringResource(id = R.string.saved_themes_delete)}: ${theme.name}")
+                                    }
+                                }
+                            },
+                            onClick = {
+                                onBeforeApply()
+                                val applied = ThemeStore.apply(context, theme)
+                                Toast.makeText(context, if (applied) R.string.theme_import_applied else R.string.theme_import_unreadable, Toast.LENGTH_SHORT).show()
+                                managing = false
+                            },
+                        )
+                    }
+                }
+            }
         }
     }
 
@@ -178,6 +250,7 @@ fun SavedThemesPreference(modifier: Modifier = Modifier, onBeforeApply: () -> Un
                         ThemeStore.remove(context, theme.name)
                         themes = ThemeStore.load(context)
                         deleting = null
+                        if (themes.isEmpty()) managing = false
                     },
                 ) { Text(stringResource(id = R.string.saved_themes_delete)) }
             },
@@ -205,23 +278,50 @@ private fun Action(icon: ImageVector, label: String, onClick: () -> Unit) {
     }
 }
 
-/** The theme's accent (and secondary color, when it has one) drawn over its background, as a small ">_" on a tile. */
+/** One saved theme: its accent prompt over its background (and the secondary color beside it), with its name under. */
 @Composable
-private fun ThemeChip(theme: ThemeSpec) {
-    val accent = (theme.accent as? ThemeColor.Custom)?.argb
-    val ground = (theme.background as? ThemeColor.Custom)?.argb ?: ThemeSpecs.DEFAULT_BACKGROUND
-    Box(
-        contentAlignment = Alignment.Center,
+private fun SavedThemeChip(theme: ThemeSpec, selected: Boolean, onClick: () -> Unit) {
+    val accent = (theme.accent as? ThemeColor.Custom)?.argb?.let { Color(it) } ?: MaterialTheme.colorScheme.primary
+    val ground = Color((theme.background as? ThemeColor.Custom)?.argb ?: ThemeSpecs.DEFAULT_BACKGROUND)
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .padding(end = 4.dp)
-            .size(36.dp)
-            .background(Color(ground), RoundedCornerShape(6.dp))
-            .border(1.dp, accent?.let { Color(it) } ?: MaterialTheme.colorScheme.outline, RoundedCornerShape(6.dp)),
+            .clip(RoundedCornerShape(12.dp))
+            .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
+            .padding(4.dp),
     ) {
-        Row(verticalAlignment = Alignment.Bottom) {
-            Text(">_", color = accent?.let { Color(it) } ?: MaterialTheme.colorScheme.primary, fontFamily = FontFamily.Monospace, fontSize = 13.sp)
-            // A three-color theme shows its secondary color beside the prompt.
-            (theme.secondary as? ThemeColor.Custom)?.let { Text("~", color = Color(it.argb), fontFamily = FontFamily.Monospace, fontSize = 13.sp) }
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                // The ">_" is decoration: the name under it is what a screen reader says.
+                .clearAndSetSemantics {}
+                .size(width = 64.dp, height = 40.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .border(
+                    border = BorderStroke(
+                        width = if (selected) 2.dp else 1.dp,
+                        color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                )
+                .background(ground),
+        ) {
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text(text = ">_", color = accent, style = MaterialTheme.typography.titleMedium)
+                // A three-color theme shows its secondary color beside the prompt.
+                (theme.secondary as? ThemeColor.Custom)?.let { Text(text = " ~", color = Color(it.argb), style = MaterialTheme.typography.titleMedium) }
+            }
         }
+        Text(
+            text = theme.name,
+            style = MaterialTheme.typography.labelSmall,
+            // Set, not inherited: the sheet and the page do not share a surface color.
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier
+                .widthIn(max = 88.dp)
+                .padding(top = 4.dp),
+        )
     }
 }
