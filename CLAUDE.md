@@ -80,6 +80,16 @@ Resumo do funcionamento:
 - **Mudar o relógio**: edite em `wear/`, rode `./gradlew :wear-protocol:test`, faça push em `wear/` e só então commite o ponteiro aqui e no Terminal Bar. Os dois apps devem apontar para o mesmo commit (`git submodule status wear`).
 - Uma ação nova no motor nasce `UNSUPPORTED` no relógio; para liberá-la, ponha-a em `WatchRules.effect`.
 
+## Nova customização visual
+
+Sempre que surgir uma nova possibilidade de customização visual (uma cor, um estilo, uma opção de widget, um campo de tema), o suporte a ela tem de chegar junto, no mesmo trabalho, a estas três peças:
+
+1. **Theme spec**: `ThemeSpec` em `command-host/` (formato `.tthm`): o campo novo, a leitura, a validação e a aplicação.
+2. **IA de temas**: `ia tema <descrição>` / `ThemeCommand`, para a IA conseguir pedir e a importação conseguir aplicar o campo novo.
+3. **Prompt de temas**: `THEME_SHAPE` e `THEME_MASTER_PROMPT` em `LauncherAiPrompts` (a tela "Criar tema com IA", `ThemeGuidePreferences`, usa o mesmo texto), descrevendo o campo, os valores aceitos e um exemplo.
+
+Atualize também `ThemeShapeTest` e `ThemeCommandTest` e as strings de `command-host/res/values*/strings_host.xml`. Uma opção visual que só existe na tela de Aparência, fora dessas três peças, é trabalho incompleto. Confira se o Terminal Bar precisa do mesmo campo (`TerminalBar/CLAUDE.md`, seção "Nova customização visual").
+
 ## Release
 
 When the user asks for a "release", they always mean: build a new version and publish it to the Play Store **internal** track. Run `./release.sh` (default track is `internal`). Do only a build without publishing (`--build-only` for the `.aab`, `--apk` for an installable APK) or use another track (`PLAY_TRACK=...`) when the user explicitly asks for it. To publish to several tracks, pass them together (`./release.sh --tracks internal,closed-testing`): the script builds once, publishes to the first and promotes the same build to the others (`closed-testing` is the `alpha` track). To promote the build already in a track without building, use `./release.sh --promote-only` (internal to closed-testing by default; `--tracks from,to,...` picks the tracks).
