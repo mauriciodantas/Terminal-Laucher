@@ -47,6 +47,9 @@ import app.lawnchair.command.ThemeCommand
 import app.lawnchair.command.ThemeSpec
 import app.lawnchair.command.ThemeSpecs
 import app.lawnchair.command.ThemeStore
+import app.lawnchair.preferences.getAdapter
+import app.lawnchair.preferences2.preferenceManager2
+import app.lawnchair.theme.color.ColorOption
 import app.lawnchair.ui.preferences.components.layout.PreferenceTemplate
 import com.android.launcher3.R
 
@@ -56,8 +59,13 @@ import com.android.launcher3.R
  * current look, open a .tthm file, send the current look. Meant to sit inside the Themes group.
  */
 @Composable
-fun SavedThemesPreference(modifier: Modifier = Modifier) {
+fun SavedThemesPreference(modifier: Modifier = Modifier, onBeforeApply: () -> Unit = {}) {
     val context = LocalContext.current
+    val prefs2 = preferenceManager2()
+    // Read so the "in use" mark follows the colors as they change.
+    val accent = prefs2.accentColor.getAdapter().state.value
+    val background = prefs2.launcherBackgroundColor.getAdapter().state.value
+    val secondary = prefs2.secondaryColor.getAdapter().state.value
     var themes by remember { mutableStateOf(ThemeStore.load(context)) }
     var saving by remember { mutableStateOf(false) }
     var deleting by remember { mutableStateOf<ThemeSpec?>(null) }
@@ -73,14 +81,16 @@ fun SavedThemesPreference(modifier: Modifier = Modifier) {
     }
 
     themes.forEach { theme ->
+        val inUse = (theme.accent != null || theme.background != null) &&
+            theme.accent.matches(accent) && theme.background.matches(background) && theme.secondary.matches(secondary)
         PreferenceTemplate(
-            title = { Text(theme.name) },
+            title = { Text(if (inUse) "${theme.name} · ${stringResource(id = R.string.saved_themes_in_use)}" else theme.name) },
             description = {
                 Text(
                     ThemeCommand.summary(theme),
                     fontFamily = FontFamily.Monospace,
                     fontSize = 12.sp,
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
             },
@@ -96,6 +106,7 @@ fun SavedThemesPreference(modifier: Modifier = Modifier) {
                 }
             },
             onClick = {
+                onBeforeApply()
                 val applied = ThemeStore.apply(context, theme)
                 Toast.makeText(context, if (applied) R.string.theme_import_applied else R.string.theme_import_unreadable, Toast.LENGTH_SHORT).show()
             },
@@ -113,7 +124,7 @@ fun SavedThemesPreference(modifier: Modifier = Modifier) {
             Action(Icons.Rounded.FileOpen, stringResource(id = R.string.saved_themes_import)) {
                 runCatching { importTheme.launch(arrayOf("*/*")) }
             }
-            Action(Icons.Rounded.Share, stringResource(id = R.string.saved_themes_share)) {
+            Action(Icons.Rounded.Share, stringResource(id = R.string.saved_themes_share_current)) {
                 ThemeStore.shareIntent(context, ThemeStore.current(context))?.let(context::startActivity)
             }
         }
@@ -174,6 +185,17 @@ fun SavedThemesPreference(modifier: Modifier = Modifier) {
         )
     }
 }
+
+/** True when the color a theme sets is the one chosen now; a color the theme leaves unset does not count against it. */
+private fun ThemeColor?.matches(option: ColorOption): Boolean = when (this) {
+    null -> true
+    is ThemeColor.Custom -> option is ColorOption.CustomColor && (option.color or OPAQUE) == argb
+    ThemeColor.System -> option == ColorOption.SystemAccent
+    ThemeColor.Wallpaper -> option == ColorOption.WallpaperPrimary
+    ThemeColor.Default -> option !is ColorOption.CustomColor && option != ColorOption.SystemAccent && option != ColorOption.WallpaperPrimary
+}
+
+private const val OPAQUE = 0xFF000000.toInt()
 
 @Composable
 private fun Action(icon: ImageVector, label: String, onClick: () -> Unit) {

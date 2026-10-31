@@ -172,7 +172,7 @@
     <string name="show_deck_layout_description">Mostrar uma opção de layout para ocultar a gaveta de aplicativos e adicionar automaticamente novos aplicativos à tela inicial</string>
     <string name="material_expressive_label">Material 3 expressivo</string>
     <string name="material_expressive_description">Habilitar as mudanças do Material 3 Expressive na área de trabalho</string>
-    <string name="folder_shape_label">Tamanho da pasta</string>
+    <string name="folder_shape_label">Formato da pasta</string>
     <string name="folder_label">Pasta</string>
     <string name="app_icon_shape_label">Aplicativo</string>
     <string name="gesturenavcontract_label">Usar a API da Navegação por Gestos</string>

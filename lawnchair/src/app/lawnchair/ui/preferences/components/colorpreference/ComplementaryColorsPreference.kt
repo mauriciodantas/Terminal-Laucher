@@ -9,10 +9,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -29,6 +32,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.ColorUtils
@@ -43,21 +48,33 @@ import com.android.launcher3.R
  * complement it brings along, in one row with no text around it. Tapping one sets the accent and the background together.
  */
 @Composable
-fun ComplementaryColorsPreference(modifier: Modifier = Modifier) {
-    val looks = rememberLooks()
-    Column(
+fun ComplementaryColorsPreference(modifier: Modifier = Modifier, onBeforeApply: () -> Unit = {}) {
+    val looks = rememberLooks(onBeforeApply = onBeforeApply)
+    val scroll = rememberScrollState()
+    val ground = MaterialTheme.colorScheme.surfaceContainer
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceContainer),
+            .background(ground),
     ) {
         Row(
             modifier = Modifier
-                .horizontalScroll(rememberScrollState())
+                .horizontalScroll(scroll)
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             WheelChip(onClick = looks::openWheel)
             ComplementaryColors.all.forEach { pair -> LookChip(pair, looks.isSelected(pair), onClick = { looks.apply(pair) }) }
+        }
+        // Tells there are more looks to the right; gone once the row is scrolled to its end.
+        if (scroll.canScrollForward) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .width(32.dp)
+                    .fillMaxHeight()
+                    .background(Brush.horizontalGradient(listOf(Color.Transparent, ground))),
+            )
         }
     }
 }
@@ -81,7 +98,7 @@ class Looks internal constructor(
 }
 
 @Composable
-fun rememberLooks(onApply: (ComplementaryColors.Pair) -> Unit = {}): Looks {
+fun rememberLooks(onApply: (ComplementaryColors.Pair) -> Unit = {}, onBeforeApply: () -> Unit = {}): Looks {
     val prefs2 = preferenceManager2()
     val accent = prefs2.accentColor.getAdapter()
     val background = prefs2.launcherBackgroundColor.getAdapter()
@@ -92,6 +109,7 @@ fun rememberLooks(onApply: (ComplementaryColors.Pair) -> Unit = {}): Looks {
 
     var wheelOpen by remember { mutableStateOf(false) }
     val applyPair = { pair: ComplementaryColors.Pair ->
+        onBeforeApply()
         // The background goes first: the accent is checked against it as it lands.
         background.onChange(ColorOption.CustomColor(pair.background))
         accent.onChange(ColorOption.CustomColor(pair.accent))
@@ -121,11 +139,13 @@ fun LookChip(pair: ComplementaryColors.Pair, selected: Boolean, onClick: () -> U
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick)
+            .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
             .padding(4.dp),
     ) {
         Box(
             modifier = Modifier
+                // The ">_" is decoration: the name under it is what a screen reader says.
+                .clearAndSetSemantics {}
                 .size(width = 64.dp, height = 40.dp)
                 .clip(RoundedCornerShape(10.dp))
                 .border(
@@ -168,11 +188,12 @@ fun WheelChip(onClick: () -> Unit, modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick)
+            .clickable(role = Role.Button, onClick = onClick)
             .padding(4.dp),
     ) {
         Box(
             modifier = Modifier
+                .clearAndSetSemantics {}
                 .size(width = 64.dp, height = 40.dp)
                 .clip(RoundedCornerShape(10.dp))
                 .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(10.dp)),
