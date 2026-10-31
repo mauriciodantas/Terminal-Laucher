@@ -326,6 +326,8 @@ private fun CommandScreen(onClose: () -> Unit) {
     // The conversation with the AI while the bar is open, and the note of a command it filled in.
     var aiTurns by remember { mutableStateOf<List<AiTurn>>(emptyList()) }
     var aiBusy by remember { mutableStateOf(false) }
+    // The slow command now working in the bar: handed to the background service when the bar is left.
+    var liveRun by remember { mutableStateOf<Pair<CommandAction, String>?>(null) }
 
     // The answer of the conversation while it is still coming in.
     var aiPartial by remember { mutableStateOf<String?>(null) }
@@ -630,30 +632,8 @@ private fun CommandScreen(onClose: () -> Unit) {
     }
 
     fun commit(action: CommandAction, command: String) {
-        // Slow commands (AI, requests, scripts) go on after the bar closes and tell when they end.
-        if (BackgroundRules.isLong(action) && !(action is CommandAction.Ai && AiStore.load(context) == null) &&
-            !(action is CommandAction.Ai && aiBusy)
-        ) {
-            record(action, command)
-            val history = if (action is CommandAction.Ai && action.mode == AiMode.CHAT) aiTurns else emptyList()
-            if (BackgroundRunService.start(context, command, history, action as? CommandAction.Ai) != null) {
-                // Denied twice (or turned off in One UI), Android never asks again: the run goes on, so say where to turn them on.
-                if (!androidx.core.app.NotificationManagerCompat.from(context).areNotificationsEnabled()) {
-                    android.widget.Toast.makeText(context, context.getString(R.string.cmd_bg_notify_off), android.widget.Toast.LENGTH_LONG).show()
-                    runCatching {
-                        context.startActivity(
-                            Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-                                .putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, context.packageName)
-                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-                        )
-                    }
-                } else {
-                    android.widget.Toast.makeText(context, context.getString(CommandR.string.cmd_bg_started), android.widget.Toast.LENGTH_SHORT).show()
-                }
-                onClose()
-                return
-            }
-        }
+        // Slow commands (AI, requests, scripts) work here, in the bar; they go to the background only when the user leaves it.
+        liveRun = if (BackgroundRules.isLong(action) && !(action is CommandAction.Ai && AiStore.load(context) == null)) action to command else null
         when (action) {
             is CommandAction.Ai -> if (action.mode != AiMode.SETUP) {
                 askAi(action, command)
@@ -944,6 +924,25 @@ private fun CommandScreen(onClose: () -> Unit) {
             done = executedLabel
             onClose()
         }
+    }
+
+    // Leaving the bar (home, another app, closing it) is what sends a slow command to the background.
+    DisposableEffect(lifecycle) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event != androidx.lifecycle.Lifecycle.Event.ON_PAUSE) return@LifecycleEventObserver
+            val live = liveRun ?: return@LifecycleEventObserver
+            if (done != context.getString(R.string.command_running)) return@LifecycleEventObserver
+            val ai = live.first as? CommandAction.Ai
+            val history = if (ai != null && ai.mode == AiMode.CHAT) aiTurns.dropLast(1) else emptyList()
+            runCatching { BackgroundRunService.start(context, live.second, history, ai) }.getOrNull() ?: return@LifecycleEventObserver
+            liveRun = null
+            scope.coroutineContext[kotlinx.coroutines.Job]?.children?.forEach { it.cancel() }
+            aiBusy = false
+            aiPartial = null
+            android.widget.Toast.makeText(context, context.getString(CommandR.string.cmd_bg_started), android.widget.Toast.LENGTH_SHORT).show()
+        }
+        lifecycle.addObserver(observer)
+        onDispose { lifecycle.removeObserver(observer) }
     }
 
     val callPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
