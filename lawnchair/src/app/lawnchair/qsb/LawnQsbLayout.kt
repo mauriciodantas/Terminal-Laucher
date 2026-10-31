@@ -165,6 +165,11 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
                             style = style,
                             actions = actions,
                             placeholder = stringResource(R.string.nostromo_prompt_hint),
+                            examples = listOf(
+                                stringResource(R.string.nostromo_prompt_example_calc),
+                                stringResource(R.string.nostromo_prompt_example_torch),
+                                stringResource(R.string.nostromo_prompt_example_help),
+                            ),
                             hint = stringResource(R.string.nostromo_swipe_hint),
                             onVoiceClick = if (commandBarEnabled && CommandActivity.voiceAvailable(context)) {
                                 { CommandActivity.start(context.launcher, voice = true) }

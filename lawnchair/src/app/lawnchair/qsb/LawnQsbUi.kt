@@ -1,12 +1,10 @@
 package app.lawnchair.qsb
 
 import android.content.Context
+import android.provider.Settings
 import androidx.annotation.ColorInt
 import androidx.annotation.DrawableRes
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.keyframes
-import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -30,8 +28,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -39,6 +41,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
@@ -338,12 +341,14 @@ fun LawnQsbUi(
     actions: QsbActions,
     modifier: Modifier = Modifier,
     placeholder: String? = null,
+    examples: List<String> = emptyList(),
     hint: String? = null,
     onVoiceClick: (() -> Unit)? = null,
     voiceLabel: String? = null,
     hintAbove: Boolean = false,
 ) {
     val density = LocalDensity.current
+    val animated = Settings.Global.getFloat(LocalContext.current.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) > 0f
 
     val cornerRadius = with(density) { style.cornerRadiusPx.toDp() }
     val strokeWidth = with(density) { style.strokeWidthPx.toDp() }
@@ -351,7 +356,8 @@ fun LawnQsbUi(
 
     val containerModifier = modifier
         .fillMaxWidth()
-        .semantics { contentDescription = state.contentDescription }
+        // The spoken name starts with the words on screen, so "tap type a command" finds it.
+        .semantics { contentDescription = if (placeholder != null) "$placeholder, ${state.contentDescription}" else state.contentDescription }
         .clip(shape)
         .background(ComposeColor(style.backgroundColor).copy(alpha = style.backgroundAlpha), shape)
         .combinedClickable(
@@ -380,30 +386,39 @@ fun LawnQsbUi(
                 modifier = Modifier.padding(start = 16.dp, end = 10.dp),
             )
             if (placeholder != null) {
-                Text(
-                    text = placeholder,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                val blink by rememberInfiniteTransition(label = "cursor").animateFloat(
-                    initialValue = 1f,
-                    targetValue = 0f,
-                    animationSpec = infiniteRepeatable(
-                        animation = keyframes {
-                            durationMillis = 1000
-                            1f at 0
-                            1f at 499
-                            0f at 500
-                            0f at 999
-                        },
-                    ),
-                    label = "cursorAlpha",
-                )
+                // The prompt and then real commands, one after the other, so the line teaches what to type.
+                val lines = remember(placeholder, examples) { listOf(placeholder) + examples }
+                var shown by remember { mutableIntStateOf(0) }
+                if (animated && lines.size > 1) {
+                    LaunchedEffect(lines) {
+                        while (true) {
+                            kotlinx.coroutines.delay(if (shown == 0) PROMPT_HOLD_MS else EXAMPLE_HOLD_MS)
+                            shown = (shown + 1) % lines.size
+                        }
+                    }
+                }
+                Crossfade(targetState = lines[shown % lines.size], label = "prompt-example") { line ->
+                    Text(
+                        text = line,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                    )
+                }
+                // A text caret, like the system's: it blinks whatever the animation scale is, since a
+                // delay is not scaled the way a Compose animation is.
+                var caretOn by remember { mutableStateOf(true) }
+                LaunchedEffect(Unit) {
+                    while (true) {
+                        kotlinx.coroutines.delay(CARET_HALF_PERIOD_MS)
+                        caretOn = !caretOn
+                    }
+                }
                 Box(
                     Modifier
                         .padding(start = 8.dp)
                         .size(width = 8.dp, height = 16.dp)
-                        .alpha(blink)
+                        .alpha(if (caretOn) 1f else 0f)
                         .background(ComposeColor(style.strokeColor)),
                 )
             }
@@ -557,3 +572,7 @@ private fun LawnQsbUiPreview() {
         )
     }
 }
+
+private const val PROMPT_HOLD_MS = 4000L
+private const val EXAMPLE_HOLD_MS = 2600L
+private const val CARET_HALF_PERIOD_MS = 500L

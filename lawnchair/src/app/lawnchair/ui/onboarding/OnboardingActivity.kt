@@ -3,17 +3,26 @@ package app.lawnchair.ui.onboarding
 import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.LauncherApps
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.Process
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,6 +32,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
@@ -43,8 +53,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
@@ -53,6 +65,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import app.lawnchair.LawnchairLauncher
+import app.lawnchair.command.CommandActivity
 import app.lawnchair.theme.ComplementaryColors
 import app.lawnchair.ui.preferences.components.colorpreference.LookChip
 import app.lawnchair.ui.preferences.components.colorpreference.WheelChip
@@ -81,6 +94,13 @@ class OnboardingActivity : ComponentActivity() {
                     onFinish = {
                         markDone(this@OnboardingActivity)
                         if (isDefaultLauncher()) goHomeAndCloseStrayLaunchers(applicationContext)
+                        finish()
+                    },
+                    onTry = { command ->
+                        markDone(this@OnboardingActivity)
+                        if (isDefaultLauncher()) goHomeAndCloseStrayLaunchers(applicationContext)
+                        // The bar opens on top of the home screen, with the example typed and ready for Enter.
+                        CommandActivity.start(applicationContext, text = command)
                         finish()
                     },
                 )
@@ -160,7 +180,7 @@ private const val STEP_NOTIFICATIONS = 3
 private const val STEP_READY = 4
 
 @Composable
-private fun OnboardingScreen(onFinish: () -> Unit) {
+private fun OnboardingScreen(onFinish: () -> Unit, onTry: (String) -> Unit) {
     val context = LocalContext.current
     var step by rememberSaveable { mutableIntStateOf(STEP_BOOT) }
     var isDefault by remember { mutableStateOf(context.isDefaultLauncher()) }
@@ -175,7 +195,8 @@ private fun OnboardingScreen(onFinish: () -> Unit) {
         notificationsGranted = isNotificationServiceEnabled(context)
     }
 
-    BackHandler(enabled = step > STEP_BOOT) { step -= 1 }
+    // Back on the first screen leaves the setup, counted as skipping it so it does not come back.
+    BackHandler { if (step > STEP_BOOT) step -= 1 else onFinish() }
 
     Column(
         modifier = Modifier
@@ -195,7 +216,7 @@ private fun OnboardingScreen(onFinish: () -> Unit) {
                 STEP_DEFAULT -> DefaultLauncherStep(isDefault)
                 STEP_COLOR -> ThemeStep(onChoose = { colorChosen = true })
                 STEP_NOTIFICATIONS -> NotificationsStep(notificationsGranted)
-                else -> ReadyStep(isDefault, defaultSkipped, notificationsGranted, notificationsSkipped, colorChosen)
+                else -> ReadyStep(isDefault, defaultSkipped, notificationsGranted, notificationsSkipped, colorChosen, onTry)
             }
         }
         Spacer(Modifier.height(12.dp))
@@ -238,9 +259,13 @@ private fun BootStep(isDefault: Boolean, notificationsGranted: Boolean) {
     Spacer(Modifier.height(28.dp))
     Mono(stringResource(R.string.onboarding_wordmark), size = 52.sp, weight = FontWeight.Bold, spacing = 4.sp)
     Spacer(Modifier.height(28.dp))
-    LogLine(stringResource(R.string.onboarding_boot_memory), stringResource(R.string.onboarding_status_ok), ok = true)
-    LogLine(stringResource(R.string.onboarding_boot_icons), stringResource(R.string.onboarding_status_ok), ok = true)
-    LogLine(stringResource(R.string.onboarding_boot_apps), stringResource(R.string.onboarding_status_ok), ok = true)
+    val context = LocalContext.current
+    val appCount = remember {
+        runCatching {
+            context.getSystemService(LauncherApps::class.java).getActivityList(null, Process.myUserHandle()).size
+        }.getOrDefault(0)
+    }
+    if (appCount > 0) LogLine(stringResource(R.string.onboarding_boot_apps), appCount.toString(), ok = true)
     LogLine(
         stringResource(R.string.onboarding_boot_default),
         stringResource(if (isDefault) R.string.onboarding_status_ok else R.string.onboarding_status_undefined),
@@ -271,6 +296,8 @@ private fun BootStep(isDefault: Boolean, notificationsGranted: Boolean) {
 private fun DefaultLauncherStep(isDefault: Boolean) {
     StepIntro(R.string.onboarding_default_heading, 1, R.string.onboarding_default_title)
     Mono(stringResource(R.string.set_default_launcher_tip), color = MaterialTheme.colorScheme.onSurfaceVariant, size = 12.5.sp, lineHeight = 19.sp)
+    Spacer(Modifier.height(10.dp))
+    Mono(stringResource(R.string.onboarding_default_revert), color = dim(), size = 11.sp, lineHeight = 17.sp)
     Spacer(Modifier.height(18.dp))
     Panel {
         Mono(stringResource(R.string.onboarding_default_unlocks), color = dim(), size = 10.sp, spacing = 1.8.sp)
@@ -327,11 +354,15 @@ private fun ReadyStep(
     notificationsGranted: Boolean,
     notificationsSkipped: Boolean,
     colorChosen: Boolean,
+    onTry: (String) -> Unit,
 ) {
     Spacer(Modifier.height(8.dp))
     Mono(stringResource(R.string.onboarding_ready_heading), weight = FontWeight.SemiBold, size = 13.sp, spacing = 2.sp)
-    Spacer(Modifier.height(24.dp))
-    Mono(stringResource(R.string.onboarding_ready_title), size = 44.sp, weight = FontWeight.Bold, spacing = 3.sp)
+    Spacer(Modifier.height(10.dp))
+    Mono(stringResource(R.string.onboarding_ready_title), size = 28.sp, weight = FontWeight.Bold, spacing = 3.sp)
+    Spacer(Modifier.height(16.dp))
+    // The first thing to do comes first: the examples, before the summary and the hints.
+    TryPanel(onTry)
     Spacer(Modifier.height(20.dp))
     LogLine(
         stringResource(R.string.onboarding_boot_default),
@@ -341,8 +372,9 @@ private fun ReadyStep(
     )
     LogLine(
         stringResource(R.string.onboarding_ready_color),
-        stringResource(R.string.onboarding_status_ok),
-        ok = true,
+        stringResource(if (colorChosen) R.string.onboarding_status_ok else R.string.onboarding_status_default),
+        ok = colorChosen,
+        warn = !colorChosen,
     )
     LogLine(
         stringResource(R.string.onboarding_boot_notifications),
@@ -356,7 +388,60 @@ private fun ReadyStep(
     }
     Spacer(Modifier.height(20.dp))
     Mono(stringResource(R.string.onboarding_ready_hint_swipe), color = MaterialTheme.colorScheme.onSurfaceVariant, size = 11.5.sp, lineHeight = 20.sp)
-    Mono(stringResource(R.string.onboarding_ready_hint_command), color = MaterialTheme.colorScheme.onSurfaceVariant, size = 11.5.sp, lineHeight = 20.sp)
+}
+
+/** The first commands to try: one tap opens the bar with the line typed, and Enter runs it. */
+@Composable
+private fun TryPanel(onTry: (String) -> Unit) {
+    val animate = animationsOn(LocalContext.current)
+    Mono(stringResource(R.string.onboarding_try_title), weight = FontWeight.SemiBold, size = 13.sp, spacing = 2.sp)
+    Spacer(Modifier.height(4.dp))
+    Mono(stringResource(R.string.onboarding_try_hint), color = dim(), size = 11.sp, lineHeight = 17.sp)
+    Spacer(Modifier.height(10.dp))
+    TryLine("calc 12*3", stringResource(R.string.onboarding_try_calc), pulse = animate, onClick = { onTry("calc 12*3") })
+    TryLine("torch", stringResource(R.string.onboarding_try_torch), pulse = false, onClick = { onTry("torch") })
+    TryLine("?", stringResource(R.string.onboarding_try_help), pulse = false, onClick = { onTry("?") })
+}
+
+/** False when the person turned system animations off, so nothing pulses for them. */
+private fun animationsOn(context: Context): Boolean = Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) > 0f
+
+/** A line to tap. With [pulse], a ring grows out of it and fades, to say where to tap first. */
+@Composable
+private fun TryLine(command: String, caption: String, pulse: Boolean, onClick: () -> Unit) {
+    val ring = MaterialTheme.colorScheme.primary
+    Box(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+        if (pulse) {
+            val grow by rememberInfiniteTransition(label = "try-pulse").animateFloat(
+                initialValue = 0f,
+                targetValue = 1f,
+                animationSpec = infiniteRepeatable(tween(1700, easing = FastOutSlowInEasing), RepeatMode.Restart),
+                label = "try-pulse-grow",
+            )
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .graphicsLayer {
+                        scaleX = 1f + 0.05f * grow
+                        scaleY = 1f + 0.45f * grow
+                        alpha = 0.9f * (1f - grow)
+                    }
+                    .border(BorderStroke(1.dp, ring)),
+            )
+        }
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outline))
+                .clickable(onClickLabel = caption, role = Role.Button, onClick = onClick)
+                .heightIn(min = 48.dp)
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Mono("> $command", weight = FontWeight.SemiBold, size = 13.sp, spacing = 0.8.sp)
+            Mono(caption, color = dim(), size = 11.sp)
+        }
+    }
 }
 
 @Composable
@@ -382,7 +467,6 @@ private fun Actions(
                 PrimaryButton(
                     text = stringResource(R.string.set_default_launcher_action),
                     onClick = { context.startActivity(Intent(Settings.ACTION_HOME_SETTINGS)) },
-                    danger = true,
                 )
                 GhostButton(stringResource(R.string.onboarding_skip), onSkip)
             }
@@ -399,7 +483,7 @@ private fun Actions(
                 GhostButton(stringResource(R.string.onboarding_skip), onSkip)
             }
 
-            else -> PrimaryButton(stringResource(R.string.onboarding_enter), onFinish)
+            else -> GhostButton(stringResource(R.string.onboarding_enter), onFinish)
         }
     }
 }

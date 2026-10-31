@@ -25,9 +25,13 @@ import android.util.AttributeSet;
 import android.view.HapticFeedbackConstants;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.accessibility.AccessibilityNodeInfo;
 
 import androidx.annotation.Nullable;
 import androidx.core.graphics.ColorUtils;
+
+import com.android.launcher3.R;
 
 import app.lawnchair.theme.ThemeProvider;
 
@@ -48,9 +52,13 @@ public class DirectoryIndexView extends View {
 
     private static final float TEXT_SIZE_SP = 10f;
     private static final float MIN_TEXT_SIZE_SP = 7f;
+    private static final float BALLOON_DP = 56f;
+    private static final float BALLOON_GAP_DP = 12f;
+    private static final float BALLOON_TEXT_SP = 30f;
 
     private final Paint mTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint mActivePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint mBalloonTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final RectF mTmpRect = new RectF();
     private final List<String> mLetters = new ArrayList<>();
     private final List<Integer> mPositions = new ArrayList<>();
@@ -70,7 +78,45 @@ public class DirectoryIndexView extends View {
         mTextPaint.setTextAlign(Paint.Align.CENTER);
         mTextPaint.setColor(ColorUtils.setAlphaComponent(mPhosphor, 0xB0));
         mActivePaint.setColor(mPhosphor);
-        setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_NO);
+        mBalloonTextPaint.setTypeface(Typeface.MONOSPACE);
+        mBalloonTextPaint.setTextAlign(Paint.Align.CENTER);
+        mBalloonTextPaint.setFakeBoldText(true);
+        setContentDescription(context.getString(R.string.directory_index_description));
+        setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        // The letter balloon is drawn to the left of the strip, outside its bounds.
+        if (getParent() instanceof ViewGroup) ((ViewGroup) getParent()).setClipChildren(false);
+    }
+
+    @Override
+    public void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo info) {
+        super.onInitializeAccessibilityNodeInfo(info);
+        // Screen readers cannot drag along the strip: next and previous letter stand in for it.
+        info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_FORWARD);
+        info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_BACKWARD);
+    }
+
+    @Override
+    public boolean performAccessibilityAction(int action, @Nullable android.os.Bundle arguments) {
+        int step = action == AccessibilityNodeInfo.ACTION_SCROLL_FORWARD ? 1
+                : action == AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD ? -1 : 0;
+        if (step == 0 || mLetters.isEmpty()) return super.performAccessibilityAction(action, arguments);
+        int index = Math.max(0, Math.min(mLetters.size() - 1, (mActiveIndex < 0 ? 0 : mActiveIndex + step)));
+        selectIndex(index);
+        setStateDescription(mLetters.get(index));
+        return true;
+    }
+
+    private void selectIndex(int index) {
+        if (index == mActiveIndex) return;
+        mActiveIndex = index;
+        performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK);
+        if (mListener != null) mListener.onSectionSelected(mPositions.get(index));
+        invalidate();
     }
 
     public void setOnSectionSelectedListener(@Nullable OnSectionSelectedListener listener) {
@@ -119,6 +165,21 @@ public class DirectoryIndexView extends View {
                 canvas.drawText(mLetters.get(i), cx, baseline, mTextPaint);
             }
         }
+        if (mActiveIndex >= 0 && mActiveIndex < count) drawBalloon(canvas, mActiveIndex, cell, density);
+    }
+
+    /** The active letter, large, beside the strip: the finger covers the strip's own letter. */
+    private void drawBalloon(Canvas canvas, int index, float cell, float density) {
+        float size = BALLOON_DP * density;
+        float cy = Math.max(size / 2f, Math.min(getHeight() - size / 2f, index * cell + cell / 2f));
+        float right = -BALLOON_GAP_DP * density;
+        mTmpRect.set(right - size, cy - size / 2f, right, cy + size / 2f);
+        canvas.drawRoundRect(mTmpRect, 4 * density, 4 * density, mActivePaint);
+        mBalloonTextPaint.setTextSize(BALLOON_TEXT_SP * density);
+        mBalloonTextPaint.setColor(app.lawnchair.theme.LauncherGround.INSTANCE.onAccent(getContext(), mPhosphor));
+        Paint.FontMetrics fm = mBalloonTextPaint.getFontMetrics();
+        canvas.drawText(mLetters.get(index), mTmpRect.centerX(),
+                mTmpRect.centerY() - (fm.ascent + fm.descent) / 2f, mBalloonTextPaint);
     }
 
     @Override
@@ -130,15 +191,7 @@ public class DirectoryIndexView extends View {
             case MotionEvent.ACTION_MOVE: {
                 getParent().requestDisallowInterceptTouchEvent(true);
                 int index = (int) (event.getY() / getHeight() * count);
-                index = Math.max(0, Math.min(count - 1, index));
-                if (index != mActiveIndex) {
-                    mActiveIndex = index;
-                    performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK);
-                    if (mListener != null) {
-                        mListener.onSectionSelected(mPositions.get(index));
-                    }
-                    invalidate();
-                }
+                selectIndex(Math.max(0, Math.min(count - 1, index)));
                 return true;
             }
             case MotionEvent.ACTION_UP:

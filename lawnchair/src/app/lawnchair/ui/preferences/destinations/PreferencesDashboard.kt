@@ -16,7 +16,6 @@
 
 package app.lawnchair.ui.preferences.destinations
 
-import android.app.Activity
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -33,7 +32,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuGroup
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -43,12 +41,18 @@ import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.getSystemService
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import app.lawnchair.LawnchairLauncher
 import app.lawnchair.preferences.preferenceManager
 import app.lawnchair.ui.OverflowMenuGrouped
@@ -82,6 +86,10 @@ fun PreferencesDashboard(
     SyncLiveInformation()
     val prefs = preferenceManager()
 
+    // Back from the system's home settings, the card goes away on its own once Terminal is the default.
+    var isDefault by remember { mutableStateOf(context.isDefaultLauncher()) }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { isDefault = context.isDefaultLauncher() }
+
     val aboutDescrption = if (prefs.hideVersionInfo.get()) {
         prefs.pseudonymVersion.get()
     } else {
@@ -100,7 +108,7 @@ fun PreferencesDashboard(
             Spacer(modifier = Modifier.height(8.dp))
         }
 
-        if (!context.isDefaultLauncher()) {
+        if (!isDefault) {
             PreferencesSetDefaultLauncherWarning()
             Spacer(modifier = Modifier.height(8.dp))
         }
@@ -242,7 +250,7 @@ fun PreferencesSetDefaultLauncherWarning(
     Surface(
         modifier = modifier.padding(horizontal = 16.dp),
         shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.errorContainer,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -251,12 +259,12 @@ fun PreferencesSetDefaultLauncherWarning(
             Text(
                 text = stringResource(id = R.string.set_default_launcher_title),
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onErrorContainer,
+                color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
                 text = stringResource(id = R.string.set_default_launcher_tip),
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onErrorContainer,
+                color = MaterialTheme.colorScheme.onSurface,
             )
             Button(
                 onClick = {
@@ -264,13 +272,8 @@ fun PreferencesSetDefaultLauncherWarning(
                     Intent(Settings.ACTION_HOME_SETTINGS)
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         .let { context.startActivity(it) }
-                    (context as? Activity)?.finish()
                 },
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error,
-                    contentColor = MaterialTheme.colorScheme.onError,
-                ),
             ) {
                 Text(text = stringResource(id = R.string.set_default_launcher_action))
             }

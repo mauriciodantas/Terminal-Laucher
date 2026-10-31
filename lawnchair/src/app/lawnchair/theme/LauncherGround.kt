@@ -86,10 +86,29 @@ object LauncherGround {
      * the text itself. With a [secondary] color, the middle tones (lines and secondary text) are
      * drawn from it instead, reaching it at [SECONDARY_MIX]; the surfaces and the text keep the accent.
      */
-    fun shade(ground: Int, accent: Int, secondary: Int?, mix: Float): Int = if (secondary != null && mix >= 0.25f && mix < 0.9f) {
-        ColorUtils.blendARGB(ground, secondary, (mix / SECONDARY_MIX).coerceAtMost(1f))
-    } else {
-        ColorUtils.blendARGB(ground, accent, mix)
+    fun shade(ground: Int, accent: Int, secondary: Int?, mix: Float): Int {
+        val tone = if (secondary != null && mix >= 0.25f && mix < 0.9f) {
+            ColorUtils.blendARGB(ground, secondary, (mix / SECONDARY_MIX).coerceAtMost(1f))
+        } else {
+            ColorUtils.blendARGB(ground, accent, mix)
+        }
+        return if (mix >= TEXT_TONE_MIN && mix <= TEXT_TONE_MAX) readableOver(tone, ground, accent) else tone
+    }
+
+    /** The mixes that stand for secondary text: they are lifted toward the accent until they read over the ground. */
+    private const val TEXT_TONE_MIN = 0.55f
+    private const val TEXT_TONE_MAX = 0.75f
+
+    /** [tone] itself when it reads over [ground] (4.5:1), else the nearest step toward [accent] that does, or [accent]. */
+    private fun readableOver(tone: Int, ground: Int, accent: Int): Int {
+        val base = ground or OPAQUE
+        var t = 0f
+        var lifted = tone or OPAQUE
+        while (ColorUtils.calculateContrast(lifted, base) < READABLE && t < 1f) {
+            t = (t + 0.05f).coerceAtMost(1f)
+            lifted = ColorUtils.blendARGB(tone or OPAQUE, accent or OPAQUE, t)
+        }
+        return lifted
     }
 
     /** The least contrast that still reads as text over a fill. */

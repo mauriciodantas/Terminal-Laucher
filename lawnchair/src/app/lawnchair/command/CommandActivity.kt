@@ -10,6 +10,9 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
@@ -235,6 +238,27 @@ private fun mono(): FontFamily = MaterialTheme.typography.bodyMedium.fontFamily 
 private enum class Outcome { DONE, RUNNING, WARNING, FAILED }
 
 private val Danger = Color(0xFFFF5A45)
+
+/** Which spoken commands wait for a cancel before they run, and for how long. */
+internal object VoiceHold {
+    const val MILLIS = 3000
+
+    /** Commands that reach another person, remove something or change the commands themselves. */
+    fun needed(action: CommandAction): Boolean = when (action) {
+        is CommandAction.Call,
+        is CommandAction.Custom,
+        is CommandAction.Chain,
+        is CommandAction.Uninstall,
+        is CommandAction.Schedule,
+        is CommandAction.CancelJob,
+        is CommandAction.RemovePack,
+        is CommandAction.RemoveCommand,
+        is CommandAction.ClearHistory,
+        -> true
+
+        else -> false
+    }
+}
 private val Amber = Color(0xFFF2B84B)
 
 /** Colors the command word fully and the argument softer, so where one ends and the other starts is clear. */
@@ -356,6 +380,9 @@ private fun CommandScreen(onClose: () -> Unit) {
     // The code "qr" drew, shown under the preview until something else is typed.
     var qr by remember { mutableStateOf<QrMatrix?>(null) }
     var pendingAction by remember { mutableStateOf<CommandAction?>(null) }
+
+    // A spoken command that acts on the world (call, message, uninstall) waits a moment for a cancel.
+    var voiceHold by remember { mutableStateOf<Pair<CommandAction, String>?>(null) }
     var pendingCommand by remember { mutableStateOf("") }
 
     var field by remember {
@@ -1153,7 +1180,7 @@ private fun CommandScreen(onClose: () -> Unit) {
             // A spoken command that is already complete and runnable runs on its own.
             val action = CommandEngine.analyze(value, apps, contacts, granted, custom, aliases, extras.copy(history = history)).action
             if (action != null) {
-                runAction(action, value.trim())
+                if (VoiceHold.needed(action)) voiceHold = action to value.trim() else runAction(action, value.trim())
                 return@rememberLauncherForActivityResult
             }
         }
@@ -1289,7 +1316,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                         Text(
                             text = buildAnnotatedString {
                                 withStyle(SpanStyle(color = Color.Transparent)) { append(text) }
-                                withStyle(SpanStyle(color = phosphor.copy(alpha = 0.4f))) { append(ghost) }
+                                withStyle(SpanStyle(color = phosphor.copy(alpha = 0.62f))) { append(ghost) }
                             },
                             style = style,
                             maxLines = 1,
@@ -1299,6 +1326,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                             value = field,
                             onValueChange = {
                                 if (it.text != field.text) {
+                                    voiceHold = null
                                     selected = 0
                                     done = null
                                     qr = null
@@ -2001,11 +2029,56 @@ private fun CommandScreen(onClose: () -> Unit) {
                 }
             }
 
+            // What the voice understood, with a countdown to run it and a way to stop it first.
+            val voiceConfirm: @Composable () -> Unit = {
+                voiceHold?.let { (held, heldCommand) ->
+                    val progress = remember(held) { Animatable(0f) }
+                    LaunchedEffect(held) {
+                        progress.animateTo(1f, tween(VoiceHold.MILLIS, easing = LinearEasing))
+                        voiceHold = null
+                        runAction(held, heldCommand)
+                    }
+                    Column(
+                        Modifier
+                            .padding(top = 8.dp)
+                            .fillMaxWidth()
+                            .border(1.dp, phosphor)
+                            .semantics { liveRegion = LiveRegionMode.Assertive },
+                    ) {
+                        Row(Modifier.padding(start = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                stringResource(R.string.command_voice_heard, heldCommand),
+                                color = phosphor,
+                                fontFamily = mono(),
+                                fontSize = 12.5.sp,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f),
+                            )
+                            val nowLabel = stringResource(R.string.command_voice_now_label)
+                            val cancelLabel = stringResource(R.string.command_voice_cancel_label)
+                            BarButton(stringResource(R.string.command_voice_now), nowLabel, phosphor) {
+                                voiceHold = null
+                                runAction(held, heldCommand)
+                            }
+                            BarButton(stringResource(R.string.command_voice_cancel), cancelLabel, Danger) { voiceHold = null }
+                        }
+                        Box(
+                            Modifier
+                                .fillMaxWidth(1f - progress.value)
+                                .height(3.dp)
+                                .background(phosphor),
+                        )
+                    }
+                }
+            }
+
             if (wide) {
                 // Wide screens: what is typed on the left, what it will do on the right.
                 Row(Modifier.weight(1f).fillMaxWidth()) {
                     Column(Modifier.weight(1.4f)) {
                         commandLine()
+                        voiceConfirm()
                         quickStarts()
                         listArea(Modifier.weight(1f, fill = false))
                     }
@@ -2018,6 +2091,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                 }
             } else {
                 commandLine()
+                voiceConfirm()
                 quickStarts()
                 // The preview stays right under the list, and the keys at the bottom.
                 Column(Modifier.weight(1f)) {
