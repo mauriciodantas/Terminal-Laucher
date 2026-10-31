@@ -148,7 +148,8 @@ class CommandActivity : ComponentActivity() {
         fun intent(context: Context, voice: Boolean = false, text: String = "", run: Boolean = false): Intent = // A task of its own, outside the home task: the system cannot split the screen with
             // the home screen, and "dividir" opens an app beside the bar.
             Intent(context, CommandActivity::class.java)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                // CLEAR_TASK: a bar left open in the background would come back as it was and drop the new text or command.
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
                 .putExtra(EXTRA_VOICE, voice)
                 .putExtra(EXTRA_TEXT, text)
                 .putExtra(EXTRA_RUN, run)
