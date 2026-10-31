@@ -9,14 +9,6 @@
         <item name="android:windowLightNavigationBar" tools:ignore="NewApi">false</item>
     </style>
 
-    <!-- The bar is translucent so the home screen shows behind it while it collapses on close. -->
-    <style name="Theme.Lawnchair.Command" parent="Theme.Lawnchair">
-        <item name="android:windowIsTranslucent">true</item>
-        <item name="android:windowBackground">@android:color/transparent</item>
-        <item name="android:windowAnimationStyle">@null</item>
-        <item name="android:backgroundDimEnabled">false</item>
-    </style>
-
     <style name="Base.Theme.Lawnchair" parent="Base.Theme.MaterialThemeBuilder">
         <item name="android:colorBackground">@color/white_50</item>
     </style>
