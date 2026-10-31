@@ -94,6 +94,8 @@ Atualize também `ThemeShapeTest` e `ThemeCommandTest` e as strings de `command-
 
 When the user asks for a "release", they always mean: build a new version and publish it to the Play Store **internal** track. Run `./release.sh` (default track is `internal`). Do only a build without publishing (`--build-only` for the `.aab`, `--apk` for an installable APK) or use another track (`PLAY_TRACK=...`) when the user explicitly asks for it. To publish to several tracks, pass them together (`./release.sh --tracks internal,closed-testing`): the script builds once, publishes to the first and promotes the same build to the others (`closed-testing` is the `alpha` track). To promote the build already in a track without building, use `./release.sh --promote-only` (internal to closed-testing by default; `--tracks from,to,...` picks the tracks).
 
+Release only when the change affects this app. The launcher and the Terminal Bar are separate deliverables with their own Play Store versions: a fix for something the Bar does not have (the drawer, the drawer search, the home screen) does not need a Bar release, and a change that only touches the Bar does not need a launcher release. A change in the shared engine (`commands/`) or the watch (`wear/`) goes to both. The full decision table is in `../CLAUDE.md`, section "Ship".
+
 `release.sh` fetches the signing credentials from 1Password (`op`), generates `versionCode`/`versionName` from the date and, without flags, publishes through Gradle Play Publisher. Artifacts from `--build-only` and `--apk` go to `releases/`, which is gitignored. The branch is `16-dev`; commit and push it before releasing.
 
 ## Conventions
