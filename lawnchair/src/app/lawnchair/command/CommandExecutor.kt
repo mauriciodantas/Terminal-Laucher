@@ -510,10 +510,12 @@ object CommandExecutor {
             if (comp != null) intent.component = comp
         }
         spec.effectiveExtras().forEach { extra ->
-            val filled = fillTemplate(extra.value, contact, text, ::normalizedNumber, stdin)
-            if (filled.isNotEmpty()) {
+            // {pix} is the code of the key (and amount) typed, built from the text as typed, not from the filled template.
+            val pix = if ("{pix}" in extra.value) PixInput.of(text)?.let { PixCode.of(it.key.value, it.cents) } else null
+            val filled = fillTemplate(extra.value, contact, text, ::normalizedNumber, stdin).let { if (pix != null) it.replace("{pix}", pix) else it }
+            if (filled.isNotEmpty() && !(pix == null && "{pix}" in filled)) {
                 when (extra.type) {
-                    ExtraType.STRING -> intent.putExtra(extra.key, spec.extraFor(filled) ?: filled)
+                    ExtraType.STRING -> intent.putExtra(extra.key, if (pix != null) filled else spec.extraFor(filled) ?: filled)
                     ExtraType.INT -> filled.toIntOrNull()?.let { intent.putExtra(extra.key, it) }
                     ExtraType.BOOL -> intent.putExtra(extra.key, filled.toBooleanStrictOrNull() ?: (filled == "1" || filled.equals("true", ignoreCase = true)))
                     ExtraType.LONG -> filled.toLongOrNull()?.let { intent.putExtra(extra.key, it) }
