@@ -166,7 +166,7 @@ data object ActionsSectionBuilder : SectionBuilder {
 
         val targets = mutableListOf<SearchTargetCompat>()
 
-        command.firstOrNull()?.let {
+        command.forEach {
             targets.add(factory.createCommandActionTarget(it.line, it.preview, it.runnable))
         }
         if (marketSearch.isNotEmpty()) {

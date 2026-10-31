@@ -143,7 +143,7 @@ class LawnchairLocalSearchAlgorithm(context: Context) : LawnchairSearchAlgorithm
         val actions = mutableListOf<SearchResult.Action>()
 
         // What the web search offered is now the command bar: the typed line, run with its preview.
-        CommandSearch.offer(context, query)?.let {
+        CommandSearch.offers(context, query).forEach {
             actions.add(SearchResult.Action.Command(it.line, it.preview, it.runnable))
         }
 
