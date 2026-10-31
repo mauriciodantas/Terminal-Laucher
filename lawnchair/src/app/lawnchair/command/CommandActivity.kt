@@ -52,6 +52,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -230,6 +231,9 @@ private val PlexMono = FontFamily(
 @Composable
 private fun mono(): FontFamily = MaterialTheme.typography.bodyMedium.fontFamily ?: PlexMono
 
+/** What the text in the preview says about the command that ran: its title and color follow it. */
+private enum class Outcome { DONE, RUNNING, WARNING, FAILED }
+
 private val Danger = Color(0xFFFF5A45)
 private val Amber = Color(0xFFF2B84B)
 
@@ -364,6 +368,14 @@ private fun CommandScreen(onClose: () -> Unit) {
     var selected by remember { mutableIntStateOf(0) }
     var historyIndex by remember { mutableIntStateOf(-1) }
     var done by remember { mutableStateOf<String?>(null) }
+    var outcome by remember { mutableStateOf(Outcome.DONE) }
+    // Why a failure happened and what to do next, when the failure knows it; the last answer, to read again.
+    var doneHint by remember { mutableStateOf<Int?>(null) }
+    var last by remember { mutableStateOf<Pair<String, String>?>(null) }
+    // The command working in the bar, so it can be stopped; "stopped" keeps a late answer from covering that.
+    var foreground by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
+    var stopped by remember { mutableStateOf(false) }
+    var runStartedAt by remember { mutableLongStateOf(0L) }
     var undoAction by remember { mutableStateOf<(() -> Unit)?>(null) }
 
     // "More" of a paginated API: asks for the next items and adds them to the answer. A new line ends it.
@@ -398,8 +410,32 @@ private fun CommandScreen(onClose: () -> Unit) {
     val top = analysis.suggestions.getOrNull(sel)
     val ghost = if (done == null) CommandEngine.ghost(text, top) else ""
 
+    val runningLabel = stringResource(R.string.command_running)
+
+    fun show(message: String, kind: Outcome = Outcome.DONE, hint: Int? = null) {
+        if (stopped) return
+        done = message
+        outcome = kind
+        doneHint = hint
+        if (kind != Outcome.RUNNING && message.isNotBlank()) last = field.text.trim() to message
+    }
+
+    /** While a command works in the bar, the preview says so and counts the time. */
+    fun running() {
+        stopped = false
+        runStartedAt = System.currentTimeMillis()
+        show(runningLabel, Outcome.RUNNING)
+    }
+
+    /** Runs [block] as the command of the bar that [PARAR] can stop. */
+    fun launchRun(block: suspend kotlinx.coroutines.CoroutineScope.() -> Unit) {
+        foreground = scope.launch(block = block)
+    }
+
     fun setText(value: String, cursor: Int = value.length) {
         speedJob?.cancel()
+        stopped = false
+        doneHint = null
         field = TextFieldValue(value, TextRange(cursor))
         selected = 0
         done = null
@@ -418,7 +454,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                     val brought = steps.more(step, st)
                     // The line changed while it was asked: the answer is no longer on screen.
                     if (version != lineVersion) return@launch
-                    done = done.orEmpty() + "\n" + brought.text
+                    show(done.orEmpty() + "\n" + brought.text)
                     offerMore(step, brought.more)
                 }
             }
@@ -434,6 +470,26 @@ private fun CommandScreen(onClose: () -> Unit) {
 
     val executedLabel = stringResource(R.string.command_executed)
     val failedLabel = stringResource(R.string.command_failed)
+    val stoppedLabel = stringResource(R.string.command_stopped)
+    val saveFailedLabel = stringResource(R.string.command_failed_save)
+    val openFailedLabel = stringResource(R.string.command_failed_open)
+
+    /** Stops the command working in the bar and says so; whatever it answers later is dropped. */
+    fun stopRun() {
+        stopped = true
+        speedJob?.cancel()
+        foreground?.cancel()
+        foreground = null
+        if (aiBusy) {
+            aiBusy = false
+            aiPartial = null
+            if (aiTurns.lastOrNull()?.fromUser == true) aiTurns = aiTurns.dropLast(1)
+        }
+        liveRun = null
+        done = stoppedLabel
+        outcome = Outcome.WARNING
+        doneHint = null
+    }
 
     fun record(action: CommandAction, command: String) {
         // "!!" is not kept: the command it repeated stays the last one.
@@ -458,7 +514,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                 val proposal = AiPrompts.command(reply.text)
                 val line = proposal.command
                 if (line == null) {
-                    done = proposal.note.ifEmpty { context.getString(R.string.cmd_ai_no_command) }
+                    show(proposal.note.ifEmpty { context.getString(R.string.cmd_ai_no_command) }, Outcome.WARNING)
                 } else {
                     // The command waits on the line with its preview; Enter runs it.
                     setText(line)
@@ -471,9 +527,9 @@ private fun CommandScreen(onClose: () -> Unit) {
                 // Asked for a theme in other words ("ia create theme for halloween"), the AI sends one: it is reviewed as a theme.
                 val theme = LauncherAiPrompts.createdTheme(reply.text)
                 if (theme != null) {
-                    if (ThemeStore.review(context, ThemeImages.embed(context, theme.first))) onClose() else done = failedLabel
+                    if (ThemeStore.review(context, ThemeImages.embed(context, theme.first))) onClose() else show(openFailedLabel, Outcome.FAILED, R.string.command_hint_open)
                 } else if (pack == null) {
-                    done = context.getString(R.string.cmd_ai_create_failed)
+                    show(context.getString(R.string.cmd_ai_create_failed), Outcome.FAILED)
                 } else {
                     // The same import screen as a pack received from somebody: nothing is added unseen.
                     val opened = runCatching {
@@ -487,28 +543,28 @@ private fun CommandScreen(onClose: () -> Unit) {
                                 .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION),
                         )
                     }.isSuccess
-                    if (opened) onClose() else done = failedLabel
+                    if (opened) onClose() else show(openFailedLabel, Outcome.FAILED, R.string.command_hint_open)
                 }
             }
 
             AiMode.THEME -> {
                 val theme = LauncherAiPrompts.theme(reply.text)
                 when {
-                    theme == null -> done = context.getString(R.string.cmd_ai_theme_failed)
+                    theme == null -> show(context.getString(R.string.cmd_ai_theme_failed), Outcome.FAILED)
 
                     // The same screen as a theme received from somebody: nothing changes unseen.
                     ThemeStore.review(context, ThemeImages.embed(context, theme.first)) -> onClose()
 
-                    else -> done = failedLabel
+                    else -> show(openFailedLabel, Outcome.FAILED, R.string.command_hint_open)
                 }
             }
 
             AiMode.FOLDERS -> {
                 val plan = AiFolders.plan(reply.text, apps, folders, action.force)
                 when {
-                    plan == null -> done = context.getString(R.string.cmd_ai_folders_failed)
+                    plan == null -> show(context.getString(R.string.cmd_ai_folders_failed), Outcome.FAILED)
 
-                    plan.isEmpty -> done = plan.note.ifEmpty { context.getString(R.string.cmd_ai_folders_none) }
+                    plan.isEmpty -> show(plan.note.ifEmpty { context.getString(R.string.cmd_ai_folders_none) })
 
                     // The plan waits on screen: nothing changes until APPLY.
                     else -> {
@@ -537,8 +593,17 @@ private fun CommandScreen(onClose: () -> Unit) {
         }
     }
 
+    // The command working in the bar counts its time, like the ones sent to the background.
+    LaunchedEffect(outcome == Outcome.RUNNING && done != null) {
+        while (outcome == Outcome.RUNNING && done != null) {
+            clockNow = System.currentTimeMillis()
+            kotlinx.coroutines.delay(200)
+        }
+    }
+
     /** Shows how a run ended and takes it off the list: the answer, the line it suggests, or why it failed. */
     fun adopt(job: BackgroundJob) {
+        stopped = false
         BackgroundRuns.dismiss(job.id)
         BackgroundRunService.clearDone(context, job.id)
         val ask = job.ai
@@ -553,7 +618,7 @@ private fun CommandScreen(onClose: () -> Unit) {
             setText(prefill)
             aiNote = prefill to job.result.orEmpty()
         } else {
-            done = job.result.orEmpty().ifBlank { executedLabel }
+            show(job.result.orEmpty().ifBlank { executedLabel }, if (job.phase == RunPhase.FAILED) Outcome.FAILED else Outcome.DONE)
         }
     }
 
@@ -585,8 +650,8 @@ private fun CommandScreen(onClose: () -> Unit) {
         if (action.mode == AiMode.CHAT) aiTurns = turns
         folderPlan = null
         aiBusy = true
-        done = context.getString(R.string.command_running)
-        scope.launch {
+        running()
+        launchRun {
             val folders = if (action.mode == AiMode.FOLDERS) runCatching { FolderOrganizer.existing(context) }.getOrDefault(emptyList()) else emptyList()
             val now = java.time.ZonedDateTime.now()
             val aiContext = AiContext(
@@ -617,8 +682,8 @@ private fun CommandScreen(onClose: () -> Unit) {
             aiPartial = null
             val reply = result.getOrElse { error ->
                 if (action.mode == AiMode.CHAT) aiTurns = turns.dropLast(1)
-                done = AiClient.describe(context, error)
-                return@launch
+                show(AiClient.describe(context, error), Outcome.FAILED)
+                return@launchRun
             }
             applyAiReply(action, turns, reply, folders)
         }
@@ -630,7 +695,7 @@ private fun CommandScreen(onClose: () -> Unit) {
     /** The end of a command that went through [steps]: its text, or why it failed, and then its action. */
     fun finish(result: StepResult, failure: () -> String = { result.failure() }) {
         if (!result.ok) {
-            done = failure()
+            show(failure(), Outcome.FAILED)
             return
         }
         val action = result.action
@@ -638,7 +703,7 @@ private fun CommandScreen(onClose: () -> Unit) {
             onStepAction(action)
             return
         }
-        done = if (result.text != null || result.data != null) result.shown() else executedLabel
+        show(if (result.text != null || result.data != null) result.shown() else executedLabel)
     }
 
     fun commit(action: CommandAction, command: String) {
@@ -653,7 +718,7 @@ private fun CommandScreen(onClose: () -> Unit) {
             is CommandAction.AiSetup -> {
                 val before = AiStore.load(context)
                 if (!CommandExecutor.execute(context, action)) {
-                    done = failedLabel
+                    show(saveFailedLabel, Outcome.FAILED, R.string.command_hint_save)
                     return
                 }
                 extras = extras.copy(ai = AiStore.load(context)?.label)
@@ -661,10 +726,12 @@ private fun CommandScreen(onClose: () -> Unit) {
                 undoAction = {
                     AiStore.save(context, before)
                     extras = extras.copy(ai = before?.label)
-                    done = context.getString(R.string.cmd_pref_undo)
+                    show(context.getString(R.string.cmd_pref_undo))
                 }
-                done = AiStore.load(context)?.let { context.getString(CommandR.string.cmd_ai_setup_saved, it.label.uppercase()) }
-                    ?: context.getString(CommandR.string.cmd_ai_setup_removed)
+                show(
+                    AiStore.load(context)?.let { context.getString(CommandR.string.cmd_ai_setup_saved, it.label.uppercase()) }
+                        ?: context.getString(CommandR.string.cmd_ai_setup_removed),
+                )
                 return
             }
 
@@ -678,12 +745,18 @@ private fun CommandScreen(onClose: () -> Unit) {
             is CommandAction.SpeedTest -> {
                 if (speedJob?.isActive == true) return
                 record(action, command)
-                speedJob = scope.launch {
-                    val result = runCatching { SpeedTestRunner.run { r -> done = Speed.text(r) } }
-                    result.exceptionOrNull()?.takeIf { it !is kotlinx.coroutines.CancellationException }?.let {
-                        done = context.getString(R.string.cmd_fast_failed, it.message ?: it.javaClass.simpleName)
+                running()
+                launchRun {
+                    val result = runCatching { SpeedTestRunner.run { r -> show(Speed.text(r), Outcome.RUNNING) } }
+                    val error = result.exceptionOrNull()
+                    when {
+                        error == null -> outcome = Outcome.DONE
+
+                        error !is kotlinx.coroutines.CancellationException ->
+                            show(context.getString(R.string.cmd_fast_failed, error.message ?: error.javaClass.simpleName), Outcome.FAILED)
                     }
                 }
+                speedJob = foreground
                 return
             }
 
@@ -692,41 +765,41 @@ private fun CommandScreen(onClose: () -> Unit) {
                 record(action, command)
                 val code = QrCode.encode(action.content)
                 qr = code
-                done = context.getString(if (code != null) CommandR.string.cmd_qr_shown else CommandR.string.cmd_qr_failed)
+                show(context.getString(if (code != null) CommandR.string.cmd_qr_shown else CommandR.string.cmd_qr_failed), if (code != null) Outcome.DONE else Outcome.FAILED)
                 return
             }
 
             // Fetched here and shown in the preview, like the ping output.
             is CommandAction.Weather -> {
                 record(action, command)
-                done = context.getString(R.string.command_running)
-                scope.launch { done = withContext(Dispatchers.IO) { Weather.run(action) } }
+                running()
+                launchRun { show(withContext(Dispatchers.IO) { Weather.run(action) }) }
                 return
             }
 
             is CommandAction.Custom -> if (action.action.kind == ActionKind.API) {
                 record(action, command)
-                done = context.getString(R.string.command_running)
+                running()
                 val version = lineVersion
-                scope.launch {
+                launchRun {
                     val result = steps.run(action, null)
-                    done = result.shown()
+                    show(result.shown())
                     if (version == lineVersion) offerMore(action, result.more)
                 }
                 return
             } else if (action.action.kind == ActionKind.SCRIPT) {
                 record(action, command)
-                done = context.getString(R.string.command_running)
-                scope.launch { finish(steps.run(action, null)) }
+                running()
+                launchRun { finish(steps.run(action, null)) }
                 return
             }
 
             // Run here, step by step, so "|" passes outputs on and requests and scripts show their answer.
             is CommandAction.Chain -> {
                 record(action, command)
-                done = context.getString(R.string.command_running)
+                running()
                 val version = lineVersion
-                scope.launch {
+                launchRun {
                     // The last command that ran as it ran (its text filled from the pipe), so "more" can ask it for the next page.
                     var lastRan: CommandAction? = null
                     val outcome = ChainRunner.run(action) { step, stdin ->
@@ -735,7 +808,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                     }
                     if (!outcome.ok) {
                         finish(outcome.result) { ChainRunner.failure(action, outcome) }
-                        return@launch
+                        return@launchRun
                     }
                     if (action.steps.any { it is CommandAction.Schedule || it is CommandAction.CancelJob || it is CommandAction.AddNote || it is CommandAction.SetVariable || it is CommandAction.UnsetVariable || it is CommandAction.SetAdvancedMode }) {
                         reloadExtras()
@@ -745,13 +818,13 @@ private fun CommandScreen(onClose: () -> Unit) {
                         result.action != null -> finish(result)
 
                         result.text != null || result.data != null -> {
-                            done = result.shown()
+                            show(result.shown())
                             val paged = lastRan as? CommandAction.Custom
                             if (version == lineVersion && paged != null && paged.action.kind == ActionKind.API) offerMore(paged, result.more)
                         }
 
                         else -> {
-                            done = executedLabel
+                            show(executedLabel)
                             onClose()
                         }
                     }
@@ -764,7 +837,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                 val pack = BundledPacks.of(action.id)
                 val skipped = CommandExecutor.installPack(context, action.id)
                 if (pack == null || skipped == null) {
-                    done = failedLabel
+                    show(saveFailedLabel, Outcome.FAILED, R.string.command_hint_save)
                     return
                 }
                 record(action, command)
@@ -772,32 +845,34 @@ private fun CommandScreen(onClose: () -> Unit) {
                 // A pack brings its providers too: the commands that use them work right away.
                 extras = with(CommandSources) { extras.withProviders(context) }
                 val letters = custom.filter { it.pack == pack.id }.joinToString(" · ") { it.letter }
-                done = if (skipped == 0) {
-                    context.getString(CommandR.string.cmd_pack_done, pack.name.uppercase(), letters)
-                } else {
-                    context.getString(CommandR.string.cmd_pack_done_skipped, pack.name.uppercase(), letters, skipped)
-                }
+                show(
+                    if (skipped == 0) {
+                        context.getString(CommandR.string.cmd_pack_done, pack.name.uppercase(), letters)
+                    } else {
+                        context.getString(CommandR.string.cmd_pack_done_skipped, pack.name.uppercase(), letters, skipped)
+                    },
+                )
                 return
             }
 
             is CommandAction.RemovePack -> {
                 if (!CommandExecutor.execute(context, action)) {
-                    done = failedLabel
+                    show(saveFailedLabel, Outcome.FAILED, R.string.command_hint_save)
                     return
                 }
                 record(action, command)
                 custom = CustomActionStore.load(context)
                 // A pack brings its providers too: the commands that use them work right away.
                 extras = with(CommandSources) { extras.withProviders(context) }
-                done = context.getString(CommandR.string.cmd_pack_removed, BundledPacks.of(action.id)?.name?.uppercase() ?: action.id)
+                show(context.getString(CommandR.string.cmd_pack_removed, BundledPacks.of(action.id)?.name?.uppercase() ?: action.id))
                 return
             }
 
             // The output shows in the preview; the bar stays open to read it.
             is CommandAction.Ping -> {
                 record(action, command)
-                done = context.getString(R.string.command_running)
-                scope.launch { done = withContext(Dispatchers.IO) { CommandSources.ping(action.host) } }
+                running()
+                launchRun { show(withContext(Dispatchers.IO) { CommandSources.ping(action.host) }) }
                 return
             }
 
@@ -805,7 +880,7 @@ private fun CommandScreen(onClose: () -> Unit) {
             is CommandAction.SetVariable, is CommandAction.UnsetVariable -> {
                 val before = UserVariableStore.load(context)
                 if (!CommandExecutor.execute(context, action)) {
-                    done = failedLabel
+                    show(saveFailedLabel, Outcome.FAILED, R.string.command_hint_save)
                     return
                 }
                 val after = UserVariableStore.load(context)
@@ -814,32 +889,34 @@ private fun CommandScreen(onClose: () -> Unit) {
                 undoAction = {
                     UserVariableStore.save(context, before)
                     extras = extras.copy(variables = before)
-                    done = context.getString(R.string.cmd_pref_undo)
+                    show(context.getString(R.string.cmd_pref_undo))
                 }
-                done = when (action) {
-                    is CommandAction.SetVariable -> context.getString(CommandR.string.cmd_variable_saved, action.name, action.value)
-                    is CommandAction.UnsetVariable -> context.getString(CommandR.string.cmd_variable_removed, action.name)
-                    else -> executedLabel
-                }
+                show(
+                    when (action) {
+                        is CommandAction.SetVariable -> context.getString(CommandR.string.cmd_variable_saved, action.name, action.value)
+                        is CommandAction.UnsetVariable -> context.getString(CommandR.string.cmd_variable_removed, action.name)
+                        else -> executedLabel
+                    },
+                )
                 return
             }
 
             is CommandAction.SetAdvancedMode -> {
                 if (!CommandExecutor.execute(context, action)) {
-                    done = failedLabel
+                    show(saveFailedLabel, Outcome.FAILED, R.string.command_hint_save)
                     return
                 }
                 record(action, command)
                 extras = extras.copy(advancedMode = AdvancedMode.isOn)
                 setText("")
-                done = DevCommand.done(action, AdvancedMode.isOn)
+                show(DevCommand.done(action, AdvancedMode.isOn))
                 return
             }
 
             is CommandAction.ClearHistory -> {
                 clearHistory()
                 setText("")
-                done = context.getString(CommandR.string.cmd_history_cleared)
+                show(context.getString(CommandR.string.cmd_history_cleared))
                 return
             }
 
@@ -848,7 +925,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                 val oldAliases = aliases
                 val ok = CommandExecutor.execute(context, action)
                 if (!ok) {
-                    done = failedLabel
+                    show(saveFailedLabel, Outcome.FAILED, R.string.command_hint_save)
                     return
                 }
                 record(action, command)
@@ -862,9 +939,9 @@ private fun CommandScreen(onClose: () -> Unit) {
                     AliasStore.save(context, oldAliases)
                     custom = CustomActionStore.load(context)
                     aliases = AliasStore.load(context)
-                    done = context.getString(R.string.cmd_pref_undo)
+                    show(context.getString(R.string.cmd_pref_undo))
                 }
-                done = "✓ " + context.getString(CommandR.string.cmd_alias_saved, canonical)
+                show("✓ " + context.getString(CommandR.string.cmd_alias_saved, canonical))
                 return
             }
 
@@ -874,7 +951,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                 val name = action.name.lowercase()
                 val ok = CommandExecutor.execute(context, action)
                 if (!ok) {
-                    done = failedLabel
+                    show(saveFailedLabel, Outcome.FAILED, R.string.command_hint_save)
                     return
                 }
                 record(action, command)
@@ -887,9 +964,9 @@ private fun CommandScreen(onClose: () -> Unit) {
                     AliasStore.save(context, oldAliases)
                     custom = CustomActionStore.load(context)
                     aliases = AliasStore.load(context)
-                    done = context.getString(R.string.cmd_pref_undo)
+                    show(context.getString(R.string.cmd_pref_undo))
                 }
-                done = context.getString(CommandR.string.cmd_unalias_done, name)
+                show(context.getString(CommandR.string.cmd_unalias_done, name))
                 return
             }
 
@@ -897,7 +974,7 @@ private fun CommandScreen(onClose: () -> Unit) {
         }
         val ok = CommandExecutor.execute(context, action)
         if (!ok) {
-            done = failedLabel
+            show(failedLabel, Outcome.FAILED, R.string.command_failed_hint)
             return
         }
         record(action, command)
@@ -906,32 +983,32 @@ private fun CommandScreen(onClose: () -> Unit) {
             scope.launch { reloadExtras() }
         }
         if (action is CommandAction.Calc) {
-            done = context.getString(R.string.command_copied, action.result)
+            show(context.getString(R.string.command_copied, action.result))
         } else if (action is CommandAction.Copy) {
-            done = context.getString(R.string.command_copied, action.text.lineSequence().first())
+            show(context.getString(R.string.command_copied, action.text.lineSequence().first()))
         } else if (action is CommandAction.Schedule) {
             val problem = CommandScheduler.notificationProblem(context, action.job)
             val exactAlarms = CommandScheduler.exactAlarmRequest(context, action.job)
             when {
                 // The bar stays to say it: the job is saved but would come and go unseen.
-                problem != null -> done = context.getString(problem)
+                problem != null -> show(context.getString(problem), Outcome.WARNING)
 
                 exactAlarms != null -> {
-                    done = context.getString(R.string.cmd_exact_alarm_hint)
+                    show(context.getString(R.string.cmd_exact_alarm_hint), Outcome.WARNING)
                     runCatching { context.startActivity(exactAlarms.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
                     onClose()
                 }
 
                 else -> {
-                    done = executedLabel
+                    show(executedLabel)
                     onClose()
                 }
             }
         } else if (action is CommandAction.SplitScreen) {
             // The bar stays a moment to open the first app from inside the split; it closes itself.
-            done = executedLabel
+            show(executedLabel)
         } else {
-            done = executedLabel
+            show(executedLabel)
             onClose()
         }
     }
@@ -968,6 +1045,7 @@ private fun CommandScreen(onClose: () -> Unit) {
     }
 
     fun runAction(action: CommandAction, command: String) {
+        stopped = false
         if (action is CommandAction.Call && !CommandExecutor.hasCallPermission(context)) {
             pendingAction = action
             pendingCommand = command
@@ -990,22 +1068,22 @@ private fun CommandScreen(onClose: () -> Unit) {
     onStepAction = { stepAction ->
         val problem = StepActions.problem(stepAction, runDepth)
         when {
-            problem != null -> done = problem
+            problem != null -> show(problem, Outcome.FAILED)
 
             stepAction is StepAction.Open -> {
                 val ok = runCatching {
                     context.startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(stepAction.uri)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
                 }.isSuccess
-                if (ok) onClose() else done = failedLabel
+                if (ok) onClose() else show(failedLabel, Outcome.FAILED, R.string.command_failed_hint)
             }
 
             stepAction is StepAction.Copy -> {
                 CommandExecutor.execute(context, CommandAction.Copy(stepAction.text))
-                done = context.getString(R.string.command_copied, stepAction.text.lineSequence().first())
+                show(context.getString(R.string.command_copied, stepAction.text.lineSequence().first()))
             }
 
             stepAction is StepAction.Share -> {
-                if (CommandExecutor.execute(context, CommandAction.ShareNotes(stepAction.text))) onClose() else done = failedLabel
+                if (CommandExecutor.execute(context, CommandAction.ShareNotes(stepAction.text))) onClose() else show(failedLabel, Outcome.FAILED, R.string.command_failed_hint)
             }
 
             stepAction is StepAction.Run -> {
@@ -1013,7 +1091,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                 val next = CommandEngine.analyze(line, apps, contacts, granted, custom, aliases, extras.copy(history = history))
                 val nextAction = next.action
                 when {
-                    nextAction == null -> done = next.preview.ifBlank { failedLabel }
+                    nextAction == null -> show(next.preview.ifBlank { failedLabel }, Outcome.FAILED, R.string.command_failed_hint.takeIf { next.preview.isBlank() })
 
                     // Confirmations stay: a request that writes or sends what the user copied waits for Enter.
                     next.tone == Tone.WARN -> setText(line)
@@ -1565,7 +1643,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                                 // A tap on an answer copies it.
                                 modifier = Modifier.fillMaxWidth().clickable(enabled = !turn.fromUser) {
                                     CommandExecutor.execute(context, CommandAction.Copy(turn.text))
-                                    done = context.getString(R.string.command_copied, turn.text.lineSequence().first())
+                                    show(context.getString(R.string.command_copied, turn.text.lineSequence().first()))
                                 },
                             )
                         }
@@ -1659,12 +1737,12 @@ private fun CommandScreen(onClose: () -> Unit) {
                         }
                         FKey(stringResource(R.string.cmd_ai_folders_apply), phosphor, Modifier.weight(1f)) {
                             folderPlan = null
-                            done = context.getString(R.string.command_running)
-                            scope.launch {
+                            running()
+                            launchRun {
                                 val changed = runCatching { FolderOrganizer.apply(context, plan) }
-                                done = changed.fold(
-                                    { context.getString(R.string.cmd_ai_folders_done, it) },
-                                    { failedLabel },
+                                changed.fold(
+                                    { show(context.getString(R.string.cmd_ai_folders_done, it)) },
+                                    { show(saveFailedLabel, Outcome.FAILED, R.string.command_hint_save) },
                                 )
                             }
                         }
@@ -1683,20 +1761,41 @@ private fun CommandScreen(onClose: () -> Unit) {
             // Preview.
             val preview: @Composable () -> Unit = {
                 val live = runs.firstOrNull { it.running }?.takeIf { done == null && text.isBlank() }
+                // With nothing typed, the answer of the last command is there to read again.
+                val lastShown = last?.takeIf { done == null && live == null && text.isBlank() }
                 val previewTitle = when {
                     live != null -> BackgroundRules.spinner(clockNow).toString() + " " + stringResource(R.string.command_running) + " " + BackgroundRules.clock(live.elapsed(clockNow))
-                    done == failedLabel -> stringResource(R.string.command_failed_title)
+
+                    lastShown != null -> stringResource(R.string.command_last_title) + " · " + lastShown.first.take(32)
+
+                    done != null && outcome == Outcome.RUNNING -> BackgroundRules.spinner(clockNow).toString() + " " + stringResource(R.string.command_running) + " " + BackgroundRules.clock((clockNow - runStartedAt).coerceAtLeast(0))
+
+                    done != null && outcome == Outcome.FAILED -> stringResource(R.string.command_failed_title)
+
+                    // Not only the color tells a warning from a success: it has its own title and mark.
+                    done != null && outcome == Outcome.WARNING -> "! " + stringResource(R.string.command_warning_title)
+
                     done != null -> stringResource(R.string.command_executed)
+
                     else -> analysis.previewTitle
                 }
                 val previewText = done ?: live?.let { job ->
                     listOf(job.command, BackgroundRules.bar(job), job.partial?.takeLast(300).orEmpty()).filter { it.isNotBlank() }.joinToString("\n")
-                } ?: analysis.preview
+                } ?: lastShown?.second ?: analysis.preview
                 val previewColor = when {
-                    done == failedLabel -> Danger
-                    done != null -> phosphor
+                    lastShown != null -> dim
+
+                    done != null -> when (outcome) {
+                        Outcome.DONE -> phosphor
+                        Outcome.RUNNING -> dim
+                        Outcome.WARNING -> Amber
+                        Outcome.FAILED -> Danger
+                    }
+
                     analysis.tone == Tone.OK -> phosphor
+
                     analysis.tone == Tone.IDLE -> dim
+
                     else -> Danger
                 }
                 // The panel runs the line only while it is a preview. Once the answer is on screen a touch
@@ -1716,7 +1815,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                         .then(
                             if (announce) {
                                 Modifier.semantics {
-                                    liveRegion = if (done == failedLabel) LiveRegionMode.Assertive else LiveRegionMode.Polite
+                                    liveRegion = if (outcome == Outcome.FAILED) LiveRegionMode.Assertive else LiveRegionMode.Polite
                                 }
                             } else {
                                 Modifier
@@ -1724,7 +1823,16 @@ private fun CommandScreen(onClose: () -> Unit) {
                         )
                         .padding(horizontal = 10.dp, vertical = 7.dp),
                 ) {
-                    Label(previewTitle, if (done == failedLabel) Danger else dim, 10.sp)
+                    Label(
+                        previewTitle,
+                        when {
+                            done == null -> dim
+                            outcome == Outcome.FAILED -> Danger
+                            outcome == Outcome.WARNING -> Amber
+                            else -> dim
+                        },
+                        10.sp,
+                    )
                     // Each line of the answer is a paragraph whose wrapped part is indented, so a long
                     // line ("Title (2024) · ★ 5,7 · HBO Max") is not taken for two items.
                     val previewLines = remember(previewText) {
@@ -1754,21 +1862,30 @@ private fun CommandScreen(onClose: () -> Unit) {
                     }
                     // The answer can be selected and copied; the preview stays a plain button face.
                     if (done != null) SelectionContainer { answer() } else answer()
-                    val failedWithoutReason = done == failedLabel
-                    if (failedWithoutReason) {
+                    val hint = doneHint.takeIf { done != null && outcome == Outcome.FAILED }
+                    if (hint != null) {
                         Text(
-                            stringResource(R.string.command_failed_hint),
+                            stringResource(hint),
                             color = dim,
                             fontFamily = mono(),
                             fontSize = 11.sp,
                             modifier = Modifier.padding(top = 4.dp),
                         )
                     }
-                    val undo = undoAction
                     val more = loadMore
-                    if (done != null) {
+                    val undo = undoAction
+                    val finished = done != null && outcome != Outcome.RUNNING
+                    val working = done != null && outcome == Outcome.RUNNING && foreground?.isActive == true
+                    if (working || finished || lastShown != null) {
                         FlowRow(Modifier.fillMaxWidth().padding(top = 2.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            if (more != null) {
+                            if (working) {
+                                ActionLink(
+                                    "[" + stringResource(R.string.command_stop).uppercase() + "]",
+                                    stringResource(R.string.command_stop_label),
+                                    Amber,
+                                ) { stopRun() }
+                            }
+                            if (finished && more != null) {
                                 ActionLink(
                                     "[" + stringResource(CommandR.string.cmd_api_more).uppercase() + "]",
                                     stringResource(R.string.command_more_label),
@@ -1776,7 +1893,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                                     more,
                                 )
                             }
-                            if (undo != null) {
+                            if (finished && undo != null) {
                                 ActionLink(
                                     "[" + stringResource(R.string.cmd_pref_undo).uppercase() + "]",
                                     stringResource(R.string.command_undo_label),
@@ -1786,7 +1903,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                                     undoAction = null
                                 }
                             }
-                            if (failedWithoutReason) {
+                            if (finished && hint != null) {
                                 ActionLink(
                                     "[" + stringResource(R.string.command_edit).uppercase() + "]",
                                     stringResource(R.string.command_edit_label),
@@ -1796,21 +1913,31 @@ private fun CommandScreen(onClose: () -> Unit) {
                                     runCatching { focus.requestFocus() }
                                 }
                             }
-                            if (analysis.action != null) {
+                            if (finished && analysis.action != null) {
                                 ActionLink(
                                     "[" + stringResource(R.string.command_repeat).uppercase() + "]",
                                     stringResource(R.string.command_repeat_label),
                                     phosphor,
                                 ) { run() }
                             }
-                            ActionLink(
-                                "[" + stringResource(R.string.command_copy).uppercase() + "]",
-                                stringResource(R.string.command_copy_label),
-                                phosphor,
-                            ) {
-                                val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                                clipboard.setPrimaryClip(android.content.ClipData.newPlainText("", done.orEmpty()))
-                                android.widget.Toast.makeText(context, R.string.command_result_copied, android.widget.Toast.LENGTH_SHORT).show()
+                            if (lastShown != null) {
+                                ActionLink(
+                                    "[" + stringResource(R.string.command_reuse).uppercase() + "]",
+                                    stringResource(R.string.command_reuse_label),
+                                    phosphor,
+                                ) { setText(lastShown.first) }
+                            }
+                            if (finished || lastShown != null) {
+                                val copied = lastShown?.second ?: done.orEmpty()
+                                ActionLink(
+                                    "[" + stringResource(R.string.command_copy).uppercase() + "]",
+                                    stringResource(R.string.command_copy_label),
+                                    phosphor,
+                                ) {
+                                    val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                                    clipboard.setPrimaryClip(android.content.ClipData.newPlainText("", copied))
+                                    android.widget.Toast.makeText(context, R.string.command_result_copied, android.widget.Toast.LENGTH_SHORT).show()
+                                }
                             }
                         }
                     }

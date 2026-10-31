@@ -60,9 +60,20 @@
     <string name="command_edit">editar</string>
     <string name="command_edit_label">Editar o comando</string>
     <string name="command_repeat">repetir</string>
-    <string name="command_repeat_label">Executar o comando de novo</string>
     <string name="command_copy">copiar</string>
     <string name="command_copy_label">Copiar o resultado</string>
     <string name="command_result_copied">Resultado copiado</string>
     <string name="command_failed_hint">Revise o comando. Se ele abre um app, confira se o app está instalado e ativado.</string>
+    <string name="command_repeat_label">Repetir o comando</string>
+    <string name="command_warning_title">AVISO</string>
+    <string name="command_stop">parar</string>
+    <string name="command_stop_label">Parar o comando</string>
+    <string name="command_stopped">PARADO</string>
+    <string name="command_last_title">ÚLTIMO RESULTADO</string>
+    <string name="command_reuse">reusar</string>
+    <string name="command_reuse_label">Reusar a linha de comando</string>
+    <string name="command_failed_save">NÃO FOI POSSÍVEL SALVAR A ALTERAÇÃO</string>
+    <string name="command_failed_open">NÃO FOI POSSÍVEL ABRIR A TELA DE IMPORTAÇÃO</string>
+    <string name="command_hint_save">Nada foi alterado. Tente de novo.</string>
+    <string name="command_hint_open">Tente de novo, ou importe por arquivo ou pela área de transferência.</string>
 </resources>

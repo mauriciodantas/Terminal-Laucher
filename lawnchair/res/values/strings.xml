@@ -1893,9 +1893,20 @@
     <string name="command_edit">edit</string>
     <string name="command_edit_label">Edit the command</string>
     <string name="command_repeat">repeat</string>
-    <string name="command_repeat_label">Run the command again</string>
     <string name="command_copy">copy</string>
     <string name="command_copy_label">Copy the result</string>
     <string name="command_result_copied">Result copied</string>
     <string name="command_failed_hint">Check the command. If it opens an app, make sure the app is installed and enabled.</string>
+    <string name="command_repeat_label">Repeat the command</string>
+    <string name="command_warning_title">WARNING</string>
+    <string name="command_stop">stop</string>
+    <string name="command_stop_label">Stop the command</string>
+    <string name="command_stopped">STOPPED</string>
+    <string name="command_last_title">LAST RESULT</string>
+    <string name="command_reuse">reuse</string>
+    <string name="command_reuse_label">Reuse the command line</string>
+    <string name="command_failed_save">COULD NOT SAVE THE CHANGE</string>
+    <string name="command_failed_open">COULD NOT OPEN THE IMPORT SCREEN</string>
+    <string name="command_hint_save">Nothing was changed. Try again.</string>
+    <string name="command_hint_open">Try again, or import from a file or the clipboard.</string>
 </resources>
