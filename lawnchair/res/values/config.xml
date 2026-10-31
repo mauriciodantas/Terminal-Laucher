@@ -143,7 +143,7 @@
     <bool name="config_default_enable_font_selection">true</bool>
     <bool name="config_default_enable_smartspace_calendar_selection">true</bool>
     <bool name="config_default_dts2">true</bool>
-    <bool name="config_default_auto_show_keyboard_in_drawer">false</bool>
+    <bool name="config_default_auto_show_keyboard_in_drawer">true</bool>
     <bool name="config_default_show_icon_labels_on_home_screen">true</bool>
     <bool name="config_default_show_icon_labels_in_drawer">true</bool>
     <bool name="config_default_enable_fuzzy_search">false</bool>
