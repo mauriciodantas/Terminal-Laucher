@@ -24,6 +24,7 @@ sealed interface SearchResult {
     data class Calculation(val data: app.lawnchair.search.algorithms.data.Calculation) : SearchResult
     sealed interface Action : SearchResult {
         data class MarketSearch(val query: String) : Action
+        data class Command(val line: String, val preview: String, val runnable: Boolean) : Action
         data class WebSearch(
             val query: String,
             val providerName: String,

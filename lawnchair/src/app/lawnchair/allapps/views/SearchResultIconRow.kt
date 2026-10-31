@@ -10,6 +10,7 @@ import androidx.core.view.isVisible
 import app.lawnchair.allapps.views.SearchResultView.Companion.FLAG_HIDE_SUBTITLE
 import app.lawnchair.font.FontManager
 import app.lawnchair.search.adapter.CALCULATOR
+import app.lawnchair.search.adapter.COMMAND_BAR
 import app.lawnchair.search.adapter.HISTORY
 import app.lawnchair.search.adapter.SETTINGS
 import app.lawnchair.search.adapter.SearchTargetCompat
@@ -98,6 +99,8 @@ class SearchResultIconRow(context: Context, attrs: AttributeSet?) :
             target.resultType == SearchTargetCompat.RESULT_TYPE_SETTING_TILE &&
             target.packageName == SETTINGS
 
+        val isCommand = target.packageName == COMMAND_BAR
+
         val isCalculator = target.layoutType == LayoutType.CALCULATOR &&
             target.resultType == SearchTargetCompat.RESULT_TYPE_CALCULATOR &&
             target.packageName == CALCULATOR
@@ -124,7 +127,7 @@ class SearchResultIconRow(context: Context, attrs: AttributeSet?) :
                 target.searchAction?.intent?.let { intent -> handleSearchTargetClick(context, intent) }
             }
         }
-        if (isSuggestion || isSetting) {
+        if (isSuggestion || isSetting || isCommand) {
             layoutParams.height = resources.getDimensionPixelSize(R.dimen.search_result_small_row_height)
             setOnClickListener {
                 target.searchAction?.intent?.let { intent -> handleSearchTargetClick(context, intent) }

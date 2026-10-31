@@ -1859,4 +1859,5 @@
     <string name="glance_preset_centered_desc">Everything centered, rounded panel</string>
     <string name="glance_preset_minimal">Minimal</string>
     <string name="glance_preset_minimal_desc">Only clock, weekday and the target, to the right</string>
+    <string name="all_apps_search_run_command">Run as a command</string>
 </resources>

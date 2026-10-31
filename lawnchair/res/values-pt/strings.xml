@@ -52,4 +52,5 @@
     <string name="command_pin">Fixar na tela inicial</string>
     <string name="command_pin_unsupported">Este launcher não consegue fixar atalhos</string>
     <string name="screen_animation_custom">Do tema</string>
+    <string name="all_apps_search_run_command">Executar como comando</string>
 </resources>

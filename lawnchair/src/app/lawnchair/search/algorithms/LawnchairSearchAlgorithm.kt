@@ -127,7 +127,7 @@ sealed class LawnchairSearchAlgorithm(
         }
 
         // "N CORRESPONDÊNCIAS" line on top of the results, like a terminal query report.
-        val matches = filtered.count { it.layoutType != TEXT_HEADER && !it.isDivider }
+        val matches = filtered.count { it.layoutType != TEXT_HEADER && it.layoutType != SEARCH_SETTINGS && !it.isDivider }
         if (matches == 0) return items
         val label = if (matches == 1) {
             context.getString(R.string.nostromo_matches_one)

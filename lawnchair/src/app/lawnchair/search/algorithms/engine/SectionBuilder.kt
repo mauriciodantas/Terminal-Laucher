@@ -162,9 +162,13 @@ data object ActionsSectionBuilder : SectionBuilder {
     ): List<SearchTargetCompat> {
         val marketSearch = results.filterIsInstance<SearchResult.Action.MarketSearch>()
         val webSearch = results.filterIsInstance<SearchResult.Action.WebSearch>()
+        val command = results.filterIsInstance<SearchResult.Action.Command>()
 
         val targets = mutableListOf<SearchTargetCompat>()
 
+        command.firstOrNull()?.let {
+            targets.add(factory.createCommandActionTarget(it.line, it.preview, it.runnable))
+        }
         if (marketSearch.isNotEmpty()) {
             factory.createMarketSearchTarget(marketSearch.first().query)?.let {
                 targets.add(it)

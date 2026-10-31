@@ -20,6 +20,7 @@ import androidx.core.net.toUri
 import androidx.core.os.bundleOf
 import androidx.exifinterface.media.ExifInterface
 import app.lawnchair.allapps.views.SearchResultView
+import app.lawnchair.command.CommandActivity
 import app.lawnchair.search.algorithms.data.Calculation
 import app.lawnchair.search.algorithms.data.ContactInfo
 import app.lawnchair.search.algorithms.data.FileInfo
@@ -232,6 +233,18 @@ class SearchTargetFactory(
             MARKET_STORE,
             extras,
         )
+    }
+
+    /** Runs [line] as a command; its [preview] shows under the title, as in the command bar. */
+    fun createCommandActionTarget(line: String, preview: String, runnable: Boolean): SearchTargetCompat {
+        val id = "command:$line"
+        val bitmap = createSmallSearchResultBitmap(context, R.drawable.ic_terminal_monochrome)
+        val action = SearchActionCompat.Builder(id, "> $line")
+            .setIcon(Icon.createWithAdaptiveBitmap(bitmap))
+            .setSubtitle(preview.ifBlank { context.getString(R.string.all_apps_search_run_command) })
+            .setIntent(CommandActivity.intent(context, text = line, run = runnable))
+            .build()
+        return createSearchLinksTarget(id, action, COMMAND_BAR)
     }
 
     fun createWebSearchActionTarget(
@@ -549,6 +562,7 @@ object SettingsTarget {
 // keys used in `pkg` param
 const val START_PAGE = "startpage"
 const val MARKET_STORE = "marketstore"
+const val COMMAND_BAR = "commandbar"
 const val WEB_SUGGESTION = "suggestion"
 const val HEADER = "header"
 const val CONTACT = "contact"
