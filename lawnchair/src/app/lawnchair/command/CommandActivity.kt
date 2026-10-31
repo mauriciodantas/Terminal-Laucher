@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -40,6 +42,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -68,9 +71,14 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.ParagraphStyle
@@ -252,6 +260,7 @@ private fun onPhosphor(): Color {
     return remember { Color(LauncherGround.onAccent(context, PhosphorColorToken(1f).resolveColor(context))) }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun CommandScreen(onClose: () -> Unit) {
     val context = LocalContext.current
@@ -1676,6 +1685,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                 val live = runs.firstOrNull { it.running }?.takeIf { done == null && text.isBlank() }
                 val previewTitle = when {
                     live != null -> BackgroundRules.spinner(clockNow).toString() + " " + stringResource(R.string.command_running) + " " + BackgroundRules.clock(live.elapsed(clockNow))
+                    done == failedLabel -> stringResource(R.string.command_failed_title)
                     done != null -> stringResource(R.string.command_executed)
                     else -> analysis.previewTitle
                 }
@@ -1683,21 +1693,38 @@ private fun CommandScreen(onClose: () -> Unit) {
                     listOf(job.command, BackgroundRules.bar(job), job.partial?.takeLast(300).orEmpty()).filter { it.isNotBlank() }.joinToString("\n")
                 } ?: analysis.preview
                 val previewColor = when {
+                    done == failedLabel -> Danger
                     done != null -> phosphor
                     analysis.tone == Tone.OK -> phosphor
                     analysis.tone == Tone.IDLE -> dim
                     else -> Danger
                 }
+                // The panel runs the line only while it is a preview. Once the answer is on screen a touch
+                // does not run it again; [REPETIR] does, on purpose.
+                val tappable = analysis.action != null && done == null
+                val announce = done != null || live != null
+                val runLabel = stringResource(R.string.command_run_label)
+                val scroll = rememberScrollState()
+                val answerMax = (LocalConfiguration.current.screenHeightDp * 0.45f).coerceIn(140f, 360f).dp
                 Column(
                     Modifier
                         .padding(top = 8.dp)
                         .fillMaxWidth()
                         .heightIn(min = 52.dp)
                         .border(1.dp, line)
-                        .clickable(enabled = analysis.action != null) { run() }
+                        .clickable(enabled = tappable, onClickLabel = runLabel, role = Role.Button) { run() }
+                        .then(
+                            if (announce) {
+                                Modifier.semantics {
+                                    liveRegion = if (done == failedLabel) LiveRegionMode.Assertive else LiveRegionMode.Polite
+                                }
+                            } else {
+                                Modifier
+                            },
+                        )
                         .padding(horizontal = 10.dp, vertical = 7.dp),
                 ) {
-                    Label(previewTitle, dim, 10.sp)
+                    Label(previewTitle, if (done == failedLabel) Danger else dim, 10.sp)
                     // Each line of the answer is a paragraph whose wrapped part is indented, so a long
                     // line ("Title (2024) · ★ 5,7 · HBO Max") is not taken for two items.
                     val previewLines = remember(previewText) {
@@ -1707,47 +1734,85 @@ private fun CommandScreen(onClose: () -> Unit) {
                             }
                         }
                     }
-                    Text(
-                        previewLines,
-                        color = previewColor,
-                        fontFamily = mono(),
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.sp,
-                        letterSpacing = 0.9.sp,
-                        // A long answer (a list of 40 moves) scrolls instead of pushing the keys away,
-                        // and gives way to [MAIS] and [DESFAZER] when the keyboard leaves little room.
-                        modifier = Modifier
-                            .padding(top = 3.dp)
-                            .weight(1f, fill = false)
-                            .heightIn(max = 360.dp)
-                            .verticalScroll(rememberScrollState()),
-                    )
-                    val undo = undoAction
-                    if (undo != null) {
+                    val answer: @Composable () -> Unit = {
                         Text(
-                            text = "[" + stringResource(R.string.cmd_pref_undo).uppercase() + "]",
-                            color = Amber,
+                            previewLines,
+                            color = previewColor,
                             fontFamily = mono(),
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.sp,
+                            letterSpacing = 0.9.sp,
+                            // A long answer (a list of 40 moves) scrolls instead of pushing the keys away,
+                            // and gives way to the links under it when the keyboard leaves little room.
                             modifier = Modifier
-                                .padding(top = 4.dp)
-                                .clickable {
-                                    undo()
-                                    undoAction = null
-                                },
+                                .padding(top = 3.dp)
+                                .weight(1f, fill = false)
+                                .heightIn(max = answerMax)
+                                .scrollHint(scroll, phosphor.copy(alpha = 0.6f), ground)
+                                .verticalScroll(scroll),
                         )
                     }
-                    val more = loadMore
-                    if (done != null && more != null) {
+                    // The answer can be selected and copied; the preview stays a plain button face.
+                    if (done != null) SelectionContainer { answer() } else answer()
+                    val failedWithoutReason = done == failedLabel
+                    if (failedWithoutReason) {
                         Text(
-                            text = "[" + stringResource(CommandR.string.cmd_api_more).uppercase() + "]",
-                            color = Amber,
+                            stringResource(R.string.command_failed_hint),
+                            color = dim,
                             fontFamily = mono(),
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier
-                                .padding(top = 4.dp)
-                                .clickable { more() },
+                            fontSize = 11.sp,
+                            modifier = Modifier.padding(top = 4.dp),
                         )
+                    }
+                    val undo = undoAction
+                    val more = loadMore
+                    if (done != null) {
+                        FlowRow(Modifier.fillMaxWidth().padding(top = 2.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            if (more != null) {
+                                ActionLink(
+                                    "[" + stringResource(CommandR.string.cmd_api_more).uppercase() + "]",
+                                    stringResource(R.string.command_more_label),
+                                    Amber,
+                                    more,
+                                )
+                            }
+                            if (undo != null) {
+                                ActionLink(
+                                    "[" + stringResource(R.string.cmd_pref_undo).uppercase() + "]",
+                                    stringResource(R.string.command_undo_label),
+                                    Amber,
+                                ) {
+                                    undo()
+                                    undoAction = null
+                                }
+                            }
+                            if (failedWithoutReason) {
+                                ActionLink(
+                                    "[" + stringResource(R.string.command_edit).uppercase() + "]",
+                                    stringResource(R.string.command_edit_label),
+                                    phosphor,
+                                ) {
+                                    field = field.copy(selection = TextRange(field.text.length))
+                                    runCatching { focus.requestFocus() }
+                                }
+                            }
+                            if (analysis.action != null) {
+                                ActionLink(
+                                    "[" + stringResource(R.string.command_repeat).uppercase() + "]",
+                                    stringResource(R.string.command_repeat_label),
+                                    phosphor,
+                                ) { run() }
+                            }
+                            ActionLink(
+                                "[" + stringResource(R.string.command_copy).uppercase() + "]",
+                                stringResource(R.string.command_copy_label),
+                                phosphor,
+                            ) {
+                                val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                                clipboard.setPrimaryClip(android.content.ClipData.newPlainText("", done.orEmpty()))
+                                android.widget.Toast.makeText(context, R.string.command_result_copied, android.widget.Toast.LENGTH_SHORT).show()
+                            }
+                        }
                     }
                     val code = qr
                     if (done != null && code != null) {
@@ -1871,6 +1936,20 @@ private fun Label(text: String, color: Color, size: androidx.compose.ui.unit.Tex
         letterSpacing = 1.6.sp,
         modifier = modifier,
     )
+}
+
+/** A bracketed action under an answer: terminal-looking, with a touch target and a label for screen readers. */
+@Composable
+private fun ActionLink(text: String, description: String, color: Color, onClick: () -> Unit) {
+    Box(
+        Modifier
+            .heightIn(min = 32.dp)
+            .clickable(onClickLabel = description, role = Role.Button, onClick = onClick)
+            .semantics { contentDescription = description },
+        contentAlignment = Alignment.CenterStart,
+    ) {
+        Text(text, color = color, fontFamily = mono(), fontWeight = FontWeight.Bold)
+    }
 }
 
 @Composable

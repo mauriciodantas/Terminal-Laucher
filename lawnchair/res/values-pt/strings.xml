@@ -53,4 +53,16 @@
     <string name="command_pin_unsupported">Este launcher não consegue fixar atalhos</string>
     <string name="screen_animation_custom">Do tema</string>
     <string name="all_apps_search_run_command">Executar como comando</string>
+    <string name="command_failed_title">FALHOU</string>
+    <string name="command_run_label">Executar comando</string>
+    <string name="command_more_label">Carregar mais resultados</string>
+    <string name="command_undo_label">Desfazer a última alteração</string>
+    <string name="command_edit">editar</string>
+    <string name="command_edit_label">Editar o comando</string>
+    <string name="command_repeat">repetir</string>
+    <string name="command_repeat_label">Executar o comando de novo</string>
+    <string name="command_copy">copiar</string>
+    <string name="command_copy_label">Copiar o resultado</string>
+    <string name="command_result_copied">Resultado copiado</string>
+    <string name="command_failed_hint">Revise o comando. Se ele abre um app, confira se o app está instalado e ativado.</string>
 </resources>
