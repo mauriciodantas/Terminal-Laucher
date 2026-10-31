@@ -149,7 +149,7 @@
             android:excludeFromRecents="true"
             android:taskAffinity="${applicationId}.command"
             android:windowSoftInputMode="adjustResize"
-            android:theme="@style/Theme.Lawnchair" />
+            android:theme="@style/Theme.Lawnchair.Command" />
 
         <!-- "Terminal" in the menu of selected text: the bar opens with it as {sel}. -->
         <activity-alias

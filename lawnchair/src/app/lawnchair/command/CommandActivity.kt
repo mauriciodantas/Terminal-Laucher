@@ -6,11 +6,14 @@ import android.os.Bundle
 import android.speech.RecognizerIntent
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -70,6 +73,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -131,7 +135,11 @@ class CommandActivity : ComponentActivity() {
         )
         setContent {
             LawnchairTheme {
-                CommandScreen(onClose = { finish() })
+                PowerAnimated(onClose = {
+                    finish()
+                    // The window itself has no animation: the bar already played its own.
+                    overridePendingTransition(0, 0)
+                }) { close -> CommandScreen(onClose = close) }
             }
         }
     }
@@ -286,6 +294,43 @@ private class CommandHighlight(private val command: Color, private val argument:
 private fun onPhosphor(): Color {
     val context = LocalContext.current
     return remember { Color(LauncherGround.onAccent(context, PhosphorColorToken(1f).resolveColor(context))) }
+}
+
+/**
+ * Power-on / power-off of the bar, like a CRT: it rises in with a fade, and on close collapses into
+ * a thin line and fades. Done here because the bar is a task of its own, whose transition the
+ * system and the launcher own and a window animation cannot change.
+ */
+@Composable
+private fun PowerAnimated(onClose: () -> Unit, content: @Composable (close: () -> Unit) -> Unit) {
+    val on = remember { Animatable(0f) }
+    val off = remember { Animatable(0f) }
+    val scope = rememberCoroutineScope()
+    var closing by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { on.animateTo(1f, tween(220, easing = FastOutSlowInEasing)) }
+    val close: () -> Unit = {
+        if (!closing) {
+            closing = true
+            scope.launch {
+                off.animateTo(1f, tween(200, easing = FastOutLinearInEasing))
+                onClose()
+            }
+        }
+    }
+    // Registered before the screen's own handlers, so those still win; this is the last resort.
+    BackHandler(onBack = close)
+    Box(
+        Modifier
+            .fillMaxSize()
+            .graphicsLayer {
+                val p = off.value
+                alpha = on.value * (1f - ((p - 0.4f) / 0.6f).coerceIn(0f, 1f))
+                scaleY = 1f - 0.98f * p
+                translationY = (1f - on.value) * size.height * 0.05f
+            },
+    ) {
+        content(close)
+    }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
