@@ -113,6 +113,40 @@ object ThemeStore {
         )
     }
 
+    /** Every element of the theme as the app comes (what [reset] writes), in the same form as [current]. */
+    fun defaults(context: Context): ThemeSpec {
+        val p = PreferenceManager2.getInstance(context)
+        return ThemeSpec(
+            accent = colorOf(p.accentColor.defaultValue),
+            background = colorOf(p.launcherBackgroundColor.defaultValue),
+            secondary = colorOf(p.secondaryColor.defaultValue),
+            outline = colorOf(p.strokeColorStyle.defaultValue),
+            dock = colorOf(p.hotseatBackgroundColor.defaultValue),
+            folder = colorOf(p.folderColor.defaultValue),
+            font = fontOf(PreferenceManager.getInstance(context).fontWorkspace.defaultValue),
+            pixelClock = p.terminalPixelClock.defaultValue,
+            iconEffect = p.terminalIconEffect.defaultValue,
+            widgetEffect = p.widgetEffect.defaultValue,
+            widgetIntensity = p.widgetEffectIntensity.defaultValue,
+            crtEffect = p.crtEffect.defaultValue,
+            crtIntensity = p.crtEffectIntensity.defaultValue,
+            animation = p.screenAnimation.defaultValue.takeIf { it in ThemeSpecs.ANIMATIONS },
+            showWallpaper = p.showSystemWallpaper.defaultValue,
+            wallpaperDim = p.wallpaperDim.defaultValue,
+            colorAsWallpaper = p.backgroundColorAsWallpaper.defaultValue,
+            iconShape = ThemeSpecs.shapeKey(p.iconShape.defaultValue.toString()),
+            folderShape = ThemeSpecs.shapeKey(p.folderShape.defaultValue.toString()),
+        )
+    }
+
+    /** What [spec] leaves alone that is not at the default now, so applying it would keep it (see [ThemeSpecs.leftovers]). */
+    fun leftovers(context: Context, spec: ThemeSpec): List<ThemeElement> =
+        ThemeSpecs.leftovers(spec, current(context), defaults(context))
+
+    /** [apply], with each of [elements] that [spec] leaves out set to the default. */
+    fun applyWithDefaults(context: Context, spec: ThemeSpec, elements: Collection<ThemeElement>): Boolean =
+        apply(context, ThemeSpecs.defaultsFor(elements, defaults(context)).overlaidWith(spec))
+
     /** What the At a Glance panel has that is not how the app comes; null when it is all as it comes. */
     private fun glanceNow(context: Context, p: PreferenceManager2): GlanceSpec? {
         val style = p.glanceAnimation.firstCached(p)

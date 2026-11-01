@@ -997,6 +997,23 @@ private fun CommandScreen(onClose: () -> Unit) {
                 return
             }
 
+            // A theme of the user's that leaves out something not at the default asks first. The bar stays until it is answered.
+            is ThemeAction.Apply -> {
+                val left = if (action.whole) ThemeStore.leftovers(context, action.spec) else emptyList()
+                val asked = left.isNotEmpty() && ThemeApply.ask(context, left) { choice ->
+                    if (choice == null) return@ask
+                    if (!ThemeApply.apply(context, action.spec, left, choice)) {
+                        show(failedLabel, Outcome.FAILED, R.string.command_failed_hint)
+                        return@ask
+                    }
+                    record(action, command)
+                    historyIndex = -1
+                    show(executedLabel)
+                    onClose()
+                }
+                if (asked) return
+            }
+
             else -> {}
         }
         val ok = CommandExecutor.execute(context, action)

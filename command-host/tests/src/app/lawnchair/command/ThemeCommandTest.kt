@@ -106,7 +106,7 @@ class ThemeCommandTest {
     // ---- whole themes ----
 
     @Test fun themesByName() {
-        assertEquals(ThemeAction.Apply(night), run("tema noite").action)
+        assertEquals(ThemeAction.Apply(night, whole = true), run("tema noite").action)
         assertEquals(ThemeAction.Apply(gameBoy), run("tema game boy").action)
         assertEquals(listOf("tema Game Boy"), run("tema gam").suggestions.map { it.completion })
         assertEquals(Tone.ERROR, run("tema qualquer coisa").tone)

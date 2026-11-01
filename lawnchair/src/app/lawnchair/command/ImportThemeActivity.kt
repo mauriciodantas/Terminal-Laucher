@@ -71,9 +71,13 @@ class ImportThemeActivity : ComponentActivity() {
                     current = current,
                     onApply = { named ->
                         ThemeStore.keep(this, named)
-                        val applied = ThemeStore.apply(this, named)
-                        Toast.makeText(this, if (applied) R.string.theme_import_applied else R.string.theme_import_unreadable, Toast.LENGTH_SHORT).show()
-                        finish()
+                        // The dialog of the question lives in this screen, which closes only once it is answered.
+                        ThemeApply.run(this, named) { applied ->
+                            if (applied != null) {
+                                Toast.makeText(this, if (applied) R.string.theme_import_applied else R.string.theme_import_unreadable, Toast.LENGTH_SHORT).show()
+                            }
+                            finish()
+                        }
                     },
                     onKeep = { named ->
                         ThemeStore.keep(this, named)

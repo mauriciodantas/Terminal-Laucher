@@ -53,6 +53,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.lawnchair.command.ImportThemeActivity
+import app.lawnchair.command.ThemeApply
 import app.lawnchair.command.ThemeColor
 import app.lawnchair.command.ThemeCommand
 import app.lawnchair.command.ThemeSpec
@@ -137,8 +138,9 @@ fun SavedThemesPreference(modifier: Modifier = Modifier, onBeforeApply: () -> Un
                         selected = inUse(theme),
                         onClick = {
                             onBeforeApply()
-                            val applied = ThemeStore.apply(context, theme)
-                            Toast.makeText(context, if (applied) R.string.theme_import_applied else R.string.theme_import_unreadable, Toast.LENGTH_SHORT).show()
+                            ThemeApply.run(context, theme) { applied ->
+                                if (applied != null) Toast.makeText(context, if (applied) R.string.theme_import_applied else R.string.theme_import_unreadable, Toast.LENGTH_SHORT).show()
+                            }
                         },
                     )
                 }
@@ -199,9 +201,10 @@ fun SavedThemesPreference(modifier: Modifier = Modifier, onBeforeApply: () -> Un
                             },
                             onClick = {
                                 onBeforeApply()
-                                val applied = ThemeStore.apply(context, theme)
-                                Toast.makeText(context, if (applied) R.string.theme_import_applied else R.string.theme_import_unreadable, Toast.LENGTH_SHORT).show()
                                 managing = false
+                                ThemeApply.run(context, theme) { applied ->
+                                    if (applied != null) Toast.makeText(context, if (applied) R.string.theme_import_applied else R.string.theme_import_unreadable, Toast.LENGTH_SHORT).show()
+                                }
                             },
                         )
                     }

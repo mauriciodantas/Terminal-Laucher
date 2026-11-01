@@ -36,8 +36,12 @@ sealed interface ThemeAction : CommandAction {
     /** Inverts the theme colors, lays them light or dark, or makes them follow the system mode. */
     data class Change(val change: ThemeChange) : ThemeAction
 
-    /** Sets what [spec] has: one element ("tema fundo #000"), a saved theme or a ready-made look. */
-    data class Apply(val spec: ThemeSpec) : ThemeAction
+    /**
+     * Sets what [spec] has: one element ("tema fundo #000"), a saved theme or a ready-made look. [whole] is a theme
+     * of the user's (saved or imported), as opposed to one element or a look: what it leaves out is then offered back
+     * to the defaults (see [ThemeSpecs.leftovers]).
+     */
+    data class Apply(val spec: ThemeSpec, val whole: Boolean = false) : ThemeAction
 
     /** Keeps the theme on screen now under [name]. */
     data class Save(val name: String) : ThemeAction

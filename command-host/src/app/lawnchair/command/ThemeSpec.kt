@@ -680,5 +680,74 @@ object ThemeSpecs {
     fun weak(spec: ThemeSpec, current: ThemeSpec?): Boolean = !unreadable(spec, current) &&
         listOfNotNull(contrastOf(spec, current), secondaryContrastOf(spec, current)).any { it < COMFORTABLE_VISIBILITY }
 
+    // ---- what an older theme left behind ----
+
+    /**
+     * The elements [spec] says nothing about that are not at their [defaults] in [current]: what an earlier theme
+     * (or the user) set and this one would silently keep. Empty when every such element is already default, so
+     * there is nothing to ask. An element whose default is unknown (null in [defaults]) is never reported.
+     */
+    fun leftovers(spec: ThemeSpec, current: ThemeSpec, defaults: ThemeSpec): List<ThemeElement> =
+        ThemeElement.entries.filter { !sets(it, spec) && differs(it, current, defaults) }
+
+    /** A theme holding the default of each of [elements] only, to apply together with the theme that leaves them out. */
+    fun defaultsFor(elements: Collection<ThemeElement>, defaults: ThemeSpec): ThemeSpec {
+        fun <T> T?.of(vararg e: ThemeElement): T? = takeIf { e.any { it in elements } }
+        return ThemeSpec(
+            accent = defaults.accent.of(ThemeElement.ACCENT),
+            background = defaults.background.of(ThemeElement.BACKGROUND),
+            secondary = defaults.secondary.of(ThemeElement.SECONDARY),
+            outline = defaults.outline.of(ThemeElement.OUTLINE),
+            dock = defaults.dock.of(ThemeElement.DOCK),
+            folder = defaults.folder.of(ThemeElement.FOLDER),
+            font = defaults.font.of(ThemeElement.FONT),
+            pixelClock = defaults.pixelClock.of(ThemeElement.CLOCK),
+            iconEffect = defaults.iconEffect.of(ThemeElement.ICONS),
+            widgetEffect = defaults.widgetEffect.of(ThemeElement.WIDGETS),
+            widgetIntensity = defaults.widgetIntensity.of(ThemeElement.WIDGETS),
+            crtEffect = defaults.crtEffect.of(ThemeElement.CRT),
+            crtIntensity = defaults.crtIntensity.of(ThemeElement.CRT),
+            animation = defaults.animation.of(ThemeElement.ANIMATION),
+            showWallpaper = defaults.showWallpaper.of(ThemeElement.WALLPAPER),
+            wallpaperDim = defaults.wallpaperDim.of(ThemeElement.DIM),
+            colorAsWallpaper = defaults.colorAsWallpaper.of(ThemeElement.PAINT),
+            iconShape = defaults.iconShape.of(ThemeElement.SHAPE),
+            folderShape = defaults.folderShape.of(ThemeElement.FOLDER_SHAPE),
+        )
+    }
+
+    /** True when [spec] sets [element], by itself or through another field that decides it (an image as wallpaper). */
+    private fun sets(element: ThemeElement, spec: ThemeSpec): Boolean = when (element) {
+        ThemeElement.WIDGETS -> spec.widgetEffect != null || spec.widgetIntensity != null
+        ThemeElement.CRT -> spec.crtEffect != null || spec.crtIntensity != null
+        ThemeElement.ANIMATION -> spec.animation != null || spec.customAnimation != null || spec.crtEffect == false
+        ThemeElement.WALLPAPER -> spec.showWallpaper != null || spec.wallpaper != null
+        ThemeElement.PAINT -> spec.colorAsWallpaper != null || spec.wallpaper != null
+        else -> element.valueIn(spec) != null
+    }
+
+    private fun differs(element: ThemeElement, now: ThemeSpec, d: ThemeSpec): Boolean {
+        fun <T> T?.isOff(default: T?) = default != null && this != default
+        return when (element) {
+            ThemeElement.ACCENT -> now.accent.isOff(d.accent)
+            ThemeElement.BACKGROUND -> now.background.isOff(d.background)
+            ThemeElement.SECONDARY -> now.secondary.isOff(d.secondary)
+            ThemeElement.OUTLINE -> now.outline.isOff(d.outline)
+            ThemeElement.DOCK -> now.dock.isOff(d.dock)
+            ThemeElement.FOLDER -> now.folder.isOff(d.folder)
+            ThemeElement.FONT -> now.font.isOff(d.font)
+            ThemeElement.CLOCK -> now.pixelClock.isOff(d.pixelClock)
+            ThemeElement.ICONS -> now.iconEffect.isOff(d.iconEffect)
+            ThemeElement.WIDGETS -> now.widgetEffect.isOff(d.widgetEffect) || now.widgetIntensity.isOff(d.widgetIntensity)
+            ThemeElement.CRT -> now.crtEffect.isOff(d.crtEffect) || now.crtIntensity.isOff(d.crtIntensity)
+            ThemeElement.ANIMATION -> d.animation != null && (now.animation != d.animation || now.customAnimation != null)
+            ThemeElement.WALLPAPER -> now.showWallpaper.isOff(d.showWallpaper)
+            ThemeElement.DIM -> now.wallpaperDim.isOff(d.wallpaperDim)
+            ThemeElement.PAINT -> now.colorAsWallpaper.isOff(d.colorAsWallpaper)
+            ThemeElement.SHAPE -> now.iconShape.isOff(d.iconShape)
+            ThemeElement.FOLDER_SHAPE -> now.folderShape.isOff(d.folderShape)
+        }
+    }
+
     private const val OPAQUE = 0xFF000000.toInt()
 }

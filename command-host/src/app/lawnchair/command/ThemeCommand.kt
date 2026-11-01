@@ -166,7 +166,7 @@ object ThemeCommand : BuiltIn(BuiltInCommand.THEME, null, R.string.cmd_help_them
         val tone = if (ThemeSpecs.weak(spec, extras.theme)) Tone.WARN else Tone.OK
         // A ready-made look says so; the user's own is just its name.
         val heading = if (builtIn) title + " · " + Texts.get(R.string.cmd_theme_kind_preset) else title
-        return result(heading, preview + weakNote(spec, extras), tone, ThemeAction.Apply(spec))
+        return result(heading, preview + weakNote(spec, extras), tone, ThemeAction.Apply(spec, whole = !builtIn))
     }
 
     // ---- one element ----
