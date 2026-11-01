@@ -232,6 +232,8 @@ object CommandExecutor {
 
             is CommandAction.ClearHistory -> CommandActivity.clearHistory(context)
 
+            is CommandAction.OpenGuide -> CommandGuideActivity.start(context, action.query)
+
             // "dev" alone only says the state; on and off save it, and every screen follows (AdvancedMode.enabled).
             is CommandAction.SetAdvancedMode -> action.on?.let { AdvancedModeStore.set(context, it) }
 

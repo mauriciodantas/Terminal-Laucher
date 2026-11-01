@@ -151,6 +151,14 @@
             android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.Lawnchair" />
 
+        <activity
+            android:name="app.lawnchair.command.CommandGuideActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:taskAffinity="${applicationId}.command"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.Lawnchair" />
+
         <!-- "Terminal" in the menu of selected text: the bar opens with it as {sel}. -->
         <activity-alias
             android:name="app.lawnchair.command.CommandSelection"

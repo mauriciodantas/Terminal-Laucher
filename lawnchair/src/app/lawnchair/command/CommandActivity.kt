@@ -1274,8 +1274,10 @@ private fun CommandScreen(onClose: () -> Unit) {
                 )
             }
             val settingsLabel = stringResource(R.string.command_settings)
+            val guideLabel = stringResource(CommandR.string.cmd_manual_open_button)
             val closeLabel = stringResource(R.string.command_close)
             val barButtons: @Composable () -> Unit = {
+                BarButton("[?]", guideLabel, phosphor) { CommandGuideActivity.start(context) }
                 BarButton("[CFG]", settingsLabel, phosphor, openSettings)
                 BarButton("[×]", closeLabel, phosphor, onClose)
             }

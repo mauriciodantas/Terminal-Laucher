@@ -1169,7 +1169,7 @@
     <string name="command_voice_cancel_label">Cancel the spoken command</string>
     <string name="command_chips_title">RECENT · PINNED</string>
     <string name="command_history_clear">[×] CLEAR RECENT</string>
-    <string name="command_more">SHOWING %1$d OF %2$d · TYPE ? TO SEE ALL</string>
+    <string name="command_more">SHOWING %1$d OF %2$d · TYPE guide TO SEE ALL</string>
     <string name="cmd_pref_undo">Undo</string>
     <string name="cmd_pref_cancel">Cancel</string>
     <string name="cmd_pref_save">Save</string>

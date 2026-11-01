@@ -90,7 +90,7 @@
     <string name="command_voice_cancel_label">Cancelar o comando falado</string>
     <string name="command_chips_title">RECENTES · FIXADOS</string>
     <string name="command_history_clear">[×] LIMPAR RECENTES</string>
-    <string name="command_more">MOSTRANDO %1$d DE %2$d · DIGITE ? PARA VER TODOS</string>
+    <string name="command_more">MOSTRANDO %1$d DE %2$d · DIGITE guia PARA VER TODOS</string>
     <string name="cmd_pref_undo">Desfazer</string>
     <string name="cmd_pref_cancel">Cancelar</string>
     <string name="cmd_pref_save">Salvar</string>
