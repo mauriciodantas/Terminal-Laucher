@@ -31,12 +31,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.ColorUtils
+import app.lawnchair.command.ThemeApply
+import app.lawnchair.command.ThemeStore
 import app.lawnchair.preferences.getAdapter
 import app.lawnchair.preferences2.preferenceManager2
 import app.lawnchair.theme.ComplementaryColors
@@ -49,7 +52,7 @@ import com.android.launcher3.R
  */
 @Composable
 fun ComplementaryColorsPreference(modifier: Modifier = Modifier, onBeforeApply: () -> Unit = {}) {
-    val looks = rememberLooks(onBeforeApply = onBeforeApply)
+    val looks = rememberLooks(onBeforeApply = onBeforeApply, askAboutLeftovers = true)
     ChipRow(modifier = modifier) {
         WheelChip(onClick = looks::openWheel)
         ComplementaryColors.all.forEach { pair -> LookChip(pair, looks.isSelected(pair), onClick = { looks.apply(pair) }) }
@@ -105,7 +108,12 @@ class Looks internal constructor(
 }
 
 @Composable
-fun rememberLooks(onApply: (ComplementaryColors.Pair) -> Unit = {}, onBeforeApply: () -> Unit = {}): Looks {
+fun rememberLooks(
+    onApply: (ComplementaryColors.Pair) -> Unit = {},
+    onBeforeApply: () -> Unit = {},
+    askAboutLeftovers: Boolean = false,
+): Looks {
+    val context = LocalContext.current
     val prefs2 = preferenceManager2()
     val accent = prefs2.accentColor.getAdapter()
     val background = prefs2.launcherBackgroundColor.getAdapter()
@@ -115,14 +123,33 @@ fun rememberLooks(onApply: (ComplementaryColors.Pair) -> Unit = {}, onBeforeAppl
     val currentBackground = (background.state.value as? ColorOption.CustomColor)?.color
 
     var wheelOpen by remember { mutableStateOf(false) }
-    val applyPair = { pair: ComplementaryColors.Pair ->
-        onBeforeApply()
+    val setPair = { pair: ComplementaryColors.Pair ->
         // The background goes first: the accent is checked against it as it lands.
         background.onChange(ColorOption.CustomColor(pair.background))
         accent.onChange(ColorOption.CustomColor(pair.accent))
         // A pair goes back to the dimmed accent; a triad brings its third color.
         secondary.onChange(pair.secondary?.let { ColorOption.CustomColor(it) } ?: ColorOption.Default)
         onApply(pair)
+    }
+    val applyPair = { pair: ComplementaryColors.Pair ->
+        // A look says nothing about the font, the shapes and so on: when an earlier theme left some of it, ask like a theme does.
+        val spec = ThemeStore.presetOf(context, pair)
+        val left = if (askAboutLeftovers) ThemeStore.leftovers(context, spec) else emptyList()
+        val asked = left.isNotEmpty() && ThemeApply.ask(context, left) { choice ->
+            if (choice != null) {
+                onBeforeApply()
+                if (choice == ThemeApply.Choice.DEFAULTS) {
+                    ThemeStore.applyWithDefaults(context, spec, left)
+                    onApply(pair)
+                } else {
+                    setPair(pair)
+                }
+            }
+        }
+        if (!asked) {
+            onBeforeApply()
+            setPair(pair)
+        }
     }
     if (wheelOpen) {
         ComplementaryWheelDialog(

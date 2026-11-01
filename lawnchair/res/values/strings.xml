@@ -1620,9 +1620,9 @@
     <string name="saved_themes_delete_title">Delete the theme %1$s?</string>
     <string name="theme_import_title">Theme</string>
     <string name="theme_import_invalid">This file is not a valid theme</string>
-    <string name="theme_leftover_title">Keep the current settings?</string>
-    <string name="theme_leftover_message">This theme says nothing about: %1$s. They were set by an earlier theme or by you. Put them back to the defaults, or keep them as they are?</string>
-    <string name="theme_leftover_defaults">Use defaults</string>
+    <string name="theme_leftover_title">Overwrite current settings?</string>
+    <string name="theme_leftover_message">These will be replaced by the defaults:\n%1$s</string>
+    <string name="theme_leftover_defaults">Overwrite</string>
     <string name="theme_leftover_keep">Keep mine</string>
     <string name="theme_import_applied">Theme applied</string>
     <string name="theme_import_unreadable">The text would not be readable over this background, so the theme cannot be applied.</string>

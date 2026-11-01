@@ -65,15 +65,16 @@ object ThemeStore {
     fun saveCurrent(context: Context, name: String) = keep(context, current(context).copy(name = name))
 
     /** The ready-made looks of Appearance, with their names in the app language. */
-    fun presets(context: Context): List<ThemeSpec> = ComplementaryColors.all.map {
-        ThemeSpec(
-            name = context.getString(it.name),
-            accent = ThemeColor.Custom(it.accent),
-            background = ThemeColor.Custom(it.background),
-            // A pair brings no third color: the secondary text goes back to the dimmed accent, as in Appearance.
-            secondary = it.secondary?.let { color -> ThemeColor.Custom(color) } ?: ThemeColor.Default,
-        )
-    }
+    fun presets(context: Context): List<ThemeSpec> = ComplementaryColors.all.map { presetOf(context, it) }
+
+    /** The theme a ready-made look of Appearance stands for: its colors, and nothing else. */
+    fun presetOf(context: Context, pair: ComplementaryColors.Pair): ThemeSpec = ThemeSpec(
+        name = context.getString(pair.name),
+        accent = ThemeColor.Custom(pair.accent),
+        background = ThemeColor.Custom(pair.background),
+        // A pair brings no third color: the secondary text goes back to the dimmed accent, as in Appearance.
+        secondary = pair.secondary?.let { color -> ThemeColor.Custom(color) } ?: ThemeColor.Default,
+    )
 
     /** The Google Fonts families, for "tema fonte" to suggest; empty if the list cannot be read. */
     suspend fun fonts(context: Context): List<String> = runCatching {

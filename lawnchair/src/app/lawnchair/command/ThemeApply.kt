@@ -1,9 +1,31 @@
 package app.lawnchair.command
 
 import android.app.Activity
-import android.app.AlertDialog
 import android.content.Context
 import android.content.ContextWrapper
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.view.ViewGroup
+import androidx.activity.ComponentActivity
+import androidx.activity.ComponentDialog
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialogDefaults
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import app.lawnchair.ui.theme.LawnchairTheme
 import com.android.launcher3.R
 
 /**
@@ -15,23 +37,33 @@ object ThemeApply {
 
     enum class Choice { DEFAULTS, KEEP }
 
-    /** Asks what to do with [left]; [onChoice] gets null when the user backs out. Needs an Activity [context]. */
+    /**
+     * Asks what to do with [left], in the look of the app; [onChoice] gets null when the user backs out. Needs the
+     * screen of a [ComponentActivity] in [context]; false when there is none, and then nothing was asked.
+     */
     fun ask(context: Context, left: List<ThemeElement>, onChoice: (Choice?) -> Unit): Boolean {
-        val activity = activityOf(context)?.takeUnless { it.isFinishing || it.isDestroyed } ?: return false
+        val activity = (activityOf(context) as? ComponentActivity)?.takeUnless { it.isFinishing || it.isDestroyed } ?: return false
         var answered = false
+        val dialog = ComponentDialog(activity)
         fun answer(choice: Choice?) {
             if (answered) return
             answered = true
+            dialog.dismiss()
             onChoice(choice)
         }
-        AlertDialog.Builder(activity)
-            .setTitle(R.string.theme_leftover_title)
-            .setMessage(activity.getString(R.string.theme_leftover_message, left.joinToString(", ") { it.desc.lowercase() }))
-            .setPositiveButton(R.string.theme_leftover_defaults) { _, _ -> answer(Choice.DEFAULTS) }
-            .setNeutralButton(R.string.theme_leftover_keep) { _, _ -> answer(Choice.KEEP) }
-            .setNegativeButton(android.R.string.cancel) { _, _ -> answer(null) }
-            .setOnCancelListener { answer(null) }
-            .show()
+        dialog.setContentView(
+            ComposeView(activity).apply {
+                setContent { LawnchairTheme { LeftoverPrompt(left.joinToString("\n") { "• " + it.desc.lowercase() }, ::answer) } }
+            },
+        )
+        // After the content: the window takes the width of the screen and the card draws its own edges.
+        dialog.window?.apply {
+            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            decorView.setPadding(0, 0, 0, 0)
+            setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        }
+        dialog.setOnCancelListener { answer(null) }
+        dialog.show()
         return true
     }
 
@@ -39,10 +71,22 @@ object ThemeApply {
     fun apply(context: Context, spec: ThemeSpec, left: List<ThemeElement>, choice: Choice): Boolean =
         if (choice == Choice.DEFAULTS) ThemeStore.applyWithDefaults(context, spec, left) else ThemeStore.apply(context, spec)
 
-    /** Applies [spec], asking first when it leaves out something that is not the default; [onDone] gets whether it was applied (null: the user backed out). */
-    fun run(context: Context, spec: ThemeSpec, onDone: (Boolean?) -> Unit) {
+    /**
+     * Applies [spec], asking first when it leaves out something that is not the default; [onDone] gets whether it was
+     * applied (null: the user backed out). [onBefore] runs once the theme is going to be applied, after the answer.
+     */
+    fun run(context: Context, spec: ThemeSpec, onBefore: () -> Unit = {}, onDone: (Boolean?) -> Unit) {
         val left = ThemeStore.leftovers(context, spec)
-        if (left.isEmpty() || !ask(context, left) { choice -> onDone(choice?.let { apply(context, spec, left, it) }) }) {
+        val asked = left.isNotEmpty() && ask(context, left) { choice ->
+            if (choice == null) {
+                onDone(null)
+            } else {
+                onBefore()
+                onDone(apply(context, spec, left, choice))
+            }
+        }
+        if (!asked) {
+            onBefore()
             onDone(ThemeStore.apply(context, spec))
         }
     }
@@ -54,5 +98,39 @@ object ThemeApply {
             c = c.baseContext
         }
         return null
+    }
+}
+
+/** The question, as a card in the colors and the font of the app; the message is just the list of what would be replaced. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun LeftoverPrompt(elements: String, onAnswer: (ThemeApply.Choice?) -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+        shape = AlertDialogDefaults.shape,
+        color = AlertDialogDefaults.containerColor,
+        tonalElevation = AlertDialogDefaults.TonalElevation,
+    ) {
+        Column(modifier = Modifier.padding(24.dp)) {
+            Text(
+                text = stringResource(R.string.theme_leftover_title),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                text = stringResource(R.string.theme_leftover_message, elements),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 16.dp),
+            )
+            FlowRow(
+                modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, androidx.compose.ui.Alignment.End),
+            ) {
+                TextButton(onClick = { onAnswer(null) }) { Text(stringResource(android.R.string.cancel)) }
+                TextButton(onClick = { onAnswer(ThemeApply.Choice.KEEP) }) { Text(stringResource(R.string.theme_leftover_keep)) }
+                Button(onClick = { onAnswer(ThemeApply.Choice.DEFAULTS) }) { Text(stringResource(R.string.theme_leftover_defaults)) }
+            }
+        }
     }
 }

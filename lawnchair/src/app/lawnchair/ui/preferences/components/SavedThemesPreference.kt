@@ -137,8 +137,7 @@ fun SavedThemesPreference(modifier: Modifier = Modifier, onBeforeApply: () -> Un
                         theme = theme,
                         selected = inUse(theme),
                         onClick = {
-                            onBeforeApply()
-                            ThemeApply.run(context, theme) { applied ->
+                            ThemeApply.run(context, theme, onBefore = onBeforeApply) { applied ->
                                 if (applied != null) Toast.makeText(context, if (applied) R.string.theme_import_applied else R.string.theme_import_unreadable, Toast.LENGTH_SHORT).show()
                             }
                         },
@@ -200,9 +199,8 @@ fun SavedThemesPreference(modifier: Modifier = Modifier, onBeforeApply: () -> Un
                                 }
                             },
                             onClick = {
-                                onBeforeApply()
                                 managing = false
-                                ThemeApply.run(context, theme) { applied ->
+                                ThemeApply.run(context, theme, onBefore = onBeforeApply) { applied ->
                                     if (applied != null) Toast.makeText(context, if (applied) R.string.theme_import_applied else R.string.theme_import_unreadable, Toast.LENGTH_SHORT).show()
                                 }
                             },

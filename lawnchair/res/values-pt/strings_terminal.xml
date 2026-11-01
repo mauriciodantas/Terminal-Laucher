@@ -548,9 +548,9 @@
     <string name="theme_share">Compartilhar tema</string>
     <string name="theme_import_title">Tema</string>
     <string name="theme_import_invalid">Este arquivo não é um tema válido</string>
-    <string name="theme_leftover_title">Manter os ajustes atuais?</string>
-    <string name="theme_leftover_message">Este tema não diz nada sobre: %1$s. Eles foram definidos por um tema anterior ou por você. Voltar ao padrão ou manter como estão?</string>
-    <string name="theme_leftover_defaults">Usar padrões</string>
+    <string name="theme_leftover_title">Sobrescrever ajustes atuais?</string>
+    <string name="theme_leftover_message">Serão substituídos pelo padrão:\n%1$s</string>
+    <string name="theme_leftover_defaults">Sobrescrever</string>
     <string name="theme_leftover_keep">Manter os meus</string>
     <string name="theme_import_applied">Tema aplicado</string>
     <string name="theme_import_unreadable">O texto não seria legível sobre este fundo, então o tema não pode ser aplicado.</string>
