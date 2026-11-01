@@ -1,6 +1,5 @@
 package app.lawnchair.command
 
-import android.app.SearchManager
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.ComponentName
@@ -14,6 +13,8 @@ import android.provider.CalendarContract
 import android.provider.ContactsContract
 import android.provider.Settings
 import androidx.core.content.FileProvider
+import app.lawnchair.preferences2.PreferenceManager2
+import app.lawnchair.preferences2.firstCached
 import app.lawnchair.theme.SystemColorMode
 import app.lawnchair.widgets.lottie.ImportWidgetActivity
 import app.lawnchair.widgets.lottie.LottieWidgetPack
@@ -339,10 +340,11 @@ object CommandExecutor {
                 )
             }
 
-            is CommandAction.WebSearch -> start(
-                context,
-                Intent(Intent.ACTION_WEB_SEARCH).putExtra(SearchManager.QUERY, action.query),
-            )
+            // ACTION_WEB_SEARCH only fills the search box of Chrome and Google; it does not search.
+            is CommandAction.WebSearch -> {
+                val provider = PreferenceManager2.getInstance(context).webSuggestionProvider.firstCached().configure(context)
+                start(context, Intent(Intent.ACTION_VIEW, Uri.parse(provider.getSearchUrl(action.query))))
+            }
 
             is CommandAction.SaveCommand -> {
                 when (val cmd = action.command) {
