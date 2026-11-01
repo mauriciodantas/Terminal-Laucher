@@ -1,6 +1,5 @@
 package app.lawnchair.command
 
-import android.app.WallpaperManager
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -8,7 +7,7 @@ import android.graphics.Canvas
 import android.util.Log
 import android.widget.Toast
 import androidx.core.graphics.createBitmap
-import app.lawnchair.wallpaper.BackgroundColorWallpaper
+import app.lawnchair.wallpaper.WallpaperController
 import com.android.launcher3.R
 import com.caverock.androidsvg.PreserveAspectRatio
 import com.caverock.androidsvg.SVG
@@ -57,12 +56,9 @@ object ThemeImages {
     suspend fun apply(context: Context, spec: ThemeSpec): Boolean = withContext(Dispatchers.IO) {
         val home = spec.wallpaper?.image
         val lock = spec.lockImage
-        // The color painted as wallpaper would cover the image the next time the launcher starts.
-        BackgroundColorWallpaper.forget(context, system = home != null, lock = lock != null)
         val same = home != null && home == lock
-        val homeOk = home != null && set(context, spec, home, if (same) WallpaperManager.FLAG_SYSTEM or WallpaperManager.FLAG_LOCK else WallpaperManager.FLAG_SYSTEM)
-        val lockOk = lock != null && (if (same) homeOk else set(context, spec, lock, WallpaperManager.FLAG_LOCK))
-        BackgroundColorWallpaper.markImage(context, system = homeOk, lock = lockOk)
+        val homeOk = home != null && set(context, spec, home, system = true, lock = same)
+        val lockOk = lock != null && (if (same) homeOk else set(context, spec, lock, system = false, lock = true))
         (home == null || homeOk) && (lock == null || lockOk)
     }
 
@@ -70,17 +66,13 @@ object ThemeImages {
     fun clearLater(context: Context, system: Boolean, lock: Boolean) {
         if (!system && !lock) return
         val app = context.applicationContext
-        scope.launch { BackgroundColorWallpaper.clearImages(app, system, lock) }
+        scope.launch { WallpaperController.clear(app, system, lock) }
     }
 
-    private fun set(context: Context, spec: ThemeSpec, image: ThemeImage, which: Int): Boolean {
+    private suspend fun set(context: Context, spec: ThemeSpec, image: ThemeImage, system: Boolean, lock: Boolean): Boolean {
         val bitmap = bitmap(context, spec, image) ?: return false
         return try {
-            WallpaperManager.getInstance(context).setBitmap(bitmap, null, true, which)
-            true
-        } catch (e: Exception) {
-            Log.e(TAG, "could not set the wallpaper", e)
-            false
+            WallpaperController.setImage(context, bitmap, system, lock, fromTheme = true)
         } finally {
             bitmap.recycle()
         }

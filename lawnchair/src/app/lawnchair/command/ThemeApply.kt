@@ -9,9 +9,9 @@ import android.view.ViewGroup
 import androidx.activity.ComponentActivity
 import androidx.activity.ComponentDialog
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialogDefaults
@@ -26,6 +26,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.lawnchair.ui.theme.LawnchairTheme
+import app.lawnchair.wallpaper.WallpaperController
 import com.android.launcher3.R
 
 /**
@@ -68,8 +69,12 @@ object ThemeApply {
     }
 
     /** Applies [spec] with [choice] for the elements in [left]. */
-    fun apply(context: Context, spec: ThemeSpec, left: List<ThemeElement>, choice: Choice): Boolean =
-        if (choice == Choice.DEFAULTS) ThemeStore.applyWithDefaults(context, spec, left) else ThemeStore.apply(context, spec)
+    fun apply(context: Context, spec: ThemeSpec, left: List<ThemeElement>, choice: Choice): Boolean {
+        if (choice == Choice.DEFAULTS) return ThemeStore.applyWithDefaults(context, spec, left)
+        // Kept: the wallpaper on the screens is the user's from now on, so no later theme asks about it or takes it off.
+        WallpaperController.keep(context, system = ThemeElement.WALLPAPER in left, lock = ThemeElement.LOCK in left)
+        return ThemeStore.apply(context, spec)
+    }
 
     /**
      * Applies [spec], asking first when it leaves out something that is not the default; [onDone] gets whether it was

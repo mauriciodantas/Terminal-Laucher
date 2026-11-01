@@ -24,7 +24,7 @@ import app.lawnchair.smartspace.glance.GlanceTitleBar
 import app.lawnchair.smartspace.glance.GlanceUrgentColor
 import app.lawnchair.theme.ComplementaryColors
 import app.lawnchair.theme.color.ColorOption
-import app.lawnchair.wallpaper.BackgroundColorWallpaper
+import app.lawnchair.wallpaper.WallpaperController
 import com.android.launcher3.R
 import com.patrykmichalik.opto.core.PreferenceImpl
 import com.patrykmichalik.opto.core.setBlocking
@@ -146,8 +146,8 @@ object ThemeStore {
 
     /** The wallpaper elements holding an image an earlier theme put there, which [current] has no way to show. */
     private fun imagesPlaced(context: Context): List<ThemeElement> = listOfNotNull(
-        ThemeElement.WALLPAPER.takeIf { BackgroundColorWallpaper.hasThemeImage(context, lock = false) },
-        ThemeElement.LOCK.takeIf { BackgroundColorWallpaper.hasThemeImage(context, lock = true) },
+        ThemeElement.WALLPAPER.takeIf { WallpaperController.hasThemeImage(context, lock = false) },
+        ThemeElement.LOCK.takeIf { WallpaperController.hasThemeImage(context, lock = true) },
     )
 
     /** [apply], with each of [elements] that [spec] leaves out set to the default. */
@@ -155,12 +155,9 @@ object ThemeStore {
         if (!apply(context, ThemeSpecs.defaultsFor(elements, defaults(context)).overlaidWith(spec))) return false
         // The panel has many settings and no single default to carry in a spec: it goes back as a whole, after the theme.
         if (ThemeElement.GLANCE in elements) resetGlance(PreferenceManager2.getInstance(context))
-        // The images an earlier theme put on the screens: the system's own wallpaper shows again.
-        ThemeImages.clearLater(
-            context,
-            system = ThemeElement.WALLPAPER in elements && BackgroundColorWallpaper.hasThemeImage(context, lock = false),
-            lock = ThemeElement.LOCK in elements && BackgroundColorWallpaper.hasThemeImage(context, lock = true),
-        )
+        // The user agreed to replace the wallpaper: both screens are taken off, so the old one cannot come back on either.
+        val replace = ThemeElement.WALLPAPER in elements || ThemeElement.LOCK in elements
+        ThemeImages.clearLater(context, system = replace && spec.wallpaper == null, lock = replace && spec.lockImage == null)
         return true
     }
 
@@ -312,7 +309,8 @@ object ThemeStore {
         (spec.showWallpaper ?: spec.wallpaper?.let { true })?.let { p.showSystemWallpaper.update(p, it) }
         spec.wallpaperDim?.let { p.wallpaperDim.update(p, it) }
         (if (spec.wallpaper != null) false else spec.colorAsWallpaper)?.let { p.backgroundColorAsWallpaper.update(p, it) }
-        if (spec.lockImage != null) p.backgroundColorOnLockScreen.update(p, false)
+        // The lock screen is painted only when the theme says so; an image of its own for it wins, and left out it is not touched.
+        if (spec.lockImage != null) p.backgroundColorOnLockScreen.update(p, false) else spec.colorOnLock?.let { p.backgroundColorOnLockScreen.update(p, it) }
         spec.iconShape?.let { setShape(context, p.iconShape, it) }
         spec.folderShape?.let { setShape(context, p.folderShape, it) }
         ThemeImages.applyLater(context, spec)

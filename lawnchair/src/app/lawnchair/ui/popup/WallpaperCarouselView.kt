@@ -2,7 +2,6 @@ package app.lawnchair.ui.popup
 
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
-import android.app.WallpaperManager
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -23,6 +22,7 @@ import app.lawnchair.launcher
 import app.lawnchair.util.decodeSampledBitmapFromFile
 import app.lawnchair.util.observeOnce
 import app.lawnchair.views.component.IconFrame
+import app.lawnchair.wallpaper.WallpaperController
 import com.android.launcher3.R
 import com.android.launcher3.util.Themes
 import java.io.File
@@ -162,13 +162,10 @@ class WallpaperCarouselView @JvmOverloads constructor(
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                WallpaperManager.getInstance(context).setBitmap(
-                    BitmapFactory.decodeFile(wallpaper.imagePath),
-                    null,
-                    true,
-                    WallpaperManager.FLAG_SYSTEM,
-                )
-                viewModel.updateWallpaperRank(wallpaper)
+                val bitmap = BitmapFactory.decodeFile(wallpaper.imagePath)
+                if (bitmap != null && WallpaperController.setImage(context, bitmap, system = true, lock = false, fromTheme = false)) {
+                    viewModel.updateWallpaperRank(wallpaper)
+                }
             } catch (e: Exception) {
                 Log.e("WallpaperCarouselView", "Failed to set wallpaper: ${e.message}")
             } finally {

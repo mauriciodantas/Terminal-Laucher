@@ -265,6 +265,14 @@ class ThemeCommandTest {
         assertFalse(ThemeCommand.describe(spec).contains(png()))
     }
 
+    @Test fun colorOnLockIsOptInAndRoundTrips() {
+        val spec = night.copy(colorAsWallpaper = true, colorOnLock = true)
+        assertEquals(true, ThemeSpecs.decode(ThemeSpecs.encode(spec)).colorOnLock)
+        // Left out, the lock screen is not asked for.
+        assertNull(theme(""""accent":"#fff","colorAsWallpaper":true""").colorOnLock)
+        assertEquals(false, theme(""""colorOnLock":false""").colorOnLock)
+    }
+
     @Test fun brokenWallpapersAreLeftOut() {
         // Only http and https: a theme file never reads a file of the phone.
         listOf("file:///sdcard/a.png", "content://media/1", "javascript:alert(1)", "https://", "https://a.com/a b.png").forEach {

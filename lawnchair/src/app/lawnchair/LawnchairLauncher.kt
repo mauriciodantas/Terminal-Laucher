@@ -71,7 +71,7 @@ import app.lawnchair.util.unsafeLazy
 import app.lawnchair.views.BurnInGuard
 import app.lawnchair.views.LawnchairFloatingSurfaceView
 import app.lawnchair.views.ScreenAnimationView
-import app.lawnchair.wallpaper.BackgroundColorWallpaper
+import app.lawnchair.wallpaper.WallpaperController
 import com.android.launcher3.AbstractFloatingView
 import com.android.launcher3.BaseActivity
 import com.android.launcher3.BubbleTextView
@@ -399,7 +399,7 @@ class LawnchairLauncher : QuickstepLauncher() {
             preferenceManager2.backgroundColorOnLockScreen.get(),
         ) { option, toSystem, toLock ->
             val color = LauncherGround.resolveBackground(option, this) ?: getColor(R.color.terminal_background)
-            BackgroundColorWallpaper.sync(this, color, toSystem, toLock)
+            WallpaperController.paintColor(this, color, toSystem, toLock)
         }.launchIn(lifecycleScope)
         preferenceManager2.roundedWidgets.onEach(launchIn = lifecycleScope) {
             RoundedCornerEnforcement.sRoundedCornerEnabled = it

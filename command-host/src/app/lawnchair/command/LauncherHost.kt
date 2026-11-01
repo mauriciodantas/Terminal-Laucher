@@ -128,7 +128,7 @@ object AppHost : CommandHost {
         val hasThemeProps = listOf(
             "accent", "background", "secondary", "outline", "dock", "folder",
             "followSystem", "pixelClock", "iconEffect", "widgetEffect", "crtEffect", "animation", "customAnimation",
-            "showWallpaper", "colorAsWallpaper", "wallpaper", "lockWallpaper",
+            "showWallpaper", "colorAsWallpaper", "colorOnLock", "wallpaper", "lockWallpaper",
         ).any { o.has(it) }
         if (hasThemeProps) {
             val spec = runCatching { ThemeSpecs.fromJson(o) }.getOrNull()

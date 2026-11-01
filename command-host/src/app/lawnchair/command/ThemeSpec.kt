@@ -115,6 +115,8 @@ data class ThemeSpec(
     val wallpaperDim: Float? = null,
     /** The background color also set as the system wallpaper of the home screen. */
     val colorAsWallpaper: Boolean? = null,
+    /** The background color also set on the lock screen, replacing what is there; left out, the lock screen is not touched. */
+    val colorOnLock: Boolean? = null,
     /** An image as the wallpaper of the home screen, and of the lock screen when it says so. */
     val wallpaper: ThemeWallpaper? = null,
     /** An image of its own for the lock screen; it wins over [ThemeWallpaper.lockScreen]. */
@@ -154,6 +156,7 @@ data class ThemeSpec(
         showWallpaper = other.showWallpaper ?: showWallpaper,
         wallpaperDim = other.wallpaperDim ?: wallpaperDim,
         colorAsWallpaper = other.colorAsWallpaper ?: colorAsWallpaper,
+        colorOnLock = other.colorOnLock ?: colorOnLock,
         wallpaper = other.wallpaper ?: wallpaper,
         lockWallpaper = other.lockWallpaper ?: lockWallpaper,
         iconShape = other.iconShape ?: iconShape,
@@ -265,6 +268,7 @@ object ThemeSpecs {
         spec.showWallpaper?.let { o.put("showWallpaper", it) }
         spec.wallpaperDim?.let { o.put("wallpaperDim", it.toDouble()) }
         spec.colorAsWallpaper?.let { o.put("colorAsWallpaper", it) }
+        spec.colorOnLock?.let { o.put("colorOnLock", it) }
         spec.wallpaper?.let { w -> o.put("wallpaper", image(w.image).apply { if (w.lockScreen) put("lockScreen", true) }) }
         spec.lockWallpaper?.let { o.put("lockWallpaper", image(it)) }
         spec.iconShape?.let { o.put("iconShape", it) }
@@ -327,6 +331,7 @@ object ThemeSpecs {
         showWallpaper = bool(o, "showWallpaper"),
         wallpaperDim = fraction(o, "wallpaperDim"),
         colorAsWallpaper = bool(o, "colorAsWallpaper"),
+        colorOnLock = bool(o, "colorOnLock"),
         wallpaper = o.opt("wallpaper")?.let { w ->
             image(w, stored)?.let { ThemeWallpaper(it, lockScreen = (w as? JSONObject)?.let { bool(it, "lockScreen") } == true) }
         },

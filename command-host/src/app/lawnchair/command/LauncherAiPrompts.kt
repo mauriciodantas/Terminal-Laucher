@@ -55,7 +55,7 @@ object LauncherAiPrompts {
             "\"outline\": \"#rrggbb\", \"dock\": \"#rrggbb\", \"folder\": \"#rrggbb\", \"followSystem\": false, " +
             "\"font\": {\"kind\": \"google\", \"family\": \"<Google Fonts family>\"}, \"pixelClock\": true, \"iconEffect\": true, " +
             "\"widgetEffect\": true, \"widgetIntensity\": 0.6, \"crtEffect\": true, \"crtIntensity\": 0.4, \"animation\": \"<animation>\", " +
-            "\"showWallpaper\": false, \"wallpaperDim\": 0.5, \"colorAsWallpaper\": false, \"iconShape\": \"<shape>\", \"folderShape\": \"<shape>\", " +
+            "\"showWallpaper\": false, \"wallpaperDim\": 0.5, \"colorAsWallpaper\": false, \"colorOnLock\": false, \"iconShape\": \"<shape>\", \"folderShape\": \"<shape>\", " +
             "\"wallpaper\": {\"svg\": \"<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1080 2400'>...</svg>\", \"lockScreen\": false}, " +
             "\"lockWallpaper\": {\"svg\": \"<svg ...>...</svg>\"}, " +
             "\"glance\": {\"show\": true, \"animation\": \"<${GlanceSpecs.ANIMATIONS.joinToString("|")}>\", \"tint\": true, \"shortcuts\": true, \"chats\": true, " +
@@ -87,7 +87,7 @@ object LauncherAiPrompts {
             "twinkle how much its light comes and goes (0 to 1). shape svg also takes \"svg\": a single small <svg> of at most ${ThemeSpecs.MAX_SPRITE_CHARS} characters with a viewBox, " +
             "shapes only. Embers rising (angle 180, circle, orange), fireflies (twinkle, sway), leaves, confetti or bubbles are good uses. Never write a Lottie file. " +
             "intensities go from 0.05 to 1. showWallpaper shows the system wallpaper behind the home screen, dimmed by wallpaperDim (0 to 1); " +
-            "colorAsWallpaper sets the background color as the system wallpaper. Set followSystem only when asked to follow the light and dark mode. " +
+            "colorAsWallpaper sets the background color as the system wallpaper; colorOnLock also paints it on the lock screen, replacing what is there, so set it true only when the user asks for the lock screen to follow, and leave it out otherwise. Set followSystem only when asked to follow the light and dark mode. " +
             "iconShape and folderShape pick the shape app icons and folders are cut to, one of: ${ThemeSpecs.ICON_SHAPES.joinToString(", ")}. " +
             "Choose them as part of the concept instead of leaving the default: hexagon or diamond for sci-fi, flower or cloudy for something soft, " +
             "sharpSquare or square for brutalist or terminal looks, squircle for clean ones, heart, leaf or teardrop for playful or nature themes. " +
