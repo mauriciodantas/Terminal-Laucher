@@ -256,11 +256,13 @@ fi
 
 # Execute build and publish using Gradle Play Publisher
 echo "Building and Publishing to Play Store (faixa: $PRIMARY_TRACK)..."
-./gradlew "${GRADLE_TASK:-publishLawnWithQuickstepPlayReleaseBundle}" --no-daemon
+# App e relógio vão numa só invocação, para o Gradle compilar os dois em paralelo.
+PUBLISH_TASKS=("${GRADLE_TASK:-publishLawnWithQuickstepPlayReleaseBundle}")
 if wear_enabled; then
-    echo "Publicando o app do relógio (faixa: wear:$PRIMARY_TRACK)..."
-    ./gradlew :wear-app:publishLauncherReleaseBundle --no-daemon
+    echo "Publicando também o app do relógio (faixa: wear:$PRIMARY_TRACK)..."
+    PUBLISH_TASKS+=(":wear-app:publishLauncherReleaseBundle")
 fi
+./gradlew "${PUBLISH_TASKS[@]}" --no-daemon
 
 # As demais faixas recebem o MESMO build, promovido a partir da primeira. Uma
 # faixa que falhe (nome inexistente, por exemplo) não impede as outras; o
