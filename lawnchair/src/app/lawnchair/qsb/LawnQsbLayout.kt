@@ -10,8 +10,18 @@ import android.util.TypedValue
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.TextView
+import androidx.compose.runtime.DisposableEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import app.lawnchair.command.CommandStats
+import app.lawnchair.command.CommandUsage
+import app.lawnchair.command.StatsStore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
@@ -105,6 +115,30 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
                         val themed by prefs2.themedHotseatQsb.asState()
                         val commandBarEnabled by prefs2.commandBarEnabled.asState()
 
+                        // The examples in the empty bar are the commands the user runs most; the defaults fill the rest.
+                        val defaultExamples = listOf(
+                            stringResource(R.string.nostromo_prompt_example_calc),
+                            stringResource(R.string.nostromo_prompt_example_torch),
+                            stringResource(R.string.nostromo_prompt_example_help),
+                        )
+                        var promptExamples by remember { mutableStateOf(defaultExamples) }
+                        val lifecycle = LocalLifecycleOwner.current.lifecycle
+                        DisposableEffect(lifecycle, defaultExamples) {
+                            val observer = LifecycleEventObserver { _, event ->
+                                if (event == Lifecycle.Event.ON_RESUME) {
+                                    context.launcher.lifecycleScope.launch {
+                                        promptExamples = withContext(Dispatchers.IO) {
+                                            // Same counters as the command list: letters and aliases, by name.
+                                            val counted = CommandUsage.load(context).mapKeys { it.key.substringAfter(':') }
+                                            CommandStats.promptExamples(StatsStore.load(context), defaultExamples, counted)
+                                        }
+                                    }
+                                }
+                            }
+                            lifecycle.addObserver(observer)
+                            onDispose { lifecycle.removeObserver(observer) }
+                        }
+
                         val supportsLens = searchProvider == Google || searchProvider == PixelSearch
                         val voiceIntent = remember(searchProvider, context) {
                             getVoiceIntent(searchProvider, context)
@@ -165,11 +199,7 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
                             style = style,
                             actions = actions,
                             placeholder = stringResource(R.string.nostromo_prompt_hint),
-                            examples = listOf(
-                                stringResource(R.string.nostromo_prompt_example_calc),
-                                stringResource(R.string.nostromo_prompt_example_torch),
-                                stringResource(R.string.nostromo_prompt_example_help),
-                            ),
+                            examples = promptExamples,
                             hint = stringResource(R.string.nostromo_swipe_hint),
                             onVoiceClick = if (commandBarEnabled && CommandActivity.voiceAvailable(context)) {
                                 { CommandActivity.start(context.launcher, voice = true) }
