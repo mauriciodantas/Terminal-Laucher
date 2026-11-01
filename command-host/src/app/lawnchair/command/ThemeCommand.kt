@@ -5,7 +5,7 @@ import app.lawnchair.util.Texts
 import app.lawnchair.util.foldAccents
 
 /** What an element of the theme takes after its word. */
-enum class ThemeValue { COLOR, FONT, SWITCH, EFFECT, PERCENT, SHAPE, ANIMATION }
+enum class ThemeValue { COLOR, FONT, SWITCH, EFFECT, PERCENT, SHAPE, ANIMATION, OFFERED }
 
 /**
  * Each part of the theme the command sets on its own: "tema fundo #000000", "tema fonte Space Mono",
@@ -36,7 +36,16 @@ enum class ThemeElement(
     SHAPE(R.string.cmd_theme_el_shape, "formato", "shape", R.string.cmd_theme_el_shape_desc, ThemeValue.SHAPE),
     FOLDER_SHAPE(R.string.cmd_theme_el_foldershape, "formatopasta", "foldershape", R.string.cmd_theme_el_foldershape_desc, ThemeValue.SHAPE),
     PAINT(R.string.cmd_theme_el_paint, "pintar", "paint", R.string.cmd_theme_el_paint_desc, ThemeValue.SWITCH),
+
+    /** The At a Glance panel: not typed after "tema" (it has many settings), only offered back to the default when a theme leaves it out. */
+    GLANCE(R.string.cmd_theme_el_glance, "glance", "glance", R.string.cmd_theme_el_glance_desc, ThemeValue.OFFERED),
+
+    /** The image a theme put on the lock screen: only offered back (to the system's own wallpaper) when a theme leaves it out. */
+    LOCK(R.string.cmd_theme_el_lock, "bloqueio", "lock", R.string.cmd_theme_el_lock_desc, ThemeValue.OFFERED),
     ;
+
+    /** True when "tema <word>" sets it on its own. */
+    val settable: Boolean get() = value != ThemeValue.OFFERED
 
     val word: String get() = Texts.get(wordRes)
 
@@ -48,26 +57,45 @@ enum class ThemeElement(
     /** The element's value in [spec], as a short text; null when the theme leaves it alone. */
     fun valueIn(spec: ThemeSpec): String? = when (this) {
         ACCENT -> spec.accent?.let(ThemeCommand::colorText)
+
         BACKGROUND -> spec.background?.let(ThemeCommand::colorText)
+
         SECONDARY -> spec.secondary?.let(ThemeCommand::colorText)
+
         OUTLINE -> spec.outline?.let(ThemeCommand::colorText)
+
         DOCK -> spec.dock?.let(ThemeCommand::colorText)
+
         FOLDER -> spec.folder?.let(ThemeCommand::colorText)
+
         FONT -> spec.font?.label
+
         CLOCK -> spec.pixelClock?.let(ThemeCommand::stateText)
+
         ICONS -> spec.iconEffect?.let(ThemeCommand::stateText)
+
         WIDGETS -> ThemeCommand.effectText(spec.widgetEffect, spec.widgetIntensity)
+
         CRT -> ThemeCommand.effectText(spec.crtEffect, spec.crtIntensity)
+
         ANIMATION -> spec.customAnimation?.label ?: spec.animation ?: spec.crtEffect?.takeIf { !it }?.let { ThemeCommand.NO_ANIMATION }
+
         WALLPAPER -> spec.showWallpaper?.let(ThemeCommand::stateText)
+
         DIM -> spec.wallpaperDim?.let(ThemeCommand::percentText)
+
         PAINT -> spec.colorAsWallpaper?.let(ThemeCommand::stateText)
+
         SHAPE -> spec.iconShape
+
         FOLDER_SHAPE -> spec.folderShape
+
+        // Listed on their own by the import screen.
+        GLANCE, LOCK -> null
     }
 
     companion object {
-        fun of(word: String): ThemeElement? = entries.firstOrNull { word in it.words() }
+        fun of(word: String): ThemeElement? = entries.firstOrNull { it.settable && word in it.words() }
     }
 }
 
@@ -144,7 +172,7 @@ object ThemeCommand : BuiltIn(BuiltInCommand.THEME, null, R.string.cmd_help_them
         val word = BuiltInCommand.THEME.word
         val option = Texts.get(R.string.cmd_kind_option)
         return ThemeChange.entries.map { Suggestion("$word ${it.word}", it.preview, option) } +
-            ThemeElement.entries.map { Suggestion("$word ${it.word} ", it.desc, option) } +
+            ThemeElement.entries.filter { it.settable }.map { Suggestion("$word ${it.word} ", it.desc, option) } +
             ThemeVerb.entries.map { Suggestion("$word ${it.word} ", it.desc, option) } +
             extras.themes.map { Suggestion("$word ${it.name}", summary(it), Texts.get(R.string.cmd_theme_kind_saved)) } +
             extras.themePresets.map { Suggestion("$word ${it.name}", summary(it), Texts.get(R.string.cmd_theme_kind_preset)) }
@@ -181,6 +209,7 @@ object ThemeCommand : BuiltIn(BuiltInCommand.THEME, null, R.string.cmd_help_them
             ThemeValue.PERCENT -> percent(element, rest, title, current)
             ThemeValue.SHAPE -> shape(element, rest, title, current)
             ThemeValue.ANIMATION -> animation(rest, title, current)
+            ThemeValue.OFFERED -> result(title, "", Tone.IDLE, null)
         }
     }
 

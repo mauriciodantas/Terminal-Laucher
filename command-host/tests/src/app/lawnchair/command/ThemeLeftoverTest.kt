@@ -51,6 +51,28 @@ class ThemeLeftoverTest {
         assertEquals(listOf(ThemeElement.ANIMATION), ThemeSpecs.leftovers(ThemeSpec(), now, defaults))
     }
 
+    @Test fun aChangedGlancePanelIsOfferedBackUnlessTheThemeBringsIt() {
+        val now = defaults.copy(glance = GlanceSpec(shortcuts = false))
+        assertEquals(listOf(ThemeElement.GLANCE), ThemeSpecs.leftovers(ThemeSpec(accent = ThemeColor.Custom(1)), now, defaults))
+        assertTrue(ThemeSpecs.leftovers(ThemeSpec(glance = GlanceSpec(chats = false)), now, defaults).isEmpty())
+        assertTrue(ThemeSpecs.leftovers(ThemeSpec(), defaults, defaults).isEmpty())
+    }
+
+    @Test fun theGlancePanelAndTheLockScreenAreNotWordsOfTheCommand() {
+        assertNull(ThemeElement.of("glance"))
+        assertNull(ThemeElement.of("bloqueio"))
+    }
+
+    @Test fun imagesAThemePlacedAreOfferedBackUnlessTheNewThemeBringsOne() {
+        val placed = listOf(ThemeElement.WALLPAPER, ThemeElement.LOCK)
+        val plain = ThemeSpec(accent = ThemeColor.Custom(1))
+        assertEquals(placed, ThemeSpecs.leftovers(plain, defaults, defaults, placed))
+        val image = ThemeImage.Url("https://a.b/c.png")
+        assertEquals(listOf(ThemeElement.LOCK), ThemeSpecs.leftovers(plain.copy(wallpaper = ThemeWallpaper(image)), defaults, defaults, placed))
+        assertTrue(ThemeSpecs.leftovers(plain.copy(wallpaper = ThemeWallpaper(image, lockScreen = true)), defaults, defaults, placed).isEmpty())
+        assertTrue(ThemeSpecs.leftovers(plain, defaults, defaults).isEmpty())
+    }
+
     @Test fun defaultsAreAppliedOnlyToTheChosenElements() {
         val chosen = ThemeSpecs.defaultsFor(listOf(ThemeElement.FONT, ThemeElement.WALLPAPER), defaults)
         assertEquals(ThemeSpec(font = ThemeFont.Default, showWallpaper = false), chosen)

@@ -59,11 +59,18 @@ object ThemeImages {
         val lock = spec.lockImage
         // The color painted as wallpaper would cover the image the next time the launcher starts.
         BackgroundColorWallpaper.forget(context, system = home != null, lock = lock != null)
-        if (home != null && home == lock) {
-            set(context, spec, home, WallpaperManager.FLAG_SYSTEM or WallpaperManager.FLAG_LOCK)
-        } else {
-            listOfNotNull(home?.let { set(context, spec, it, WallpaperManager.FLAG_SYSTEM) }, lock?.let { set(context, spec, it, WallpaperManager.FLAG_LOCK) }).all { it }
-        }
+        val same = home != null && home == lock
+        val homeOk = home != null && set(context, spec, home, if (same) WallpaperManager.FLAG_SYSTEM or WallpaperManager.FLAG_LOCK else WallpaperManager.FLAG_SYSTEM)
+        val lockOk = lock != null && (if (same) homeOk else set(context, spec, lock, WallpaperManager.FLAG_LOCK))
+        BackgroundColorWallpaper.markImage(context, system = homeOk, lock = lockOk)
+        (home == null || homeOk) && (lock == null || lockOk)
+    }
+
+    /** Takes the images a theme placed off the home screen and the lock screen, in the background. */
+    fun clearLater(context: Context, system: Boolean, lock: Boolean) {
+        if (!system && !lock) return
+        val app = context.applicationContext
+        scope.launch { BackgroundColorWallpaper.clearImages(app, system, lock) }
     }
 
     private fun set(context: Context, spec: ThemeSpec, image: ThemeImage, which: Int): Boolean {

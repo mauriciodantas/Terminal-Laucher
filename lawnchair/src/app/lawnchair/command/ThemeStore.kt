@@ -24,6 +24,7 @@ import app.lawnchair.smartspace.glance.GlanceTitleBar
 import app.lawnchair.smartspace.glance.GlanceUrgentColor
 import app.lawnchair.theme.ComplementaryColors
 import app.lawnchair.theme.color.ColorOption
+import app.lawnchair.wallpaper.BackgroundColorWallpaper
 import com.android.launcher3.R
 import com.patrykmichalik.opto.core.PreferenceImpl
 import com.patrykmichalik.opto.core.setBlocking
@@ -141,12 +142,27 @@ object ThemeStore {
     }
 
     /** What [spec] leaves alone that is not at the default now, so applying it would keep it (see [ThemeSpecs.leftovers]). */
-    fun leftovers(context: Context, spec: ThemeSpec): List<ThemeElement> =
-        ThemeSpecs.leftovers(spec, current(context), defaults(context))
+    fun leftovers(context: Context, spec: ThemeSpec): List<ThemeElement> = ThemeSpecs.leftovers(spec, current(context), defaults(context), imagesPlaced(context))
+
+    /** The wallpaper elements holding an image an earlier theme put there, which [current] has no way to show. */
+    private fun imagesPlaced(context: Context): List<ThemeElement> = listOfNotNull(
+        ThemeElement.WALLPAPER.takeIf { BackgroundColorWallpaper.hasThemeImage(context, lock = false) },
+        ThemeElement.LOCK.takeIf { BackgroundColorWallpaper.hasThemeImage(context, lock = true) },
+    )
 
     /** [apply], with each of [elements] that [spec] leaves out set to the default. */
-    fun applyWithDefaults(context: Context, spec: ThemeSpec, elements: Collection<ThemeElement>): Boolean =
-        apply(context, ThemeSpecs.defaultsFor(elements, defaults(context)).overlaidWith(spec))
+    fun applyWithDefaults(context: Context, spec: ThemeSpec, elements: Collection<ThemeElement>): Boolean {
+        if (!apply(context, ThemeSpecs.defaultsFor(elements, defaults(context)).overlaidWith(spec))) return false
+        // The panel has many settings and no single default to carry in a spec: it goes back as a whole, after the theme.
+        if (ThemeElement.GLANCE in elements) resetGlance(PreferenceManager2.getInstance(context))
+        // The images an earlier theme put on the screens: the system's own wallpaper shows again.
+        ThemeImages.clearLater(
+            context,
+            system = ThemeElement.WALLPAPER in elements && BackgroundColorWallpaper.hasThemeImage(context, lock = false),
+            lock = ThemeElement.LOCK in elements && BackgroundColorWallpaper.hasThemeImage(context, lock = true),
+        )
+        return true
+    }
 
     /** What the At a Glance panel has that is not how the app comes; null when it is all as it comes. */
     private fun glanceNow(context: Context, p: PreferenceManager2): GlanceSpec? {
@@ -337,7 +353,17 @@ object ThemeStore {
         listOf(p.widgetEffectIntensity, p.crtEffectIntensity, p.wallpaperDim).forEach { it.update(p, it.defaultValue) }
         p.screenAnimation.update(p, p.screenAnimation.defaultValue)
         p.screenAnimationCustom.update(p, p.screenAnimationCustom.defaultValue)
-        // The panel's look; what it shows (agenda, weather…) is a choice of the user, not of a theme.
+        resetGlance(p)
+        val fonts = PreferenceManager.getInstance(context).fontWorkspace
+        if (fonts.get() != fonts.defaultValue) fonts.set(fonts.defaultValue)
+        p.strokeColorStyle.update(p, p.strokeColorStyle.defaultValue)
+        setShape(context, p.iconShape, p.iconShape.defaultValue.toString())
+        setShape(context, p.folderShape, p.folderShape.defaultValue.toString())
+        net.mdantas.terminal.wear.bridge.TerminalWear.publishTheme(context)
+    }
+
+    /** The At a Glance panel back to how the app comes; what it shows (agenda, weather…) is a choice of the user, not of a theme. */
+    private fun resetGlance(p: PreferenceManager2) {
         listOf(p.glanceAnimationTint, p.glanceShortcuts, p.glanceChats, p.enableSmartspace).forEach { it.update(p, it.defaultValue) }
         p.glanceAnimation.update(p, p.glanceAnimation.defaultValue)
         listOf(
@@ -358,12 +384,6 @@ object ThemeStore {
         p.glanceTitleBar.update(p, p.glanceTitleBar.defaultValue)
         p.glanceUrgentColor.update(p, p.glanceUrgentColor.defaultValue)
         p.glanceShortcutsHidden.update(p, p.glanceShortcutsHidden.defaultValue)
-        val fonts = PreferenceManager.getInstance(context).fontWorkspace
-        if (fonts.get() != fonts.defaultValue) fonts.set(fonts.defaultValue)
-        p.strokeColorStyle.update(p, p.strokeColorStyle.defaultValue)
-        setShape(context, p.iconShape, p.iconShape.defaultValue.toString())
-        setShape(context, p.folderShape, p.folderShape.defaultValue.toString())
-        net.mdantas.terminal.wear.bridge.TerminalWear.publishTheme(context)
     }
 
     private fun <C, S> PreferenceImpl<C, S>.update(p: PreferenceManager2, value: C) {

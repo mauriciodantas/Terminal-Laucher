@@ -685,10 +685,11 @@ object ThemeSpecs {
     /**
      * The elements [spec] says nothing about that are not at their [defaults] in [current]: what an earlier theme
      * (or the user) set and this one would silently keep. Empty when every such element is already default, so
-     * there is nothing to ask. An element whose default is unknown (null in [defaults]) is never reported.
+     * there is nothing to ask. An element whose default is unknown (null in [defaults]) is never reported, unless
+     * it is in [placed]: the ones holding an image a theme put there (the home and lock screen wallpapers), which
+     * [current] cannot show.
      */
-    fun leftovers(spec: ThemeSpec, current: ThemeSpec, defaults: ThemeSpec): List<ThemeElement> =
-        ThemeElement.entries.filter { !sets(it, spec) && differs(it, current, defaults) }
+    fun leftovers(spec: ThemeSpec, current: ThemeSpec, defaults: ThemeSpec, placed: Collection<ThemeElement> = emptyList()): List<ThemeElement> = ThemeElement.entries.filter { !sets(it, spec) && (differs(it, current, defaults) || it in placed) }
 
     /** A theme holding the default of each of [elements] only, to apply together with the theme that leaves them out. */
     fun defaultsFor(elements: Collection<ThemeElement>, defaults: ThemeSpec): ThemeSpec {
@@ -723,6 +724,8 @@ object ThemeSpecs {
         ThemeElement.ANIMATION -> spec.animation != null || spec.customAnimation != null || spec.crtEffect == false
         ThemeElement.WALLPAPER -> spec.showWallpaper != null || spec.wallpaper != null
         ThemeElement.PAINT -> spec.colorAsWallpaper != null || spec.wallpaper != null
+        ThemeElement.GLANCE -> spec.glance != null
+        ThemeElement.LOCK -> spec.lockImage != null
         else -> element.valueIn(spec) != null
     }
 
@@ -730,22 +733,44 @@ object ThemeSpecs {
         fun <T> T?.isOff(default: T?) = default != null && this != default
         return when (element) {
             ThemeElement.ACCENT -> now.accent.isOff(d.accent)
+
             ThemeElement.BACKGROUND -> now.background.isOff(d.background)
+
             ThemeElement.SECONDARY -> now.secondary.isOff(d.secondary)
+
             ThemeElement.OUTLINE -> now.outline.isOff(d.outline)
+
             ThemeElement.DOCK -> now.dock.isOff(d.dock)
+
             ThemeElement.FOLDER -> now.folder.isOff(d.folder)
+
             ThemeElement.FONT -> now.font.isOff(d.font)
+
             ThemeElement.CLOCK -> now.pixelClock.isOff(d.pixelClock)
+
             ThemeElement.ICONS -> now.iconEffect.isOff(d.iconEffect)
+
             ThemeElement.WIDGETS -> now.widgetEffect.isOff(d.widgetEffect) || now.widgetIntensity.isOff(d.widgetIntensity)
+
             ThemeElement.CRT -> now.crtEffect.isOff(d.crtEffect) || now.crtIntensity.isOff(d.crtIntensity)
+
             ThemeElement.ANIMATION -> d.animation != null && (now.animation != d.animation || now.customAnimation != null)
+
             ThemeElement.WALLPAPER -> now.showWallpaper.isOff(d.showWallpaper)
+
             ThemeElement.DIM -> now.wallpaperDim.isOff(d.wallpaperDim)
+
             ThemeElement.PAINT -> now.colorAsWallpaper.isOff(d.colorAsWallpaper)
+
             ThemeElement.SHAPE -> now.iconShape.isOff(d.iconShape)
+
             ThemeElement.FOLDER_SHAPE -> now.folderShape.isOff(d.folderShape)
+
+            // The panel has no single default value: [now] carries only what is not how the app comes.
+            ThemeElement.GLANCE -> now.glance != null
+
+            // Only [leftovers]' `placed` can tell: the image itself is not in a spec.
+            ThemeElement.LOCK -> false
         }
     }
 
