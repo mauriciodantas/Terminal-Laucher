@@ -34,6 +34,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.rounded.Checklist
 import androidx.compose.material.icons.rounded.Close
@@ -562,6 +563,26 @@ fun CommandActionsPreferences(openEdit: String = "") {
                             )
                         }
                     }
+                }
+            }
+            if (!selectionMode) {
+                // The same way in as the theme's "Create with AI": the guide has the prompt and imports the answer.
+                TextButton(
+                    onClick = { navController.navigate(CommandGuide) },
+                    modifier = Modifier.padding(horizontal = 8.dp),
+                ) {
+                    Icon(Icons.Rounded.AutoAwesome, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.cmd_guide_ai_create))
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        stringResource(R.string.cmd_guide_ai_create_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
                 }
             }
             @Composable

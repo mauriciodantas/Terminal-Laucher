@@ -1708,6 +1708,24 @@
     <string name="cmd_guide_section_examples">Full examples</string>
     <string name="cmd_guide_backup_hint">How to create .tcmd packs with AI or manually?</string>
     <string name="cmd_guide_editor_hint">View technical specs and AI prompt</string>
+    <string name="cmd_guide_ai_title">Create commands with AI</string>
+    <string name="cmd_guide_ai_create">Create with AI</string>
+    <string name="cmd_guide_ai_create_hint">Describe the command to any AI chat and import the answer</string>
+    <string name="cmd_guide_import_clipboard">Import from the clipboard</string>
+    <string name="cmd_guide_share">Share</string>
+    <string name="cmd_guide_save">Save file</string>
+    <string name="cmd_guide_prompt_saved">Prompt saved</string>
+    <string name="cmd_guide_prompt_save_failed">Could not save the prompt</string>
+    <string name="cmd_guide_clipboard_empty">The clipboard is empty: copy the commands the AI wrote first</string>
+    <string name="cmd_guide_clipboard_invalid">The clipboard does not hold a command pack</string>
+    <string name="cmd_guide_steps_heading">How it works</string>
+    <string name="cmd_guide_step1">1. Copy the prompt and paste it in the AI chat of your choice.</string>
+    <string name="cmd_guide_step2">2. Replace the last line with what you want: what the command does, the word you will type in the bar and, for an API, its documentation.</string>
+    <string name="cmd_guide_step3">3. Copy the JSON the AI answers with. Markdown fences around it are fine.</string>
+    <string name="cmd_guide_step4">4. Tap Import from the clipboard. The import screen shows every command before anything is added, and asks for the API key if one is needed.</string>
+    <string name="cmd_guide_bar_heading">In the bar</string>
+    <string name="cmd_guide_bar_intro">With an AI key saved, the bar writes the commands itself and opens the same import screen.</string>
+    <string name="cmd_guide_bar_commands" formatted="false">ai create search a movie on IMDb\nai create alarm for 7am, then do not disturb\nai do open maps and search a pharmacy</string>
     <string name="cmd_providers_group">Providers</string>
     <string name="cmd_providers_intro">An API command names a provider and gives a path. The provider holds the address and how to authenticate, so a key is typed once and only goes to that service.</string>
     <string name="cmd_providers_new">New provider</string>

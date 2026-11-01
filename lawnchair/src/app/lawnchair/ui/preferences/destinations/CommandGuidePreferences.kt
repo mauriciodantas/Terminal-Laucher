@@ -1,8 +1,12 @@
 package app.lawnchair.ui.preferences.destinations
 
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -18,7 +22,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ContentCopy
+import androidx.compose.material.icons.rounded.ContentPaste
 import androidx.compose.material.icons.rounded.OpenInBrowser
+import androidx.compose.material.icons.rounded.Save
+import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -38,6 +45,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import app.lawnchair.command.AiPrompts
+import app.lawnchair.command.CommandPacks
+import app.lawnchair.command.ImportCommandsActivity
 import app.lawnchair.ui.preferences.components.controls.ClickablePreference
 import app.lawnchair.ui.preferences.components.layout.ClickableIcon
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
@@ -198,45 +208,62 @@ O Terminal Launcher solicita a chave ao usuário durante a importação do pacot
 - Depois de um "|", um comando digitado sem texto recebe a saída anterior em {text}; com texto, o digitado ganha e a saída fica em {stdin}.
 - "alias" e "unalias" não podem fazer parte de uma cadeia.
 
-DOCUMENTAÇÃO DA API A INTEGRAR:
-[Forneça aqui a documentação da API, URL base, endpoint desejado e estrutura de resposta JSON]"""
+RESPOSTA:
+Responda somente com o JSON do pacote .tcmd, sem explicações antes ou depois. Se o pedido for ambíguo, escolha o mais simples que funcione e siga em frente.
 
+O QUE EU QUERO (troque esta linha pelo seu pedido: o que o comando faz, o nome que você quer digitar na barra e, se for uma API, a documentação, a URL base e o formato da resposta):
+[Descreva aqui o comando que você quer]"""
+
+/**
+ * How to make commands with an AI chat and bring them in, like the theme guide: the prompt to copy,
+ * share or save, the pack on the clipboard to import, the steps and the bar's own "ia criar".
+ * Under them, the technical reference of the .tcmd format.
+ */
 @Composable
 fun CommandGuidePreferences(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    val promptCopiedMessage = stringResource(R.string.cmd_guide_prompt_copied)
+    val prompt = AI_MASTER_PROMPT
+    val copied = stringResource(R.string.cmd_guide_prompt_copied)
+    val copyPrompt = {
+        copyToClipboard(context = context, text = prompt, label = "Prompt Terminal Launcher (.tcmd)", toastMessage = copied)
+    }
+
+    val saved = stringResource(R.string.cmd_guide_prompt_saved)
+    val saveFailed = stringResource(R.string.cmd_guide_prompt_save_failed)
+    val saveFile = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri ->
+        if (uri != null) {
+            val ok = runCatching {
+                context.contentResolver.openOutputStream(uri, "wt")?.use { it.write(prompt.toByteArray(Charsets.UTF_8)) } != null
+            }.getOrDefault(false)
+            Toast.makeText(context, if (ok) saved else saveFailed, Toast.LENGTH_SHORT).show()
+        }
+    }
+    val sharePrompt = {
+        val send = Intent(Intent.ACTION_SEND)
+            .setType("text/plain")
+            .putExtra(Intent.EXTRA_SUBJECT, "Prompt Terminal Launcher (.tcmd)")
+            .putExtra(Intent.EXTRA_TEXT, prompt)
+        context.startActivity(Intent.createChooser(send, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    }
+    val openGithub = {
+        runCatching {
+            context.startActivity(
+                Intent(Intent.ACTION_VIEW, Uri.parse(GITHUB_GUIDE_URL))
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
+        }
+    }
 
     PreferenceLayout(
-        label = stringResource(R.string.cmd_guide_title),
+        label = stringResource(R.string.cmd_guide_ai_title),
         modifier = modifier,
         actions = {
-            ClickableIcon(
-                imageVector = Icons.Rounded.ContentCopy,
-                onClick = {
-                    copyToClipboard(
-                        context = context,
-                        text = AI_MASTER_PROMPT,
-                        label = "Prompt Terminal Launcher (.tcmd)",
-                        toastMessage = promptCopiedMessage,
-                    )
-                },
-            )
-            ClickableIcon(
-                imageVector = Icons.Rounded.OpenInBrowser,
-                onClick = {
-                    runCatching {
-                        context.startActivity(
-                            Intent(Intent.ACTION_VIEW, Uri.parse(GITHUB_GUIDE_URL))
-                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-                        )
-                    }
-                },
-            )
+            ClickableIcon(imageVector = Icons.Rounded.ContentCopy, onClick = { copyPrompt() })
+            ClickableIcon(imageVector = Icons.Rounded.OpenInBrowser, onClick = { openGithub() })
         },
     ) {
-        // Quick Action Banner
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -259,40 +286,55 @@ fun CommandGuidePreferences(
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                Button(onClick = { copyPrompt() }, modifier = Modifier.fillMaxWidth()) {
+                    Icon(Icons.Rounded.ContentCopy, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.cmd_guide_copy_prompt))
+                }
+                OutlinedButton(
+                    onClick = { importFromClipboard(context) },
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                 ) {
-                    Button(
-                        onClick = {
-                            copyToClipboard(
-                                context = context,
-                                text = AI_MASTER_PROMPT,
-                                label = "Prompt Terminal Launcher (.tcmd)",
-                                toastMessage = promptCopiedMessage,
-                            )
-                        },
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Icon(Icons.Rounded.ContentCopy, contentDescription = null)
+                    Icon(Icons.Rounded.ContentPaste, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.cmd_guide_import_clipboard))
+                }
+                Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = { sharePrompt() }, modifier = Modifier.weight(1f)) {
+                        Icon(Icons.Rounded.Share, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(stringResource(R.string.cmd_guide_copy_prompt))
+                        Text(stringResource(R.string.cmd_guide_share))
                     }
-                    OutlinedButton(
-                        onClick = {
-                            runCatching {
-                                context.startActivity(
-                                    Intent(Intent.ACTION_VIEW, Uri.parse(GITHUB_GUIDE_URL))
-                                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-                                )
-                            }
-                        },
-                    ) {
-                        Icon(Icons.Rounded.OpenInBrowser, contentDescription = null)
+                    OutlinedButton(onClick = { saveFile.launch("terminal-launcher-comandos-prompt.txt") }, modifier = Modifier.weight(1f)) {
+                        Icon(Icons.Rounded.Save, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(stringResource(R.string.cmd_guide_github_btn))
+                        Text(stringResource(R.string.cmd_guide_save))
                     }
                 }
+            }
+        }
+
+        PreferenceGroup(heading = stringResource(R.string.cmd_guide_steps_heading), modifier = Modifier.padding(top = 8.dp)) {
+            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf(
+                    R.string.cmd_guide_step1,
+                    R.string.cmd_guide_step2,
+                    R.string.cmd_guide_step3,
+                    R.string.cmd_guide_step4,
+                ).forEach { Text(stringResource(it), style = MaterialTheme.typography.bodyMedium) }
+            }
+        }
+
+        PreferenceGroup(heading = stringResource(R.string.cmd_guide_bar_heading), modifier = Modifier.padding(top = 8.dp)) {
+            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(stringResource(R.string.cmd_guide_bar_intro), style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    stringResource(R.string.cmd_guide_bar_commands),
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 12.sp,
+                    lineHeight = 18.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
 
@@ -622,3 +664,33 @@ internal fun JsonCodeCard(json: String) {
         }
     }
 }
+
+/**
+ * Opens the import screen with the commands the AI wrote, found on the clipboard even when they came
+ * with Markdown fences or a sentence around them. Nothing is added unseen: it is the same screen as
+ * a pack received from somebody.
+ */
+private fun importFromClipboard(context: Context) {
+    val clip = (context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager)
+        ?.primaryClip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.coerceToText(context)?.toString().orEmpty()
+    val pack = AiPrompts.pack(clip)?.first
+    val message = when {
+        clip.isBlank() -> R.string.cmd_guide_clipboard_empty
+        pack == null -> R.string.cmd_guide_clipboard_invalid
+        stagePack(context, pack) -> return
+        else -> R.string.cmd_imp_invalid
+    }
+    Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+}
+
+private fun stagePack(context: Context, json: String): Boolean = runCatching {
+    val dir = java.io.File(context.cacheDir, "commands").apply { mkdirs() }
+    val file = java.io.File(dir, "ia." + CommandPacks.EXTENSION).apply { writeText(json) }
+    val uri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+    context.startActivity(
+        Intent(context, ImportCommandsActivity::class.java)
+            .setAction(Intent.ACTION_VIEW)
+            .setData(uri)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION),
+    )
+}.isSuccess

@@ -603,6 +603,24 @@
     <string name="cmd_guide_section_examples">Exemplos completos</string>
     <string name="cmd_guide_backup_hint">Como criar pacotes .tcmd com IA ou manualmente?</string>
     <string name="cmd_guide_editor_hint">Ver especificações técnicas e prompt para IA</string>
+    <string name="cmd_guide_ai_title">Criar comandos com IA</string>
+    <string name="cmd_guide_ai_create">Criar com IA</string>
+    <string name="cmd_guide_ai_create_hint">Descreva o comando para qualquer chat de IA e importe a resposta</string>
+    <string name="cmd_guide_import_clipboard">Importar da área de transferência</string>
+    <string name="cmd_guide_share">Compartilhar</string>
+    <string name="cmd_guide_save">Salvar arquivo</string>
+    <string name="cmd_guide_prompt_saved">Prompt salvo</string>
+    <string name="cmd_guide_prompt_save_failed">Não foi possível salvar o prompt</string>
+    <string name="cmd_guide_clipboard_empty">A área de transferência está vazia: copie antes os comandos que a IA escreveu</string>
+    <string name="cmd_guide_clipboard_invalid">A área de transferência não tem um pacote de comandos</string>
+    <string name="cmd_guide_steps_heading">Como funciona</string>
+    <string name="cmd_guide_step1">1. Copie o prompt e cole no chat de IA que preferir.</string>
+    <string name="cmd_guide_step2">2. Troque a última linha pelo que você quer: o que o comando faz, a palavra que você vai digitar na barra e, se for uma API, a documentação dela.</string>
+    <string name="cmd_guide_step3">3. Copie o JSON que a IA responder. Pode vir com as cercas de código do Markdown.</string>
+    <string name="cmd_guide_step4">4. Toque em Importar da área de transferência. A tela de importação mostra cada comando antes de adicionar qualquer coisa e pede a chave da API, se precisar.</string>
+    <string name="cmd_guide_bar_heading">Na barra</string>
+    <string name="cmd_guide_bar_intro">Com uma chave de IA salva, a própria barra escreve os comandos e abre a mesma tela de importação.</string>
+    <string name="cmd_guide_bar_commands" formatted="false">ia criar buscar um filme no IMDb\nia criar alarme para as 7h e depois não perturbe\nia fazer abrir o mapa e buscar uma farmácia</string>
     <string name="cmd_providers_group">Provedores</string>
     <string name="cmd_providers_intro">Um comando de API diz qual provedor usa e o caminho. O provedor guarda o endereço e como se autenticar: a chave é digitada uma vez e só vai para esse serviço.</string>
     <string name="cmd_providers_new">Novo provedor</string>
