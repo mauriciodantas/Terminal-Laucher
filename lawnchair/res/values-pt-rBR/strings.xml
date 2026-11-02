@@ -574,6 +574,8 @@ Essa nova versão é atualização Major e pode ser menos estável\".</string>
     <string name="home_screen_unlock">Desbloquear a tela inicial</string>
     <string name="home_screen_locked">A tela inicial está bloqueada</string>
     <string name="home_screen_lock_description">Impedir mudanças no layout da tela inicial</string>
+    <string name="home_add_new_apps_label">Adicionar novos apps à tela inicial</string>
+    <string name="home_add_new_apps_description">Coloca um ícone na tela inicial quando você instala um app</string>
     <string name="horizontal_padding_label">Preenchimento horizontal</string>
     <string name="vertical_padding_label">Preenchimento vertical</string>
     <string name="top_padding_label">Preenchimento central</string>

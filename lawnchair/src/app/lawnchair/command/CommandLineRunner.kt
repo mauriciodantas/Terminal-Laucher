@@ -39,6 +39,12 @@ object CommandLineRunner {
                 Result(analysis, ran = ping.isNotEmpty(), output = ping)
             }
 
+            // The same run as in a chain: refuses a metered network, and shows the figures (or why it failed).
+            is CommandAction.SpeedTest -> withSteps(context) { steps ->
+                val result = steps.run(action, null)
+                Result(analysis, ran = result.ok, output = result.shown().ifBlank { null })
+            }
+
             is CommandAction.Weather -> {
                 val weather = withContext(Dispatchers.IO) { Weather.run(action) }
                 Result(analysis, ran = weather.isNotEmpty(), output = weather)
@@ -100,7 +106,7 @@ object CommandLineRunner {
     }
 
     private fun producesOutput(action: CommandAction): Boolean = when (action) {
-        is CommandAction.Ping, is CommandAction.Weather -> true
+        is CommandAction.Ping, is CommandAction.Weather, is CommandAction.SpeedTest -> true
         is CommandAction.Custom -> action.action.kind == ActionKind.SCRIPT || action.action.kind == ActionKind.API
         is CommandAction.Chain -> action.steps.all { producesOutput(it) }
         else -> false

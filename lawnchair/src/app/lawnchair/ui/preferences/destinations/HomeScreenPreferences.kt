@@ -91,6 +91,11 @@ fun HomeScreenPreferences(
                 description = stringResource(id = R.string.home_screen_lock_description),
             )
             SwitchPreference(
+                adapter = prefs.addIconToHome.getAdapter(),
+                label = stringResource(id = R.string.home_add_new_apps_label),
+                description = stringResource(id = R.string.home_add_new_apps_description),
+            )
+            SwitchPreference(
                 adapter = prefs.allowRotation.getAdapter(),
                 label = stringResource(id = R.string.home_screen_rotation_label),
                 description = stringResource(id = R.string.home_screen_rotation_description),
