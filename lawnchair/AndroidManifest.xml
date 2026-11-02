@@ -368,6 +368,33 @@
             </intent-filter>
         </activity>
 
+        <!-- Routines files (.trtn): scheduled commands, reminders and rules; files sent as octet-stream reach ImportCommandsActivity, which hands them over here. -->
+        <activity
+            android:name="app.lawnchair.command.ImportRoutinesActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:label="@string/routines_import_title"
+            android:theme="@style/Theme.Transparent">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/x-terminal-routines" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:mimeType="*/*" />
+                <data android:host="*" />
+                <data android:pathPattern=".*\\.trtn" />
+                <data android:pathPattern=".*\\..*\\.trtn" />
+                <data android:pathPattern=".*\\..*\\..*\\.trtn" />
+            </intent-filter>
+        </activity>
+
         <activity
             android:name="app.lawnchair.command.ImportThemeActivity"
             android:exported="true"

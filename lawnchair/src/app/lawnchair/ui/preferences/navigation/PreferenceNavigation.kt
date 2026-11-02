@@ -53,6 +53,7 @@ import app.lawnchair.ui.preferences.destinations.PickAppForGesture
 import app.lawnchair.ui.preferences.destinations.PredictionsPreferences
 import app.lawnchair.ui.preferences.destinations.PreferencesDashboard
 import app.lawnchair.ui.preferences.destinations.QuickstepPreferences
+import app.lawnchair.ui.preferences.destinations.RoutineGuidePreferences
 import app.lawnchair.ui.preferences.destinations.RoutinesPreferences
 import app.lawnchair.ui.preferences.destinations.SearchPreferences
 import app.lawnchair.ui.preferences.destinations.SearchProviderPreferences
@@ -175,6 +176,9 @@ fun PreferenceNavigation(
         composable<CommandGuide>(
             deepLinks = getDeepLink(CommandGuide),
         ) { CommandGuidePreferences() }
+        composable<RoutineGuide>(
+            deepLinks = getDeepLink(RoutineGuide),
+        ) { RoutineGuidePreferences() }
         composable<ThemeGuide>(
             deepLinks = getDeepLink(ThemeGuide),
         ) { ThemeGuidePreferences() }

@@ -1,6 +1,7 @@
 package app.lawnchair.ui.preferences.destinations
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.widget.Toast
@@ -10,10 +11,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -30,25 +36,33 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import app.lawnchair.command.AliasStore
 import app.lawnchair.command.Analysis
 import app.lawnchair.command.CommandActivity
 import app.lawnchair.command.CommandExtras
 import app.lawnchair.command.CommandLineRunner
 import app.lawnchair.command.CommandScheduler
+import app.lawnchair.command.CustomActionStore
+import app.lawnchair.command.ImportRoutinesActivity
 import app.lawnchair.command.JobStore
+import app.lawnchair.command.ProviderStore
+import app.lawnchair.command.RoutinePacks
 import app.lawnchair.command.RoutineStore
 import app.lawnchair.command.Routines
 import app.lawnchair.command.ScheduleAssistant
 import app.lawnchair.command.Tone
 import app.lawnchair.command.TriggerEvent
+import app.lawnchair.ui.preferences.LocalNavController
 import app.lawnchair.ui.preferences.components.controls.ClickablePreference
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
+import app.lawnchair.ui.preferences.navigation.RoutineGuide
 import com.android.launcher3.R
 import kotlinx.coroutines.launch
 
@@ -60,6 +74,19 @@ import kotlinx.coroutines.launch
 fun RoutinesPreferences(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val navController = LocalNavController.current
+
+    // A routines file picked here goes through the same review screen as one received from a chat.
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            context.startActivity(
+                Intent(context, ImportRoutinesActivity::class.java)
+                    .setAction(Intent.ACTION_VIEW)
+                    .setData(uri)
+                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION),
+            )
+        }
+    }
 
     // What runs in the background changes the list while the screen is away: it is read again on return.
     var version by remember { mutableIntStateOf(0) }
@@ -93,6 +120,57 @@ fun RoutinesPreferences(modifier: Modifier = Modifier) {
                 label = stringResource(R.string.routines_add),
                 subtitle = stringResource(R.string.routines_add_desc),
                 onClick = { adding = true },
+            )
+        }
+        // The same way in as the commands' and the theme's "Create with AI": the guide has the prompt and imports the answer.
+        TextButton(
+            onClick = { navController.navigate(RoutineGuide) },
+            modifier = Modifier.padding(horizontal = 8.dp),
+        ) {
+            Icon(Icons.Rounded.AutoAwesome, contentDescription = null)
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(R.string.cmd_guide_ai_create))
+            Spacer(Modifier.width(8.dp))
+            Text(
+                stringResource(R.string.routine_guide_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false),
+            )
+        }
+        PreferenceGroup(heading = stringResource(R.string.routines_share_heading)) {
+            ClickablePreference(
+                label = stringResource(R.string.routines_export),
+                subtitle = stringResource(R.string.routines_export_desc),
+                onClick = {
+                    val jobs = JobStore.load(context)
+                    val pack = RoutinePacks.fromJobs(
+                        name = context.getString(R.string.routines_title),
+                        jobs = jobs,
+                        extras = CommandExtras(jobs = jobs),
+                        actions = CustomActionStore.load(context),
+                        aliases = AliasStore.load(context),
+                        providers = ProviderStore.load(context),
+                    )
+                    val send = pack.takeUnless { it.isEmpty }?.let { RoutinePacks.shareIntent(context, it) }
+                    if (send == null) {
+                        Toast.makeText(context, R.string.routines_export_empty, Toast.LENGTH_SHORT).show()
+                    } else {
+                        context.startActivity(send.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                    }
+                },
+            )
+            ClickablePreference(
+                label = stringResource(R.string.routines_import_file),
+                subtitle = stringResource(R.string.routines_import_file_desc),
+                onClick = { picker.launch(arrayOf("*/*")) },
+            )
+            ClickablePreference(
+                label = stringResource(R.string.routines_import_clipboard),
+                subtitle = stringResource(R.string.routines_import_clipboard_desc),
+                onClick = { importRoutinesFromClipboard(context) },
             )
         }
         if (rows.isEmpty()) {
@@ -200,6 +278,8 @@ private fun AddRoutineDialog(onDismiss: () -> Unit, onSave: () -> Unit) {
                                 ScheduleAssistant.Moment.IN to (R.string.routines_when_in to "30m"),
                                 ScheduleAssistant.Moment.AT to (R.string.routines_when_at to "22h"),
                                 ScheduleAssistant.Moment.TOMORROW to (R.string.routines_when_tomorrow to "7h"),
+                                ScheduleAssistant.Moment.DAILY to (R.string.routines_when_daily to "7h"),
+                                ScheduleAssistant.Moment.EVERY to (R.string.routines_when_every to "2h"),
                             ).forEach { (kind, pair) ->
                                 FilterChip(
                                     selected = moment == kind,

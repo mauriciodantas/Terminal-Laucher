@@ -112,7 +112,9 @@ object CommandScheduler {
 
     /** Runs the job [id] once: the alarm and [armAll] may both reach it when the app starts. */
     internal suspend fun fire(context: Context, id: Long) {
-        val job = JobStore.take(context, id) ?: return
+        val job = JobStore.takeOrAdvance(context, id, System.currentTimeMillis()) ?: return
+        // A job that repeats stays in the store with its next run, which is armed now.
+        JobStore.load(context).firstOrNull { it.id == id && it.repeat != null }?.let { arm(context, it) }
         when (job.kind) {
             JobKind.REMIND -> {
                 RoutineStore.record(context, Routines.jobKey(id), context.getString(app.lawnchair.command.R.string.cmd_remind_label, job.text), true)

@@ -53,6 +53,7 @@ class ImportCommandsActivity : ComponentActivity() {
         // Chats hand any file over as octet-stream, so a theme or a widget file may land here first.
         val other = when {
             pack != null || uri == null -> null
+            RoutinePacks.read(this, uri) != null -> ImportRoutinesActivity::class.java
             ThemeStore.read(this, uri) != null -> ImportThemeActivity::class.java
             LottieWidgetPacks.looksLikePack(this, uri) -> ImportWidgetActivity::class.java
             else -> null

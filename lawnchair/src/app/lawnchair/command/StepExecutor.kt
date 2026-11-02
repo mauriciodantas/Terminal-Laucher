@@ -39,6 +39,19 @@ class StepExecutor(
 
         is CommandAction.Weather -> withContext(Dispatchers.IO) { StepResult.ok(text = Weather.run(step)) }
 
+        // The figures the bar shows go on to the next command: "fast | notificar". It uses up to 150 MB, so mobile data is left alone.
+        is CommandAction.SpeedTest -> withContext(Dispatchers.IO) {
+            val metered = context.getSystemService(android.net.ConnectivityManager::class.java)?.isActiveNetworkMetered == true
+            if (metered) {
+                StepResult.error(context.getString(app.lawnchair.command.R.string.cmd_fast_chain_metered, Speed.MAX_MB))
+            } else {
+                runCatching { SpeedTestRunner.run { } }.fold(
+                    { StepResult.ok(text = Speed.text(it)) },
+                    { StepResult.error(context.getString(R.string.command_failed)) },
+                )
+            }
+        }
+
         is CommandAction.Ping -> withContext(Dispatchers.IO) {
             CommandSources.ping(step.host).let { if (it.isBlank()) StepResult.error(context.getString(R.string.command_failed)) else StepResult.ok(text = it) }
         }

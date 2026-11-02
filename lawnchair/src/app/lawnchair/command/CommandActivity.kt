@@ -528,7 +528,7 @@ private fun CommandScreen(onClose: () -> Unit) {
     fun record(action: CommandAction, command: String) {
         // "!!" is not kept: the command it repeated stays the last one.
         if (command.trim() == BuiltInCommand.REPEAT || command.trimStart().startsWith(BuiltInCommand.RECALL)) return
-        if (action is ImportAction.Theme || action is ImportAction.Widget || action is CommandAction.ImportCommands) return
+        if (action is ImportAction.Theme || action is ImportAction.Widget || action is CommandAction.ImportCommands || action is CommandAction.ImportRoutines) return
         // The line carries the key: it stays out of the history, the usage counts and the statistics.
         if (action is CommandAction.AiSetup) return
         // A variable holds what the user chose to keep apart: an address, a code. It stays out of the history too.

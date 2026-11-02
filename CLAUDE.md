@@ -80,6 +80,10 @@ Resumo do funcionamento:
 - **Mudar o relógio**: edite em `wear/`, rode `./gradlew :wear-protocol:test`, faça push em `wear/` e só então commite o ponteiro aqui e no Terminal Bar. Os dois apps devem apontar para o mesmo commit (`git submodule status wear`).
 - Uma ação nova no motor nasce `UNSUPPORTED` no relógio; para liberá-la, ponha-a em `WatchRules.effect`.
 
+## Rotinas (`.trtn`)
+
+Exportar, importar (arquivo, área de transferência ou `importar {...}` na barra) e "Criar rotinas com IA" ficam em Rotinas (`RoutinesPreferences`, `RoutineGuidePreferences`, `ImportRoutinesActivity`). O formato e o prompt vêm do motor (`RoutinePacks`, `RoutinePrompts`) e são os mesmos do Terminal Bar; a especificação está em `../TerminalBar/docs/FORMATO_ROTINAS.md`.
+
 ## Nova customização visual
 
 Sempre que surgir uma nova possibilidade de customização visual (uma cor, um estilo, uma opção de widget, um campo de tema), o suporte a ela tem de chegar junto, no mesmo trabalho, a estas três peças:

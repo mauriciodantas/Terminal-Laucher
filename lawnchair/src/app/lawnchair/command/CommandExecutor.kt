@@ -344,6 +344,17 @@ object CommandExecutor {
                 )
             }
 
+            is CommandAction.ImportRoutines -> {
+                val uri = RoutinePacks.stage(context, RoutinePacks.encode(action.pack)) ?: return false
+                start(
+                    context,
+                    Intent(context, ImportRoutinesActivity::class.java)
+                        .setAction(Intent.ACTION_VIEW)
+                        .setData(uri)
+                        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION),
+                )
+            }
+
             // ACTION_WEB_SEARCH only fills the search box of Chrome and Google; it does not search.
             is CommandAction.WebSearch -> {
                 val provider = PreferenceManager2.getInstance(context).webSuggestionProvider.firstCached().configure(context)

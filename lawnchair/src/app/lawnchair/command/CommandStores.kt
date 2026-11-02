@@ -39,6 +39,8 @@ object UserVariableStore {
 
 /** Reminders, scheduled commands and rules; [CommandScheduler] arms and runs them. */
 object JobStore {
+    /** An alarm never comes early, but its clock and the job's may differ by a moment. */
+    private const val DUE_SLACK_MS = 2_000L
     private const val KEY = "command_jobs"
     private const val KEY_NEXT_ID = "command_jobs_next_id"
 
@@ -62,6 +64,21 @@ object JobStore {
     @Synchronized
     fun remove(context: Context, id: Long) {
         save(context, load(context).filter { it.id != id })
+    }
+
+    /**
+     * The job [id] to run now. One that runs once is removed; one that repeats stays, moved to its
+     * next run, and the job returned is the one that was due. Null when it is gone or not due yet,
+     * so a job fired twice at once (the alarm and the start of the app) runs only once.
+     */
+    @Synchronized
+    fun takeOrAdvance(context: Context, id: Long, nowMillis: Long): ScheduledJob? {
+        val jobs = load(context)
+        val job = jobs.firstOrNull { it.id == id } ?: return null
+        val next = Repeats.advance(job, nowMillis, java.time.ZoneId.systemDefault()) ?: return take(context, id)
+        if (job.at > nowMillis + DUE_SLACK_MS) return null
+        save(context, jobs.map { if (it.id == id) next else it })
+        return job
     }
 
     /** Removes the job [id] and returns it, so a job fired twice at once runs only once. */

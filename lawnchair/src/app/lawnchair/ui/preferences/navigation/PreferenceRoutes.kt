@@ -188,6 +188,12 @@ data object CommandGuide : PreferenceRoute, PreferenceDeepLink {
     override val deepLink = "$URI/command-guide"
 }
 
+/** The guide to making routines with an AI chat and importing them. */
+@Serializable
+data object RoutineGuide : PreferenceRoute, PreferenceDeepLink {
+    override val deepLink = "$URI/routine-guide"
+}
+
 /** The guide to making a theme with an AI chat and importing it. */
 @Serializable
 data object ThemeGuide : PreferenceRoute, PreferenceDeepLink {
