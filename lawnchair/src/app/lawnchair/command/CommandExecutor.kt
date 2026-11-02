@@ -135,6 +135,8 @@ object CommandExecutor {
 
             is CommandAction.Copy -> copy(context, action.text)
 
+            is CommandAction.Notify -> return CommandScheduler.notifyUser(context, action.text)
+
             is CommandAction.Schedule -> CommandScheduler.add(context, action.job)
 
             is CommandAction.CancelJob -> CommandScheduler.cancel(context, action.job)
@@ -382,7 +384,7 @@ object CommandExecutor {
      * something instead of opening a screen, which Android blocks from the background.
      */
     fun runsInBackground(context: Context, action: CommandAction): Boolean = when (action) {
-        is ThemeAction.Change, is ThemeAction.Apply, is ThemeAction.Save, is ThemeAction.Delete, is CommandAction.Calc, is CommandAction.Copy, is CommandAction.Schedule,
+        is ThemeAction.Change, is ThemeAction.Apply, is ThemeAction.Save, is ThemeAction.Delete, is CommandAction.Calc, is CommandAction.Copy, is CommandAction.Notify, is CommandAction.Schedule,
         is CommandAction.CancelJob, is CommandAction.Volume, is CommandAction.Media, is CommandAction.AddNote, is CommandAction.AiSetup,
         is CommandAction.SetAdvancedMode,
         -> true

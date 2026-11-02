@@ -1104,7 +1104,7 @@ private fun CommandScreen(onClose: () -> Unit) {
             callPermission.launch(android.Manifest.permission.CALL_PHONE)
             return
         }
-        if ((action is CommandAction.Schedule || BackgroundRules.isLong(action)) && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU &&
+        if ((action is CommandAction.Schedule || action is CommandAction.Notify || BackgroundRules.isLong(action)) && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU &&
             !CommandSources.granted(context, android.Manifest.permission.POST_NOTIFICATIONS)
         ) {
             pendingAction = action

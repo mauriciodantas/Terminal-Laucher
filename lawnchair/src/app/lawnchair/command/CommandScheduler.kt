@@ -35,6 +35,7 @@ import kotlinx.coroutines.withTimeoutOrNull
  */
 object CommandScheduler {
 
+    private const val NOTIFY_TITLE_LENGTH = 60
     private const val CHANNEL = "command_jobs"
     private const val ACTION_FIRE = "app.lawnchair.command.FIRE_JOB"
     private const val EXTRA_ID = "job_id"
@@ -169,6 +170,16 @@ object CommandScheduler {
                 notify(app, id, app.getString(R.string.cmd_notify_tap_to_run), line, line)
             }
         }
+    }
+
+    /** Posts [text] as a notification to the user; false when the user turned notifications off. */
+    fun notifyUser(context: Context, text: String): Boolean {
+        if (!androidx.core.app.NotificationManagerCompat.from(context).areNotificationsEnabled()) return false
+        // The app's name is already in the header of the notification: the text is the title, and the body only when it does not fit there.
+        val title = text.lineSequence().first().take(NOTIFY_TITLE_LENGTH)
+        val body = if (title == text) "" else text
+        notify(context, System.currentTimeMillis() % Int.MAX_VALUE, title, body, null, NotificationCompat.CATEGORY_MESSAGE)
+        return true
     }
 
     /** [run] is a command line that a tap on the notification runs in the command bar. */
