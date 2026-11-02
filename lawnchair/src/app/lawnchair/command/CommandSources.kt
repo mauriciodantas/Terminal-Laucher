@@ -46,6 +46,7 @@ object CommandSources {
             notes = NoteStore.load(context),
             variables = UserVariableStore.load(context),
             jobs = JobStore.load(context),
+            routineRuns = RoutineStore.load(context),
             info = snapshot(context),
             taskApp = TaskApp.label(context),
             ai = AiStore.load(context)?.label,

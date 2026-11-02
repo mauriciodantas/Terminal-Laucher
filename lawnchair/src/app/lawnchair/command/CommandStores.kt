@@ -46,6 +46,7 @@ object JobStore {
 
     fun save(context: Context, jobs: List<ScheduledJob>) {
         prefs(context).edit().putString(KEY, Jobs.encode(jobs)).commit()
+        app.lawnchair.widgets.command.RoutinesFeed.changed()
     }
 
     /** Saves [job] with a fresh id and returns it. */
@@ -86,6 +87,77 @@ object StatsStore {
 
     fun save(context: Context, stats: Map<String, IntArray>) {
         prefs(context).edit().putString(KEY, CommandStats.encode(stats)).apply()
+    }
+
+    fun clear(context: Context) {
+        prefs(context).edit().remove(KEY).remove(KEY_TIPS).apply()
+        ContextStore.clear(context)
+    }
+
+    private const val KEY_TIPS = "alias_tip_dismissed"
+
+    /** The lines the user turned down as alias tips, so the same one does not come back. */
+    fun dismissedTips(context: Context): Set<String> = prefs(context).getString(KEY_TIPS, null)?.split('\n')?.filter { it.isNotEmpty() }?.toSet().orEmpty()
+
+    fun dismissTip(context: Context, line: String) {
+        prefs(context).edit().putString(KEY_TIPS, (dismissedTips(context) + line).joinToString("\n")).apply()
+    }
+}
+
+/** The last result of each alias, scheduled command and rule, which "rotinas" lists. */
+object RoutineStore {
+    private const val KEY = "command_routine_runs"
+
+    fun load(context: Context): List<RoutineRun> = prefs(context).getString(KEY, null)?.let { Routines.decode(it) }.orEmpty()
+
+    @Synchronized
+    fun record(context: Context, key: String, label: String, ok: Boolean, output: String = "") {
+        val run = RoutineRun(key, label, System.currentTimeMillis(), ok, Routines.brief(output))
+        prefs(context).edit().putString(KEY, Routines.encode(Routines.record(load(context), run))).apply()
+        app.lawnchair.widgets.command.RoutinesFeed.changed()
+    }
+
+    fun clear(context: Context) {
+        prefs(context).edit().remove(KEY).apply()
+    }
+}
+
+/** The commands run while charging or with headphones on, which the bar offers first when that happens again. */
+object ContextStore {
+    private const val KEY = "command_context_stats"
+
+    /** The situations the phone is in now. */
+    fun tags(context: Context): Set<String> = buildSet {
+        if (CommandSources.snapshot(context)?.charging == true) add(ContextStats.CHARGING)
+        if (headphones(context)) add(ContextStats.HEADPHONES)
+    }
+
+    private fun headphones(context: Context): Boolean = runCatching {
+        val audio = context.getSystemService(android.media.AudioManager::class.java) ?: return false
+        val types = setOf(
+            android.media.AudioDeviceInfo.TYPE_WIRED_HEADPHONES,
+            android.media.AudioDeviceInfo.TYPE_WIRED_HEADSET,
+            android.media.AudioDeviceInfo.TYPE_BLUETOOTH_A2DP,
+            android.media.AudioDeviceInfo.TYPE_USB_HEADSET,
+        )
+        audio.getDevices(android.media.AudioManager.GET_DEVICES_OUTPUTS).any { it.type in types }
+    }.getOrDefault(false)
+
+    fun load(context: Context): Map<String, Map<String, Int>> = runCatching {
+        val root = org.json.JSONObject(prefs(context).getString(KEY, null) ?: return emptyMap())
+        root.keys().asSequence().associateWith { tag ->
+            val o = root.getJSONObject(tag)
+            o.keys().asSequence().associateWith { o.getInt(it) }
+        }
+    }.getOrDefault(emptyMap())
+
+    fun record(context: Context, command: String) {
+        val tags = tags(context)
+        if (tags.isEmpty()) return
+        val updated = ContextStats.record(load(context), tags, command)
+        val root = org.json.JSONObject()
+        updated.forEach { (tag, counts) -> root.put(tag, org.json.JSONObject(counts as Map<*, *>)) }
+        prefs(context).edit().putString(KEY, root.toString()).apply()
     }
 
     fun clear(context: Context) {

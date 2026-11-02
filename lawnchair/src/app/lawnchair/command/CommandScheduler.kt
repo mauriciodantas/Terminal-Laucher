@@ -113,7 +113,11 @@ object CommandScheduler {
     internal suspend fun fire(context: Context, id: Long) {
         val job = JobStore.take(context, id) ?: return
         when (job.kind) {
-            JobKind.REMIND -> notify(context, id, context.getString(R.string.cmd_notify_reminder), job.text, null)
+            JobKind.REMIND -> {
+                RoutineStore.record(context, Routines.jobKey(id), context.getString(app.lawnchair.command.R.string.cmd_remind_label, job.text), true)
+                notify(context, id, context.getString(R.string.cmd_notify_reminder), job.text, null)
+            }
+
             JobKind.COMMAND, JobKind.RULE -> run(context, job.text, id)
         }
     }
@@ -146,15 +150,24 @@ object CommandScheduler {
         val analysis = CommandLineRunner.analyze(app, line)
         val action = analysis.action
         when {
-            action == null -> notify(app, id, app.getString(R.string.cmd_notify_failed), line, null)
-
-            CommandExecutor.runsInBackground(app, action) -> if (CommandExecutor.execute(app, action)) {
-                notify(app, id, app.getString(R.string.cmd_notify_done), line, null, NotificationCompat.CATEGORY_STATUS)
-            } else {
+            action == null -> {
+                RoutineStore.record(app, Routines.jobKey(id), line, false, analysis.preview)
                 notify(app, id, app.getString(R.string.cmd_notify_failed), line, null)
             }
 
-            else -> notify(app, id, app.getString(R.string.cmd_notify_tap_to_run), line, line)
+            CommandExecutor.runsInBackground(app, action) -> if (CommandExecutor.execute(app, action)) {
+                RoutineStore.record(app, Routines.jobKey(id), line, true)
+                notify(app, id, app.getString(R.string.cmd_notify_done), line, null, NotificationCompat.CATEGORY_STATUS)
+            } else {
+                RoutineStore.record(app, Routines.jobKey(id), line, false)
+                notify(app, id, app.getString(R.string.cmd_notify_failed), line, null)
+            }
+
+            else -> {
+                // Waits for a tap in the notification: the routine did not fail, it did not run yet.
+                RoutineStore.record(app, Routines.jobKey(id), line, true, app.getString(R.string.cmd_notify_tap_to_run))
+                notify(app, id, app.getString(R.string.cmd_notify_tap_to_run), line, line)
+            }
         }
     }
 

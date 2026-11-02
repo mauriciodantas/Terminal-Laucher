@@ -312,17 +312,24 @@ private fun CommandScreen(onClose: () -> Unit) {
 
     // The commands, aliases and providers the first line is read against have loaded.
     var loaded by remember { mutableStateOf(false) }
+    // A line run often that a short alias would replace; offered while the bar is empty.
+    var aliasTip by remember { mutableStateOf<CommandStats.AliasTip?>(null) }
+    // What the microphone heard and the line it became, shown until the line is edited.
+    var heard by remember { mutableStateOf<Pair<String, String>?>(null) }
 
     suspend fun reloadExtras() {
         val clip = extras.clipboard
         extras = withContext(Dispatchers.IO) { CommandSources.load(context, history, selection) }.copy(clipboard = clip)
+    }
+    LaunchedEffect(aliases, custom, history) {
+        aliasTip = withContext(Dispatchers.IO) { CommandStats.aliasTip(StatsStore.load(context), aliases, custom, StatsStore.dismissedTips(context)) }
     }
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
             history = CommandActivity.loadHistory(context)
             custom = CustomActionStore.load(context)
             aliases = AliasStore.load(context)
-            usual = CommandStats.rank(StatsStore.load(context), java.time.LocalTime.now().hour)
+            usual = ContextStats.merge(ContextStats.rank(ContextStore.load(context), ContextStore.tags(context)), CommandStats.rank(StatsStore.load(context), java.time.LocalTime.now().hour))
             contacts = CommandExecutor.loadContacts(context)
             apps = CommandExecutor.loadApps(context)
         }
@@ -532,6 +539,7 @@ private fun CommandScreen(onClose: () -> Unit) {
         // The watch ranks "most used" with the runs of the bar too.
         net.mdantas.terminal.wear.bridge.TerminalWear.commandRan(context, WatchRules.letterOf(command))
         StatsStore.record(context, command.trim())
+        ContextStore.record(context, command.trim())
     }
 
     /** What the bar does with the answer of the AI: the line it suggests, what to review (pack, theme, folders) or the next question. */
@@ -1194,14 +1202,30 @@ private fun CommandScreen(onClose: () -> Unit) {
             field = TextFieldValue(value, TextRange(value.length))
             selected = 0
             done = null
-            // A spoken command that is already complete and runnable runs on its own.
-            val action = CommandEngine.analyze(value, apps, contacts, granted, custom, aliases, extras.copy(history = history)).action
-            if (action != null) {
-                if (VoiceHold.needed(action)) voiceHold = action to value.trim() else runAction(action, value.trim())
-                return@rememberLauncherForActivityResult
+            // What was heard stays on screen with what it was taken for, so a wrong guess is seen.
+            heard = spoken.trim() to value
+            val spokenAnalysis = CommandEngine.analyze(value, apps, contacts, granted, custom, aliases, extras.copy(history = history))
+            // A word the bar nearly knows is offered, not run: a misheard "bluetoth" must not become a web search.
+            val typoKind = context.getString(CommandR.string.cmd_kind_typo)
+            val guess = spokenAnalysis.suggestions.firstOrNull { it.kind == typoKind }
+            if (guess != null && spokenAnalysis.action is CommandAction.WebSearch) {
+                field = TextFieldValue(guess.completion, TextRange(guess.completion.length))
+                heard = spoken.trim() to guess.completion
+            } else {
+                // A spoken command that is already complete and runnable runs on its own.
+                val action = spokenAnalysis.action
+                if (action != null) {
+                    if (VoiceHold.needed(action)) voiceHold = action to value.trim() else runAction(action, value.trim())
+                    return@rememberLauncherForActivityResult
+                }
             }
         }
         runCatching { focus.requestFocus() }
+    }
+
+    // Typing over the line puts the heard text away; a run keeps it with its answer.
+    LaunchedEffect(field.text) {
+        if (field.text.isNotEmpty() && field.text != heard?.second && done == null) heard = null
     }
 
     fun complete() {
@@ -1478,6 +1502,34 @@ private fun CommandScreen(onClose: () -> Unit) {
                                     )
                                     Text(chip.label, color = phosphor, fontFamily = mono(), fontWeight = FontWeight.Medium, fontSize = 11.5.sp)
                                 }
+                            }
+                        }
+                    }
+                    aliasTip?.let { tip ->
+                        val dismissLabel = stringResource(R.string.command_tip_dismiss)
+                        Row(Modifier.padding(top = 8.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                stringResource(CommandR.string.cmd_tip_alias, tip.runs, tip.line),
+                                color = dim,
+                                fontFamily = mono(),
+                                fontSize = 10.sp,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .heightIn(min = 32.dp)
+                                    .clickable { setText("alias ${tip.name} ${tip.line}") }
+                                    .padding(vertical = 6.dp),
+                            )
+                            Box(
+                                Modifier
+                                    .size(32.dp)
+                                    .clickable {
+                                        StatsStore.dismissTip(context, tip.line)
+                                        aliasTip = null
+                                    }
+                                    .semantics { contentDescription = dismissLabel },
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Label("×", dim, 10.sp)
                             }
                         }
                     }
@@ -1824,7 +1876,8 @@ private fun CommandScreen(onClose: () -> Unit) {
 
                     done != null -> stringResource(R.string.command_executed)
 
-                    else -> analysis.previewTitle
+                    // The mark says what the color says, for those who do not see the color.
+                    else -> (if (text.isNotBlank() && (analysis.tone == Tone.ERROR || analysis.tone == Tone.WARN)) "! " else "") + analysis.previewTitle
                 }
                 val previewText = done ?: live?.let { job ->
                     listOf(job.command, BackgroundRules.bar(job), job.partial?.takeLast(300).orEmpty()).filter { it.isNotBlank() }.joinToString("\n")
@@ -1880,6 +1933,15 @@ private fun CommandScreen(onClose: () -> Unit) {
                         },
                         10.sp,
                     )
+                    heard?.takeIf { done != null || field.text == it.second }?.let { (said, line) ->
+                        Text(
+                            stringResource(R.string.command_voice_heard, said) + if (line.equals(said, ignoreCase = true)) "" else " → $line",
+                            color = dim,
+                            fontFamily = mono(),
+                            fontSize = 10.sp,
+                            modifier = Modifier.padding(top = 3.dp),
+                        )
+                    }
                     // Each line of the answer is a paragraph whose wrapped part is indented, so a long
                     // line ("Title (2024) · ★ 5,7 · HBO Max") is not taken for two items.
                     val previewLines = remember(previewText) {

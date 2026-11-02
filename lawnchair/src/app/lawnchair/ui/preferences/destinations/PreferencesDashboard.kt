@@ -69,6 +69,7 @@ import app.lawnchair.ui.preferences.navigation.BackupAndRestore
 import app.lawnchair.ui.preferences.navigation.CommandActions
 import app.lawnchair.ui.preferences.navigation.HomeScreen
 import app.lawnchair.ui.preferences.navigation.PreferenceRootRoute
+import app.lawnchair.ui.preferences.navigation.RoutinesList
 import app.lawnchair.util.isDefaultLauncher
 import app.lawnchair.util.restartLauncher
 import com.android.launcher3.BuildConfig
@@ -144,6 +145,14 @@ fun PreferencesDashboard(
                 iconResource = R.drawable.ic_search,
                 onNavigate = { onNavigate(CommandActions()) },
                 isSelected = currentRoute is CommandActions,
+            )
+
+            PreferenceCategory(
+                label = stringResource(R.string.routines_title),
+                description = stringResource(R.string.settings_routines_desc),
+                iconResource = R.drawable.ic_command_notification,
+                onNavigate = { onNavigate(RoutinesList) },
+                isSelected = currentRoute is RoutinesList,
             )
 
             PreferenceCategory(

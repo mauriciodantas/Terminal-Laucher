@@ -164,6 +164,14 @@ data class CommandActions(val edit: String = "") :
     override val deepLink = "$URI/command-actions"
 }
 
+/** Scheduled commands and rules with the last result of each, and a form to add one. */
+@Serializable
+data object RoutinesList :
+    PreferenceRootRoute,
+    PreferenceDeepLink {
+    override val deepLink = "$URI/routines"
+}
+
 /** Advanced: the API providers of the command bar; [open] opens one of them right away. */
 @Serializable
 data class CommandProviders(val open: String = "") : PreferenceRoute
