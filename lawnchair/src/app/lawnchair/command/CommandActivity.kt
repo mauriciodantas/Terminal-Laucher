@@ -1194,6 +1194,19 @@ private fun CommandScreen(onClose: () -> Unit) {
 
     val voiceIntent = remember { CommandActivity.voiceIntent(context) }
     val voiceAvailable = remember { CommandActivity.voiceAvailable(context) }
+    // The buttons the user chose to show; read again when the screen comes back from the settings.
+    var micShown by remember { mutableStateOf(BarButtonsStore.micShown(context)) }
+    var qrShown by remember { mutableStateOf(BarButtonsStore.qrShown(context)) }
+    DisposableEffect(lifecycle) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                micShown = BarButtonsStore.micShown(context)
+                qrShown = BarButtonsStore.qrShown(context)
+            }
+        }
+        lifecycle.addObserver(observer)
+        onDispose { lifecycle.removeObserver(observer) }
+    }
     val pinSupported = remember { CommandShortcuts.supported(context) }
     val voice = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         val spoken = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
@@ -1463,7 +1476,7 @@ private fun CommandScreen(onClose: () -> Unit) {
                                 },
                         )
                     }
-                    if (voiceAvailable) {
+                    if (voiceAvailable && micShown) {
                         Spacer(Modifier.width(6.dp))
                         val voiceLabel = stringResource(R.string.command_voice)
                         Box(
@@ -1476,16 +1489,18 @@ private fun CommandScreen(onClose: () -> Unit) {
                             Text("[MIC]", color = phosphor, fontFamily = mono(), fontSize = 10.sp, letterSpacing = 0.5.sp)
                         }
                     }
-                    Spacer(Modifier.width(2.dp))
-                    val qrLabel = stringResource(CommandR.string.cmd_qr_button)
-                    Box(
-                        Modifier
-                            .size(44.dp)
-                            .clickable { runCatching { scan.launch(Unit) } }
-                            .semantics { contentDescription = qrLabel },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text("[QR]", color = phosphor, fontFamily = mono(), fontSize = 10.sp, letterSpacing = 0.5.sp)
+                    if (qrShown) {
+                        Spacer(Modifier.width(2.dp))
+                        val qrLabel = stringResource(CommandR.string.cmd_qr_button)
+                        Box(
+                            Modifier
+                                .size(44.dp)
+                                .clickable { runCatching { scan.launch(Unit) } }
+                                .semantics { contentDescription = qrLabel },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text("[QR]", color = phosphor, fontFamily = mono(), fontSize = 10.sp, letterSpacing = 0.5.sp)
+                        }
                     }
                     // The command typed can be pinned to the home screen, where one tap runs it.
                     if (text.isNotBlank() && pinSupported) {

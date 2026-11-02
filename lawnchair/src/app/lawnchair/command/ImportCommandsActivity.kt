@@ -33,6 +33,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import app.lawnchair.command.R as CommandR
 import app.lawnchair.ui.theme.LawnchairTheme
 import app.lawnchair.widgets.lottie.ImportWidgetActivity
 import app.lawnchair.widgets.lottie.LottieWidgetPacks
@@ -79,7 +80,7 @@ class ImportCommandsActivity : ComponentActivity() {
             LawnchairTheme {
                 ImportDialog(
                     pack = pack,
-                    preview = PackRules.preview(current.first, current.second, pack, providers),
+                    preview = PackRules.preview(current.first, current.second, pack, providers, overwrite = true),
                     onImport = { chosen, secrets -> importPack(chosen, secrets) },
                     onDismiss = { finish() },
                 )
@@ -92,7 +93,7 @@ class ImportCommandsActivity : ComponentActivity() {
      * the user already has stays theirs. [secrets] are the keys typed for the providers that came in.
      */
     private fun importPack(chosen: CommandPack, secrets: Map<String, String>) {
-        val merge = CommandPacks.merge(CustomActionStore.load(this), AliasStore.load(this), chosen, rename = true, providers = ProviderStore.load(this))
+        val merge = CommandPacks.merge(CustomActionStore.load(this), AliasStore.load(this), chosen, rename = true, providers = ProviderStore.load(this), overwrite = true)
         CustomActionStore.save(this, merge.actions)
         AliasStore.save(this, merge.aliases)
         ProviderStore.save(this, merge.providers)
@@ -107,6 +108,7 @@ class ImportCommandsActivity : ComponentActivity() {
             }
         }
         val text = getString(R.string.cmd_imp_done, merge.addedActions, merge.addedAliases) +
+            (if (merge.replacedActions + merge.replacedAliases > 0) getString(CommandR.string.cmd_imp_replaced, merge.replacedActions + merge.replacedAliases) else "") +
             (if (merge.skipped > 0) getString(R.string.cmd_imp_skipped, merge.skipped) else "") +
             (if (pending > 0) getString(R.string.cmd_imp_keys_pending, pending) else "")
         Toast.makeText(this, text, Toast.LENGTH_LONG).show()
@@ -180,7 +182,7 @@ private fun ImportDialog(
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Text(
-                    stringResource(R.string.cmd_imp_warning),
+                    stringResource(CommandR.string.cmd_imp_warning_replace),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 6.dp),
@@ -406,6 +408,9 @@ private fun <T> EntryRow(
                 fontFamily = FontFamily.Monospace,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            if (entry.replaces) {
+                Text(stringResource(CommandR.string.cmd_imp_replaces), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary)
+            }
             entry.conflict?.let {
                 Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
                 entry.suggestion?.let { name ->

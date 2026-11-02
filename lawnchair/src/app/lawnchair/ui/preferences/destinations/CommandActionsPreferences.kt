@@ -34,8 +34,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Checklist
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Delete
@@ -108,6 +108,7 @@ import app.lawnchair.command.Aliases
 import app.lawnchair.command.Analysis
 import app.lawnchair.command.AppEntry
 import app.lawnchair.command.ArgKind
+import app.lawnchair.command.BarButtonsStore
 import app.lawnchair.command.CommandAction
 import app.lawnchair.command.CommandActivity
 import app.lawnchair.command.CommandAlias
@@ -745,6 +746,29 @@ fun CommandActionsPreferences(openEdit: String = "") {
                             onClick = { moreOpen = false },
                         )
                     }
+                }
+                // What shows on the command bar besides the line itself.
+                PreferenceGroup(heading = stringResource(CommandR.string.cmd_pref_group_buttons)) {
+                    var micShown by remember { mutableStateOf(BarButtonsStore.micShown(context)) }
+                    var qrShown by remember { mutableStateOf(BarButtonsStore.qrShown(context)) }
+                    SwitchPreference(
+                        checked = micShown,
+                        onCheckedChange = {
+                            micShown = it
+                            BarButtonsStore.setMicShown(context, it)
+                        },
+                        label = stringResource(CommandR.string.cmd_pref_show_mic),
+                        description = stringResource(CommandR.string.cmd_pref_show_mic_hint),
+                    )
+                    SwitchPreference(
+                        checked = qrShown,
+                        onCheckedChange = {
+                            qrShown = it
+                            BarButtonsStore.setQrShown(context, it)
+                        },
+                        label = stringResource(CommandR.string.cmd_pref_show_qr),
+                        description = stringResource(CommandR.string.cmd_pref_show_qr_hint),
+                    )
                 }
                 // Rarely needed, so kept apart: what API commands go through and their keys.
                 PreferenceGroup(heading = stringResource(R.string.cmd_pref_group_advanced)) {
