@@ -1223,6 +1223,43 @@ private fun CommandScreen(onClose: () -> Unit) {
         runCatching { focus.requestFocus() }
     }
 
+    // A QR code read by the camera: shown as it is and acted on only after the user accepts.
+    var scanned by remember { mutableStateOf<QrContent?>(null) }
+    val scan = rememberLauncherForActivityResult(QrScanActivity.Contract()) { read ->
+        // No text means the user went back: the line stays as it was.
+        if (read != null) {
+            val content = QrScan.classify(read) { CommandEngine.analyze(it, apps, contacts, granted, custom, aliases, extras.copy(history = history)) }
+            when (content) {
+                null -> show(context.getString(CommandR.string.cmd_qr_scan_empty), Outcome.FAILED)
+
+                // The import screen shows what is inside and imports nothing until the user ticks and confirms.
+                is QrContent.Import -> CommandExecutor.execute(context, content.action)
+
+                else -> scanned = content
+            }
+        }
+        runCatching { focus.requestFocus() }
+    }
+    scanned?.let { shown ->
+        QrResultDialog(
+            content = shown,
+            onRun = { command ->
+                scanned = null
+                runAction(command.action, command.line)
+            },
+            // Only puts the text in the line, at the cursor: nothing runs until the user presses Enter.
+            onInsert = { value ->
+                val clean = value.replace(Regex("[\\r\\n]+"), " ")
+                val at = field.selection
+                field = TextFieldValue(field.text.replaceRange(at.min, at.max, clean), TextRange(at.min + clean.length))
+                selected = 0
+                done = null
+                runCatching { focus.requestFocus() }
+            },
+            onDismiss = { scanned = null },
+        )
+    }
+
     // Typing over the line puts the heard text away; a run keeps it with its answer.
     LaunchedEffect(field.text) {
         if (field.text.isNotEmpty() && field.text != heard?.second && done == null) heard = null
@@ -1438,6 +1475,17 @@ private fun CommandScreen(onClose: () -> Unit) {
                         ) {
                             Text("[MIC]", color = phosphor, fontFamily = mono(), fontSize = 10.sp, letterSpacing = 0.5.sp)
                         }
+                    }
+                    Spacer(Modifier.width(2.dp))
+                    val qrLabel = stringResource(CommandR.string.cmd_qr_button)
+                    Box(
+                        Modifier
+                            .size(44.dp)
+                            .clickable { runCatching { scan.launch(Unit) } }
+                            .semantics { contentDescription = qrLabel },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text("[QR]", color = phosphor, fontFamily = mono(), fontSize = 10.sp, letterSpacing = 0.5.sp)
                     }
                     // The command typed can be pinned to the home screen, where one tap runs it.
                     if (text.isNotBlank() && pinSupported) {
