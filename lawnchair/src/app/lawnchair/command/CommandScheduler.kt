@@ -172,13 +172,16 @@ object CommandScheduler {
         }
     }
 
-    /** Posts [text] as a notification to the user; false when the user turned notifications off. */
-    fun notifyUser(context: Context, text: String): Boolean {
+    /**
+     * Posts [text] as a notification to the user; false when the user turned notifications off. With a
+     * [title] the notification has it as its title and the text as its body. Without one the app's name
+     * is already in the header of the notification, so the text is the title, and the body only when it does not fit there.
+     */
+    fun notifyUser(context: Context, text: String, title: String = ""): Boolean {
         if (!androidx.core.app.NotificationManagerCompat.from(context).areNotificationsEnabled()) return false
-        // The app's name is already in the header of the notification: the text is the title, and the body only when it does not fit there.
-        val title = text.lineSequence().first().take(NOTIFY_TITLE_LENGTH)
-        val body = if (title == text) "" else text
-        notify(context, System.currentTimeMillis() % Int.MAX_VALUE, title, body, null, NotificationCompat.CATEGORY_MESSAGE)
+        val heading = title.ifBlank { text.lineSequence().first().take(NOTIFY_TITLE_LENGTH) }
+        val body = if (heading == text) "" else text
+        notify(context, System.currentTimeMillis() % Int.MAX_VALUE, heading, body, null, NotificationCompat.CATEGORY_MESSAGE)
         return true
     }
 

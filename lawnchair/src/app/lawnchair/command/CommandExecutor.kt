@@ -135,7 +135,7 @@ object CommandExecutor {
 
             is CommandAction.Copy -> copy(context, action.text)
 
-            is CommandAction.Notify -> return CommandScheduler.notifyUser(context, action.text)
+            is CommandAction.Notify -> return CommandScheduler.notifyUser(context, action.text, action.title)
 
             is CommandAction.Schedule -> CommandScheduler.add(context, action.job)
 
