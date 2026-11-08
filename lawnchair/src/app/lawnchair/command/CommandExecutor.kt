@@ -286,6 +286,35 @@ object CommandExecutor {
                 val dir = File(context.cacheDir, "widgets").apply { mkdirs() }
                 val file = File(dir, "import.${LottieWidgetPacks.EXTENSION}")
                 val json = action.json.trim()
+                // A command widget (kind "command") has no animation: it goes in its own file, which the import screen hands to the command widget importer.
+                val commandWidget = json.startsWith("{") && runCatching {
+                    JSONObject(json).let { it.optString("format") == "terminal-widget" && it.optString("kind") == WidgetPacks.KIND_COMMAND }
+                }.getOrDefault(false)
+                if (commandWidget) {
+                    val o = JSONObject(json)
+                    val command = o.optString("command").trim()
+                    if (command.isEmpty()) return false
+                    file.outputStream().use {
+                        WidgetPacks.write(
+                            CommandWidgetPack(
+                                command = command,
+                                schedule = CommandWidgetSchedule.decode(o.optString("schedule")),
+                                commands = WidgetPacks.commandsOf(o),
+                                label = o.optString("label").trim(),
+                            ),
+                            it,
+                        )
+                    }
+                    val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+                    start(
+                        context,
+                        Intent(context, ImportWidgetActivity::class.java)
+                            .setAction(Intent.ACTION_VIEW)
+                            .setData(uri)
+                            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION),
+                    )
+                    return true
+                }
                 val pack = if (json.startsWith("{") && runCatching { JSONObject(json).optString("format") == "terminal-widget" }.getOrDefault(false)) {
                     val o = JSONObject(json)
                     val animBytes = when {
