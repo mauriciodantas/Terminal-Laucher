@@ -45,6 +45,7 @@ androidx-camera-core = "androidx.camera:camera-core:1.5.0"
 androidx-camera-camera2 = "androidx.camera:camera-camera2:1.5.0"
 androidx-camera-lifecycle = "androidx.camera:camera-lifecycle:1.5.0"
 androidx-camera-view = "androidx.camera:camera-view:1.5.0"
+mlkit-barcode = "com.google.mlkit:barcode-scanning:17.3.0"
 # AndroidX
 androidx-activity-compose = "androidx.activity:activity-compose:1.13.0"
 androidx-benchmark-macro-junit4 = "androidx.benchmark:benchmark-macro-junit4:1.5.0"

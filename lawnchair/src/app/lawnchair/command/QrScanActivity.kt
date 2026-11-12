@@ -14,6 +14,23 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
+import android.util.Size
+import android.view.MotionEvent
+import android.view.ScaleGestureDetector
+import androidx.camera.core.Camera
+import androidx.camera.core.FocusMeteringAction
+import androidx.camera.core.resolutionselector.ResolutionSelector
+import androidx.camera.core.resolutionselector.ResolutionStrategy
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size as GSize
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import com.google.android.gms.tasks.Tasks
+import com.google.mlkit.vision.barcode.BarcodeScannerOptions
+import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.google.mlkit.vision.barcode.common.Barcode
+import com.google.mlkit.vision.common.InputImage
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
@@ -49,7 +66,6 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import app.lawnchair.command.R as CommandR
-import app.lawnchair.ui.theme.LawnchairTheme
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.DecodeHintType
@@ -57,7 +73,9 @@ import com.google.zxing.MultiFormatReader
 import com.google.zxing.PlanarYUVLuminanceSource
 import com.google.zxing.common.HybridBinarizer
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import app.lawnchair.ui.theme.LawnchairTheme
 
 /**
  * Reads one QR code with the camera and hands its text back to the bar. It stops after the first
@@ -163,10 +181,27 @@ private fun CameraView(onFind: (String) -> Unit) {
     val find by androidx.compose.runtime.rememberUpdatedState(onFind)
     val previewView = remember { PreviewView(context).apply { scaleType = PreviewView.ScaleType.FILL_CENTER } }
     var empty by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    var focusAt by remember { mutableStateOf<Offset?>(null) }
+    var camera by remember { mutableStateOf<Camera?>(null) }
     LaunchedEffect(empty) {
         if (empty > 0) {
             kotlinx.coroutines.delay(2500)
             empty = 0
+        }
+    }
+    // The ring of a tap to focus fades away by itself.
+    LaunchedEffect(focusAt) {
+        if (focusAt != null) {
+            kotlinx.coroutines.delay(1200)
+            focusAt = null
+        }
+    }
+    // Phones that lose focus up close get a new focus at the centre every two seconds.
+    LaunchedEffect(camera) {
+        val cam = camera ?: return@LaunchedEffect
+        while (true) {
+            kotlinx.coroutines.delay(2000)
+            runCatching { cam.cameraControl.startFocusAndMetering(centreFocus(previewView)) }
         }
     }
     DisposableEffect(Unit) {
@@ -174,39 +209,72 @@ private fun CameraView(onFind: (String) -> Unit) {
         val found = AtomicBoolean(false)
         val future = ProcessCameraProvider.getInstance(context)
         var provider: ProcessCameraProvider? = null
+        val analyzer = QrAnalyzer { text ->
+            // Only the first code with text counts; frames that still show it are dropped.
+            val main = ContextCompat.getMainExecutor(context)
+            if (text.isBlank()) {
+                main.execute { if (!found.get()) empty += 1 }
+            } else if (found.compareAndSet(false, true)) {
+                main.execute { find(text) }
+            }
+        }
         future.addListener(
             {
                 val cameras = runCatching { future.get() }.getOrNull() ?: return@addListener
                 provider = cameras
                 val preview = Preview.Builder().build().also { it.surfaceProvider = previewView.surfaceProvider }
-                val analysis = ImageAnalysis.Builder().setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST).build()
-                val main = ContextCompat.getMainExecutor(context)
-                analysis.setAnalyzer(
-                    executor,
-                    QrAnalyzer { text ->
-                        // Only the first code with text counts; frames that still show it are dropped.
-                        if (text.isBlank()) {
-                            main.execute { if (!found.get()) empty += 1 }
-                        } else if (found.compareAndSet(false, true)) {
-                            main.execute {
-                                analysis.clearAnalyzer()
-                                find(text)
-                            }
-                        }
-                    },
-                )
+                // A theme or a pack makes a dense code: 640x480, the default, cannot resolve its modules.
+                val resolution = ResolutionSelector.Builder()
+                    .setResolutionStrategy(ResolutionStrategy(Size(1920, 1080), ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER))
+                    .build()
+                val analysis = ImageAnalysis.Builder()
+                    .setResolutionSelector(resolution)
+                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                    .build()
+                analysis.setAnalyzer(executor, analyzer)
                 cameras.unbindAll()
-                runCatching { cameras.bindToLifecycle(owner, CameraSelector.DEFAULT_BACK_CAMERA, preview, analysis) }
+                camera = runCatching { cameras.bindToLifecycle(owner, CameraSelector.DEFAULT_BACK_CAMERA, preview, analysis) }.getOrNull()
             },
             ContextCompat.getMainExecutor(context),
         )
         onDispose {
             provider?.unbindAll()
             executor.shutdown()
+            analyzer.close()
         }
+    }
+    // Pinch to zoom, tap to focus.
+    DisposableEffect(previewView, camera) {
+        val cam = camera
+        val pinch = ScaleGestureDetector(
+            context,
+            object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+                override fun onScale(detector: ScaleGestureDetector): Boolean {
+                    val zoom = cam?.cameraInfo?.zoomState?.value ?: return true
+                    cam.cameraControl.setZoomRatio(zoom.zoomRatio * detector.scaleFactor)
+                    return true
+                }
+            },
+        )
+        previewView.setOnTouchListener { view, event ->
+            pinch.onTouchEvent(event)
+            if (event.action == MotionEvent.ACTION_UP && !pinch.isInProgress && event.pointerCount == 1 && cam != null) {
+                val point = previewView.meteringPointFactory.createPoint(event.x, event.y)
+                runCatching {
+                    cam.cameraControl.startFocusAndMetering(
+                        FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF or FocusMeteringAction.FLAG_AE).build(),
+                    )
+                }
+                focusAt = Offset(event.x, event.y)
+                view.performClick()
+            }
+            true
+        }
+        onDispose { previewView.setOnTouchListener(null) }
     }
     Box(Modifier.fillMaxSize()) {
         AndroidView(factory = { previewView }, modifier = Modifier.fillMaxSize())
+        Viewfinder(focusAt)
         if (empty > 0) {
             Text(
                 stringResource(CommandR.string.cmd_qr_scan_empty),
@@ -218,19 +286,59 @@ private fun CameraView(onFind: (String) -> Unit) {
     }
 }
 
-/** Looks for a QR code in the brightness plane of each frame; a code has no up, so no rotation is needed. */
+private fun centreFocus(view: PreviewView): FocusMeteringAction {
+    val point = view.meteringPointFactory.createPoint(view.width / 2f, view.height / 2f)
+    return FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF or FocusMeteringAction.FLAG_AE).build()
+}
+
+/** The square where the code goes, with corners, and the ring where the user last tapped to focus. */
+@Composable
+private fun Viewfinder(focusAt: Offset?) {
+    Canvas(Modifier.fillMaxSize()) {
+        val side = minOf(size.width, size.height) * 0.72f
+        val left = (size.width - side) / 2f
+        val top = (size.height - side) / 2f
+        val arm = side * 0.14f
+        val stroke = Stroke(width = 5.dp.toPx(), cap = StrokeCap.Round)
+        val color = Color.White
+        // Dim everything outside the square so the eye goes to it.
+        val dim = Color(0x66000000)
+        drawRect(dim, Offset.Zero, GSize(size.width, top))
+        drawRect(dim, Offset(0f, top + side), GSize(size.width, size.height - top - side))
+        drawRect(dim, Offset(0f, top), GSize(left, side))
+        drawRect(dim, Offset(left + side, top), GSize(size.width - left - side, side))
+        for ((cx, cy, dx, dy) in listOf(
+            listOf(left, top, 1f, 1f),
+            listOf(left + side, top, -1f, 1f),
+            listOf(left, top + side, 1f, -1f),
+            listOf(left + side, top + side, -1f, -1f),
+        )) {
+            drawLine(color, Offset(cx, cy), Offset(cx + dx * arm, cy), stroke.width, StrokeCap.Round)
+            drawLine(color, Offset(cx, cy), Offset(cx, cy + dy * arm), stroke.width, StrokeCap.Round)
+        }
+        focusAt?.let { drawCircle(color, radius = 36.dp.toPx(), center = it, style = Stroke(width = 3.dp.toPx())) }
+    }
+}
+
+/**
+ * Looks for a QR code in each frame. ML Kit goes first (it finds small, tilted, curved or dense
+ * codes that zxing misses); zxing, on the brightness plane, is the second try, also inverted.
+ */
 private class QrAnalyzer(private val onText: (String) -> Unit) : ImageAnalysis.Analyzer {
+    private val scanner = BarcodeScanning.getClient(
+        BarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_QR_CODE).build(),
+    )
     private val reader = MultiFormatReader().apply {
         setHints(mapOf(DecodeHintType.POSSIBLE_FORMATS to listOf(BarcodeFormat.QR_CODE), DecodeHintType.TRY_HARDER to true))
     }
     private var lastEmpty = 0L
 
+    fun close() = scanner.close()
+
+    @androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
     override fun analyze(image: ImageProxy) {
         try {
-            val plane = image.planes[0]
-            val data = ByteArray(plane.buffer.remaining()).also { plane.buffer.get(it) }
-            val source = PlanarYUVLuminanceSource(data, plane.rowStride, image.height, 0, 0, image.width, image.height, false)
-            val text = decode(source) ?: decode(source.invert()) ?: return
+            val text = mlKit(image) ?: zxing(image) ?: return
             if (text.isBlank()) {
                 // A blank code is reported now and then, not on every frame.
                 val now = System.currentTimeMillis()
@@ -243,6 +351,24 @@ private class QrAnalyzer(private val onText: (String) -> Unit) : ImageAnalysis.A
         } finally {
             image.close()
         }
+    }
+
+    @androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
+    private fun mlKit(image: ImageProxy): String? {
+        val media = image.image ?: return null
+        val input = InputImage.fromMediaImage(media, image.imageInfo.rotationDegrees)
+        val codes = Tasks.await(scanner.process(input), 3, TimeUnit.SECONDS)
+        // Prefer the bytes read as UTF-8: a theme with accents must come back intact.
+        return codes.firstNotNullOfOrNull { code ->
+            code.rawBytes?.let { String(it, Charsets.UTF_8) }?.takeIf { it.isNotEmpty() && '\uFFFD' !in it } ?: code.rawValue?.takeIf { it.isNotEmpty() }
+        }
+    }
+
+    private fun zxing(image: ImageProxy): String? {
+        val plane = image.planes[0]
+        val data = ByteArray(plane.buffer.remaining()).also { plane.buffer.get(it) }
+        val source = PlanarYUVLuminanceSource(data, plane.rowStride, image.height, 0, 0, image.width, image.height, false)
+        return decode(source) ?: decode(source.invert())
     }
 
     private fun decode(source: com.google.zxing.LuminanceSource): String? = try {
