@@ -519,6 +519,37 @@ fun ChatShortcutsPreferences(modifier: Modifier = Modifier) {
             label = stringResource(id = R.string.glance_chats_badge),
             description = stringResource(id = R.string.glance_chats_badge_desc),
         )
+        ListPreference(
+            adapter = prefs2.glanceChatShape.getAdapter(),
+            entries = remember {
+                app.lawnchair.chats.ChatShape.entries.map { entry ->
+                    ListPreferenceEntry(value = entry, label = { stringResource(entry.labelRes) })
+                }
+            },
+            label = stringResource(id = R.string.glance_chat_shape),
+        )
+        SliderPreference(
+            label = stringResource(id = R.string.glance_chat_size),
+            adapter = prefs2.glanceChatSize.getAdapter(),
+            step = 2,
+            valueRange = 36..64,
+        )
+        SwitchPreference(
+            adapter = prefs2.glanceChatLabels.getAdapter(),
+            label = stringResource(id = R.string.glance_chat_labels),
+        )
+        SwitchPreference(
+            adapter = prefs2.glanceChatHeader.getAdapter(),
+            label = stringResource(id = R.string.glance_chat_header),
+        )
+        SwitchPreference(
+            adapter = prefs2.glanceChatBorder.getAdapter(),
+            label = stringResource(id = R.string.glance_chat_border),
+        )
+        SwitchPreference(
+            adapter = prefs2.glanceChatGlow.getAdapter(),
+            label = stringResource(id = R.string.glance_chat_glow),
+        )
         SwitchPreference(
             checked = includeBusiness.state.value,
             onCheckedChange = {

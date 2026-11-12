@@ -1380,6 +1380,15 @@
     <string name="glance_chats_pinned">Pinned shortcut</string>
     <string name="glance_chats_recent">Recent</string>
     <string name="glance_chats_limit">%1$d of %2$d on the home screen</string>
+    <string name="glance_chat_shape">Icon shape</string>
+    <string name="glance_chat_shape_square">Square</string>
+    <string name="glance_chat_shape_rounded">Rounded</string>
+    <string name="glance_chat_shape_circle">Circle</string>
+    <string name="glance_chat_size">Icon size</string>
+    <string name="glance_chat_labels">Show names</string>
+    <string name="glance_chat_header">Show title line</string>
+    <string name="glance_chat_border">Icon border</string>
+    <string name="glance_chat_glow">Letter glow</string>
     <string name="glance_chats_badge">Show unread</string>
     <string name="glance_chats_badge_desc">A counter per chat, read from notifications</string>
     <string name="glance_chats_business">Include WhatsApp Business</string>

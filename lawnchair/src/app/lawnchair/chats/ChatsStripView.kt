@@ -57,6 +57,7 @@ class ChatsStripView(context: Context) :
     private val label = TextView(context)
     private val count = TextView(context)
     private val cells = LinearLayout(context)
+    private val header = LinearLayout(context)
 
     private var chats: List<ChatCandidate> = emptyList()
     private var unread: Map<String, Int> = emptyMap()
@@ -87,7 +88,7 @@ class ChatsStripView(context: Context) :
         val side = (16 * density).toInt()
         setPadding(side, 0, side, (6 * density).toInt())
 
-        val header = LinearLayout(context).apply {
+        header.apply {
             orientation = HORIZONTAL
             addView(label, LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
             addView(count, LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT))
@@ -131,7 +132,16 @@ class ChatsStripView(context: Context) :
                     prefs2.glanceChatKeys.get(),
                     prefs2.glanceChatBusiness.get(),
                     prefs2.glanceChatBadge.get(),
-                ) { _, _, _, _ -> }.collect { loadNow() }
+                    combine(
+                        prefs2.glanceChatShape.get(),
+                        prefs2.glanceChatSize.get(),
+                        prefs2.glanceChatLabels.get(),
+                        prefs2.glanceChatHeader.get(),
+                        prefs2.glanceChatBorder.get(),
+                    ) { _, _, _, _, _ -> }.let { look ->
+                        combine(look, prefs2.glanceChatGlow.get()) { _, _ -> }
+                    },
+                ) { _, _, _, _, _ -> }.collect { loadNow() }
             }
             try {
                 kotlinx.coroutines.awaitCancellation()
@@ -175,8 +185,14 @@ class ChatsStripView(context: Context) :
         chats = shown
         unread = counts
         cells.removeAllViews()
+        val iconDp = prefs2.glanceChatSize.firstCached().coerceIn(36, 64)
+        val showHeader = prefs2.glanceChatHeader.firstCached()
+        val showLabels = prefs2.glanceChatLabels.firstCached()
+        header.visibility = if (showHeader) VISIBLE else GONE
+        (cells.layoutParams as? LayoutParams)?.topMargin = if (showHeader) (6 * density).toInt() else 0
         // The workspace gives up the strip's height while there are chats, so no icon hides under it.
-        if (ChatsStripState.setShown(context, shown.isNotEmpty())) {
+        val heightDp = ChatsStripState.heightDpFor(iconDp, showHeader, showLabels)
+        if (ChatsStripState.setShown(context, shown.isNotEmpty(), heightDp)) {
             LauncherAppState.getInstance(context).invariantDeviceProfile.onPreferencesChanged(context)
         }
         // The landscape layout moves the dock to the side, where there is no room for the strip.
@@ -194,21 +210,31 @@ class ChatsStripView(context: Context) :
     }
 
     private fun cell(chat: ChatCandidate, badgeText: String?): View {
-        val size = (48 * density).toInt()
+        val iconDp = prefs2.glanceChatSize.firstCached().coerceIn(36, 64)
+        val size = (iconDp * density).toInt()
+        val chatShape = prefs2.glanceChatShape.firstCached()
+        val showBorder = prefs2.glanceChatBorder.firstCached()
+        val glow = prefs2.glanceChatGlow.firstCached()
+        val showLabels = prefs2.glanceChatLabels.firstCached()
         val square = FrameLayout(context).apply {
             background = GradientDrawable().apply {
                 setColor((phosphor and 0x00FFFFFF) or 0x14000000)
-                setStroke(density.toInt().coerceAtLeast(1), (dim and 0x00FFFFFF) or 0x66000000)
+                if (showBorder) setStroke(density.toInt().coerceAtLeast(1), (dim and 0x00FFFFFF) or 0x66000000)
+                when (chatShape) {
+                    ChatShape.SQUARE -> Unit
+                    ChatShape.ROUNDED -> cornerRadius = size * 0.22f
+                    ChatShape.CIRCLE -> this.shape = GradientDrawable.OVAL
+                }
             }
             addView(
                 TextView(context).apply {
                     text = ChatShortcuts.initial(chat.label)
-                    setTextSize(TypedValue.COMPLEX_UNIT_SP, 28f)
+                    setTextSize(TypedValue.COMPLEX_UNIT_SP, 28f * iconDp / 48f)
                     typeface = ResourcesCompat.getFont(context, R.font.vt323_regular)
                     includeFontPadding = false
                     gravity = Gravity.CENTER
                     setTextColor(phosphor)
-                    setShadowLayer(6f, 0f, 0f, (phosphor and 0x00FFFFFF) or 0x66000000)
+                    if (glow) setShadowLayer(6f, 0f, 0f, (phosphor and 0x00FFFFFF) or 0x66000000)
                 },
                 FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),
             )
@@ -247,20 +273,22 @@ class ChatsStripView(context: Context) :
             minimumHeight = (44 * density).toInt()
             contentDescription = context.getString(R.string.glance_chat_open, chat.label)
             addView(frame, LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT))
-            addView(
-                TextView(context).apply {
-                    text = chat.label
-                    setTextSize(TypedValue.COMPLEX_UNIT_SP, 10.5f)
-                    typeface = Typeface.MONOSPACE
-                    includeFontPadding = false
-                    maxLines = 1
-                    ellipsize = TextUtils.TruncateAt.END
-                    gravity = Gravity.CENTER
-                    setTextColor(dim)
-                },
-                LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                    .apply { topMargin = (4 * density).toInt() },
-            )
+            if (showLabels) {
+                addView(
+                    TextView(context).apply {
+                        text = chat.label
+                        setTextSize(TypedValue.COMPLEX_UNIT_SP, 10.5f)
+                        typeface = Typeface.MONOSPACE
+                        includeFontPadding = false
+                        maxLines = 1
+                        ellipsize = TextUtils.TruncateAt.END
+                        gravity = Gravity.CENTER
+                        setTextColor(dim)
+                    },
+                    LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                        .apply { topMargin = (4 * density).toInt() },
+                )
+            }
             setOnClickListener { WhatsAppChatSource.open(context, chat) }
             layoutParams = LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
         }

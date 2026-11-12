@@ -97,6 +97,26 @@ class ThemeShapeTest {
         assertNull(GlanceSpecs.lookFromJson(org.json.JSONObject("""{"preset":"x"}""")))
     }
 
+    @Test fun chatsLookSurvivesTheFileAndTheOverlay() {
+        val chats = ChatsLook(shape = "circle", size = 56, labels = false, header = false, border = true, glow = false, badge = false)
+        val spec = ThemeSpec(name = "x", glance = GlanceSpec(chatsLook = chats))
+        assertEquals(spec, ThemeSpecs.decode(ThemeSpecs.encode(spec)))
+        val merged = spec.overlaidWith(ThemeSpec(glance = GlanceSpec(chatsLook = ChatsLook(shape = "rounded"))))
+        assertEquals(chats.copy(shape = "rounded"), merged.glance?.chatsLook)
+        assertTrue(GlanceSpec(chatsLook = chats).items.any { it.startsWith("chat icons") })
+    }
+
+    @Test fun chatsLookReadsOnlyWhatItUnderstands() {
+        val read = GlanceSpecs.chatsLookFromJson(org.json.JSONObject("""{"shape":"Circle","size":"200","labels":"false","glow":"x","badge":false}"""))
+        assertEquals(ChatsLook(shape = "circle", size = 64, labels = false, badge = false), read)
+        assertNull(GlanceSpecs.chatsLookFromJson(org.json.JSONObject("""{"shape":"hexagon"}""")))
+    }
+
+    @Test fun promptsExplainTheChatsLook() {
+        assertTrue(LauncherAiPrompts.THEME_SHAPE.contains("chatsLook"))
+        assertTrue(LauncherAiPrompts.THEME_MASTER_PROMPT.contains("chatsLook"))
+    }
+
     @Test fun promptsExplainTheGlanceLook() {
         listOf("preset", "clockFormat", "hiddenShortcuts", "statusItems", "radius", "urgent", "dim", "textSize").forEach {
             assertTrue(it, LauncherAiPrompts.THEME_RULES.contains(it))

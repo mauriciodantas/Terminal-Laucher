@@ -932,6 +932,42 @@ class PreferenceManager2 @Inject constructor(
         defaultValue = true,
     )
 
+    /** Outline of each chat icon. */
+    val glanceChatShape = preference(
+        key = stringPreferencesKey("glance_chat_shape"),
+        defaultValue = app.lawnchair.chats.ChatShape.SQUARE,
+        parse = { app.lawnchair.chats.ChatShape.fromId(it) },
+        save = { it.id },
+    )
+
+    /** Side of each chat icon, in dp. */
+    val glanceChatSize = preference(
+        key = intPreferencesKey("glance_chat_size"),
+        defaultValue = 48,
+    )
+
+    /** The name under each chat icon. */
+    val glanceChatLabels = preference(
+        key = booleanPreferencesKey("glance_chat_labels"),
+        defaultValue = true,
+    )
+
+    /** The "CHATS · WHATSAPP" line over the icons. */
+    val glanceChatHeader = preference(
+        key = booleanPreferencesKey("glance_chat_header"),
+        defaultValue = true,
+    )
+
+    val glanceChatBorder = preference(
+        key = booleanPreferencesKey("glance_chat_border"),
+        defaultValue = true,
+    )
+
+    val glanceChatGlow = preference(
+        key = booleanPreferencesKey("glance_chat_glow"),
+        defaultValue = true,
+    )
+
     /** Lets the system wallpaper show behind the home screen; off keeps the terminal ground. */
     val showSystemWallpaper = preference(
         key = booleanPreferencesKey("show_system_wallpaper"),

@@ -11,11 +11,19 @@ import android.content.Context
  */
 object ChatsStripState {
 
-    /** Fixed height of the strip; it is also what the workspace gives up. */
+    /** Height of the strip with the default look; it is also what the workspace gives up. */
     const val HEIGHT_DP = 96
 
     private const val STORE = "nostromo"
     private const val KEY_SHOWN = "chats_strip_shown"
+    private const val KEY_HEIGHT = "chats_strip_height_dp"
+    private const val ICON_DEFAULT_DP = 48
+    private const val HEADER_DP = 18
+    private const val LABEL_DP = 18
+    private const val GAPS_DP = 12
+
+    /** Height of the strip for [iconDp]-wide icons, with or without the header line and the names. */
+    fun heightDpFor(iconDp: Int, header: Boolean, labels: Boolean): Int = GAPS_DP + iconDp + (if (header) HEADER_DP else 0) + (if (labels) LABEL_DP else 0)
 
     @Volatile
     private var cached: Boolean? = null
@@ -25,16 +33,25 @@ object ChatsStripState {
         .getBoolean(KEY_SHOWN, false)
         .also { cached = it }
 
-    /** Records the new state; true when it changed, so the grid has to be laid out again. */
-    fun setShown(context: Context, shown: Boolean): Boolean {
-        if (isShown(context) == shown) return false
+    @Volatile
+    private var cachedHeightDp: Int? = null
+
+    private fun heightDp(context: Context): Int = cachedHeightDp ?: context.applicationContext
+        .getSharedPreferences(STORE, Context.MODE_PRIVATE)
+        .getInt(KEY_HEIGHT, HEIGHT_DP)
+        .also { cachedHeightDp = it }
+
+    /** Records the new state and height; true when either changed, so the grid has to be laid out again. */
+    fun setShown(context: Context, shown: Boolean, heightDp: Int = HEIGHT_DP): Boolean {
+        if (isShown(context) == shown && heightDp(context) == heightDp) return false
         cached = shown
+        cachedHeightDp = heightDp
         context.applicationContext.getSharedPreferences(STORE, Context.MODE_PRIVATE)
-            .edit().putBoolean(KEY_SHOWN, shown).apply()
+            .edit().putBoolean(KEY_SHOWN, shown).putInt(KEY_HEIGHT, heightDp).apply()
         return true
     }
 
-    fun heightPx(context: Context): Int = Math.round(HEIGHT_DP * context.resources.displayMetrics.density)
+    fun heightPx(context: Context): Int = Math.round(heightDp(context) * context.resources.displayMetrics.density)
 
     /** Height the workspace gives up, or 0 when there is no strip. */
     @JvmStatic

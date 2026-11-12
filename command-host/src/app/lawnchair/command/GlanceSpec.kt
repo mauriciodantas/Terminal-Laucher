@@ -90,6 +90,40 @@ data class GlanceLook(
 }
 
 /**
+ * How the strip of chat shortcuts ("Conversas rápidas") is drawn. Ranges and ids are the ones in [GlanceSpecs];
+ * a null field is left as it is.
+ */
+data class ChatsLook(
+    /** One of [GlanceSpecs.CHAT_SHAPES]: the outline of each chat icon. */
+    val shape: String? = null,
+    /** Side of each icon, in dp, [GlanceSpecs.CHAT_SIZE]. */
+    val size: Int? = null,
+    /** The name under each icon. */
+    val labels: Boolean? = null,
+    /** The "CHATS · WHATSAPP" line over the icons. */
+    val header: Boolean? = null,
+    val border: Boolean? = null,
+    val glow: Boolean? = null,
+    /** The unread counter on each icon. */
+    val badge: Boolean? = null,
+) {
+    val isEmpty: Boolean get() = this == ChatsLook()
+
+    fun overlaidWith(other: ChatsLook) = ChatsLook(
+        shape = other.shape ?: shape,
+        size = other.size ?: size,
+        labels = other.labels ?: labels,
+        header = other.header ?: header,
+        border = other.border ?: border,
+        glow = other.glow ?: glow,
+        badge = other.badge ?: badge,
+    )
+
+    val label: String
+        get() = "chat icons · " + listOfNotNull(shape, size?.let { "${it}dp" }).joinToString(" ").ifEmpty { "look" }
+}
+
+/**
  * What a theme says about the At a Glance panel (the readout at the top of the home screen): hide it,
  * the animation beside its big value (one of [GlanceSpecs.ANIMATIONS] or a Lottie of its own), the rows
  * under it and the kinds of information it may show. A null field is left as it is.
@@ -116,6 +150,8 @@ data class GlanceSpec(
     val autoRotate: Boolean? = null,
     /** How the panel is drawn: a ready-made style and each of its settings. */
     val look: GlanceLook? = null,
+    /** How the chat shortcut icons are drawn. */
+    val chatsLook: ChatsLook? = null,
 ) {
     val isEmpty: Boolean get() = this == GlanceSpec()
 
@@ -134,6 +170,7 @@ data class GlanceSpec(
         bluetooth = other.bluetooth ?: bluetooth,
         autoRotate = other.autoRotate ?: autoRotate,
         look = look?.let { l -> other.look?.let(l::overlaidWith) ?: l } ?: other.look,
+        chatsLook = chatsLook?.let { l -> other.chatsLook?.let(l::overlaidWith) ?: l } ?: other.chatsLook,
     )
 
     /** What it changes, as short items for the import screen. */
@@ -156,6 +193,7 @@ data class GlanceSpec(
             }
             autoRotate?.let { add(if (it) "rotates" else "stays still") }
             look?.let { add(it.label) }
+            chatsLook?.let { add(it.label) }
         }
 }
 
@@ -177,6 +215,8 @@ object GlanceSpecs {
     val BORDER_WIDTH = 1..3
     val RADIUS = 0..16
     val DIM = 40..90
+    val CHAT_SHAPES = listOf("square", "rounded", "circle")
+    val CHAT_SIZE = 36..64
 
     /** The animation [text] names, in any case ("none" is "off"); null for an unknown one. */
     fun animationKey(text: String): String? {
@@ -209,6 +249,31 @@ object GlanceSpecs {
         }
         if (targets.length() > 0) put("targets", targets)
         g.look?.let { put("look", lookJson(it)) }
+        g.chatsLook?.let { put("chatsLook", chatsLookJson(it)) }
+    }
+
+    private fun chatsLookJson(l: ChatsLook): JSONObject = JSONObject().apply {
+        l.shape?.let { put("shape", it) }
+        l.size?.let { put("size", it) }
+        l.labels?.let { put("labels", it) }
+        l.header?.let { put("header", it) }
+        l.border?.let { put("border", it) }
+        l.glow?.let { put("glow", it) }
+        l.badge?.let { put("badge", it) }
+    }
+
+    /** The chat look [value] describes, with unknown ids dropped and the size held to its range; null when it says nothing. */
+    fun chatsLookFromJson(value: Any?): ChatsLook? {
+        val o = value as? JSONObject ?: return null
+        return ChatsLook(
+            shape = choice(o, "shape", CHAT_SHAPES),
+            size = number(o, "size", CHAT_SIZE),
+            labels = bool(o, "labels"),
+            header = bool(o, "header"),
+            border = bool(o, "border"),
+            glow = bool(o, "glow"),
+            badge = bool(o, "badge"),
+        ).takeUnless { it.isEmpty }
     }
 
     private fun lookJson(l: GlanceLook): JSONObject = JSONObject().apply {
@@ -300,6 +365,7 @@ object GlanceSpecs {
             bluetooth = t?.let { bool(it, "bluetooth") },
             autoRotate = bool(o, "autoRotate"),
             look = lookFromJson(o.opt("look")),
+            chatsLook = chatsLookFromJson(o.opt("chatsLook")),
         ).takeUnless { it.isEmpty }
     }
 

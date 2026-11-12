@@ -177,7 +177,32 @@ object ThemeStore {
             shortcuts = false.takeIf { !p.glanceShortcuts.firstCached(p) },
             chats = false.takeIf { !p.glanceChats.firstCached(p) },
             look = lookNow(p),
+            chatsLook = chatsLookNow(p),
         ).takeUnless { it.isEmpty }
+    }
+
+    /** The chat icon settings that are not how the app comes; null when they all are. */
+    private fun chatsLookNow(p: PreferenceManager2): ChatsLook? {
+        fun <C, S> PreferenceImpl<C, S>.changed(): C? = firstCached(p).takeIf { it != defaultValue }
+        return ChatsLook(
+            shape = p.glanceChatShape.changed()?.id,
+            size = p.glanceChatSize.changed(),
+            labels = p.glanceChatLabels.changed(),
+            header = p.glanceChatHeader.changed(),
+            border = p.glanceChatBorder.changed(),
+            glow = p.glanceChatGlow.changed(),
+            badge = p.glanceChatBadge.changed(),
+        ).takeUnless { it.isEmpty }
+    }
+
+    private fun applyChatsLook(p: PreferenceManager2, l: ChatsLook) {
+        l.shape?.let { p.glanceChatShape.update(p, app.lawnchair.chats.ChatShape.fromId(it)) }
+        l.size?.let { p.glanceChatSize.update(p, it) }
+        l.labels?.let { p.glanceChatLabels.update(p, it) }
+        l.header?.let { p.glanceChatHeader.update(p, it) }
+        l.border?.let { p.glanceChatBorder.update(p, it) }
+        l.glow?.let { p.glanceChatGlow.update(p, it) }
+        l.badge?.let { p.glanceChatBadge.update(p, it) }
     }
 
     /** The look settings that are not how the app comes; null when they all are. */
@@ -338,6 +363,7 @@ object ThemeStore {
         g.bluetooth?.let { p.glanceBluetooth.update(p, it) }
         g.autoRotate?.let { p.glanceAutoRotate.update(p, it) }
         g.look?.let { applyLook(p, it) }
+        g.chatsLook?.let { applyChatsLook(p, it) }
         g.lottie?.let { ThemeGlance.applyLater(context, it) }
         g.show?.let { p.enableSmartspace.update(p, it) }
     }
@@ -382,6 +408,9 @@ object ThemeStore {
         p.glanceTitleBar.update(p, p.glanceTitleBar.defaultValue)
         p.glanceUrgentColor.update(p, p.glanceUrgentColor.defaultValue)
         p.glanceShortcutsHidden.update(p, p.glanceShortcutsHidden.defaultValue)
+        listOf(p.glanceChatLabels, p.glanceChatHeader, p.glanceChatBorder, p.glanceChatGlow, p.glanceChatBadge).forEach { it.update(p, it.defaultValue) }
+        p.glanceChatSize.update(p, p.glanceChatSize.defaultValue)
+        p.glanceChatShape.update(p, p.glanceChatShape.defaultValue)
     }
 
     private fun <C, S> PreferenceImpl<C, S>.update(p: PreferenceManager2, value: C) {
