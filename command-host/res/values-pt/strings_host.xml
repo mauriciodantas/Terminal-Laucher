@@ -52,7 +52,7 @@
     <string name="cmd_theme_el_paint">pintar</string>
     <string name="cmd_theme_el_paint_desc">COR DE FUNDO COMO PAPEL DE PAREDE DO SISTEMA</string>
     <string name="cmd_theme_el_glance">glance</string>
-    <string name="cmd_theme_el_glance_desc">PAINEL AT A GLANCE · VISUAL, RELÓGIO E ANIMAÇÃO</string>
+    <string name="cmd_theme_el_glance_desc">PAINEL AT A GLANCE · VISUAL, RELÓGIO, ANIMAÇÃO E ÍCONES DE CONVERSA</string>
     <string name="cmd_theme_el_lock">bloqueio</string>
     <string name="cmd_theme_el_lock_desc">PAPEL DE PAREDE DA TELA DE BLOQUEIO</string>
     <string name="cmd_theme_el_secondary">secundária</string>

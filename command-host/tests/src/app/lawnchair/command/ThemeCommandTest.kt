@@ -228,6 +228,20 @@ class ThemeCommandTest {
         assertNull(LauncherAiPrompts.createdTheme("{\"aliases\": [{\"name\": \"halloween\", \"expansion\": \"theme dark\"}]}"))
     }
 
+    @Test fun aiThemeReplyWithChatIcons() {
+        val (spec, _) = LauncherAiPrompts.theme(
+            "{\"name\": \"Radar\", \"accent\": \"#33ff66\", \"background\": \"#001a08\", " +
+                "\"glance\": {\"chatsLook\": {\"shape\": \"Circle\", \"size\": 56, \"labels\": false, \"header\": false, \"glow\": \"false\"}}}",
+        )!!
+        assertEquals(ChatsLook(shape = "circle", size = 56, labels = false, header = false, glow = false), spec.glance?.chatsLook)
+        // A theme made of the chat look alone still counts, and an unknown shape is dropped instead of breaking the reply.
+        assertNotNull(LauncherAiPrompts.theme("{\"accent\": \"#33ff66\", \"background\": \"#001a08\", \"glance\": {\"chatsLook\": {\"shape\": \"circle\"}}}"))
+        assertNull(LauncherAiPrompts.theme("{\"accent\": \"#33ff66\", \"background\": \"#001a08\", \"glance\": {\"chatsLook\": {\"shape\": \"hexagon\"}}}")?.first?.glance?.chatsLook)
+        // The AI is told about it, from "ia tema" and from "criar".
+        assertTrue(AiPrompts.system(AiMode.THEME, AiContext()).contains("chatsLook"))
+        assertTrue(AiPrompts.system(AiMode.CREATE, AiContext()).contains("chatsLook"))
+    }
+
     // ---- wallpapers ----
 
     /** A PNG header and padding up to [size] bytes, in base64. */
