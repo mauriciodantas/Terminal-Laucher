@@ -52,7 +52,7 @@ class ChatsStripView(context: Context) :
     private val handler = Handler(Looper.getMainLooper())
     private val density = context.resources.displayMetrics.density
     private val phosphor = PhosphorColorToken(1f).resolveColor(context)
-    private val dim = PhosphorColorToken(0.62f).resolveColor(context)
+    private var dim = PhosphorColorToken(0.62f).resolveColor(context)
 
     private val label = TextView(context)
     private val count = TextView(context)
@@ -139,7 +139,30 @@ class ChatsStripView(context: Context) :
                         prefs2.glanceChatHeader.get(),
                         prefs2.glanceChatBorder.get(),
                     ) { _, _, _, _, _ -> }.let { look ->
-                        combine(look, prefs2.glanceChatGlow.get()) { _, _ -> }
+                        combine(
+                            look,
+                            prefs2.glanceChatGlow.get(),
+                            prefs2.glanceChatBorderWidth.get(),
+                            prefs2.glanceChatRadius.get(),
+                            prefs2.glanceChatTextScale.get(),
+                        ) { _, _, _, _, _ -> }
+                    }.let { look ->
+                        combine(
+                            look,
+                            prefs2.glanceChatDim.get(),
+                            prefs2.glanceChatFill.get(),
+                            prefs2.glanceChatBadgeColor.get(),
+                        ) { _, _, _, _ -> }
+                    }.let { look ->
+                        combine(
+                            look,
+                            prefs2.glanceChatLetterColor.get(),
+                            prefs2.glanceChatBorderColor.get(),
+                            prefs2.glanceChatFillColor.get(),
+                            prefs2.glanceChatLabelColor.get(),
+                        ) { _, _, _, _, _ -> }
+                    }.let { look ->
+                        combine(look, prefs2.glanceChatBadgeCustom.get()) { _, _ -> }
                     },
                 ) { _, _, _, _, _ -> }.collect { loadNow() }
             }
@@ -185,6 +208,10 @@ class ChatsStripView(context: Context) :
         chats = shown
         unread = counts
         cells.removeAllViews()
+        dim = prefs2.glanceChatLabelColor.firstCached().takeIf { it != 0 }
+            ?: PhosphorColorToken(prefs2.glanceChatDim.firstCached().coerceIn(40, 90) / 100f).resolveColor(context)
+        label.setTextColor(dim)
+        count.setTextColor(dim)
         val iconDp = prefs2.glanceChatSize.firstCached().coerceIn(36, 64)
         val showHeader = prefs2.glanceChatHeader.firstCached()
         val showLabels = prefs2.glanceChatLabels.firstCached()
@@ -216,25 +243,36 @@ class ChatsStripView(context: Context) :
         val showBorder = prefs2.glanceChatBorder.firstCached()
         val glow = prefs2.glanceChatGlow.firstCached()
         val showLabels = prefs2.glanceChatLabels.firstCached()
+        val showFill = prefs2.glanceChatFill.firstCached()
+        val borderPx = (prefs2.glanceChatBorderWidth.firstCached().coerceIn(1, 3) * density).toInt().coerceAtLeast(1)
+        val radiusPx = prefs2.glanceChatRadius.firstCached().coerceIn(0, 24) * density
+        val textScale = prefs2.glanceChatTextScale.firstCached().coerceIn(80, 140) / 100f
+        val badgeColor = prefs2.glanceChatBadgeCustom.firstCached().takeIf { it != 0 }
+            ?: prefs2.glanceChatBadgeColor.firstCached().argb ?: phosphor
+        val letter = prefs2.glanceChatLetterColor.firstCached().takeIf { it != 0 } ?: phosphor
+        val strokeColor = prefs2.glanceChatBorderColor.firstCached().takeIf { it != 0 }
+            ?: ((dim and 0x00FFFFFF) or 0x66000000)
+        val tint = prefs2.glanceChatFillColor.firstCached().takeIf { it != 0 }?.let { (it and 0x00FFFFFF) or 0x33000000 }
+            ?: ((phosphor and 0x00FFFFFF) or 0x14000000)
         val square = FrameLayout(context).apply {
             background = GradientDrawable().apply {
-                setColor((phosphor and 0x00FFFFFF) or 0x14000000)
-                if (showBorder) setStroke(density.toInt().coerceAtLeast(1), (dim and 0x00FFFFFF) or 0x66000000)
+                setColor(if (showFill) tint else Color.TRANSPARENT)
+                if (showBorder) setStroke(borderPx, strokeColor)
                 when (chatShape) {
                     ChatShape.SQUARE -> Unit
-                    ChatShape.ROUNDED -> cornerRadius = size * 0.22f
+                    ChatShape.ROUNDED -> cornerRadius = radiusPx
                     ChatShape.CIRCLE -> this.shape = GradientDrawable.OVAL
                 }
             }
             addView(
                 TextView(context).apply {
                     text = ChatShortcuts.initial(chat.label)
-                    setTextSize(TypedValue.COMPLEX_UNIT_SP, 28f * iconDp / 48f)
+                    setTextSize(TypedValue.COMPLEX_UNIT_SP, 28f * iconDp / 48f * textScale)
                     typeface = ResourcesCompat.getFont(context, R.font.vt323_regular)
                     includeFontPadding = false
                     gravity = Gravity.CENTER
-                    setTextColor(phosphor)
-                    if (glow) setShadowLayer(6f, 0f, 0f, (phosphor and 0x00FFFFFF) or 0x66000000)
+                    setTextColor(letter)
+                    if (glow) setShadowLayer(6f, 0f, 0f, (letter and 0x00FFFFFF) or 0x66000000)
                 },
                 FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),
             )
@@ -252,8 +290,8 @@ class ChatsStripView(context: Context) :
                         typeface = ResourcesCompat.getFont(context, R.font.ibm_plex_mono_semibold)
                         includeFontPadding = false
                         gravity = Gravity.CENTER
-                        setTextColor(LauncherGround.onAccent(context, phosphor))
-                        setBackgroundColor(phosphor)
+                        setTextColor(LauncherGround.onAccent(context, badgeColor))
+                        setBackgroundColor(badgeColor)
                         minWidth = h
                         minHeight = h
                         setPadding((3 * density).toInt(), 0, (3 * density).toInt(), 0)

@@ -65,7 +65,10 @@ object LauncherAiPrompts {
             "\"seconds\": false, \"dateCaps\": true, \"clockSize\": 100, \"textSize\": 100, \"border\": true, \"borderWidth\": 1, \"radius\": 8, " +
             "\"titleBar\": \"<${GlanceSpecs.TITLE_BARS.joinToString("|")}>\", \"glow\": true, \"dim\": 62, \"urgent\": \"<${GlanceSpecs.URGENT_COLORS.joinToString("|")}>\", " +
             "\"statusItems\": {\"sound\": true, \"storage\": true, \"ram\": true}, \"hiddenShortcuts\": [\"<${GlanceSpecs.SHORTCUTS.joinToString("|")}>\"]}, " +
-            "\"chatsLook\": {\"shape\": \"<${GlanceSpecs.CHAT_SHAPES.joinToString("|")}>\", \"size\": 48, \"labels\": true, \"header\": true, \"border\": true, \"glow\": true, \"badge\": true}}, " +
+            "\"chatsLook\": {\"preset\": \"<${GlanceSpecs.CHAT_PRESETS.joinToString("|")}>\", \"shape\": \"<${GlanceSpecs.CHAT_SHAPES.joinToString("|")}>\", \"size\": 48, " +
+            "\"labels\": true, \"header\": true, \"border\": true, \"borderWidth\": 1, \"radius\": 10, \"fill\": true, \"glow\": true, \"textSize\": 100, \"dim\": 62, " +
+            "\"badge\": true, \"badgeColor\": \"<${GlanceSpecs.CHAT_BADGE_COLORS.joinToString("|")}|#rrggbb>\", " +
+            "\"letterColor\": \"<default|#rrggbb>\", \"borderColor\": \"<default|#rrggbb>\", \"fillColor\": \"<default|#rrggbb>\", \"labelColor\": \"<default|#rrggbb>\"}}, " +
             "\"note\": \"<one short sentence>\"}\n" +
             "Rules: the accent over the background must read well, a contrast ratio of at least 4.5 (WCAG). " +
             "secondary is a third color for secondary text, hints and lines (default keeps the accent dimmed); " +
@@ -115,6 +118,12 @@ object LauncherAiPrompts {
             "chatsLook is how the row of WhatsApp chat shortcuts above the dock is drawn: shape ${GlanceSpecs.CHAT_SHAPES.joinToString("/")} is the outline of each icon " +
             "(square for terminal or brutalist looks, rounded for soft ones, circle for playful or avatar-like ones), size ${GlanceSpecs.CHAT_SIZE.first}-${GlanceSpecs.CHAT_SIZE.last} dp is the side of each icon, " +
             "labels shows the name under it, header the line over the row, border the frame of each icon, glow the soft light behind its letter and badge the unread counter. " +
+            "preset is a ready-made style, applied first: terminal (square, framed, glow), outline (rounded, thicker frame, no fill or glow), open (circles with no frame or title line) and minimal (bare circles, letters only). " +
+            "Then refine: borderWidth ${GlanceSpecs.CHAT_BORDER_WIDTH.first}-${GlanceSpecs.CHAT_BORDER_WIDTH.last} dp, radius ${GlanceSpecs.CHAT_RADIUS.first}-${GlanceSpecs.CHAT_RADIUS.last} dp (only for the rounded shape), " +
+            "fill the tinted background of each icon, textSize ${GlanceSpecs.CHAT_TEXT_SIZE.first}-${GlanceSpecs.CHAT_TEXT_SIZE.last} percent for the letter and the names, " +
+            "dim ${GlanceSpecs.CHAT_DIM.first}-${GlanceSpecs.CHAT_DIM.last} how strong the names and the title line are, and badgeColor ${GlanceSpecs.CHAT_BADGE_COLORS.joinToString("/")} for the unread counter (accent follows the theme; pick another, or a #rrggbb, when it must stand out). " +
+            "letterColor, borderColor, fillColor and labelColor are each \"default\" (they follow the theme accent) or a #rrggbb of their own: the letter inside each icon, its frame, its tinted background and the names with the title line. " +
+            "Set them only when the chats should differ from the rest of the theme (a green WhatsApp feel on an amber theme, say), keep the letter and the names readable against the background, and leave them out otherwise. " +
             "Keep the defaults unless the concept asks otherwise: labels, header and a small size give a cleaner, denser row. " +
             "Match the look to the concept: sharp and square (terminal, open) for brutalist, hacker or industrial ideas; rounded with outline or centered for soft, nature or playful ones; " +
             "minimal when the wallpaper is busy or its subject sits near the top; compact density for dense, technical looks; glow on for neon and CRT ideas and off for paper or flat ones. " +

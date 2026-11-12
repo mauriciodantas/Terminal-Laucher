@@ -133,6 +133,8 @@ import app.lawnchair.command.R as CommandR
 import app.lawnchair.command.StatsStore
 import app.lawnchair.command.TaskApp
 import app.lawnchair.command.Tone
+import app.lawnchair.preferences.getAdapter
+import app.lawnchair.preferences2.preferenceManager2
 import app.lawnchair.ui.preferences.LocalNavController
 import app.lawnchair.ui.preferences.components.NavigationActionPreference
 import app.lawnchair.ui.preferences.components.controls.ClickablePreference
@@ -768,6 +770,11 @@ fun CommandActionsPreferences(openEdit: String = "") {
                         },
                         label = stringResource(CommandR.string.cmd_pref_show_qr),
                         description = stringResource(CommandR.string.cmd_pref_show_qr_hint),
+                    )
+                    SwitchPreference(
+                        adapter = preferenceManager2().homeBarQr.getAdapter(),
+                        label = stringResource(R.string.home_bar_qr),
+                        description = stringResource(R.string.home_bar_qr_desc),
                     )
                 }
                 // Rarely needed, so kept apart: what API commands go through and their keys.

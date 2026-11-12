@@ -143,6 +143,7 @@ class CommandActivity : ComponentActivity() {
         private const val EXTRA_VOICE = "start_voice"
         private const val EXTRA_TEXT = "start_text"
         private const val EXTRA_RUN = "start_run"
+        private const val EXTRA_SCAN = "start_scan"
 
         /** The scheme of links that open the bar with a command typed: terminal://cmd?text=... */
         const val LINK_SCHEME = "terminal"
@@ -151,13 +152,13 @@ class CommandActivity : ComponentActivity() {
          * [voice] opens the speech recognizer right away, for the microphone on the home screen.
          * [text] starts the command line with what was typed on a hardware keyboard at home.
          */
-        fun start(context: Context, voice: Boolean = false, text: String = "", run: Boolean = false) {
+        fun start(context: Context, voice: Boolean = false, text: String = "", run: Boolean = false, scan: Boolean = false) {
             CommandExecutor.prewarm(context)
-            context.startActivity(intent(context, voice, text, run))
+            context.startActivity(intent(context, voice, text, run, scan))
         }
 
         /** [run] runs [text] right away, for a scheduled command tapped in its notification. */
-        fun intent(context: Context, voice: Boolean = false, text: String = "", run: Boolean = false): Intent = // A task of its own, outside the home task: the system cannot split the screen with
+        fun intent(context: Context, voice: Boolean = false, text: String = "", run: Boolean = false, scan: Boolean = false): Intent = // A task of its own, outside the home task: the system cannot split the screen with
             // the home screen, and "dividir" opens an app beside the bar.
             Intent(context, CommandActivity::class.java)
                 // CLEAR_TASK: a bar left open in the background would come back as it was and drop the new text or command.
@@ -165,6 +166,7 @@ class CommandActivity : ComponentActivity() {
                 .putExtra(EXTRA_VOICE, voice)
                 .putExtra(EXTRA_TEXT, text)
                 .putExtra(EXTRA_RUN, run)
+                .putExtra(EXTRA_SCAN, scan)
 
         /** True only for the app's own intents: a link or another app cannot make the bar run a command unseen. */
         private fun isOwn(intent: Intent?): Boolean = intent?.component?.className == CommandActivity::class.java.name
@@ -187,6 +189,9 @@ class CommandActivity : ComponentActivity() {
             .putExtra(RecognizerIntent.EXTRA_PROMPT, context.getString(R.string.command_voice_prompt))
 
         fun voiceAvailable(context: Context): Boolean = context.packageManager.resolveActivity(voiceIntent(context), 0) != null
+
+        /** True only for the app's own intents: the [QR] button on the home screen opens the reader right away. */
+        internal fun wantsScan(intent: Intent?): Boolean = isOwn(intent) && intent?.getBooleanExtra(EXTRA_SCAN, false) == true
 
         internal fun wantsVoice(intent: Intent?): Boolean = intent?.getBooleanExtra(EXTRA_VOICE, false) == true
 
@@ -1298,8 +1303,15 @@ private fun CommandScreen(onClose: () -> Unit) {
     val startWithVoice = remember {
         voiceAvailable && CommandActivity.wantsVoice((context as? android.app.Activity)?.intent)
     }
+    val startWithScan = remember { CommandActivity.wantsScan((context as? android.app.Activity)?.intent) }
     LaunchedEffect(Unit) {
-        if (startWithVoice) runCatching { voice.launch(voiceIntent) } else focus.requestFocus()
+        if (startWithVoice) {
+            runCatching { voice.launch(voiceIntent) }
+        } else if (startWithScan) {
+            runCatching { scan.launch(Unit) }
+        } else {
+            focus.requestFocus()
+        }
     }
     // A scheduled command tapped in its notification runs once everything it needs has loaded.
     val runAtStart = remember { CommandActivity.wantsRun(startIntent) && text.isNotBlank() }

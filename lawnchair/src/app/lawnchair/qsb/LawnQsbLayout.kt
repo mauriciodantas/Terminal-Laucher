@@ -114,6 +114,7 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
                         }
                         val themed by prefs2.themedHotseatQsb.asState()
                         val commandBarEnabled by prefs2.commandBarEnabled.asState()
+                        val homeBarQr by prefs2.homeBarQr.asState()
 
                         // The examples in the empty bar are the commands the user runs most; the defaults fill the rest.
                         val defaultExamples = listOf(
@@ -207,6 +208,12 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
                                 null
                             },
                             voiceLabel = stringResource(R.string.command_voice),
+                            onQrClick = if (commandBarEnabled && homeBarQr) {
+                                { CommandActivity.start(context.launcher, scan = true) }
+                            } else {
+                                null
+                            },
+                            qrLabel = stringResource(app.lawnchair.command.R.string.cmd_qr_button),
                             hintAbove = hintAbove.value,
                         )
                     }

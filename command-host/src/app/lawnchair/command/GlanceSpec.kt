@@ -94,6 +94,8 @@ data class GlanceLook(
  * a null field is left as it is.
  */
 data class ChatsLook(
+    /** One of [GlanceSpecs.CHAT_PRESETS]; it is applied first, so the fields below refine it. */
+    val preset: String? = null,
     /** One of [GlanceSpecs.CHAT_SHAPES]: the outline of each chat icon. */
     val shape: String? = null,
     /** Side of each icon, in dp, [GlanceSpecs.CHAT_SIZE]. */
@@ -106,10 +108,41 @@ data class ChatsLook(
     val glow: Boolean? = null,
     /** The unread counter on each icon. */
     val badge: Boolean? = null,
+    /** Border thickness in dp, [GlanceSpecs.CHAT_BORDER_WIDTH]. */
+    val borderWidth: Int? = null,
+    /** Corner radius of the rounded shape, in dp, [GlanceSpecs.CHAT_RADIUS]. */
+    val radius: Int? = null,
+    /** Percent of the default size of the letter and the names, [GlanceSpecs.CHAT_TEXT_SIZE]. */
+    val textSize: Int? = null,
+    /** Strength of the names and the title line, in percent of the accent, [GlanceSpecs.CHAT_DIM]. */
+    val dim: Int? = null,
+    /** The tinted background of each icon. */
+    val fill: Boolean? = null,
+    /** One of [GlanceSpecs.CHAT_BADGE_COLORS] or "#rrggbb": the color of the unread counter. */
+    val badgeColor: String? = null,
+    /** "default" (follows the theme) or "#rrggbb": the letter inside each icon and its glow. */
+    val letterColor: String? = null,
+    /** "default" or "#rrggbb": the frame of each icon. */
+    val borderColor: String? = null,
+    /** "default" or "#rrggbb": the tinted background of each icon. */
+    val fillColor: String? = null,
+    /** "default" or "#rrggbb": the names and the title line. */
+    val labelColor: String? = null,
 ) {
     val isEmpty: Boolean get() = this == ChatsLook()
 
     fun overlaidWith(other: ChatsLook) = ChatsLook(
+        preset = other.preset ?: preset,
+        borderWidth = other.borderWidth ?: borderWidth,
+        radius = other.radius ?: radius,
+        textSize = other.textSize ?: textSize,
+        dim = other.dim ?: dim,
+        fill = other.fill ?: fill,
+        badgeColor = other.badgeColor ?: badgeColor,
+        letterColor = other.letterColor ?: letterColor,
+        borderColor = other.borderColor ?: borderColor,
+        fillColor = other.fillColor ?: fillColor,
+        labelColor = other.labelColor ?: labelColor,
         shape = other.shape ?: shape,
         size = other.size ?: size,
         labels = other.labels ?: labels,
@@ -120,7 +153,7 @@ data class ChatsLook(
     )
 
     val label: String
-        get() = "chat icons · " + listOfNotNull(shape, size?.let { "${it}dp" }).joinToString(" ").ifEmpty { "look" }
+        get() = "chat icons · " + listOfNotNull(preset?.let { "style $it" }, shape, size?.let { "${it}dp" }, "colors".takeIf { listOfNotNull(letterColor, borderColor, fillColor, labelColor, badgeColor).isNotEmpty() }).joinToString(" ").ifEmpty { "look" }
 }
 
 /**
@@ -217,6 +250,12 @@ object GlanceSpecs {
     val DIM = 40..90
     val CHAT_SHAPES = listOf("square", "rounded", "circle")
     val CHAT_SIZE = 36..64
+    val CHAT_PRESETS = listOf("terminal", "outline", "open", "minimal")
+    val CHAT_BADGE_COLORS = listOf("accent", "red", "amber", "magenta")
+    val CHAT_BORDER_WIDTH = 1..3
+    val CHAT_RADIUS = 0..24
+    val CHAT_TEXT_SIZE = 80..140
+    val CHAT_DIM = 40..90
 
     /** The animation [text] names, in any case ("none" is "off"); null for an unknown one. */
     fun animationKey(text: String): String? {
@@ -253,6 +292,17 @@ object GlanceSpecs {
     }
 
     private fun chatsLookJson(l: ChatsLook): JSONObject = JSONObject().apply {
+        l.preset?.let { put("preset", it) }
+        l.borderWidth?.let { put("borderWidth", it) }
+        l.radius?.let { put("radius", it) }
+        l.textSize?.let { put("textSize", it) }
+        l.dim?.let { put("dim", it) }
+        l.fill?.let { put("fill", it) }
+        l.badgeColor?.let { put("badgeColor", it) }
+        l.letterColor?.let { put("letterColor", it) }
+        l.borderColor?.let { put("borderColor", it) }
+        l.fillColor?.let { put("fillColor", it) }
+        l.labelColor?.let { put("labelColor", it) }
         l.shape?.let { put("shape", it) }
         l.size?.let { put("size", it) }
         l.labels?.let { put("labels", it) }
@@ -266,6 +316,17 @@ object GlanceSpecs {
     fun chatsLookFromJson(value: Any?): ChatsLook? {
         val o = value as? JSONObject ?: return null
         return ChatsLook(
+            preset = choice(o, "preset", CHAT_PRESETS),
+            borderWidth = number(o, "borderWidth", CHAT_BORDER_WIDTH),
+            radius = number(o, "radius", CHAT_RADIUS),
+            textSize = number(o, "textSize", CHAT_TEXT_SIZE),
+            dim = number(o, "dim", CHAT_DIM),
+            fill = bool(o, "fill"),
+            badgeColor = choice(o, "badgeColor", CHAT_BADGE_COLORS) ?: chatColor(o, "badgeColor", allowDefault = false),
+            letterColor = chatColor(o, "letterColor"),
+            borderColor = chatColor(o, "borderColor"),
+            fillColor = chatColor(o, "fillColor"),
+            labelColor = chatColor(o, "labelColor"),
             shape = choice(o, "shape", CHAT_SHAPES),
             size = number(o, "size", CHAT_SIZE),
             labels = bool(o, "labels"),
@@ -337,6 +398,13 @@ object GlanceSpecs {
                     .filter { it in SHORTCUTS }.distinct()
             },
         ).takeUnless { it.isEmpty }
+    }
+
+    /** "default" or a "#rrggbb" color, as the theme file writes them; null for anything else (a system or wallpaper color has no meaning here). */
+    private fun chatColor(o: JSONObject, key: String, allowDefault: Boolean = true): String? {
+        val text = (o.opt(key) as? String)?.trim()?.lowercase() ?: return null
+        if (allowDefault && text in listOf("default", "padrao", "padrão")) return "default"
+        return ThemeSpecs.hexColor(text)?.let { ThemeSpecs.hex(it) }
     }
 
     private fun choice(o: JSONObject, key: String, options: List<String>): String? = (o.opt(key) as? String)?.trim()?.lowercase()?.takeIf { it in options }

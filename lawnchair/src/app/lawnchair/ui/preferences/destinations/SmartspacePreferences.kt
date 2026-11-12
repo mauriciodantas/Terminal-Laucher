@@ -492,6 +492,7 @@ private fun animationLabel(style: GlanceAnimationStyle) = when (style) {
 /** "Conversas rápidas": which WhatsApp chat shortcuts appear above the dock icons. */
 @Composable
 fun ChatShortcutsPreferences(modifier: Modifier = Modifier) {
+    val scope = rememberCoroutineScope()
     val prefs2 = preferenceManager2()
     val context = LocalContext.current
     val includeBusiness = prefs2.glanceChatBusiness.getAdapter()
@@ -519,6 +520,22 @@ fun ChatShortcutsPreferences(modifier: Modifier = Modifier) {
             label = stringResource(id = R.string.glance_chats_badge),
             description = stringResource(id = R.string.glance_chats_badge_desc),
         )
+        app.lawnchair.chats.ChatPreset.entries.forEach { preset ->
+            ClickablePreference(
+                label = stringResource(id = R.string.glance_chat_preset_format, stringResource(chatPresetLabel(preset))),
+                onClick = {
+                    scope.launch {
+                        prefs2.glanceChatShape.set(preset.shape)
+                        prefs2.glanceChatBorder.set(preset.border)
+                        prefs2.glanceChatBorderWidth.set(preset.borderWidth)
+                        prefs2.glanceChatFill.set(preset.fill)
+                        prefs2.glanceChatGlow.set(preset.glow)
+                        prefs2.glanceChatHeader.set(preset.header)
+                        prefs2.glanceChatLabels.set(preset.labels)
+                    }
+                },
+            )
+        }
         ListPreference(
             adapter = prefs2.glanceChatShape.getAdapter(),
             entries = remember {
@@ -549,6 +566,43 @@ fun ChatShortcutsPreferences(modifier: Modifier = Modifier) {
         SwitchPreference(
             adapter = prefs2.glanceChatGlow.getAdapter(),
             label = stringResource(id = R.string.glance_chat_glow),
+        )
+        SwitchPreference(
+            adapter = prefs2.glanceChatFill.getAdapter(),
+            label = stringResource(id = R.string.glance_chat_fill),
+        )
+        SliderPreference(
+            label = stringResource(id = R.string.glance_chat_border_width),
+            adapter = prefs2.glanceChatBorderWidth.getAdapter(),
+            step = 1,
+            valueRange = 1..3,
+        )
+        SliderPreference(
+            label = stringResource(id = R.string.glance_chat_radius),
+            adapter = prefs2.glanceChatRadius.getAdapter(),
+            step = 2,
+            valueRange = 0..24,
+        )
+        SliderPreference(
+            label = stringResource(id = R.string.glance_chat_text_size),
+            adapter = prefs2.glanceChatTextScale.getAdapter(),
+            step = 5,
+            valueRange = 80..140,
+        )
+        SliderPreference(
+            label = stringResource(id = R.string.glance_chat_dim),
+            adapter = prefs2.glanceChatDim.getAdapter(),
+            step = 5,
+            valueRange = 40..90,
+        )
+        ListPreference(
+            adapter = prefs2.glanceChatBadgeColor.getAdapter(),
+            entries = remember {
+                app.lawnchair.chats.ChatBadgeColor.entries.map { entry ->
+                    ListPreferenceEntry(value = entry, label = { stringResource(entry.labelRes) })
+                }
+            },
+            label = stringResource(id = R.string.glance_chat_badge_color),
         )
         SwitchPreference(
             checked = includeBusiness.state.value,
@@ -875,4 +929,11 @@ private fun GlanceSetupCard(
             ) { Text(text = action) }
         }
     }
+}
+
+private fun chatPresetLabel(preset: app.lawnchair.chats.ChatPreset): Int = when (preset) {
+    app.lawnchair.chats.ChatPreset.TERMINAL -> R.string.glance_chat_preset_terminal
+    app.lawnchair.chats.ChatPreset.OUTLINE -> R.string.glance_chat_preset_outline
+    app.lawnchair.chats.ChatPreset.OPEN -> R.string.glance_chat_preset_open
+    app.lawnchair.chats.ChatPreset.MINIMAL -> R.string.glance_chat_preset_minimal
 }

@@ -910,6 +910,12 @@ class PreferenceManager2 @Inject constructor(
         defaultValue = true,
     )
 
+    /** A [QR] button beside [MIC] on the command bar of the home screen; it opens the reader right away. */
+    val homeBarQr = preference(
+        key = booleanPreferencesKey("home_bar_qr"),
+        defaultValue = false,
+    )
+
     /** The row of WhatsApp chat shortcuts ("Conversas rápidas") under the panel. */
     val glanceChats = preference(
         key = booleanPreferencesKey("glance_chats"),
@@ -966,6 +972,73 @@ class PreferenceManager2 @Inject constructor(
     val glanceChatGlow = preference(
         key = booleanPreferencesKey("glance_chat_glow"),
         defaultValue = true,
+    )
+
+    /** Border thickness of each chat icon, in dp. */
+    val glanceChatBorderWidth = preference(
+        key = intPreferencesKey("glance_chat_border_width"),
+        defaultValue = 1,
+    )
+
+    /** Corner radius of the rounded chat icon, in dp. */
+    val glanceChatRadius = preference(
+        key = intPreferencesKey("glance_chat_radius"),
+        defaultValue = 10,
+    )
+
+    /** Percent of the default size of the letter and the names. */
+    val glanceChatTextScale = preference(
+        key = intPreferencesKey("glance_chat_text_scale"),
+        defaultValue = 100,
+    )
+
+    /** Strength of the names and the title line, in percent of the accent. */
+    val glanceChatDim = preference(
+        key = intPreferencesKey("glance_chat_dim"),
+        defaultValue = 62,
+    )
+
+    /** The tinted background of each chat icon. */
+    val glanceChatFill = preference(
+        key = booleanPreferencesKey("glance_chat_fill"),
+        defaultValue = true,
+    )
+
+    /** ARGB of the letter inside each chat icon; 0 follows the theme. */
+    val glanceChatLetterColor = preference(
+        key = intPreferencesKey("glance_chat_letter_color"),
+        defaultValue = 0,
+    )
+
+    /** ARGB of the frame of each chat icon; 0 follows the theme. */
+    val glanceChatBorderColor = preference(
+        key = intPreferencesKey("glance_chat_border_color"),
+        defaultValue = 0,
+    )
+
+    /** ARGB of the tinted background of each chat icon; 0 follows the theme. */
+    val glanceChatFillColor = preference(
+        key = intPreferencesKey("glance_chat_fill_color"),
+        defaultValue = 0,
+    )
+
+    /** ARGB of the names and the title line; 0 follows the theme. */
+    val glanceChatLabelColor = preference(
+        key = intPreferencesKey("glance_chat_label_color"),
+        defaultValue = 0,
+    )
+
+    /** ARGB of the unread counter when the theme gives a color of its own; 0 uses [glanceChatBadgeColor]. */
+    val glanceChatBadgeCustom = preference(
+        key = intPreferencesKey("glance_chat_badge_custom"),
+        defaultValue = 0,
+    )
+
+    val glanceChatBadgeColor = preference(
+        key = stringPreferencesKey("glance_chat_badge_color"),
+        defaultValue = app.lawnchair.chats.ChatBadgeColor.ACCENT,
+        parse = { app.lawnchair.chats.ChatBadgeColor.fromId(it) },
+        save = { it.id },
     )
 
     /** Lets the system wallpaper show behind the home screen; off keeps the terminal ground. */

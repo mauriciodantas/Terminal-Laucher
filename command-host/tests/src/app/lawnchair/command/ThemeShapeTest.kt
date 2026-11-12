@@ -112,6 +112,31 @@ class ThemeShapeTest {
         assertNull(GlanceSpecs.chatsLookFromJson(org.json.JSONObject("""{"shape":"hexagon"}""")))
     }
 
+    @Test fun chatsLookStyleFieldsSurviveAndAreHeldToTheirRange() {
+        val chats = ChatsLook(preset = "outline", borderWidth = 2, radius = 14, textSize = 120, dim = 50, fill = false, badgeColor = "amber")
+        val spec = ThemeSpec(name = "x", glance = GlanceSpec(chatsLook = chats))
+        assertEquals(spec, ThemeSpecs.decode(ThemeSpecs.encode(spec)))
+        assertEquals(
+            ChatsLook(preset = "minimal", borderWidth = 3, radius = 24, textSize = 80, dim = 90, fill = true, badgeColor = "red"),
+            GlanceSpecs.chatsLookFromJson(org.json.JSONObject("""{"preset":"Minimal","borderWidth":9,"radius":99,"textSize":"10","dim":"100","fill":"true","badgeColor":"RED"}""")),
+        )
+        assertNull(GlanceSpecs.chatsLookFromJson(org.json.JSONObject("""{"preset":"disco","badgeColor":"blue"}""")))
+        assertEquals("amber", spec.overlaidWith(ThemeSpec(glance = GlanceSpec(chatsLook = ChatsLook(radius = 4)))).glance?.chatsLook?.badgeColor)
+    }
+
+    @Test fun chatsLookColorsAreHexOrDefault() {
+        val read = GlanceSpecs.chatsLookFromJson(
+            org.json.JSONObject("""{"letterColor":"#25D366","borderColor":"default","fillColor":"0b141a","labelColor":"system","badgeColor":"#FF0000"}"""),
+        )
+        // "system" has no meaning for a chat icon and is dropped.
+        assertEquals(ChatsLook(letterColor = "#25d366", borderColor = "default", fillColor = "#0b141a", badgeColor = "#ff0000"), read)
+        assertEquals("amber", GlanceSpecs.chatsLookFromJson(org.json.JSONObject("""{"badgeColor":"Amber"}"""))?.badgeColor)
+        assertNull(GlanceSpecs.chatsLookFromJson(org.json.JSONObject("""{"badgeColor":"default","letterColor":"blue"}""")))
+        val spec = ThemeSpec(name = "x", glance = GlanceSpec(chatsLook = read))
+        assertEquals(spec, ThemeSpecs.decode(ThemeSpecs.encode(spec)))
+        assertEquals("#111111", spec.overlaidWith(ThemeSpec(glance = GlanceSpec(chatsLook = ChatsLook(fillColor = "#111111")))).glance?.chatsLook?.fillColor)
+    }
+
     @Test fun promptsExplainTheChatsLook() {
         assertTrue(LauncherAiPrompts.THEME_SHAPE.contains("chatsLook"))
         assertTrue(LauncherAiPrompts.THEME_MASTER_PROMPT.contains("chatsLook"))

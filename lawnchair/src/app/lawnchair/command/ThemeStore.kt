@@ -192,17 +192,48 @@ object ThemeStore {
             border = p.glanceChatBorder.changed(),
             glow = p.glanceChatGlow.changed(),
             badge = p.glanceChatBadge.changed(),
+            borderWidth = p.glanceChatBorderWidth.changed(),
+            radius = p.glanceChatRadius.changed(),
+            textSize = p.glanceChatTextScale.changed(),
+            dim = p.glanceChatDim.changed(),
+            fill = p.glanceChatFill.changed(),
+            badgeColor = p.glanceChatBadgeCustom.changed()?.let(ThemeSpecs::hex) ?: p.glanceChatBadgeColor.changed()?.id,
+            letterColor = p.glanceChatLetterColor.changed()?.let(ThemeSpecs::hex),
+            borderColor = p.glanceChatBorderColor.changed()?.let(ThemeSpecs::hex),
+            fillColor = p.glanceChatFillColor.changed()?.let(ThemeSpecs::hex),
+            labelColor = p.glanceChatLabelColor.changed()?.let(ThemeSpecs::hex),
         ).takeUnless { it.isEmpty }
     }
 
+    /** The preset first, then each setting the theme names on its own; written once, as in [applyLook]. */
     private fun applyChatsLook(p: PreferenceManager2, l: ChatsLook) {
-        l.shape?.let { p.glanceChatShape.update(p, app.lawnchair.chats.ChatShape.fromId(it)) }
-        l.size?.let { p.glanceChatSize.update(p, it) }
-        l.labels?.let { p.glanceChatLabels.update(p, it) }
-        l.header?.let { p.glanceChatHeader.update(p, it) }
-        l.border?.let { p.glanceChatBorder.update(p, it) }
-        l.glow?.let { p.glanceChatGlow.update(p, it) }
-        l.badge?.let { p.glanceChatBadge.update(p, it) }
+        val preset = app.lawnchair.chats.ChatPreset.fromId(l.preset)
+        fun <C, S> PreferenceImpl<C, S>.put(value: C?) {
+            if (value != null) setBlocking(value)
+        }
+        p.glanceChatShape.put(l.shape?.let(app.lawnchair.chats.ChatShape::fromId) ?: preset?.shape)
+        p.glanceChatBorder.put(l.border ?: preset?.border)
+        p.glanceChatBorderWidth.put(l.borderWidth ?: preset?.borderWidth)
+        p.glanceChatFill.put(l.fill ?: preset?.fill)
+        p.glanceChatGlow.put(l.glow ?: preset?.glow)
+        p.glanceChatHeader.put(l.header ?: preset?.header)
+        p.glanceChatLabels.put(l.labels ?: preset?.labels)
+        p.glanceChatSize.put(l.size)
+        p.glanceChatRadius.put(l.radius)
+        p.glanceChatTextScale.put(l.textSize)
+        p.glanceChatDim.put(l.dim)
+        p.glanceChatBadge.put(l.badge)
+        // A named counter color clears a custom one, and a "#rrggbb" takes over from the named one.
+        val badgeHex = l.badgeColor?.let(ThemeSpecs::hexColor)
+        if (l.badgeColor != null) {
+            p.glanceChatBadgeCustom.put(badgeHex?.let { it or OPAQUE } ?: 0)
+            if (badgeHex == null) p.glanceChatBadgeColor.put(app.lawnchair.chats.ChatBadgeColor.fromId(l.badgeColor))
+        }
+        fun chatColor(text: String?): Int? = text?.let { if (it == "default") 0 else ThemeSpecs.hexColor(it)?.or(OPAQUE) }
+        p.glanceChatLetterColor.put(chatColor(l.letterColor))
+        p.glanceChatBorderColor.put(chatColor(l.borderColor))
+        p.glanceChatFillColor.put(chatColor(l.fillColor))
+        p.glanceChatLabelColor.put(chatColor(l.labelColor))
     }
 
     /** The look settings that are not how the app comes; null when they all are. */
@@ -408,8 +439,12 @@ object ThemeStore {
         p.glanceTitleBar.update(p, p.glanceTitleBar.defaultValue)
         p.glanceUrgentColor.update(p, p.glanceUrgentColor.defaultValue)
         p.glanceShortcutsHidden.update(p, p.glanceShortcutsHidden.defaultValue)
-        listOf(p.glanceChatLabels, p.glanceChatHeader, p.glanceChatBorder, p.glanceChatGlow, p.glanceChatBadge).forEach { it.update(p, it.defaultValue) }
-        p.glanceChatSize.update(p, p.glanceChatSize.defaultValue)
+        listOf(p.glanceChatLabels, p.glanceChatHeader, p.glanceChatBorder, p.glanceChatGlow, p.glanceChatBadge, p.glanceChatFill).forEach { it.update(p, it.defaultValue) }
+        listOf(
+            p.glanceChatSize, p.glanceChatBorderWidth, p.glanceChatRadius, p.glanceChatTextScale, p.glanceChatDim,
+            p.glanceChatLetterColor, p.glanceChatBorderColor, p.glanceChatFillColor, p.glanceChatLabelColor, p.glanceChatBadgeCustom,
+        ).forEach { it.update(p, it.defaultValue) }
+        p.glanceChatBadgeColor.update(p, p.glanceChatBadgeColor.defaultValue)
         p.glanceChatShape.update(p, p.glanceChatShape.defaultValue)
     }
 

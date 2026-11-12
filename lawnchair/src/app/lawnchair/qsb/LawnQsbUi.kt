@@ -345,6 +345,8 @@ fun LawnQsbUi(
     hint: String? = null,
     onVoiceClick: (() -> Unit)? = null,
     voiceLabel: String? = null,
+    onQrClick: (() -> Unit)? = null,
+    qrLabel: String? = null,
     hintAbove: Boolean = false,
 ) {
     val density = LocalDensity.current
@@ -422,8 +424,23 @@ fun LawnQsbUi(
                         .background(ComposeColor(style.strokeColor)),
                 )
             }
+            if (onVoiceClick != null || onQrClick != null) Spacer(Modifier.weight(1f))
+            if (onQrClick != null) {
+                Box(
+                    Modifier
+                        .size(width = 56.dp, height = 48.dp)
+                        .clickable(onClick = onQrClick, role = Role.Button)
+                        .semantics { qrLabel?.let { contentDescription = it } },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "[QR]",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = ComposeColor(style.strokeColor),
+                    )
+                }
+            }
             if (onVoiceClick != null) {
-                Spacer(Modifier.weight(1f))
                 Box(
                     Modifier
                         .size(width = 56.dp, height = 48.dp)
