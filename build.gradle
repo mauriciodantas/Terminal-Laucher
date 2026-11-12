@@ -551,6 +551,8 @@ licensee {
     allowUrl("https://jsoup.org/license")
     // Google Play services (the Data Layer of the watch, see wear/), under the Android SDK terms.
     allowUrl("https://developer.android.com/studio/terms.html")
+    // ML Kit (barcode scanning of the QR button), under the ML Kit terms.
+    allowUrl("https://developers.google.com/ml-kit/terms")
 
     bundleAndroidAsset = true
     androidAssetReportPath = 'licenses.json'
